@@ -1,0 +1,12 @@
+[package]
+name = "chapter-02-helloecs"
+version = "0.1.0"
+authors = ["Herbert Wolverson <herberticus@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rltk = { git = "https://github.com/thebracket/rltk_rs" }
+specs = "0.15.0"
+specs-derive = "0.4.0"
