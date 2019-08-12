@@ -5,3 +5,4 @@
 - [Chapter 3 - Walking A Map](./chapter_3.md)
 - [Chapter 4 - A More Interesting Map](./chapter_4.md)
 - [Chapter 5 - Field of View](./chapter_5.md)
+- [Chapter 6 - Monsters](./chapter_6.md)
