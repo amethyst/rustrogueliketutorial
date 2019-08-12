@@ -1,5 +1,16 @@
 # Chapter 1 : Hello Rust
 
+---
+
+***About this tutorial***
+
+*This tutorial is free and open source, and all code uses the MIT license - so you are free to do with it as you like. My hope is that you will enjoy the tutorial, and make great games!*
+
+*If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
+
+---
+
+
 This tutorial will get you started with Rust development, and RLTK - The *RogueLike Took Kit* - we'll be using to provide console output.
 
 ## Getting Rust
@@ -94,3 +105,9 @@ Save, and go back to the terminal. Type `cargo run`, and you will be greeted wit
 ## Playing with the tutorials
 
 TODO: Git glone, and how to build and use the tutorials in this package.
+
+---
+
+Copyright (C) 2019, Herbert Wolverson.
+
+---

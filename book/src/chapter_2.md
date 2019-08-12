@@ -1,5 +1,15 @@
 # Chapter 2 - Entities and Components
 
+---
+
+***About this tutorial***
+
+*This tutorial is free and open source, and all code uses the MIT license - so you are free to do with it as you like. My hope is that you will enjoy the tutorial, and make great games!*
+
+*If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
+
+---
+
 This chapter will introduce the entire of an Entity Component System (ECS), which will form the backbone of the rest of this tutorial. Rust has a very good ECS, called Specs - and this tutorial will show you how to use it, and try to demonstrate some of the early benefits of using it.
 
 ## About Entities and Components
@@ -686,4 +696,11 @@ fn main() {
     rltk::main_loop(context, gs);
 }
 ```
-This chapter was a lot to digest, but provides a really solid base on which to build.
+This chapter was a lot to digest, but provides a really solid base on which to build. The great part is: you've now got further than many aspiring developers! You have entities on the screen, and can move around with the keyboard.
+
+
+---
+
+Copyright (C) 2019, Herbert Wolverson.
+
+---
