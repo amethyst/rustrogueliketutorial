@@ -329,7 +329,7 @@ If you `cargo run` the project, you now see things like *Goblin #9 shouts insult
 
 ![Screenshot](./c6-s3.gif)
 
-And that's a wrap for chapter 6; we've added a variety of foul-mouthed monsters to hurl insults at your fragile ego!
+And that's a wrap for chapter 6; we've added a variety of foul-mouthed monsters to hurl insults at your fragile ego! In this chapter, we've begun to see some of the benefits of using an Entity Component System: it was really easy to add newly rendered monsters, with a bit of variety, and start storing names for things. The Viewshed code we wrote earlier worked with minimal modification to give visibility to monsters - and our new monster AI was able to take advantage of what we've already built to quite efficiently say bad things to the player.
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-06-monsters)**
 
