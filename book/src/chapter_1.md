@@ -98,9 +98,11 @@ fn main() {
 }
 ```
 
-Now create a new folder called `resources`. RLTK needs a few files to run, and this is where we put them. Download **WARNING - INSERT DOWNLOAD LINK TO ZIP HERE**, and unzip it into this folder. Be careful to have `resources/backing.fs` (etc.) and not `resources/resources/backing.fs`.
+Now create a new folder called `resources`. RLTK needs a few files to run, and this is where we put them. Download [resources.zip](./resources.zip), and unzip it into this folder. Be careful to have `resources/backing.fs` (etc.) and not `resources/resources/backing.fs`.
 
 Save, and go back to the terminal. Type `cargo run`, and you will be greeted with a console window showing `Hello Rust`.
+
+![Screenshot](./c1-s1.png)
 
 ## Playing with the tutorials
 
