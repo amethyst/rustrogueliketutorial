@@ -1,5 +1,5 @@
 [package]
-name = "rust_roguelike_tutorial"
+name = "chapter-05-fov"
 version = "0.1.0"
 authors = ["Herbert Wolverson <herberticus@gmail.com>"]
 edition = "2018"
@@ -10,12 +10,3 @@ edition = "2018"
 rltk = { git = "https://github.com/thebracket/rltk_rs" }
 specs = "0.15.0"
 specs-derive = "0.4.0"
-
-[workspace]
-members = [ 
-    "chapter-01-hellorust", 
-    "chapter-02-helloecs", 
-    "chapter-03-walkmap", 
-    "chapter-04-newmap",
-    "chapter-05-fov"
-    ]
