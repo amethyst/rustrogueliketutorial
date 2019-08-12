@@ -279,6 +279,8 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) {
 }
 ```
 
+**The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-04-newmap)**
+
 ---
 
 Copyright (C) 2019, Herbert Wolverson.

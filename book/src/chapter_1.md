@@ -106,7 +106,43 @@ Save, and go back to the terminal. Type `cargo run`, and you will be greeted wit
 
 ## Playing with the tutorials
 
-TODO: Git glone, and how to build and use the tutorials in this package.
+You'd probably like to play with the tutorial code without having to type it all in! The good news is that it is up on GitHub for your perusal. You need to have `git` installed (RustUp should have helped you with that). Choose where you would like to have the tutorials, and open a terminal:
+
+```bash
+cd <path to tutorials>
+git clone https://github.com/thebracket/rustrogueliketutorial .
+```
+
+After a while, this will download the complete tutorial (including the source code for this book!). It is laid out as follows (this isn't complete!):
+
+```
+───book
+├───chapter-01-hellorust
+├───chapter-02-helloecs
+├───chapter-03-walkmap
+├───chapter-04-newmap
+├───chapter-05-fov
+├───resources
+├───src
+```
+
+What's here?
+
+* The `book` folder contains the source code for this book. You can ignore it, unless you feel like correcting my spelling!
+* Each chapter's example code is contained in `chapter-xy-name` folders; for example, `chapter-01-hellorust`.
+* The `src` folder contains a simple script to remind you to change to a chapter folder before running anything.
+* `resources` has the contents of the ZIP file you downloaded for this example. All the chapter folders are preconfigured to use this.
+* `Cargo.toml` is setup to include all of the tutorials as "workspace entries" - they share dependencies, so it won't eat your whole drive re-downloading everything each time you use it.
+
+To run an example, open your terminal and:
+
+```bash
+cd <where you put the tutorials>
+cd chapter-01-hellorust
+cargo run
+```
+
+If you are using *Visual Studio Code*, you can instead use *File -> Open Folder* to open the whole directory that you checked out. Using the inbuilt terminal, you can simply `cd` to each example and `cargo run` it.
 
 ---
 

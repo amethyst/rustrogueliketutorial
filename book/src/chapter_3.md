@@ -324,6 +324,8 @@ fn main() {
 }
 ```
 
+**The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-03-walkmap)**
+
 ---
 
 Copyright (C) 2019, Herbert Wolverson.
