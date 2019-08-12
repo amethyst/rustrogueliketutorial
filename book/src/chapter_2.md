@@ -291,7 +291,8 @@ fn main() {
 ```
 
 Running it (with `cargo run`) will give you the following:
-TODO: Insert screenshot
+
+![Screenshot](./c2-s1.png)
 
 ## An example system - random movement
 
@@ -484,6 +485,8 @@ fn main() {
 
 If you run it (with `cargo run`), the red smiley faces zoom to the left, while the `@` watches.
 
+![Screenshot](./c2-s2.gif)
+
 ## Moving the player
 
 Finally, lets make the `@` move with keyboard controls. So we know which entity is the player, we'll make a new tag component:
@@ -560,6 +563,8 @@ player_input(self, ctx);
 ```
 
 If you run your progam (with `cargo run`), you now have a keyboard controlled `@` symbol, while the smiley faces zoom to the left!
+
+![Screenshot](./c2-s3.gif)
 
 ## The final code for chapter 2
 
@@ -696,6 +701,7 @@ fn main() {
     rltk::main_loop(context, gs);
 }
 ```
+
 This chapter was a lot to digest, but provides a really solid base on which to build. The great part is: you've now got further than many aspiring developers! You have entities on the screen, and can move around with the keyboard.
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-02-helloecs)**

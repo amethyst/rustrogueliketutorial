@@ -152,6 +152,8 @@ The new parts are the `let map = ...` part, which uses `fetch` just the same way
 
 Run the program (`cargo run`) now, and you have a player in a map - and can move around, properly obstructed by walls.
 
+![Screenshot](./c3-s1.gif)
+
 The full program now looks like this:
 
 ```rust
