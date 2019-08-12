@@ -543,6 +543,8 @@ pub fn draw_map(ecs: &World, ctx : &mut Rltk) {
 
 If you `cargo run` your project, you will now have visible tiles as slightly cyan floors and green walls - and grey as they move out of view. Performance should be great! Congratulations - you now have a nice, working field-of-view system.
 
+TODO: SCREENSHOT
+
 ---
 
 Copyright (C) 2019, Herbert Wolverson.
