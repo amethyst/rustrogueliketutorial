@@ -315,7 +315,7 @@ pub fn draw_map(ecs: &World, ctx : &mut Rltk) {
 }
 ```
 
-If you run the example now (`cargo run`), it will show you just what the player can see. There's no memory, and performance is quite awful - but it's there and about right. TODO - SCREENSHOT
+If you run the example now (`cargo run`), it will show you just what the player can see. There's no memory, and performance is quite awful - but it's there and about right.
 
 It's clear that we're on the right track, but we need a more efficient way to do things. It would be nice if the player could remember the map as they see it, too.
 
@@ -419,7 +419,7 @@ impl<'a> System<'a> for VisibilitySystem {
 
 The main changes here are that we're getting the Entities list along with components, and obtaining read-only access to the Players storage. We add those to the list of things to iterate in the list, and add a `let p : Option<&Player> = player.get(ent);` to see if this is the player. The rather cryptic `if let Some(p) = p` runs only if there is a `Player` component. Then we calculate the index, and mark it revealed.
 
-If you run (`cargo run`) the project now, it is MASSIVELY faster than the previous version, and remembers where you've been (TODO: SCREENSHOT).
+If you run (`cargo run`) the project now, it is MASSIVELY faster than the previous version, and remembers where you've been.
 
 # Speeding it up even more - recalculating visibility when we need to
 
@@ -543,7 +543,7 @@ pub fn draw_map(ecs: &World, ctx : &mut Rltk) {
 
 If you `cargo run` your project, you will now have visible tiles as slightly cyan floors and green walls - and grey as they move out of view. Performance should be great! Congratulations - you now have a nice, working field-of-view system.
 
-TODO: SCREENSHOT
+![Screenshot](./c5-s1.gif)
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-05-fov)**
 

@@ -16,7 +16,7 @@ In this chapter, we'll make a more interesting map. It will be room-based, and l
 
 We're going to start by cleaning up our code a bit, and utilizing separate files. As projects gain in complexity/size, it's a good idea to start keeping them as a clean set of files/modules, so we can quickly find what we're looking for (and improve compilation times, sometimes).
 
-If you look at the (TODO: Git link), you'll see that we've broken out a lot of functionality into individual files. When you make a new file in Rust, it automatically becomes a *module*. You then have to tell Rust to use these modules, so `main.rs` has gained a few `mod map` and similar, followed by `pub use map::*`. This says "import the module map, and then use - and make available to other modules - its public contents".
+If you look at the [source code for this chapter](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-04-newmap), you'll see that we've broken out a lot of functionality into individual files. When you make a new file in Rust, it automatically becomes a *module*. You then have to tell Rust to use these modules, so `main.rs` has gained a few `mod map` and similar, followed by `pub use map::*`. This says "import the module map, and then use - and make available to other modules - its public contents".
 
 We've also made a bunch of `struct` into `pub struct`, and added `pub` to their members. If you *don't* do this, then the structure remains internal to that module only - and you can't use it in other parts of the code. This is the same as putting a `public:` C++ line in a class definition, and exporting the type in the header. Rust makes it a bit cleaner, and no need to write things twice!
 
@@ -102,9 +102,7 @@ pub fn new_map_rooms_and_corridors() -> Vec<TileType> {
 }
 ```
 
-This produces a map with two rooms in it:
-
-TODO - Screenshot
+If you `cargo run` your project, you'll see that we now have two rooms - not linked together.
 
 ## Making a corridor
 
@@ -130,7 +128,7 @@ fn apply_vertical_tunnel(map: &mut [TileType], y1:i32, y2:i32, x:i32) {
 }
 ```
 
-Then we add a call, `apply_horizontal_tunnel(&mut map, 25, 40, 23);` to our map making function, and (TODO: SCREENSHOT). We have a tunnel between the two rooms! If you run (`cargo run`) the project, you can walk between the two rooms - and not into walls. So our previous code is still working, but now it looks a bit more like a roguelike.
+Then we add a call, `apply_horizontal_tunnel(&mut map, 25, 40, 23);` to our map making function, and voila! We have a tunnel between the two rooms! If you run (`cargo run`) the project, you can walk between the two rooms - and not into walls. So our previous code is still working, but now it looks a bit more like a roguelike.
 
 ## Making a simple dungeon
 
@@ -177,7 +175,7 @@ There's quite a bit changed there:
 * If its ok, we apply it to the room.
 * We're keeping rooms in a vector, although we aren't using it yet.
 
-Running the code as-is gives something like this (it's random, so it won't be the same every time): TODO SCREENSHOT
+Running the project (`cargo run`) at this point will give you a selection of random rooms, with no corridors between them.
 
 ## Joining the rooms together
 
@@ -208,7 +206,7 @@ if ok {
 3. It gets the previous room in the vector's center, and stores it as `prev_x` and `prev_y`.
 4. It rolls a dice, and half the time it draws a horizontal and then vertical tunnel - and half the time, the other way around.
 
-This gives you something like this: TODO - SCREENSHOT. It's really starting to look like a roguelike, now!
+Try `cargo run` now. It's really starting to look like a roguelike!
 
 ## Placing the player
 
@@ -278,6 +276,10 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) {
     }
 }
 ```
+
+You should now get something like this when you `cargo run` your project:
+
+![Screenshot](./c4-s1.gif)
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-04-newmap)**
 
