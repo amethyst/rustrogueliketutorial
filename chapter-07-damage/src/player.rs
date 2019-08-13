@@ -2,7 +2,7 @@ extern crate rltk;
 use rltk::{VirtualKeyCode, Rltk, Point};
 extern crate specs;
 use specs::prelude::*;
-use super::{Position, Player, Viewshed, TileType, State, Map, RunState};
+use super::{Position, Player, Viewshed, State, Map, RunState};
 
 pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
     let mut positions = ecs.write_storage::<Position>();
@@ -12,7 +12,7 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
 
     for (_player, pos, viewshed) in (&mut players, &mut positions, &mut viewsheds).join() {
         let destination_idx = map.xy_idx(pos.x + delta_x, pos.y + delta_y);
-        if map.tiles[destination_idx] != TileType::Wall {
+        if !map.blocked[destination_idx] {
             pos.x += delta_x;
             pos.y += delta_y;
 
@@ -37,15 +37,32 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
             VirtualKeyCode::Left => try_move_player(-1, 0, &mut gs.ecs),
             VirtualKeyCode::Numpad4 => try_move_player(-1, 0, &mut gs.ecs),
             VirtualKeyCode::H => try_move_player(-1, 0, &mut gs.ecs),
+
             VirtualKeyCode::Right => try_move_player(1, 0, &mut gs.ecs),
-            VirtualKeyCode::Numpad6 => try_move_player(1, 0, &mut gs.ecs),
+            VirtualKeyCode::Numpad6 => try_move_player(1, 0, &mut gs.ecs),            
             VirtualKeyCode::L => try_move_player(1, 0, &mut gs.ecs),
+
             VirtualKeyCode::Up => try_move_player(0, -1, &mut gs.ecs),
             VirtualKeyCode::Numpad8 => try_move_player(0, -1, &mut gs.ecs),
             VirtualKeyCode::K => try_move_player(0, -1, &mut gs.ecs),
+
             VirtualKeyCode::Down => try_move_player(0, 1, &mut gs.ecs),
             VirtualKeyCode::Numpad2 => try_move_player(0, 1, &mut gs.ecs),
             VirtualKeyCode::J => try_move_player(0, 1, &mut gs.ecs),
+
+            // Diagonals
+            VirtualKeyCode::Numpad9 => try_move_player(1, -1, &mut gs.ecs),
+            VirtualKeyCode::Y => try_move_player(1, -1, &mut gs.ecs),
+
+            VirtualKeyCode::Numpad7 => try_move_player(-1, -1, &mut gs.ecs),
+            VirtualKeyCode::U => try_move_player(-1, -1, &mut gs.ecs),
+
+            VirtualKeyCode::Numpad3 => try_move_player(1, 1, &mut gs.ecs),
+            VirtualKeyCode::N => try_move_player(1, 1, &mut gs.ecs),
+
+            VirtualKeyCode::Numpad1 => try_move_player(-1, 1, &mut gs.ecs),
+            VirtualKeyCode::B => try_move_player(-1, 1, &mut gs.ecs),
+
             _ => { return RunState::Paused }
         },
     }
