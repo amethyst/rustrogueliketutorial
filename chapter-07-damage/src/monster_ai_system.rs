@@ -1,6 +1,6 @@
 extern crate specs;
 use specs::prelude::*;
-use super::{Viewshed, Monster, Name, Map, Position};
+use super::{Viewshed, Monster, Map, Position, WantsToMelee, RunState};
 extern crate rltk;
 use rltk::{Point};
 
@@ -10,23 +10,25 @@ impl<'a> System<'a> for MonsterAI {
     #[allow(clippy::type_complexity)]
     type SystemData = ( WriteExpect<'a, Map>,
                         ReadExpect<'a, Point>,
+                        ReadExpect<'a, Entity>,
+                        ReadExpect<'a, RunState>,
+                        Entities<'a>,
                         WriteStorage<'a, Viewshed>, 
                         ReadStorage<'a, Monster>,
-                        ReadStorage<'a, Name>,
-                        WriteStorage<'a, Position>);
+                        WriteStorage<'a, Position>,
+                        WriteStorage<'a, WantsToMelee>);
 
     fn run(&mut self, data : Self::SystemData) {
-        let (mut map, player_pos, mut viewshed, monster, name, mut position) = data;
+        let (mut map, player_pos, player_entity, runstate, entities, mut viewshed, monster, mut position, mut wants_to_melee) = data;
 
-        for (mut viewshed,_monster,name,mut pos) in (&mut viewshed, &monster, &name, &mut position).join() {
+        if *runstate != RunState::MonsterTurn { return; }
+
+        for (entity, mut viewshed,_monster,mut pos) in (&entities, &mut viewshed, &monster, &mut position).join() {
             let distance = rltk::DistanceAlg::Pythagoras.distance2d(Point::new(pos.x, pos.y), *player_pos);
             if distance < 1.5 {
-                // Attack goes here
-                println!("{} shouts insults", name.name);
-                return;
+                wants_to_melee.insert(entity, WantsToMelee{ target: *player_entity }).expect("Unable to insert attack");
             }
-
-            if viewshed.visible_tiles.contains(&*player_pos) {
+            else if viewshed.visible_tiles.contains(&*player_pos) {
                 // Path to the player
                 let path = rltk::a_star_search(
                     map.xy_idx(pos.x, pos.y) as i32, 
