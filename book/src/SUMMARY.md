@@ -7,3 +7,4 @@
 - [Chapter 5 - Field of View](./chapter_5.md)
 - [Chapter 6 - Monsters](./chapter_6.md)
 - [Chapter 7 - Dealing Damage](./chapter_7.md)
+- [Chapter 8 - User Interface](./chapter_8.md)
