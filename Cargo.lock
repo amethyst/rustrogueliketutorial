@@ -190,6 +190,11 @@ dependencies = [
 [[package]]
 name = "chapter-09-items"
 version = "0.1.0"
+dependencies = [
+ "rltk 0.2.5 (git+https://github.com/thebracket/rltk_rs)",
+ "specs 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "specs-derive 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "cloudabi"
