@@ -1,4 +1,4 @@
-# UI
+# User Interface
 
 ---
 
@@ -71,8 +71,6 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     }
 }
 ```
-
-**The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-08-ui)**
 
 # Adding a message log
 
