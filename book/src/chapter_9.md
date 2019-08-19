@@ -711,8 +711,43 @@ If you `cargo run` the project, you can now press `d` to drop items! Here's a sh
 
 # Render order
 
+You've probably noticed by now that when you walk over a potion, it renders over the top of you - removing the context for your player completely! We'll fix that by adding a `render_order` field to `Renderables`:
+
+```rust
+#[derive(Component)]
+pub struct Renderable {
+    pub glyph: u8,
+    pub fg: RGB,
+    pub bg: RGB,
+    pub render_order : i32
+}
+```
+
+Your IDE is probably now highlighting lots of errors for `Renderable` components that were created without this information. We'll add it to various places: the player is `0` (render first), monsters `1` (second) and items `2` (last). For example, in the `Player` spawner, the `Renderable` now looks like this:
+
+```rust
+.with(Renderable {
+    glyph: rltk::to_cp437('@'),
+    fg: RGB::named(rltk::YELLOW),
+    bg: RGB::named(rltk::BLACK),
+    render_order: 0
+})
+```
+
+To make this *do* something, we go to our item rendering code in `main.rs` and add a sort to the iterators. We referenced the [Book of Specs](https://slide-rs.github.io/specs/11_advanced_component.html) for how to do this! Basically, we obtain the joined set of `Position` and `Renderable` components, and collect them into a vector. We then sort that vector, and iterate it to render in the appropriate order. In `main.rs`, replace the previous entity rendering code with:
+
+```rust
+let mut data = (&positions, &renderables).join().collect::<Vec<_>>();
+data.sort_by(|&a, &b| b.1.render_order.cmp(&a.1.render_order) );
+for (pos, render) in data.iter() {
+    let idx = map.xy_idx(pos.x, pos.y);
+    if map.visible_tiles[idx] { ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph) }
+}
+```
+
 # Wrap Up
 
+This chapter has shown a fair amount of the power of using an ECS: picking up, using and dropping entities is relatively simple - and once the player can do it, so can anything else (if you add it to their AI). We've also shown how to order ECS fetches, to maintain a sensible render order.
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-09-items)**
 
