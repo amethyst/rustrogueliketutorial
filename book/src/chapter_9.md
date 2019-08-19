@@ -577,6 +577,138 @@ NOW if you `cargo run` the project, you can pickup and drink health potions:
 
 # Dropping Items
 
+You probably want to be able to drop items from your inventory, especially later when they can be used as bait. We'll follow a similar pattern for this section - create an intent component, a menu to select it, and a system to perform the drop.
+
+So we create a component (in `components.rs`), and register it in `main.rs`:
+```rust
+#[derive(Component, Debug)]
+pub struct WantsToDropItem {
+    pub item : Entity
+}
+```
+
+We add another system to `inventory_system.rs`:
+```rust
+pub struct ItemDropSystem {}
+
+impl<'a> System<'a> for ItemDropSystem {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( ReadExpect<'a, Entity>,
+                        WriteExpect<'a, GameLog>,
+                        Entities<'a>,
+                        WriteStorage<'a, WantsToDropItem>,
+                        ReadStorage<'a, Name>,
+                        WriteStorage<'a, Position>,
+                        WriteStorage<'a, InBackpack>
+                      );
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (player_entity, mut gamelog, entities, mut wants_drop, names, mut positions, mut backpack) = data;
+
+        for (entity, to_drop) in (&entities, &wants_drop).join() {
+            let mut dropper_pos : Position = Position{x:0, y:0};
+            {
+                let dropped_pos = positions.get(entity).unwrap();
+                dropper_pos.x = dropped_pos.x;
+                dropper_pos.y = dropped_pos.y;
+            }
+            positions.insert(to_drop.item, Position{ x : dropper_pos.x, y : dropper_pos.y }).expect("Unable to insert position");
+            backpack.remove(to_drop.item);
+
+            if entity == *player_entity {
+                gamelog.entries.insert(0, format!("You drop up the {}.", names.get(to_drop.item).unwrap().name));
+            }
+        }
+
+        wants_drop.clear();
+    }
+}
+```
+
+Register it in the dispatch builder in `main.rs`:
+```rust
+.with(ItemDropSystem{}, "drop_items", &["melee_combat"])
+```
+
+We'll add a new `RunState` in `main.rs`:
+```rust
+#[derive(PartialEq, Copy, Clone)]
+pub enum RunState { AwaitingInput, PreRun, PlayerTurn, MonsterTurn, ShowInventory, ShowDropItem }
+```
+
+Now in `player.rs`, we add `d` for *drop* to the list of commands:
+```rust
+VirtualKeyCode::D => return RunState::ShowDropItem,
+```
+
+In `gui.rs`, we need another menu - this time for dropping items:
+```rust
+pub fn drop_item_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
+    let player_entity = gs.ecs.fetch::<Entity>();
+    let names = gs.ecs.read_storage::<Name>();
+    let backpack = gs.ecs.read_storage::<InBackpack>();
+    let entities = gs.ecs.entities();
+
+    let inventory = (&backpack, &names).join().filter(|item| item.0.owner == *player_entity );
+    let count = inventory.count();
+
+    let mut y = (25 - (count / 2)) as i32;
+    ctx.draw_box(15, y-2, 31, (count+3) as i32, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK));
+    ctx.print_color(18, y-2, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Drop Which Item?");
+    ctx.print_color(18, y+count as i32+1, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "ESCAPE to cancel");
+
+    let mut equippable : Vec<Entity> = Vec::new();
+    let mut j = 0;
+    for (entity, _pack, name) in (&entities, &backpack, &names).join().filter(|item| item.1.owner == *player_entity ) {
+        ctx.set(17, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437('('));
+        ctx.set(18, y, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), 97+j as u8);
+        ctx.set(19, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437(')'));
+
+        ctx.print(21, y, &name.name.to_string());
+        equippable.push(entity);
+        y += 1;
+        j += 1;
+    }
+
+    match ctx.key {
+        None => (ItemMenuResult::NoResponse, None),
+        Some(key) => {
+            match key {
+                VirtualKeyCode::Escape => { (ItemMenuResult::Cancel, None) }
+                _ => { 
+                    let selection = rltk::letter_to_option(key);
+                    if selection > -1 && selection < count as i32 {
+                        return (ItemMenuResult::Selected, Some(equippable[selection as usize]));
+                    }  
+                    (ItemMenuResult::NoResponse, None)
+                }
+            }
+        }
+    }
+}
+```
+
+We also need to extend the state handler in `main.rs` to use it:
+```rust
+RunState::ShowDropItem => {
+    let result = gui::drop_item_menu(self, ctx);
+    match result.0 {
+        gui::ItemMenuResult::Cancel => newrunstate = RunState::AwaitingInput,
+        gui::ItemMenuResult::NoResponse => {}
+        gui::ItemMenuResult::Selected => {
+            let item_entity = result.1.unwrap();
+            let mut intent = self.ecs.write_storage::<WantsToDropItem>();
+            intent.insert(*self.ecs.fetch::<Entity>(), WantsToDropItem{ item: item_entity }).expect("Unable to insert intent");
+            newrunstate = RunState::PlayerTurn;
+        }
+    }
+}
+```
+
+If you `cargo run` the project, you can now press `d` to drop items! Here's a shot of rather unwisely dropping a potion while being mobbed:
+
+![Screenshot](./c9-s5.png)
+
 # Render order
 
 # Wrap Up
