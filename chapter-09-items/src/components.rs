@@ -68,3 +68,9 @@ pub struct Potion {
 pub struct InBackpack {
     pub owner : Entity
 }
+
+#[derive(Component, Debug)]
+pub struct WantsToPickupItem {
+    pub collected_by : Entity,
+    pub item : Entity
+}

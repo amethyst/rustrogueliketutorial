@@ -277,7 +277,57 @@ pub struct InBackpack {
 }
 ```
 
-Logically, picking up an item means removing its `Position` (it's no longer on the ground), and adding an `InBackpack` component with the owner listed (we're making it generic so that eventually monsters can have loot).
+We also want to make item collection generic - that is, any entity can pick up an item. It would be pretty straightforward to just make it work for the player, but later on we might decide that monsters can pick up loot (introducing a whole new tactical element - bait!). So we'll also make a component indicating intent in `components.rs` (and register it in `main.rs`):
+
+```rust
+#[derive(Component, Debug)]
+pub struct WantsToPickupItem {
+    pub collected_by : Entity,
+    pub item : Entity
+}
+```
+
+Next, we'll put together a system to process `WantsToPickupItem` notices. We'll make a new file, `inventory_system.rs`:
+
+```rust
+extern crate specs;
+use specs::prelude::*;
+use super::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog};
+
+pub struct ItemCollectionSystem {}
+
+impl<'a> System<'a> for ItemCollectionSystem {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( ReadExpect<'a, Entity>,
+                        WriteExpect<'a, GameLog>,
+                        WriteStorage<'a, WantsToPickupItem>,
+                        WriteStorage<'a, Position>,
+                        ReadStorage<'a, Name>,
+                        WriteStorage<'a, InBackpack>
+                      );
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (player_entity, mut gamelog, mut wants_pickup, mut positions, names, mut backpack) = data;
+
+        for pickup in wants_pickup.join() {
+            positions.remove(pickup.item);
+            backpack.insert(pickup.item, InBackpack{ owner: pickup.collected_by }).expect("Unable to insert backpack entry");
+
+            if pickup.collected_by == *player_entity {
+                gamelog.entries.insert(0, format!("You pick up the {}.", names.get(pickup.item).unwrap().name));
+            }
+        }
+
+        wants_pickup.clear();
+    }
+}
+```
+
+This iterates the requests to pick up an item, removes their position component, and adds an `InBackpack` component assigned to the collector. Don't forget to add it to the systems list in `main.rs`:
+
+```rust
+.with(ItemCollectionSystem{}, "pickup", &["melee_combat"])
+```
 
 The next step is to add an input command to pick up an item. `g` is a popular key for this, so we'll go with that (we can always change it!). In `player.rs`, in the ever-growing `match` statement of inputs, we add:
 
@@ -292,9 +342,7 @@ fn get_item(ecs: &mut World) {
     let player_entity = ecs.fetch::<Entity>();
     let entities = ecs.entities();
     let items = ecs.read_storage::<Item>();
-    let names = ecs.read_storage::<Name>();
-    let mut positions = ecs.write_storage::<Position>();
-    let mut backpack = ecs.write_storage::<InBackpack>();
+    let positions = ecs.read_storage::<Position>();
     let mut gamelog = ecs.fetch_mut::<GameLog>();    
 
     let mut target_item : Option<Entity> = None;
@@ -307,15 +355,14 @@ fn get_item(ecs: &mut World) {
     match target_item {
         None => gamelog.entries.insert(0, "There is nothing here to pick up.".to_string()),
         Some(item) => {
-            positions.remove(item);
-            backpack.insert(item, InBackpack{ owner: *player_entity }).expect("Unable to insert component");
-            gamelog.entries.insert(0, format!("You pick up the {}.", names.get(item).unwrap().name));
+            let mut pickup = ecs.write_storage::<WantsToPickupItem>();
+            pickup.insert(*player_entity, WantsToPickupItem{ collected_by: *player_entity, item }).expect("Unable to insert want to pickup");
         }
     }
 }
 ```
 
-This obtains a bunch of references/accessors from the ECS, and iterates all items with a position. If it matches the player's position, `target_item` is set. Then, if `target_item` is none - we tell the player that there is nothing to pick up. If it isn't `None`, we remove its `Position` component, and add an `InBackpack` component - with the owner set to the player's entity.
+This obtains a bunch of references/accessors from the ECS, and iterates all items with a position. If it matches the player's position, `target_item` is set. Then, if `target_item` is none - we tell the player that there is nothing to pick up. If it isn't, it adds a pickup request for the system we just added to use.
 
 If you `cargo run` the project now, you can press `g` anywhere to be told that there's nothing to get. If you are standing on a potion, it will vanish when you press `g`! It's in our backpack - but we haven't any way to *know* that other than the log entry.
 

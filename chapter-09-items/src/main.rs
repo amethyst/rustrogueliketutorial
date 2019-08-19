@@ -25,6 +25,8 @@ use damage_system::DamageSystem;
 mod gui;
 mod gamelog;
 mod spawner;
+mod inventory_system;
+use inventory_system::{ ItemCollectionSystem };
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { AwaitingInput, PreRun, PlayerTurn, MonsterTurn, ShowInventory }
@@ -109,6 +111,7 @@ fn main() {
             .with(MonsterAI{}, "monster_ai", &["visibility_system", "map_indexing_system"])
             .with(MeleeCombatSystem{}, "melee_combat", &["monster_ai"])
             .with(DamageSystem{}, "damage", &["melee_combat"])
+            .with(ItemCollectionSystem{}, "pickup", &["melee_combat"])
             .build(),
     };
     gs.ecs.register::<Position>();
@@ -124,6 +127,7 @@ fn main() {
     gs.ecs.register::<Item>();
     gs.ecs.register::<Potion>();
     gs.ecs.register::<InBackpack>();
+    gs.ecs.register::<WantsToPickupItem>();
 
     let map : Map = Map::new_map_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
