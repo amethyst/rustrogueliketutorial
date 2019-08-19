@@ -26,7 +26,7 @@ mod gui;
 mod gamelog;
 mod spawner;
 mod inventory_system;
-use inventory_system::{ ItemCollectionSystem };
+use inventory_system::{ ItemCollectionSystem, PotionUseSystem };
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { AwaitingInput, PreRun, PlayerTurn, MonsterTurn, ShowInventory }
@@ -64,6 +64,7 @@ impl GameState for State {
         match newrunstate {
             RunState::PreRun => {
                 self.systems.dispatch(&self.ecs);
+                self.ecs.maintain();
                 newrunstate = RunState::AwaitingInput;
             }
             RunState::AwaitingInput => {
@@ -71,10 +72,12 @@ impl GameState for State {
             }
             RunState::PlayerTurn => {
                 self.systems.dispatch(&self.ecs);
+                self.ecs.maintain();
                 newrunstate = RunState::MonsterTurn;
             }
             RunState::MonsterTurn => {
                 self.systems.dispatch(&self.ecs);
+                self.ecs.maintain();
                 newrunstate = RunState::AwaitingInput;
             }
             RunState::ShowInventory => {
@@ -84,9 +87,9 @@ impl GameState for State {
                     gui::ItemMenuResult::NoResponse => {}
                     gui::ItemMenuResult::Selected => {
                         let item_entity = result.1.unwrap();
-                        let names = self.ecs.read_storage::<Name>();
-                        let mut gamelog = self.ecs.fetch_mut::<gamelog::GameLog>();
-                        gamelog.entries.insert(0, format!("You try to use {}, but it isn't written yet", names.get(item_entity).unwrap().name));
+                        let mut intent = self.ecs.write_storage::<WantsToDrinkPotion>();
+                        intent.insert(*self.ecs.fetch::<Entity>(), WantsToDrinkPotion{ potion: item_entity }).expect("Unable to insert intent");
+                        newrunstate = RunState::PlayerTurn;
                     }
                 }
             }
@@ -112,6 +115,7 @@ fn main() {
             .with(MeleeCombatSystem{}, "melee_combat", &["monster_ai"])
             .with(DamageSystem{}, "damage", &["melee_combat"])
             .with(ItemCollectionSystem{}, "pickup", &["melee_combat"])
+            .with(PotionUseSystem{}, "potions", &["melee_combat"])
             .build(),
     };
     gs.ecs.register::<Position>();
@@ -128,6 +132,7 @@ fn main() {
     gs.ecs.register::<Potion>();
     gs.ecs.register::<InBackpack>();
     gs.ecs.register::<WantsToPickupItem>();
+    gs.ecs.register::<WantsToDrinkPotion>();
 
     let map : Map = Map::new_map_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();

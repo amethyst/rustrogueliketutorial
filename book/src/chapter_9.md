@@ -502,6 +502,79 @@ RunState::ShowInventory => {
 
 If you try to use an item in your inventory now, you'll get a log entry that you try to use it, but we haven't written that bit of code yet. That's a start!
 
+Once again, we want generic code - so that eventually monsters might use potions. We're going to cheat a little while all items are potions, and just make a potion system; we'll turn it into something more useful later. So we'll start by creating an "intent" component in `components.rs` (and registered in `main.rs`):
+
+```rust
+#[derive(Component, Debug)]
+pub struct WantsToDrinkPotion {
+    pub potion : Entity
+}
+```
+
+Add the following to `inventory.rs`:
+
+```rust
+pub struct PotionUseSystem {}
+
+impl<'a> System<'a> for PotionUseSystem {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( ReadExpect<'a, Entity>,
+                        WriteExpect<'a, GameLog>,
+                        Entities<'a>,
+                        WriteStorage<'a, WantsToDrinkPotion>,
+                        ReadStorage<'a, Name>,
+                        ReadStorage<'a, Potion>,
+                        WriteStorage<'a, CombatStats>
+                      );
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (player_entity, mut gamelog, entities, mut wants_drink, names, potions, mut combat_stats) = data;
+
+        for (entity, drink, stats) in (&entities, &wants_drink, &mut combat_stats).join() {
+            let potion = potions.get(drink.potion);
+            match potion {
+                None => {}
+                Some(potion) => {
+                    stats.hp = i32::max(stats.max_hp, stats.hp + potion.heal_amount);
+                    if entity == *player_entity {
+                        gamelog.entries.insert(0, format!("You drink the {}, healing {} hp.", names.get(drink.potion).unwrap().name, potion.heal_amount));
+                    }
+                    entities.delete(drink.potion).expect("Delete failed");
+                }
+            }
+        }
+
+        wants_drink.clear();
+    }
+}
+```
+
+And register it in the list of systems to run:
+```rust
+.with(PotionUseSystem{}, "potions", &["melee_combat"])
+```
+
+Like other systems we've looked at, this iterates all of the `WantsToDrinkPotion` intent objects. It then heals up the drinker by the amount set in the `Potion` component, and deletes the potion. Since all of the placement information is attached to the potion itself, there's no need to chase around making sure it is removed from the appropriate backpack: the entity ceases to exist, and takes its components with it.
+
+Testing this with `cargo run` gives a surprise: the potion isn't deleted after use! This is because the ECS simply marks entities as `dead` - it doesn't delete them in systems (so as to not mess up iterators and threading). So after every call to `dispatch`, we need to add a call to `maintain`. In `main.ecs`:
+
+```rust
+RunState::PlayerTurn => {
+    self.systems.dispatch(&self.ecs);
+    self.ecs.maintain();
+    newrunstate = RunState::MonsterTurn;
+}
+RunState::MonsterTurn => {
+    self.systems.dispatch(&self.ecs);
+    self.ecs.maintain();
+    newrunstate = RunState::AwaitingInput;
+}
+```
+
+NOW if you `cargo run` the project, you can pickup and drink health potions:
+
+![Screenshot](./c9-s4.gif)
+
 # Dropping Items
 
 # Render order
