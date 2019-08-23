@@ -411,6 +411,126 @@ match item_damages {
 }
 ```
 
+If you `cargo run` the project now, you can use magic missile scrolls, fireball scrolls and health potions. 
+
+# Confusion Scrolls
+
+Let's add another item - confusion scrolls. These will target a single entity at range, and make them Confused for a few turns - during which time they will do nothing. We'll start by describing what we want in the item spawning code:
+
+```rust
+fn confusion_scroll(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position{ x, y })
+        .with(Renderable{
+            glyph: rltk::to_cp437(')'),
+            fg: RGB::named(rltk::PINK),
+            bg: RGB::named(rltk::BLACK),
+            render_order: 2
+        })
+        .with(Name{ name : "Confusion Scroll".to_string() })
+        .with(Item{})
+        .with(Consumable{})
+        .with(Ranged{ range: 6 })
+        .with(Confusion{ turns: 4 })
+        .build();
+}
+```
+
+We'll also add it to the item choices:
+```rust
+fn random_item(ecs: &mut World, x: i32, y: i32) {
+    let roll :i32;
+    {
+        let mut rng = ecs.write_resource::<RandomNumberGenerator>();
+        roll = rng.roll_dice(1, 4);
+    }
+    match roll {
+        1 => { health_potion(ecs, x, y) }
+        2 => { fireball_scroll(ecs, x, y) }
+        3 => { confusion_scroll(ecs, x, y) }
+        _ => { magic_missile_scroll(ecs, x, y) }
+    }
+}
+```
+
+We'll add a new component (and register it!):
+```rust
+#[derive(Component, Debug)]
+pub struct Confusion {
+    pub turns : i32
+}
+```
+
+That's enough to have them appear, be triggerable and cause targeting to happen - but nothing will happen when it is used. We'll add the ability to pass along confusion to the `ItemUseSystem`:
+
+```rust
+// Can it pass along confusion? Note the use of scopes to escape from the borrow checker!
+let mut add_confusion = Vec::new();
+{
+    let causes_confusion = confused.get(useitem.item);
+    match causes_confusion {
+        None => {}
+        Some(confusion) => {
+            used_item = false;
+            for mob in targets.iter() {
+                add_confusion.push((*mob, confusion.turns ));
+                if entity == *player_entity {
+                    let mob_name = names.get(*mob).unwrap();
+                    let item_name = names.get(useitem.item).unwrap();
+                    gamelog.entries.insert(0, format!("You use {} on {}, confusing them.", item_name.name, mob_name.name));
+                }
+            }
+        }
+    }
+}
+for mob in add_confusion.iter() {
+    confused.insert(mob.0, Confusion{ turns: mob.1 }).expect("Unable to insert status");
+}
+```
+
+Alright! Now we can *add* the `Confused` status to anything. We should update the `monster_ai_system` to use it. Replace the loop with:
+
+```rust
+for (entity, mut viewshed,_monster,mut pos) in (&entities, &mut viewshed, &monster, &mut position).join() {
+    let mut can_act = true;
+
+    let is_confused = confused.get_mut(entity);
+    if let Some(i_am_confused) = is_confused {
+        i_am_confused.turns -= 1;
+        if i_am_confused.turns < 1 {
+            confused.remove(entity);
+        }
+        can_act = false;
+    }
+
+    if can_act {
+        let distance = rltk::DistanceAlg::Pythagoras.distance2d(Point::new(pos.x, pos.y), *player_pos);
+        if distance < 1.5 {
+            wants_to_melee.insert(entity, WantsToMelee{ target: *player_entity }).expect("Unable to insert attack");
+        }
+        else if viewshed.visible_tiles.contains(&*player_pos) {
+            // Path to the player
+            let path = rltk::a_star_search(
+                map.xy_idx(pos.x, pos.y) as i32, 
+                map.xy_idx(player_pos.x, player_pos.y) as i32, 
+                &mut *map
+            );
+            if path.success && path.steps.len()>1 {
+                let mut idx = map.xy_idx(pos.x, pos.y);
+                map.blocked[idx] = false;
+                pos.x = path.steps[1] % map.width;
+                pos.y = path.steps[1] / map.width;
+                idx = map.xy_idx(pos.x, pos.y);
+                map.blocked[idx] = true;
+                viewshed.dirty = true;
+            }
+        }
+    }
+}
+```
+
+If this sees a `Confused` component, it decrements the timer. If the timer hits 0, it removes it. It then returns, making the monster
+
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-10-ranged)**
 
 ---

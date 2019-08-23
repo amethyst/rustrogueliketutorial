@@ -79,6 +79,11 @@ pub struct AreaOfEffect {
 }
 
 #[derive(Component, Debug)]
+pub struct Confusion {
+    pub turns : i32
+}
+
+#[derive(Component, Debug)]
 pub struct ProvidesHealing {
     pub heal_amount : i32
 }
