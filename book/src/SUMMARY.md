@@ -10,3 +10,4 @@
 - [Chapter 8 - User Interface](./chapter_8.md)
 - [Chapter 9 - Items and Inventory](./chapter_9.md)
 - [Chapter 10 - Ranged Scrolls/Targeting](./chapter_10.md)
+- [Chapter 11 - Saving and Loading](./chapter_11.md)
