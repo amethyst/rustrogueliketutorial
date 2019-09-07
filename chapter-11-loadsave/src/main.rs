@@ -160,7 +160,8 @@ impl GameState for State {
                 }
             }
             RunState::SaveGame => {
-                //let data = serde_json::to_string(&*self.ecs.fetch::<Map>()).unwrap();
+                let data = serde_json::to_string(&*self.ecs.fetch::<Map>()).unwrap();
+                println!("{}", data);
                 //let mut f = File::create("./savegame.json").expect("Unable to create file");
                 //f.write_all(data.as_bytes()).expect("Unable to write data");
 

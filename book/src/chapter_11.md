@@ -166,7 +166,7 @@ That's a bit of a mouthful, but it displays menu options and lets you select the
 
 ```toml
 [dependencies]
-rltk = { git = "https://github.com/thebracket/rltk_rs", features = ["serde"] }
+rltk = { git = "https://github.com/thebracket/rltk_rs", features = ["serialization"] }
 specs = { version = "0.15.0", features = ["serde"] }
 specs-derive = "0.4.0"
 serde= { version = "1.0.93", features = ["derive"] }
@@ -210,9 +210,60 @@ VirtualKeyCode::Escape => return RunState::SaveGame,
 
 If you `cargo run` now, you can start a game and press escape to quit to the menu.
 
-# Actually saving the game
+# Getting started with saving the game
 
-Now that the scaffolding is in place, it's time to actually save something!
+Now that the scaffolding is in place, it's time to actually save something! Lets start simple, to get a feel for Serde. In the `tick` function, we extend the save system to just dump a JSON representation of the map to the console:
+
+```rust
+RunState::SaveGame => {
+    let data = serde_json::to_string(&*self.ecs.fetch::<Map>()).unwrap();
+    println!("{}", data);
+
+    newrunstate = RunState::MainMenu{ menu_selection : gui::MainMenuSelection::LoadGame };
+}
+```
+
+We'll also need to add an `extern crate serde;` to the top of `main.rs`.
+
+This won't compile, because we need to tell `Map` to serialize itself! Fortunately, `serde` provides some helpers to make this easy. At the top of `map.rs`, we add `use serde::{Serialize, Deserialize};`. We then decorate the map to derive serialization and de-serialization code:
+
+```rust
+#[derive(Default, Serialize, Deserialize)]
+pub struct Map {
+    pub tiles : Vec<TileType>,
+    pub rooms : Vec<Rect>,
+    pub width : i32,
+    pub height : i32,
+    pub revealed_tiles : Vec<bool>,
+    pub visible_tiles : Vec<bool>,
+    pub blocked : Vec<bool>,
+
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    pub tile_content : Vec<Vec<Entity>>
+}
+```
+
+Note that we've decorated `tile_content` with directives to not serialize/de-serialize it. This prevents us from needing to store the entities, and since this data is rebuilt every frame - it doesn't matter. The game still won't compile; we need to add similar decorators to `TileType` and `Rect`:
+
+```rust
+#[derive(PartialEq, Copy, Clone, Serialize, Deserialize)]
+pub enum TileType {
+    Wall, Floor
+}
+```
+
+```rust
+#[derive(PartialEq, Copy, Clone, Serialize, Deserialize)]
+pub struct Rect {
+    pub x1 : i32,
+    pub x2 : i32,
+    pub y1 : i32,
+    pub y2 : i32
+}
+```
+
+If you `cargo run` the project now, when you hit escape it will dump a huge blob of JSON data to the console. That's the game map!
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-10-ranged)**
 
