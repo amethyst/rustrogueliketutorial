@@ -123,8 +123,6 @@ pub struct WantsToDropItem {
 
 pub struct SerializeMe;
 
-
-
 // WantsToMelee wrapper
 #[derive(Serialize, Deserialize, Clone)]
 pub struct WantsToMeleeData<M>(M);

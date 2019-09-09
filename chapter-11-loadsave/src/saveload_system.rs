@@ -4,6 +4,7 @@ use specs::error::NoError;
 use super::components::*;
 use std::fs::File;
 use std::io::Write;
+use std::path::Path;
 
 macro_rules! serialize_individually {
     ($ecs:expr, $ser:expr, $data:expr, $( $type:ty),*) => {
@@ -29,4 +30,8 @@ pub fn save_game(ecs : &World) {
         AreaOfEffect, Confusion, ProvidesHealing, InBackpack, WantsToPickupItem, WantsToUseItem,
         WantsToDropItem
     );
+}
+
+pub fn does_save_exist() -> bool {
+    Path::new("./savegame.json").exists()
 }
