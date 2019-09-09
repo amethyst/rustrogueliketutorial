@@ -150,7 +150,10 @@ impl GameState for State {
                     gui::MainMenuResult::Selected{ selected } => {
                         match selected {
                             gui::MainMenuSelection::NewGame => newrunstate = RunState::PreRun,
-                            gui::MainMenuSelection::LoadGame => newrunstate = RunState::PreRun,
+                            gui::MainMenuSelection::LoadGame => {
+                                saveload_system::load_game(&mut self.ecs);
+                                newrunstate = RunState::AwaitingInput;
+                            }
                             gui::MainMenuSelection::Quit => { ::std::process::exit(0); }
                         }
                     }
@@ -158,11 +161,6 @@ impl GameState for State {
             }
             RunState::SaveGame => {
                 saveload_system::save_game(&mut self.ecs);
-
-                //let data = serde_json::to_string(&*self.ecs.fetch::<Map>()).unwrap();
-                //let mut f = File::create("./savemap.json").expect("Unable to create file");
-                //f.write_all(data.as_bytes()).expect("Unable to write data");
-
                 newrunstate = RunState::MainMenu{ menu_selection : gui::MainMenuSelection::LoadGame };
             }
         }
@@ -213,6 +211,7 @@ fn main() {
     gs.ecs.register::<WantsToDropItem>();
     gs.ecs.register::<Confusion>();
     gs.ecs.register::<SimpleMarker<SerializeMe>>();
+    gs.ecs.register::<SerializationHelper>();
 
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
