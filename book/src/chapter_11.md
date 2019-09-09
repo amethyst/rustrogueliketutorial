@@ -228,7 +228,7 @@ We'll also need to add an `extern crate serde;` to the top of `main.rs`.
 This won't compile, because we need to tell `Map` to serialize itself! Fortunately, `serde` provides some helpers to make this easy. At the top of `map.rs`, we add `use serde::{Serialize, Deserialize};`. We then decorate the map to derive serialization and de-serialization code:
 
 ```rust
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Default, Serialize, Deserialize, Clone)]
 pub struct Map {
     pub tiles : Vec<TileType>,
     pub rooms : Vec<Rect>,
@@ -324,13 +324,344 @@ pub fn player(ecs : &mut World, player_x : i32, player_y : i32) -> Entity {
 }
 ```
 
-The new line (`.marked::<SimpleMarker<SerializeMe>>()`) needs to be repeated for all of our spawners in this file.
+The new line (`.marked::<SimpleMarker<SerializeMe>>()`) needs to be repeated for all of our spawners in this file. It's worth looking at the source for this chaper; to avoid making a *huge* chapter full of source code, I've omitted the repeated details.
 
-## Actually Serializing Something
+## Serializing components that don't contain an Entity
 
+It's pretty easy to serialize a type that doesn't have an Entity in it: mark it with `#[derive(Component, Serialize, Deserialize, Clone)]`. So we go through all the simple component types in `components.rs`; for example, here's `Position`:
 
+```rust
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct Position {
+    pub x: i32,
+    pub y: i32,
+}
+```
 
-**The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-10-ranged)**
+## Serializing components that point to entities
+
+Here is where it gets a little messy. There are no provided `derive` functions for handling serialization of `Entity`, so we have to do it the hard way. The good news is that we're not doing it very often. Here's a helper for `InBackpack`:
+
+```rust
+// InBackpack wrapper
+#[derive(Serialize, Deserialize, Clone)]
+pub struct InBackpackData<M>(M);
+
+impl<M: Marker + Serialize> ConvertSaveload<M> for InBackpack
+where
+    for<'de> M: Deserialize<'de>,
+{
+    type Data = InBackpackData<M>;
+    type Error = NoError;
+
+    fn convert_into<F>(&self, mut ids: F) -> Result<Self::Data, Self::Error>
+    where
+        F: FnMut(Entity) -> Option<M>,
+    {
+        let marker = ids(self.owner).unwrap();
+        Ok(InBackpackData(marker))
+    }
+
+    fn convert_from<F>(data: Self::Data, mut ids: F) -> Result<Self, Self::Error>
+    where
+        F: FnMut(M) -> Option<Entity>,
+    {
+        let entity = ids(data.0).unwrap();
+        Ok(InBackpack{owner: entity})
+    }
+}
+```
+
+So we start off by making a "data" class for `InBackpack`, which simply stores the entity at which it points. Then we implement `convert_info` and `convert_from` to satisfy Specs' `ConvertSaveLoad` trait. In `convert_into`, we use the `ids` map to get a saveable ID number for the item, and return an `InBackpackData` using this marker. `convert_from` does the reverse: we get the ID, look up the ID, and return an `InBackpack` method.
+
+So that's not *too* bad. If you look at the source, we've done this for all of the types that store `Entity` data - some of which have other data, or multiple `Entity` types.
+
+## Actually saving something
+
+The code for loading and saving gets large, so we've moved it into `saveload_system.rs`. Then include a `mod saveload_system;` in `main.rs`, and replace the `SaveGame` state with:
+
+```rust
+RunState::SaveGame => {
+    saveload_system::save_game(&mut self.ecs);
+    newrunstate = RunState::MainMenu{ menu_selection : gui::MainMenuSelection::LoadGame };
+}
+```
+
+So... onto implementing `save_game`. Serde and Specs work decently together, but the bridge is still pretty roughly defined. I kept running into problems like it failing to compile if I had more than 16 component types! To get around this, I build a *macro*. I recommend just copying the macro until you feel ready to learn Rust's (impressive) macro system.
+
+```rust
+macro_rules! serialize_individually {
+    ($ecs:expr, $ser:expr, $data:expr, $( $type:ty),*) => {
+        $(
+        SerializeComponents::<NoError, SimpleMarker<SerializeMe>>::serialize(
+            &( $ecs.read_storage::<$type>(), ),
+            &$data.0,
+            &$data.1,
+            &mut $ser,
+        )
+        .unwrap();
+        )*
+    };
+}
+```
+
+The short version of what it does is that it takes your ECS as the first parameter, and a tuple with your entity store and "markers" stores in it (you'll see this in a moment). Every parameter after that is a *type* - listing a type stored in your ECS. These are *repeating* rules, so it issues one `SerializeComponent::serialize` call per type. It's not as efficient as doing them all at once, but it works - and doesn't fall over when you exceed 16 types! The `save_game` function then looks like this:
+
+```rust
+pub fn save_game(ecs : &mut World) {
+    // Create helper
+    let mapcopy = ecs.get_mut::<super::map::Map>().unwrap().clone();
+    let savehelper = ecs
+        .create_entity()
+        .with(SerializationHelper{ map : mapcopy })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+
+    // Actually serialize
+    {
+        let data = ( ecs.entities(), ecs.read_storage::<SimpleMarker<SerializeMe>>() );
+
+        let writer = File::create("./savegame.json").unwrap();
+        let mut serializer = serde_json::Serializer::new(writer);
+        serialize_individually!(ecs, serializer, data, Position, Renderable, Player, Viewshed, Monster, 
+            Name, BlocksTile, CombatStats, SufferDamage, WantsToMelee, Item, Consumable, Ranged, InflictsDamage, 
+            AreaOfEffect, Confusion, ProvidesHealing, InBackpack, WantsToPickupItem, WantsToUseItem,
+            WantsToDropItem, SerializationHelper
+        );
+    }
+
+    // Clean up
+    ecs.delete_entity(savehelper).expect("Crash on cleanup");
+}
+```
+
+What's going on here, then? 
+
+1. We start by creating a new component type - `SerializationHelper` that stores a copy of the map (see, we are using the map stuff from above!). It then creates a new entity, and gives it the new component - with a copy of the map (the `clone` command makes a deep copy). This is needed so we don't need to serialize the map separately.
+2. We enter a block to avoid borrow-checker issues.
+3. We set `data` to be a tuple, containing the `Entity` store and `ReadStorage` for `SimpleMarker`. These will be used by the save macro.
+4. We open a `File` called `savegame.json` in the current directory.
+5. We obtain a JSON serializer from Serde.
+6. We call the `serialize_individually` macro with all of our types.
+7. We delete the temporary helper entity we created.
+
+If you `cargo run` and start a game, then save it - you'll find a `savegame.json` file has appeared - with your game state in it. Yay!
+
+# Restoring Game State
+
+Now that we have the game data, it's time to load it!
+
+## Is there a saved game?
+
+First, we need to know if there *is* a saved game to load. In `saveload_system.rs`, we add the following function:
+
+```rust
+pub fn does_save_exist() -> bool {
+    Path::new("./savegame.json").exists()
+}
+```
+
+Then in `gui.rs`, we extend the `main_menu` function to check for the existence of a file - and not offer to load it if it isn't there:
+
+```rust
+pub fn main_menu(gs : &mut State, ctx : &mut Rltk) -> MainMenuResult {
+    let save_exists = super::saveload_system::does_save_exist();
+    let runstate = gs.ecs.fetch::<RunState>();
+
+    ctx.print_color_centered(15, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Rust Roguelike Tutorial");
+    
+    if let RunState::MainMenu{ menu_selection : selection } = *runstate {
+        if selection == MainMenuSelection::NewGame {
+            ctx.print_color_centered(24, RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK), "Begin New Game");
+        } else {
+            ctx.print_color_centered(24, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), "Begin New Game");
+        }
+
+        if save_exists {
+            if selection == MainMenuSelection::LoadGame {
+                ctx.print_color_centered(25, RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK), "Load Game");
+            } else {
+                ctx.print_color_centered(25, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), "Load Game");
+            }
+        }
+
+        if selection == MainMenuSelection::Quit {
+            ctx.print_color_centered(26, RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK), "Quit");
+        } else {
+            ctx.print_color_centered(26, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), "Quit");
+        }
+
+        match ctx.key {
+            None => return MainMenuResult::NoSelection{ selected: selection },
+            Some(key) => {
+                match key {
+                    VirtualKeyCode::Escape => { return MainMenuResult::NoSelection{ selected: MainMenuSelection::Quit } }
+                    VirtualKeyCode::Up => {
+                        let mut newselection;
+                        match selection {
+                            MainMenuSelection::NewGame => newselection = MainMenuSelection::Quit,
+                            MainMenuSelection::LoadGame => newselection = MainMenuSelection::NewGame,
+                            MainMenuSelection::Quit => newselection = MainMenuSelection::LoadGame
+                        }
+                        if newselection == MainMenuSelection::LoadGame && !save_exists {
+                            newselection = MainMenuSelection::NewGame;
+                        }
+                        return MainMenuResult::NoSelection{ selected: newselection }
+                    }
+                    VirtualKeyCode::Down => {
+                        let mut newselection;
+                        match selection {
+                            MainMenuSelection::NewGame => newselection = MainMenuSelection::LoadGame,
+                            MainMenuSelection::LoadGame => newselection = MainMenuSelection::Quit,
+                            MainMenuSelection::Quit => newselection = MainMenuSelection::NewGame
+                        }
+                        if newselection == MainMenuSelection::LoadGame && !save_exists {
+                            newselection = MainMenuSelection::Quit;
+                        }
+                        return MainMenuResult::NoSelection{ selected: newselection }
+                    }
+                    VirtualKeyCode::Return => return MainMenuResult::Selected{ selected : selection },
+                    _ => return MainMenuResult::NoSelection{ selected: selection }
+                }
+            }
+        }
+    }
+
+    MainMenuResult::NoSelection { selected: MainMenuSelection::NewGame }
+}
+```
+
+Finally, we'll modify the calling code in `main.rs` to call game loading:
+
+```rust
+RunState::MainMenu{ .. } => {
+    let result = gui::main_menu(self, ctx);
+    match result {
+        gui::MainMenuResult::NoSelection{ selected } => newrunstate = RunState::MainMenu{ menu_selection: selected },
+        gui::MainMenuResult::Selected{ selected } => {
+            match selected {
+                gui::MainMenuSelection::NewGame => newrunstate = RunState::PreRun,
+                gui::MainMenuSelection::LoadGame => {
+                    saveload_system::load_game(&mut self.ecs);
+                    newrunstate = RunState::AwaitingInput;
+                }
+                gui::MainMenuSelection::Quit => { ::std::process::exit(0); }
+            }
+        }
+    }
+}
+```
+
+## Actually loading the game
+
+In `saveload_system.rs`, we're going to need another macro! This is pretty much the same as the `serialize_individually` macro - but reverses the process, and includes some slight changes:
+
+```rust
+macro_rules! deserialize_individually {
+    ($ecs:expr, $de:expr, $data:expr, $( $type:ty),*) => {
+        $(
+        DeserializeComponents::<NoError, _>::deserialize(
+            &mut ( &mut $ecs.write_storage::<$type>(), ),
+            &mut $data.0, // entities
+            &mut $data.1, // marker
+            &mut $data.2, // allocater
+            &mut $de,
+        )
+        .unwrap();
+        )*
+    };
+}
+```
+
+This is called from a new function, `load_game`:
+
+```rust
+pub fn load_game(ecs: &mut World) {
+    {
+        // Delete everything
+        let mut to_delete = Vec::new();
+        for e in ecs.entities().join() {
+            to_delete.push(e);
+        }
+        for del in to_delete.iter() {
+            ecs.delete_entity(*del).expect("Deletion failed");
+        }
+    }
+
+    let data = fs::read_to_string("./savegame.json").unwrap();
+    let mut de = serde_json::Deserializer::from_str(&data);
+
+    {
+        let mut d = (&mut ecs.entities(), &mut ecs.write_storage::<SimpleMarker<SerializeMe>>(), &mut SimpleMarkerAllocator::<SerializeMe>::new());
+
+        deserialize_individually!(ecs, de, d, Position, Renderable, Player, Viewshed, Monster, 
+            Name, BlocksTile, CombatStats, SufferDamage, WantsToMelee, Item, Consumable, Ranged, InflictsDamage, 
+            AreaOfEffect, Confusion, ProvidesHealing, InBackpack, WantsToPickupItem, WantsToUseItem,
+            WantsToDropItem, SerializationHelper
+        );
+    }
+
+    let mut deleteme : Option<Entity> = None;
+    {
+        let entities = ecs.entities();
+        let helper = ecs.read_storage::<SerializationHelper>();
+        let player = ecs.read_storage::<Player>();
+        let position = ecs.read_storage::<Position>();
+        for (e,h) in (&entities, &helper).join() {
+            let mut worldmap = ecs.write_resource::<super::map::Map>();
+            *worldmap = h.map.clone();
+            worldmap.tile_content = vec![Vec::new(); super::map::MAPCOUNT];
+            deleteme = Some(e);
+        }
+        for (e,_p,pos) in (&entities, &player, &position).join() {
+            let mut ppos = ecs.write_resource::<rltk::Point>();
+            *ppos = rltk::Point::new(pos.x, pos.y);
+            let mut player_resource = ecs.write_resource::<Entity>();
+            *player_resource = e;
+        }
+    }
+    ecs.delete_entity(deleteme.unwrap()).expect("Unable to delete helper");
+}
+```
+
+That's quite the mouthful, so lets step through it:
+
+1. Inside a block (to keep the borrow checker happy), we iterate all entities in the game. We add them to a vector, and then iterate the vector - deleting the entities. This is a two-step process to avoid invalidating the iterator in the first pass.
+2. We open the `savegame.json` file, and attach a JSON deserializer.
+3. Then we build the tuple for the macro, which requires mutable access to the entities store, write access to the marker store, and an allocator (from Specs).
+4. Now we pass that to the macro we just made, which calls the de-serializer for each type in turn. Since we saved in the same order, it will pick up everything.
+5. Now we go into another block, to avoid borrow conflicts with the previous code and the entity deletion.
+6. We first iterate all entities with a `SerializationHelper` type. If we find it, we get access to the resource storing the map - and replace it. Since we aren't serializing `tile_content`, we replace it with an empty set of vectors.
+7. Then we find the player, by iterating entities with a `Player` type and a `Position` type. We store the world resources for the player entity and his/her position.
+8. Finally, we delete the helper entity - so we won't have a duplicate if we save the game again.
+
+If you `cargo run` now, you can load your saved game!
+
+# Just add permadeath!
+
+It wouldn't really be a roguelike if we let you keep your save game after you reload! So we'll add one more function to `saveload_system`:
+
+```rust
+pub fn delete_save() {
+    if Path::new("./savegame.json").exists() { std::fs::remove_file("./savegame.json").expect("Unable to delete file"); } 
+}
+```
+
+We'll add a call to `main.rs` to delete the save after we load the game:
+
+```rust
+gui::MainMenuSelection::LoadGame => {
+    saveload_system::load_game(&mut self.ecs);
+    newrunstate = RunState::AwaitingInput;
+    saveload_system::delete_save();
+}
+```
+
+# Wrap-up
+
+Ths has been a long chapter, with quite heavy content. The great news is that we now have a framework for loading and saving the game whenever we want to. Adding components has gained some steps: we have to register them in `main`, tag them for `Serialize, Deserialize`, and remember to add them to our component type lists in `saveload_system.rs`. That could be easier - but it's a very solid foundation.
+
+**The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-11-loadsave)**
 
 ---
 
