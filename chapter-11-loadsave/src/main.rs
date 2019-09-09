@@ -1,9 +1,9 @@
 extern crate serde;
-use serde::{Serialize, Deserialize};
 extern crate rltk;
 use rltk::{Console, GameState, Rltk, Point};
 extern crate specs;
 use specs::prelude::*;
+use specs::saveload::{SimpleMarker, SimpleMarkerAllocator};
 #[macro_use]
 extern crate specs_derive;
 mod components;
@@ -29,10 +29,7 @@ mod gamelog;
 mod spawner;
 mod inventory_system;
 use inventory_system::{ ItemCollectionSystem, ItemUseSystem, ItemDropSystem };
-use std::fs;
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
+mod saveload_system;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { AwaitingInput, 
@@ -160,9 +157,10 @@ impl GameState for State {
                 }
             }
             RunState::SaveGame => {
-                let data = serde_json::to_string(&*self.ecs.fetch::<Map>()).unwrap();
-                println!("{}", data);
-                //let mut f = File::create("./savegame.json").expect("Unable to create file");
+                saveload_system::save_game(&mut self.ecs);
+
+                //let data = serde_json::to_string(&*self.ecs.fetch::<Map>()).unwrap();
+                //let mut f = File::create("./savemap.json").expect("Unable to create file");
                 //f.write_all(data.as_bytes()).expect("Unable to write data");
 
                 newrunstate = RunState::MainMenu{ menu_selection : gui::MainMenuSelection::LoadGame };
@@ -214,6 +212,9 @@ fn main() {
     gs.ecs.register::<WantsToUseItem>();
     gs.ecs.register::<WantsToDropItem>();
     gs.ecs.register::<Confusion>();
+    gs.ecs.register::<SimpleMarker<SerializeMe>>();
+
+    gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
     let map : Map = Map::new_map_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();

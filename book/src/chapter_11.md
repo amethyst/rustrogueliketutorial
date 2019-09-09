@@ -263,7 +263,72 @@ pub struct Rect {
 }
 ```
 
+Lastly, we should extend the game saving code to dump the map to the console:
+
+```rust
+let data = serde_json::to_string(&*self.ecs.fetch::<Map>()).unwrap();
+println!("{}", data);
+```
+
 If you `cargo run` the project now, when you hit escape it will dump a huge blob of JSON data to the console. That's the game map!
+
+# Saving entity state
+
+Now that we've seen how useful `serde` is, we should start to use it for the game itself. This is harder than one might expect, because of how `specs` handles `Entity` structures: their ID # is purely synthetic, with no guaranty that you'll get the same one next time! Also, you may not want to save *everything* - so `specs` introduces a concept of *markers* to help with this. It winds up being a bit more of a mouthful than it really needs to be, but gives a pretty powerful serialization system.
+
+## Introducing Markers
+
+First of all, in `main.rs` we'll tell Rust that we'd like to make use of the marker functionality:
+
+```rust
+use specs::saveload::{SimpleMarker, SimpleMarkerAllocator};
+```
+
+In `components.rs`, we'll add a marker type:
+
+```rust
+pub struct SerializeMe;
+```
+
+Back in `main.rs`, we'll add `SerializeMe` to the list of things that we *register*:
+
+```rust
+gs.ecs.register::<SimpleMarker<SerializeMe>>();
+```
+
+We'll also add an entry to the ECS resources, which gets used to determine the next identity:
+
+```rust
+gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
+```
+
+Finally, in `spawners.rs` we tell each entity builder to include the marker. Here's the complete entry for the `Player`:
+
+```rust
+pub fn player(ecs : &mut World, player_x : i32, player_y : i32) -> Entity {
+    ecs
+        .create_entity()
+        .with(Position { x: player_x, y: player_y })
+        .with(Renderable {
+            glyph: rltk::to_cp437('@'),
+            fg: RGB::named(rltk::YELLOW),
+            bg: RGB::named(rltk::BLACK),
+            render_order: 0
+        })
+        .with(Player{})
+        .with(Viewshed{ visible_tiles : Vec::new(), range: 8, dirty: true })
+        .with(Name{name: "Player".to_string() })
+        .with(CombatStats{ max_hp: 30, hp: 30, defense: 2, power: 5 })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build()
+}
+```
+
+The new line (`.marked::<SimpleMarker<SerializeMe>>()`) needs to be repeated for all of our spawners in this file.
+
+## Actually Serializing Something
+
+
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-10-ranged)**
 
