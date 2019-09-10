@@ -257,7 +257,7 @@ A `cargo build` later, and voila - you have an increasing probability of finding
 
 # Wrapping Up
 
-You now have a dungeon that increases in difficulty as you descend! In the next chapter, we'll look at giving your character some progression as well, to balance things out.
+You now have a dungeon that increases in difficulty as you descend! In the next chapter, we'll look at giving your character some progression as well (through equipment), to balance things out.
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-13-difficulty)**
 
