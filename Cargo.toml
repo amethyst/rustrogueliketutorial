@@ -23,5 +23,6 @@ members = [
     "chapter-08-ui",
     "chapter-09-items",
     "chapter-10-ranged",
-    "chapter-11-loadsave"
+    "chapter-11-loadsave",
+    "chapter-12-delvingdeeper"
     ]
