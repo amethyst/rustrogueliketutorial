@@ -12,3 +12,4 @@
 - [Chapter 10 - Ranged Scrolls/Targeting](./chapter_10.md)
 - [Chapter 11 - Saving and Loading](./chapter_11.md)
 - [Chapter 12 - Delving Deeper](./chapter_12.md)
+- [Chapter 13 - Difficulty](./chapter_13.md)
