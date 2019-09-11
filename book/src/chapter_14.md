@@ -715,12 +715,96 @@ pub enum RunState { AwaitingInput,
 We'll add that to the state implementation, also in `main.rs`:
 
 ```rust
+RunState::GameOver => {
+    let result = gui::game_over(ctx);
+    match result {
+        gui::GameOverResult::NoSelection => {}
+        gui::GameOverResult::QuitToMenu => {
+            self.game_over_cleanup();
+            newrunstate = RunState::MainMenu{ menu_selection: gui::MainMenuSelection::NewGame };
+        }
+    }
+}
 ```
 
+That's relatively straightforward: we call `game_over` to render the menu, and when you quit we delete everything in the ECS. Lastly, in `gui.rs` we'll implement `game_over`:
 
+```rust
+#[derive(PartialEq, Copy, Clone)]
+pub enum GameOverResult { NoSelection, QuitToMenu }
 
+pub fn game_over(ctx : &mut Rltk) -> GameOverResult {
+    ctx.print_color_centered(15, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Your journey has ended!");
+    ctx.print_color_centered(17, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), "One day, we'll tell you all about how you did.");
+    ctx.print_color_centered(18, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), "That day, sadly, is not in this chapter..");
 
-We're done!
+    ctx.print_color_centered(20, RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK), "Press any key to return to the menu.");
+
+    match ctx.key {
+        None => GameOverResult::NoSelection,
+        Some(_) => GameOverResult::QuitToMenu
+    }
+}
+```
+
+Lastly, we'll handle `game_over_cleanup`:
+
+```rust
+fn game_over_cleanup(&mut self) {
+    // Delete everything
+    let mut to_delete = Vec::new();
+    for e in self.ecs.entities().join() {
+        to_delete.push(e);
+    }
+    for del in to_delete.iter() {
+        self.ecs.delete_entity(*del).expect("Deletion failed");
+    }
+
+    // Build a new map and place the player
+    let worldmap;
+    {
+        let mut worldmap_resource = self.ecs.write_resource::<Map>();
+        *worldmap_resource = Map::new_map_rooms_and_corridors(1);
+        worldmap = worldmap_resource.clone();
+    }
+
+    // Spawn bad guys
+    for room in worldmap.rooms.iter().skip(1) {
+        spawner::spawn_room(&mut self.ecs, room, 1);
+    }
+
+    // Place the player and update resources
+    let (player_x, player_y) = worldmap.rooms[0].center();
+    let player_entity = spawner::player(&mut self.ecs, player_x, player_y);
+    let mut player_position = self.ecs.write_resource::<Point>();
+    *player_position = Point::new(player_x, player_y);
+    let mut position_components = self.ecs.write_storage::<Position>();
+    let mut player_entity_writer = self.ecs.write_resource::<Entity>();
+    *player_entity_writer = player_entity;
+    let player_pos_comp = position_components.get_mut(player_entity);
+    if let Some(player_pos_comp) = player_pos_comp {
+        player_pos_comp.x = player_x;
+        player_pos_comp.y = player_y;
+    }
+
+    // Mark the player's visibility as dirty
+    let mut viewshed_components = self.ecs.write_storage::<Viewshed>();
+    let vs = viewshed_components.get_mut(player_entity);
+    if let Some(vs) = vs {
+        vs.dirty = true;
+    }                                               
+}
+```
+
+This should look familiar from our serialization work when loading the game. It's very similar, but it generates a new player.
+
+If you `cargo run` now, and die - you'll get a message informing you that the game is done, and sending you back to the menu.
+
+![Screenshot](./c14-s3.jpg)
+
+# Wrapping Up
+
+That's it for the first section of the tutorial. It sticks relatively closely to the Python tutorial, and takes you from "hello rust" to a moderately fun Roguelike. I hope you've enjoyed it! Stay tuned, I hope to add a section 2 soon.
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-14-gear)**
 
