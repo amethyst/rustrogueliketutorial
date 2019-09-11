@@ -123,7 +123,7 @@ If you `cargo run` your project, the map starts to show signs of battle!
 
 ![Screenshot](./c17-s1.jpg)
 
-**The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-16-nicewalls)**
+**The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-17-blood)**
 
 ---
 
