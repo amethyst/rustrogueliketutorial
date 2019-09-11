@@ -26,5 +26,6 @@ members = [
     "chapter-11-loadsave",
     "chapter-12-delvingdeeper",
     "chapter-13-difficulty",
-    "chapter-14-gear"
+    "chapter-14-gear",
+    "chapter-16-nicewalls"
     ]

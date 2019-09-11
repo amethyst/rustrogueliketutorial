@@ -18,3 +18,4 @@ spawners
 saveable
 serializer
 deserializer
+bitset
