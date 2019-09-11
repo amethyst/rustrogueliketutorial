@@ -64,6 +64,7 @@ impl GameState for State {
 
         match newrunstate {
             RunState::MainMenu{..} => {}
+            RunState::GameOver{..} => {}
             _ => {
                 draw_map(&self.ecs, ctx);
 
@@ -176,6 +177,9 @@ impl GameState for State {
                         }
                     }
                 }
+            }
+            RunState::GameOver => {
+                
             }
             RunState::SaveGame => {
                 saveload_system::save_game(&mut self.ecs);

@@ -40,7 +40,7 @@ pub fn delete_the_dead(ecs : &mut World) {
                         dead.push(entity)
                     }
                     Some(_) => {
-                        let runstate = ecs.write_resource::<RunState>();
+                        let mut runstate = ecs.write_resource::<RunState>();
                         *runstate = RunState::GameOver;
                     }
                 }
