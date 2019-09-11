@@ -79,7 +79,7 @@ Specs includes a concept of "resources" - shared data the whole ECS can use. So 
 gs.ecs.insert(new_map());
 ```
 
-The map is now available from anywhere the ECS can see! Now inside your code, you can access the map with the rather unwieldy `let map = self.ecs.get_mut::<Vec<TileType>>();`; it's available to systems in an easier fasion.
+The map is now available from anywhere the ECS can see! Now inside your code, you can access the map with the rather unwieldy `let map = self.ecs.get_mut::<Vec<TileType>>();`; it's available to systems in an easier fashion.
 
 ## Draw the map
 

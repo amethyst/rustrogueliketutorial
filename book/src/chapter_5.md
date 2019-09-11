@@ -16,7 +16,7 @@ This chapter starts with the code from chapter 4.
 
 # Map refactor
 
-We'll keep map-related functions and data together, to keep things clear as we make an ever-more-complicated game. The bulk of this is createing a new `Map` structure, and moving our helper functions to its implementation.
+We'll keep map-related functions and data together, to keep things clear as we make an ever-more-complicated game. The bulk of this is creating a new `Map` structure, and moving our helper functions to its implementation.
 
 ```rust
 extern crate rltk;
@@ -273,7 +273,7 @@ There's quite a bit here, and the viewshed is actually the simplest part:
 
 * We've added a `ReadExpect<'a, Map>` - meaning that the system should be passed our `Map` for use. We used `ReadExpect`, because not having a map is a failure.
 * In the loop, we first clear the list of visible tiles.
-* Then we call RLTK's `field_of_view` function, providing the starting point (the location of the entity, from `pos`), the range (from the viewshed), and a sligthtly convoluted "dereference, then get a reference" to unwrap `Map` from the ECS.
+* Then we call RLTK's `field_of_view` function, providing the starting point (the location of the entity, from `pos`), the range (from the viewshed), and a slightly convoluted "dereference, then get a reference" to unwrap `Map` from the ECS.
 
 This will now run every frame (which is overkill, more on that later) - and store a list of visible tiles.
 

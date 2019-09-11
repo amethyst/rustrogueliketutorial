@@ -14,7 +14,7 @@ This chapter will introduce the entire of an Entity Component System (ECS), whic
 
 ## About Entities and Components
 
-If you've worked on games before, you may well be used to an object oriented design (this is very common, even in the original Python libtcod tutorial that inspired this one). There's nothing really wrong with an object-oriented (OOP) design - but game developers have moved away from it, mostly because it can become quite confusing when you start to expand your game beyond your original design ideas.
+If you've worked on games before, you may well be used to an object oriented design (this is very common, even in the original Python `libtcod` tutorial that inspired this one). There's nothing really wrong with an object-oriented (OOP) design - but game developers have moved away from it, mostly because it can become quite confusing when you start to expand your game beyond your original design ideas.
 
 You've probably seen a "class hierarchy" such as this simplified one:
 
@@ -31,7 +31,7 @@ You'd probably have something more complicated than that, but it works as an ill
 
 Entity Component based design tries to eliminate the hierarchy, and instead implement a set of "components" that describe what you want. An "entity" is a *thing* - anything, really. An orc, a wolf, a potion, an Ethereal hard-drive formatting ghost - whatever you want. It's also really simple: little more than an identification number. The magic comes from entities being able to have as many *components* as you want to add. Components are just data, grouped by whatever properties you want to give an entity.
 
-For example, you could build the same set of mobs with components for: Position, Renderable, Hostile, MeleeAI, RangedAI, and some sort of CombatStats component (to tell you about their weaponry, hit points, etc.). An Orc Warrior would need a position so you know where they are, a renderable so you know how to draw them. It's Hostile, so you mark it as such. Give it a MeleeAI and a set of game stats, and you have everything you need to make it approach the player and try to hit them. An Archer might be the same thing, but replacing MeleeAI with RangedAI. A hybrid could keep all the components, but either have both AIs or an additional one if you want custom behavior. If your orc becomes friendly, you could remove the Hostile component - and add a Friendly one.
+For example, you could build the same set of mobs with components for: `Position`, `Renderable`, `Hostile`, `MeleeAI`, `RangedAI`, and some sort of CombatStats component (to tell you about their weaponry, hit points, etc.). An Orc Warrior would need a position so you know where they are, a renderable so you know how to draw them. It's Hostile, so you mark it as such. Give it a MeleeAI and a set of game stats, and you have everything you need to make it approach the player and try to hit them. An Archer might be the same thing, but replacing MeleeAI with RangedAI. A hybrid could keep all the components, but either have both AIs or an additional one if you want custom behavior. If your orc becomes friendly, you could remove the Hostile component - and add a Friendly one.
 
 In other words: components are just like your inheritance tree, but instead of *inheriting* traits you *compose* them by adding components until it does what you want. This is often called "composition".
 
@@ -41,7 +41,7 @@ For small games, an ECS often feels like it's adding a bit of extra typing to yo
 
 That's a lot to digest, so we'll look at a simple example of how an ECS can make your life a bit easier.
 
-## Includings Specs in the project
+## Including Specs in the project
 
 To start, we want to tell Cargo that we're going to use Specs. Open your `Cargo.toml` file, and change the `dependencies` section to look like this:
 ```toml
@@ -148,7 +148,7 @@ gs.ecs.register::<Position>();
 gs.ecs.register::<Renderable>();
 ```
 
-What this does is it tells our `World` to take a look at the types we are giving it, and do some internal magic to create storage systems for each of them. Specs has made this easy; so long as it implemenets `Component`, you can put anything you like in as a component!
+What this does is it tells our `World` to take a look at the types we are giving it, and do some internal magic to create storage systems for each of them. Specs has made this easy; so long as it implements `Component`, you can put anything you like in as a component!
 
 ## Creating entities
 
@@ -562,7 +562,7 @@ This function takes the current game state and context, looks at the `key` varia
 player_input(self, ctx);
 ```
 
-If you run your progam (with `cargo run`), you now have a keyboard controlled `@` symbol, while the smiley faces zoom to the left!
+If you run your program (with `cargo run`), you now have a keyboard controlled `@` symbol, while the smiley faces zoom to the left!
 
 ![Screenshot](./c2-s3.gif)
 

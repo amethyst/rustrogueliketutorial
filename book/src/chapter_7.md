@@ -659,7 +659,7 @@ Let's replace `RunState` with something more descriptive of each phase:
 pub enum RunState { AwaitingInput, PreRun, PlayerTurn, MonsterTurn }
 ```
 
-If you're running Visual Studio Code with RLS, half your project just turned red. That's ok, we'll refactor one step at a time. We're going to *remove* the runstate altogether from the main `GameState`:
+If you're running Visual Studio Code with RLS, half your project just turned red. That's ok, we'll refactor one step at a time. We're going to *remove* the `RunState` altogether from the main `GameState`:
 
 ```rust
 pub struct State {

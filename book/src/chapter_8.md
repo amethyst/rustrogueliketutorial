@@ -198,7 +198,7 @@ ctx.set_bg(mouse_pos.0, mouse_pos.1, RGB::named(rltk::MAGENTA));
 
 This sets the background of the cell at which the mouse is pointed to magenta. As you can see, mouse information arrives from RLTK as part of the context.
 
-Now we'll introduct a new function, `draw_tooltips` and call it at the end of `draw_ui`. New new function looks like this:
+Now we'll introduce a new function, `draw_tooltips` and call it at the end of `draw_ui`. New new function looks like this:
 
 ```rust
 fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {

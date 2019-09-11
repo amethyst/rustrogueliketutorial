@@ -324,7 +324,7 @@ pub fn player(ecs : &mut World, player_x : i32, player_y : i32) -> Entity {
 }
 ```
 
-The new line (`.marked::<SimpleMarker<SerializeMe>>()`) needs to be repeated for all of our spawners in this file. It's worth looking at the source for this chaper; to avoid making a *huge* chapter full of source code, I've omitted the repeated details.
+The new line (`.marked::<SimpleMarker<SerializeMe>>()`) needs to be repeated for all of our spawners in this file. It's worth looking at the source for this chapter; to avoid making a *huge* chapter full of source code, I've omitted the repeated details.
 
 ## Serializing components that don't contain an Entity
 
@@ -659,7 +659,7 @@ gui::MainMenuSelection::LoadGame => {
 
 # Wrap-up
 
-Ths has been a long chapter, with quite heavy content. The great news is that we now have a framework for loading and saving the game whenever we want to. Adding components has gained some steps: we have to register them in `main`, tag them for `Serialize, Deserialize`, and remember to add them to our component type lists in `saveload_system.rs`. That could be easier - but it's a very solid foundation.
+This has been a long chapter, with quite heavy content. The great news is that we now have a framework for loading and saving the game whenever we want to. Adding components has gained some steps: we have to register them in `main`, tag them for `Serialize, Deserialize`, and remember to add them to our component type lists in `saveload_system.rs`. That could be easier - but it's a very solid foundation.
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-11-loadsave)**
 
