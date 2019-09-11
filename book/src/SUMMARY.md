@@ -18,4 +18,5 @@
     - [Difficulty](./chapter_13.md)
     - [Equipment](./chapter_14.md)
 - [Section 2 - Stretch Goals](./chapter_15.md)
-    - [Nice Walls](./chapter_16.md)
+    - [Nice Walls with Bitsets](./chapter_16.md)
+    - [Bloodstains](./chapter_17.md)
