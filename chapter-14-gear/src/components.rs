@@ -118,6 +118,12 @@ pub struct WantsToDropItem {
     pub item : Entity
 }
 
+// See wrapper below for serialization
+#[derive(Component, Debug)]
+pub struct WantsToRemoveItem {
+    pub item : Entity
+}
+
 #[derive(PartialEq, Copy, Clone, Serialize, Deserialize)]
 pub enum EquipmentSlot { Melee, Shield }
 
@@ -294,6 +300,34 @@ where
     {
         let entity = ids(data.0).unwrap();
         Ok(WantsToDropItem{item: entity})
+    }
+}
+
+// WantsToRemoveItem wrapper
+#[derive(Serialize, Deserialize, Clone)]
+pub struct WantsToRemoveItemData<M>(M);
+
+impl<M: Marker + Serialize> ConvertSaveload<M> for WantsToRemoveItem
+where
+    for<'de> M: Deserialize<'de>,
+{
+    type Data = WantsToRemoveItemData<M>;
+    type Error = NoError;
+
+    fn convert_into<F>(&self, mut ids: F) -> Result<Self::Data, Self::Error>
+    where
+        F: FnMut(Entity) -> Option<M>,
+    {
+        let marker = ids(self.item).unwrap();
+        Ok(WantsToRemoveItemData(marker))
+    }
+
+    fn convert_from<F>(data: Self::Data, mut ids: F) -> Result<Self, Self::Error>
+    where
+        F: FnMut(M) -> Option<Entity>,
+    {
+        let entity = ids(data.0).unwrap();
+        Ok(WantsToRemoveItem{item: entity})
     }
 }
 

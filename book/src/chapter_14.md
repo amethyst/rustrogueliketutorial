@@ -436,7 +436,155 @@ If you `cargo run` now, you'll find that using your dagger makes you hit harder 
 
 ### Unequipping the item
 
-Now that you can equip items, and remove the by swapping, you may want to stop holding an item and return it to your backpack. In a game as simple as this one, this isn't *strictly* necessary - but it is a good option to have for the future.
+Now that you can equip items, and remove the by swapping, you may want to stop holding an item and return it to your backpack. In a game as simple as this one, this isn't *strictly* necessary - but it is a good option to have for the future. We'll bind the `R` key to *remove* an item, since that key is available. In `player.rs`, add this to the input code:
+
+```rust
+VirtualKeyCode::R => return RunState::ShowRemoveItem,
+```
+
+Now we add `ShowRemoveItem` to `RunState` in `main.rs`:
+
+```rust
+#[derive(PartialEq, Copy, Clone)]
+pub enum RunState { AwaitingInput, 
+    PreRun, 
+    PlayerTurn, 
+    MonsterTurn, 
+    ShowInventory, 
+    ShowDropItem, 
+    ShowTargeting { range : i32, item : Entity},
+    MainMenu { menu_selection : gui::MainMenuSelection },
+    SaveGame,
+    NextLevel,
+    ShowRemoveItem
+}
+```
+
+And we add a handler for it in `tick`:
+
+```rust
+RunState::ShowRemoveItem => {
+    let result = gui::remove_item_menu(self, ctx);
+    match result.0 {
+        gui::ItemMenuResult::Cancel => newrunstate = RunState::AwaitingInput,
+        gui::ItemMenuResult::NoResponse => {}
+        gui::ItemMenuResult::Selected => {
+            let item_entity = result.1.unwrap();
+            let mut intent = self.ecs.write_storage::<WantsToRemoveItem>();
+            intent.insert(*self.ecs.fetch::<Entity>(), WantsToRemoveItem{ item: item_entity }).expect("Unable to insert intent");
+            newrunstate = RunState::PlayerTurn;
+        }
+    }
+}
+```
+
+We'll implement a new component in `components.rs` (see the source code for the serialization handler; it's a cut-and-paste of the handler for wanting to drop an item, with the names changed):
+
+```rust
+#[derive(Component, Debug)]
+pub struct WantsToRemoveItem {
+    pub item : Entity
+}
+```
+
+As usual, it has to be registered in `main.rs` and `saveload_system.rs`.
+
+Now in `gui.rs`, we'll implement `remove_item_menu`. It's almost exactly the same as the item dropping menu, but changing what is queries and the heading (it'd be a great idea to make these into more generic functions some time!):
+
+```rust
+pub fn remove_item_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
+    let player_entity = gs.ecs.fetch::<Entity>();
+    let names = gs.ecs.read_storage::<Name>();
+    let backpack = gs.ecs.read_storage::<Equipped>();
+    let entities = gs.ecs.entities();
+
+    let inventory = (&backpack, &names).join().filter(|item| item.0.owner == *player_entity );
+    let count = inventory.count();
+
+    let mut y = (25 - (count / 2)) as i32;
+    ctx.draw_box(15, y-2, 31, (count+3) as i32, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK));
+    ctx.print_color(18, y-2, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Remove Which Item?");
+    ctx.print_color(18, y+count as i32+1, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "ESCAPE to cancel");
+
+    let mut equippable : Vec<Entity> = Vec::new();
+    let mut j = 0;
+    for (entity, _pack, name) in (&entities, &backpack, &names).join().filter(|item| item.1.owner == *player_entity ) {
+        ctx.set(17, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437('('));
+        ctx.set(18, y, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), 97+j as u8);
+        ctx.set(19, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437(')'));
+
+        ctx.print(21, y, &name.name.to_string());
+        equippable.push(entity);
+        y += 1;
+        j += 1;
+    }
+
+    match ctx.key {
+        None => (ItemMenuResult::NoResponse, None),
+        Some(key) => {
+            match key {
+                VirtualKeyCode::Escape => { (ItemMenuResult::Cancel, None) }
+                _ => { 
+                    let selection = rltk::letter_to_option(key);
+                    if selection > -1 && selection < count as i32 {
+                        return (ItemMenuResult::Selected, Some(equippable[selection as usize]));
+                    }  
+                    (ItemMenuResult::NoResponse, None)
+                }
+            }
+        }
+    }
+}
+```
+
+Next, we should extend `inventory_system.rs` to support removing items. Fortunately, this is a very simple system:
+
+```rust
+pub struct ItemRemoveSystem {}
+
+impl<'a> System<'a> for ItemRemoveSystem {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( 
+                        Entities<'a>,
+                        WriteStorage<'a, WantsToRemoveItem>,
+                        WriteStorage<'a, Equipped>,
+                        WriteStorage<'a, InBackpack>
+                      );
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (entities, mut wants_remove, mut equipped, mut backpack) = data;
+
+        for (entity, to_remove) in (&entities, &wants_remove).join() {
+            equipped.remove(to_remove.item);
+            backpack.insert(to_remove.item, InBackpack{ owner: entity }).expect("Unable to insert backpack");
+        }
+
+        wants_remove.clear();
+    }
+}
+```
+
+Lastly, we add it to the systems in `main.rs`:
+
+```rust
+let mut gs = State {
+    ecs: World::new(),
+    systems : DispatcherBuilder::new()
+        .with(MapIndexingSystem{}, "map_indexing_system", &[])
+        .with(VisibilitySystem{}, "visibility_system", &[])
+        .with(MonsterAI{}, "monster_ai", &["visibility_system", "map_indexing_system"])
+        .with(MeleeCombatSystem{}, "melee_combat", &["monster_ai"])
+        .with(DamageSystem{}, "damage", &["melee_combat"])
+        .with(ItemCollectionSystem{}, "pickup", &["melee_combat"])
+        .with(ItemUseSystem{}, "potions", &["melee_combat"])
+        .with(ItemDropSystem{}, "drop_items", &["melee_combat"])
+        .with(ItemRemoveSystem{}, "remove_items", &["melee_combat"])
+        .build(),
+};
+```
+
+Now if you `cargo run`, you can pick up a dagger or shield and equip it. Then you can press `R` to remove it.
+
 
 The death screen
 We're done!
