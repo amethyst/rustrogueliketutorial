@@ -1,6 +1,6 @@
 extern crate specs;
 use specs::prelude::*;
-use super::{CombatStats, SufferDamage, Player, Name, gamelog::GameLog};
+use super::{CombatStats, SufferDamage, Player, Name, gamelog::GameLog, RunState};
 
 pub struct DamageSystem {}
 
@@ -39,7 +39,10 @@ pub fn delete_the_dead(ecs : &mut World) {
                         }
                         dead.push(entity)
                     }
-                    Some(_) => println!("You are dead")
+                    Some(_) => {
+                        let runstate = ecs.write_resource::<RunState>();
+                        *runstate = RunState::GameOver;
+                    }
                 }
             }
         }

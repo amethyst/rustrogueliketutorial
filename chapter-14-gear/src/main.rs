@@ -43,7 +43,8 @@ pub enum RunState { AwaitingInput,
     MainMenu { menu_selection : gui::MainMenuSelection },
     SaveGame,
     NextLevel,
-    ShowRemoveItem
+    ShowRemoveItem,
+    GameOver
 }
 
 pub struct State {

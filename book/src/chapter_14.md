@@ -585,8 +585,141 @@ let mut gs = State {
 
 Now if you `cargo run`, you can pick up a dagger or shield and equip it. Then you can press `R` to remove it.
 
+# Adding some more powerful gear later
 
-The death screen
+Lets add a couple more items, in `spawner.rs`:
+
+```rust
+fn longsword(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position{ x, y })
+        .with(Renderable{
+            glyph: rltk::to_cp437('/'),
+            fg: RGB::named(rltk::YELLOW),
+            bg: RGB::named(rltk::BLACK),
+            render_order: 2
+        })
+        .with(Name{ name : "Longsword".to_string() })
+        .with(Item{})
+        .with(Equippable{ slot: EquipmentSlot::Melee })
+        .with(MeleePowerBonus{ power: 4 })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
+fn tower_shield(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position{ x, y })
+        .with(Renderable{
+            glyph: rltk::to_cp437('('),
+            fg: RGB::named(rltk::YELLOW),
+            bg: RGB::named(rltk::BLACK),
+            render_order: 2
+        })
+        .with(Name{ name : "Tower Shield".to_string() })
+        .with(Item{})
+        .with(Equippable{ slot: EquipmentSlot::Shield })
+        .with(DefenseBonus{ defense: 3 })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+```
+
+We're going to add a quick fix to `random_table.rs` to ignore entries with 0 or lower spawn chances:
+
+```rust
+pub fn add<S:ToString>(mut self, name : S, weight: i32) -> RandomTable {
+    if weight > 0 {
+        self.total_weight += weight;
+        self.entries.push(RandomEntry::new(name.to_string(), weight));
+    }
+    self
+}
+```
+
+And back in `spawner.rs`, we'll add them to the loot table - with a chance of appearing later in the dungeon:
+
+```rust
+fn room_table(map_depth: i32) -> RandomTable {
+    RandomTable::new()
+        .add("Goblin", 10)
+        .add("Orc", 1 + map_depth)
+        .add("Health Potion", 7)
+        .add("Fireball Scroll", 2 + map_depth)
+        .add("Confusion Scroll", 2 + map_depth)
+        .add("Magic Missile Scroll", 4)
+        .add("Dagger", 3)
+        .add("Shield", 3)
+        .add("Longsword", map_depth - 1)
+        .add("Tower Shield", map_depth - 1)
+}
+```
+
+```rust
+match spawn.1.as_ref() {
+    "Goblin" => goblin(ecs, x, y),
+    "Orc" => orc(ecs, x, y),
+    "Health Potion" => health_potion(ecs, x, y),
+    "Fireball Scroll" => fireball_scroll(ecs, x, y),
+    "Confusion Scroll" => confusion_scroll(ecs, x, y),
+    "Magic Missile Scroll" => magic_missile_scroll(ecs, x, y),
+    "Dagger" => dagger(ecs, x, y),
+    "Shield" => shield(ecs, x, y),
+    "Longsword" => longsword(ecs, x, y),
+    "Tower Shield" => tower_shield(ecs, x, y),
+    _ => {}
+}
+```
+
+Now as you descend further, you can find better weapons and shields!
+
+# The game over screen
+
+We're nearly at the end of the basic tutorial, so lets make something happen when you die - rather than locking up in a console loop. In the file `damage_system.rs`, we'll edit the match statement on `player` for `delete_the_dead`:
+
+```rust
+match player {
+    None => {
+        let victim_name = names.get(entity);
+        if let Some(victim_name) = victim_name {
+            log.entries.insert(0, format!("{} is dead", &victim_name.name));
+        }
+        dead.push(entity)
+    }
+    Some(_) => {
+        let runstate = ecs.write_resource::<RunState>();
+        *runstate = RunState::GameOver;
+    }
+}
+```
+
+Of course, we now have to go to `main.rs` and add the new state:
+
+```rust
+#[derive(PartialEq, Copy, Clone)]
+pub enum RunState { AwaitingInput, 
+    PreRun, 
+    PlayerTurn, 
+    MonsterTurn, 
+    ShowInventory, 
+    ShowDropItem, 
+    ShowTargeting { range : i32, item : Entity},
+    MainMenu { menu_selection : gui::MainMenuSelection },
+    SaveGame,
+    NextLevel,
+    ShowRemoveItem,
+    GameOver
+}
+```
+
+We'll add that to the state implementation, also in `main.rs`:
+
+```rust
+```
+
+
+
+
 We're done!
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-14-gear)**
