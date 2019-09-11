@@ -186,6 +186,7 @@ impl State {
         let player = self.ecs.read_storage::<Player>();
         let backpack = self.ecs.read_storage::<InBackpack>();
         let player_entity = self.ecs.fetch::<Entity>();
+        let equipped = self.ecs.read_storage::<Equipped>();
 
         let mut to_delete : Vec<Entity> = Vec::new();
         for entity in entities.join() {
@@ -201,6 +202,13 @@ impl State {
             let bp = backpack.get(entity);
             if let Some(bp) = bp {
                 if bp.owner == *player_entity {
+                    should_delete = false;
+                }
+            }
+
+            let eq = equipped.get(entity);
+            if let Some(eq) = eq {
+                if eq.owner == *player_entity {
                     should_delete = false;
                 }
             }
@@ -304,6 +312,10 @@ fn main() {
     gs.ecs.register::<Confusion>();
     gs.ecs.register::<SimpleMarker<SerializeMe>>();
     gs.ecs.register::<SerializationHelper>();
+    gs.ecs.register::<Equippable>();
+    gs.ecs.register::<Equipped>();
+    gs.ecs.register::<MeleePowerBonus>();
+    gs.ecs.register::<DefenseBonus>();
 
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 

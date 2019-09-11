@@ -118,6 +118,31 @@ pub struct WantsToDropItem {
     pub item : Entity
 }
 
+#[derive(PartialEq, Copy, Clone, Serialize, Deserialize)]
+pub enum EquipmentSlot { Melee, Shield }
+
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct Equippable {
+    pub slot : EquipmentSlot
+}
+
+// See wrapper below for serialization
+#[derive(Component)]
+pub struct Equipped {
+    pub owner : Entity,
+    pub slot : EquipmentSlot
+}
+
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct MeleePowerBonus {
+    pub power : i32
+}
+
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct DefenseBonus {
+    pub defense : i32
+}
+
 // Serialization helper code. We need to implement ConvertSaveLoad for each type that contains an
 // Entity.
 
@@ -269,5 +294,33 @@ where
     {
         let entity = ids(data.0).unwrap();
         Ok(WantsToDropItem{item: entity})
+    }
+}
+
+// Equipped wrapper
+#[derive(Serialize, Deserialize, Clone)]
+pub struct EquippedData<M>(M, EquipmentSlot);
+
+impl<M: Marker + Serialize> ConvertSaveload<M> for Equipped
+where
+    for<'de> M: Deserialize<'de>,
+{
+    type Data = EquippedData<M>;
+    type Error = NoError;
+
+    fn convert_into<F>(&self, mut ids: F) -> Result<Self::Data, Self::Error>
+    where
+        F: FnMut(Entity) -> Option<M>,
+    {
+        let marker = ids(self.owner).unwrap();
+        Ok(EquippedData(marker, self.slot))
+    }
+
+    fn convert_from<F>(data: Self::Data, mut ids: F) -> Result<Self, Self::Error>
+    where
+        F: FnMut(M) -> Option<Entity>,
+    {
+        let entity = ids(data.0).unwrap();
+        Ok(Equipped{owner: entity, slot : data.1})
     }
 }
