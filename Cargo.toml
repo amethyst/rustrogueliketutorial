@@ -29,5 +29,6 @@ members = [
     "chapter-14-gear",
     "chapter-16-nicewalls",
     "chapter-17-blood",
-    "chapter-18-particles"
+    "chapter-18-particles",
+    "chapter-19-food"
     ]
