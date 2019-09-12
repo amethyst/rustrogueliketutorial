@@ -1,8 +1,7 @@
 extern crate specs;
 use specs::prelude::*;
-use super::{CombatStats, WantsToMelee, Name, SufferDamage, gamelog::GameLog, 
-    MeleePowerBonus, DefenseBonus, Equipped, Position, Renderable, ParticleLifetime};
-use rltk::RGB;
+use super::{CombatStats, WantsToMelee, Name, SufferDamage, gamelog::GameLog, MeleePowerBonus, DefenseBonus, Equipped,
+    particle_system::ParticleBuilder, Position};
 
 pub struct MeleeCombatSystem {}
 
@@ -17,14 +16,13 @@ impl<'a> System<'a> for MeleeCombatSystem {
                         ReadStorage<'a, MeleePowerBonus>,
                         ReadStorage<'a, DefenseBonus>,
                         ReadStorage<'a, Equipped>,
-                        WriteStorage<'a, Position>,
-                        WriteStorage<'a, Renderable>,
-                        WriteStorage<'a, ParticleLifetime>
+                        WriteExpect<'a, ParticleBuilder>,
+                        ReadStorage<'a, Position>
                       );
 
     fn run(&mut self, data : Self::SystemData) {
         let (entities, mut log, mut wants_melee, names, combat_stats, mut inflict_damage, 
-            melee_power_bonuses, defense_bonuses, equipped, mut positions, mut renderables, mut particles) = data;
+            melee_power_bonuses, defense_bonuses, equipped, mut particle_builder, positions) = data;
 
         for (entity, wants_melee, name, stats) in (&entities, &wants_melee, &names, &combat_stats).join() {
             if stats.hp > 0 {
@@ -46,6 +44,11 @@ impl<'a> System<'a> for MeleeCombatSystem {
                         }
                     }
 
+                    let pos = positions.get(wants_melee.target);
+                    if let Some(pos) = pos {
+                        particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::ORANGE), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('‼'), 100.0);
+                    }
+
                     let damage = i32::max(0, (stats.power + offensive_bonus) - (target_stats.defense + defensive_bonus));
 
                     if damage == 0 {
@@ -53,18 +56,6 @@ impl<'a> System<'a> for MeleeCombatSystem {
                     } else {
                         log.entries.insert(0, format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));
                         inflict_damage.insert(wants_melee.target, SufferDamage{ amount: damage }).expect("Unable to do damage");                        
-                    }
-
-                    let pos = positions.get(wants_melee.target);
-                    if let Some(pos) = pos {
-                        let particle = entities.create();
-                        positions.insert(particle, Position{ x:pos.x, y:pos.y }).expect("Unable to insert position");
-                        renderables.insert(particle, 
-                            Renderable{ glyph: rltk::to_cp437('░'),
-                                fg: RGB::named(rltk::CYAN),
-                                bg: RGB::named(rltk::BLACK),
-                                render_order: 0 }).expect("Unable to insert renderable");
-                        particles.insert(particle, ParticleLifetime{ lifetime_ms : 100.0 }).expect("Unable to insert particle lifetime");
                     }
                 }
             }

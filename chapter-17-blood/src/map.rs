@@ -190,7 +190,7 @@ fn is_revealed_and_wall(map: &Map, x: i32, y: i32) -> bool {
 }
 
 fn wall_glyph(map : &Map, x: i32, y:i32) -> u8 {
-    if x == 0 || x == map.width || y == 0 || y == MAPHEIGHT as i32 { return 35; }
+    if x < 0 || x > map.width-1 || y < 0 || y > map.height-1 as i32 { return 35; }
     let mut mask : u8 = 0;
 
     if is_revealed_and_wall(map, x, y - 1) { mask +=1; }

@@ -25,9 +25,144 @@ pub struct ParticleLifetime {
 
 We have to register this in all the usual places: `main.rs` and `saveload_system.rs` (twice).
 
-## Spawning particles
+## Grouping particle code together
 
-We'll start by spawning a particle whenever someone attacks. In `melee_combat_system.rs`, we'll expand the list of resources required for melee:
+We'll make a new file, `particle_system.rs`. It won't be a regular system, because we need access to the RLTK `Context` object - but it will have to provide services to other systems.
+
+The first thing to support is making particles vanish after their lifetime. So we start with the following in `particle_system.rs`:
+
+```rust
+use specs::prelude::*;
+use super::{ Rltk, ParticleLifetime};
+
+pub fn cull_dead_particles(ecs : &mut World, ctx : &Rltk) {
+    let mut dead_particles : Vec<Entity> = Vec::new();
+    {
+        // Age out particles
+        let mut particles = ecs.write_storage::<ParticleLifetime>();
+        let entities = ecs.entities();
+        for (entity, mut particle) in (&entities, &mut particles).join() {
+            particle.lifetime_ms -= ctx.frame_time_ms;
+            if particle.lifetime_ms < 0.0 {
+                dead_particles.push(entity);
+            }
+        }                    
+    }
+    for dead in dead_particles.iter() {
+        ecs.delete_entity(*dead).expect("Particle will not die");
+    } 
+}
+```
+
+Then we modify the render loop in `main.rs` to call it:
+
+```rust
+ctx.cls();        
+particle_system::cull_dead_particles(&mut self.ecs, ctx);
+```
+
+## Spawning particles via a service
+
+Let's extend `particle_system.rs` to offer a builder system: you obtain a `ParticleBuilder` and add requests to it, and then create your particles as a batch together. We'll offer the particle system as a *resource* - so it's available anywhere. This avoids having to add much intrusive code into each system, and lets us handle the actual particle spawning as a single (fast) batch.
+
+Our basic `ParticleBuilder` looks like this. We haven't done anything to actually *add* any particles yet, but this provides the requestor service:
+
+```rust
+struct ParticleRequest {
+    x: i32,
+    y: i32,
+    fg: RGB,
+    bg: RGB,
+    glyph: u8,
+    lifetime: f32
+}
+
+pub struct ParticleBuilder {
+    requests : Vec<ParticleRequest>
+}
+
+impl ParticleBuilder {
+    pub fn new() -> ParticleBuilder {
+        ParticleBuilder{ requests : Vec::new() }
+    }
+
+    pub fn request(&mut self, x:i32, y:i32, fg: RGB, bg:RGB, glyph: u8, lifetime: f32) {
+        self.requests.push(
+            ParticleRequest{
+                x, y, fg, bg, glyph, lifetime
+            }
+        );
+    }
+}
+```
+
+In `main.rs`, we'll turn it into a *resource*:
+
+```rust
+gs.ecs.insert(particle_system::ParticleBuilder::new());
+```
+
+Now, we'll return to `particle_systemrs` and build an actual system to spawn particles. The system looks like this:
+
+```rust
+pub struct ParticleSpawnSystem {}
+
+impl<'a> System<'a> for ParticleSpawnSystem {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( 
+                        Entities<'a>,
+                        WriteStorage<'a, Position>,
+                        WriteStorage<'a, Renderable>,
+                        WriteStorage<'a, ParticleLifetime>,
+                        WriteExpect<'a, ParticleBuilder>
+                      );
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (entities, mut positions, mut renderables, mut particles, mut particle_builder) = data;
+        for new_particle in particle_builder.requests.iter() {
+            let p = entities.create();
+            positions.insert(p, Position{ x: new_particle.x, y: new_particle.y }).expect("Unable to inser position");
+            renderables.insert(p, Renderable{ fg: new_particle.fg, bg: new_particle.bg, glyph: new_particle.glyph, render_order: 0 }).expect("Unable to insert renderable");
+            particles.insert(p, ParticleLifetime{ lifetime_ms: new_particle.lifetime }).expect("Unable to insert lifetime");
+        }
+
+        particle_builder.requests.clear();
+    }
+}
+```
+
+This is a very simple service: it iterates the requests, and creates an entity for each particle with the component parameters from the request. Then it clears the builder list. The last step is to add it to the system schedule in `main.rs`:
+
+```rust
+let mut gs = State {
+    ecs: World::new(),
+    systems : DispatcherBuilder::new()
+        .with(MapIndexingSystem{}, "map_indexing_system", &[])
+        .with(VisibilitySystem{}, "visibility_system", &[])
+        .with(MonsterAI{}, "monster_ai", &["visibility_system", "map_indexing_system"])
+        .with(MeleeCombatSystem{}, "melee_combat", &["monster_ai"])
+        .with(DamageSystem{}, "damage", &["melee_combat"])
+        .with(ItemCollectionSystem{}, "pickup", &["melee_combat"])
+        .with(ItemUseSystem{}, "potions", &["melee_combat"])
+        .with(ItemDropSystem{}, "drop_items", &["melee_combat"])
+        .with(ItemRemoveSystem{}, "remove_items", &["melee_combat"])
+        .with(particle_system::ParticleSpawnSystem{}, "spawn_particles", &["potions", "melee_combat"])
+        .build(),
+};
+```
+
+We've made it depend upon likely particle spawners. We'll have to be a little careful to avoid accidentally making it concurrent with anything that might add to it.
+
+## Actually spawning some particles for combat
+
+Lets start by spawning a particle whenever someone attacks. Open up `melee_combat_system.rs`, and we'll add `ParticleBuilder` to the list of requested resources for the system. First, the includes:
+
+```rust
+use super::{CombatStats, WantsToMelee, Name, SufferDamage, gamelog::GameLog, MeleePowerBonus, DefenseBonus, Equipped,
+    particle_system::ParticleBuilder, Position};
+```
+
+Then, a `WriteExpect` to be able to write to the resource:
 
 ```rust
 type SystemData = ( Entities<'a>,
@@ -39,92 +174,35 @@ type SystemData = ( Entities<'a>,
     ReadStorage<'a, MeleePowerBonus>,
     ReadStorage<'a, DefenseBonus>,
     ReadStorage<'a, Equipped>,
-    WriteStorage<'a, Position>,
-    WriteStorage<'a, Renderable>,
-    WriteStorage<'a, ParticleLifetime>
+    WriteExpect<'a, ParticleBuilder>,
+    ReadStorage<'a, Position>
 );
 ```
 
-Then we'll add some logic to spawn a particle on impact:
+And the expanded list of resources for the `run` method itself:
+```rust
+let (entities, mut log, mut wants_melee, names, combat_stats, mut inflict_damage, 
+    melee_power_bonuses, defense_bonuses, equipped, mut particle_builder, positions) = data;
+```
+
+Finally, we'll add the request:
 
 ```rust
 let pos = positions.get(wants_melee.target);
 if let Some(pos) = pos {
-    let particle = entities.create();
-    positions.insert(particle, Position{ x:pos.x, y:pos.y }).expect("Unable to insert position");
-    renderables.insert(particle, 
-        Renderable{ glyph: rltk::to_cp437('░'),
-            fg: RGB::named(rltk::CYAN),
-            bg: RGB::named(rltk::BLACK),
-            render_order: 0 }).expect("Unable to insert renderable");
-    particles.insert(particle, ParticleLifetime{ lifetime_ms : 100.0 }).expect("Unable to insert particle lifetime");
+    particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::ORANGE), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('‼'), 100.0);
 }
+
+let damage = i32::max(0, (stats.power + offensive_bonus) - (target_stats.defense + defensive_bonus));
 ```
 
-This gives a borrow warning (FIXME), but works (I'll fix later, promise). If you `cargo run` your project now, when one entity attacks another a cyan ░ pattern renders in the attack space. Unfortunately, it persists forever!
+If you `cargo run` now, you'll see a relatively subtle particle feedback to show that melee combat occurred. This definitely helps with the *feel* of gameplay, and is sufficiently non-intrusive that we aren't making our other systems too confusing.
 
-## Vanishing particles
+![Screenshot](./c18-s1.gif)
 
-We want to age each particle by the time since the last frame, each tick. We can do this by modifying the `tick` function in `main.rs`:
+## Adding effects to item use
 
-```rust
-match newrunstate {
-    RunState::MainMenu{..} => {}
-    RunState::GameOver{..} => {}
-    _ => {
-        draw_map(&self.ecs, ctx);
-
-        let mut dead_particles : Vec<Entity> = Vec::new();
-        {
-            let positions = self.ecs.read_storage::<Position>();
-            let renderables = self.ecs.read_storage::<Renderable>();
-            let map = self.ecs.fetch::<Map>();
-
-            let mut data = (&positions, &renderables).join().collect::<Vec<_>>();
-            data.sort_by(|&a, &b| b.1.render_order.cmp(&a.1.render_order) );
-            for (pos, render) in data.iter() {
-                let idx = map.xy_idx(pos.x, pos.y);
-                if map.visible_tiles[idx] { ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph) }
-            }
-
-            gui::draw_ui(&self.ecs, ctx);
-
-            // Age out particles
-            let mut particles = self.ecs.write_storage::<ParticleLifetime>();
-            let entities = self.ecs.entities();
-            for (entity, mut particle) in (&entities, &mut particles).join() {
-                particle.lifetime_ms -= ctx.frame_time_ms;
-                if particle.lifetime_ms < 0.0 {
-                    dead_particles.push(entity);
-                }
-            }                    
-        }
-        for dead in dead_particles.iter() {
-            self.ecs.delete_entity(*dead).expect("Particle will not die");
-        } 
-    }
-}
-```
-
-You can `cargo run` now, and see the hit effect quickly appear and then vanish after you bash a poor goblin (or it bashes you!).
-FIXME: SCREENSHOT
-
-## Adding more effects
-
-It would be nice if the various magical items in the game provide some visual feedback. We'll try and add this in a relatively generic fashion to the item use system in `inventory_system.rs`. First, we'll make a new structure to indicate that we'd like a particle:
-
-```rust
-struct ItemParticleRequest {
-    x: i32,
-    y: i32,
-    fg: RGB,
-    bg: RGB,
-    glyph: u8,
-    lifetime: f32
-}
-```
-
-Then at the top of the system, we'll request a few more containers and initialize a list of particle requests:
+It would be great to add similar effects to item use, so lets do it! In `inventory_system.rs`, we'll expand the `ItemUseSystem` introduction to include the `ParticleBuilder`:
 
 ```rust
 impl<'a> System<'a> for ItemUseSystem {
@@ -145,81 +223,106 @@ impl<'a> System<'a> for ItemUseSystem {
                         ReadStorage<'a, Equippable>,
                         WriteStorage<'a, Equipped>,
                         WriteStorage<'a, InBackpack>,
-                        WriteStorage<'a, Position>,
-                        ReadExpect<'a, Point>,
-                        WriteStorage<'a, Renderable>,
-                        WriteStorage<'a, ParticleLifetime>
+                        WriteExpect<'a, ParticleBuilder>,
+                        ReadStorage<'a, Position>
                       );
 
     #[allow(clippy::cognitive_complexity)]
     fn run(&mut self, data : Self::SystemData) {
-        let mut particle_requests : Vec<ItemParticleRequest> = Vec::new();
+        let (player_entity, mut gamelog, map, entities, mut wants_use, names, 
+            consumables, healing, inflict_damage, mut combat_stats, mut suffer_damage, 
+            aoe, mut confused, equippable, mut equipped, mut backpack, mut particle_builder, positions) = data;
 ```
 
-At the *bottom* of the system, we'll instantiate our particles in one go:
-
+We'll start by showing a heart when you drink a healing potion. In the *healing* section:
 ```rust
-wants_use.clear();
+stats.hp = i32::min(stats.max_hp, stats.hp + healer.heal_amount);
+if entity == *player_entity {
+    gamelog.entries.insert(0, format!("You use the {}, healing {} hp.", names.get(useitem.item).unwrap().name, healer.heal_amount));
+}
+used_item = true;
 
-for part in particle_requests.iter() {
-    let particle = entities.create();
-    positions.insert(particle, Position{ x : part.x, y: part.y }).expect("Unable to insert position");
-    renderables.insert(particle, Renderable{ fg: part.fg, bg: part.bg, glyph: part.glyph, render_order: 0 }).expect("Unable to insert renderable");
-    particle_life.insert(particle, ParticleLifetime{ lifetime_ms: part.lifetime }).expect("Unable to insert particle lifetime");
+let pos = positions.get(*target);
+if let Some(pos) = pos {
+    particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::GREEN), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('♥'), 100.0);
 }
 ```
 
-Now we need to add some effects. In the *healing* section:
-
+We can use a similar effect for confusion - only with a magenta question mark. In the *confusion* section:
 ```rust
-used_item = true;                            
-particle_requests.push(ItemParticleRequest{
-    x: player_pos.x,
-    y: player_pos.y,
-    fg: RGB::from_f32(0., 0.75, 0.),
-    bg: RGB::from_f32(0., 0., 0.),
-    glyph: rltk::to_cp437('♥'),
-    lifetime: 200.0
-});
+gamelog.entries.insert(0, format!("You use {} on {}, confusing them.", item_name.name, mob_name.name));
+
+let pos = positions.get(*mob);
+if let Some(pos) = pos {
+    particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('?'), 100.0);
+}
 ```
 
-And in the *damage* section:
+We should also use a particle to indicate that damage was inflicted. In the *damage* section of the system:
 
 ```rust
 gamelog.entries.insert(0, format!("You use {} on {}, inflicting {} hp.", item_name.name, mob_name.name, damage.damage));
 
-let mob_pos = positions.get(*mob);
-if let Some(mob_pos) = mob_pos {
-    particle_requests.push(ItemParticleRequest{
-        x: mob_pos.x,
-        y: mob_pos.y,
-        fg: RGB::named(rltk::ORANGE),
-        bg: RGB::from_f32(0., 0., 0.),
-        glyph: rltk::to_cp437('▒'),
-        lifetime: 200.0
-    });
+let pos = positions.get(*mob);
+if let Some(pos) = pos {
+    particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::RED), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('‼'), 100.0);
 }
 ```
 
-And in the *confusion* section:
+Lastly, if an effect hits a whole area (for example, a fireball) it would be good to indicate what the area is. In the *targeting* section of the system, add:
 
 ```rust
-let mob_pos = positions.get(*mob);
-if let Some(mob_pos) = mob_pos {
-    particle_requests.push(ItemParticleRequest{
-        x: mob_pos.x,
-        y: mob_pos.y,
-        fg: RGB::from_f32(0., 0., 0.75),
-        bg: RGB::from_f32(0., 0., 0.),
-        glyph: rltk::to_cp437('?'),
-        lifetime: 200.0
-    });
+for mob in map.tile_content[idx].iter() {
+    targets.push(*mob);
 }
+particle_builder.request(tile_idx.x, tile_idx.y, rltk::RGB::named(rltk::ORANGE), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('░'), 100.0);
 ```
 
-If you `cargo run` the project now, you'll find that healing generates a nice heart over yourself, confusion spams a question mark, and damage-dealing flashes an orange haze. It's subtle, but gives a lot more visceral feel to the game.
+That wasn't too hard, was it? If you `cargo run` your project now, you'll see various visual effects firing.
 
-FIXME: SCREENSHOT
+![Screenshot](./c18-s2.gif)
+
+## Adding an indicator for missing a turn due to confusion
+
+Lastly, we'll repeat the confused effect on monsters when it is their turn and they skip due to being confused. This should make it less confusing as to why they stand around. In `monster_ai_system.rs`, we first modify the system header to request the appropriate helper:
+
+```rust
+impl<'a> System<'a> for MonsterAI {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( WriteExpect<'a, Map>,
+                        ReadExpect<'a, Point>,
+                        ReadExpect<'a, Entity>,
+                        ReadExpect<'a, RunState>,
+                        Entities<'a>,
+                        WriteStorage<'a, Viewshed>, 
+                        ReadStorage<'a, Monster>,
+                        WriteStorage<'a, Position>,
+                        WriteStorage<'a, WantsToMelee>,
+                        WriteStorage<'a, Confusion>,
+                        WriteExpect<'a, ParticleBuilder>);
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (mut map, player_pos, player_entity, runstate, entities, mut viewshed, 
+            monster, mut position, mut wants_to_melee, mut confused, mut particle_builder) = data;
+```
+
+Then we add in a request at the end of the confusion test:
+
+```rust
+can_act = false;
+
+particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), 
+                    rltk::RGB::named(rltk::BLACK), rltk::to_cp437('?'), 100.0);
+```
+
+We don't need to worry about getting the `Position` component here, because we already get it as part of the loop. If you `cargo run` your project now, and find a confusion scroll - you have visual feedback as to why a goblin isn't chasing you anymore:
+
+![Screenshot](./c18-s3.gif)
+
+## Wrap Up
+
+That's it for visual effects for now. We've given the game a much more visceral feel, with feedback given for actions. That's a big improvement, and goes a long way to modernizing an ASCII interface!
+
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-18-particles)**
 

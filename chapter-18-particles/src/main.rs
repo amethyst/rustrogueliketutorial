@@ -31,6 +31,7 @@ mod inventory_system;
 use inventory_system::{ ItemCollectionSystem, ItemUseSystem, ItemDropSystem, ItemRemoveSystem };
 pub mod saveload_system;
 pub mod random_table;
+pub mod particle_system;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { AwaitingInput, 
@@ -61,41 +62,24 @@ impl GameState for State {
         }
 
         ctx.cls();        
+        particle_system::cull_dead_particles(&mut self.ecs, ctx);
 
         match newrunstate {
             RunState::MainMenu{..} => {}
             RunState::GameOver{..} => {}
             _ => {
                 draw_map(&self.ecs, ctx);
+                let positions = self.ecs.read_storage::<Position>();
+                let renderables = self.ecs.read_storage::<Renderable>();
+                let map = self.ecs.fetch::<Map>();
 
-                let mut dead_particles : Vec<Entity> = Vec::new();
-                {
-                    let positions = self.ecs.read_storage::<Position>();
-                    let renderables = self.ecs.read_storage::<Renderable>();
-                    let map = self.ecs.fetch::<Map>();
-
-                    let mut data = (&positions, &renderables).join().collect::<Vec<_>>();
-                    data.sort_by(|&a, &b| b.1.render_order.cmp(&a.1.render_order) );
-                    for (pos, render) in data.iter() {
-                        let idx = map.xy_idx(pos.x, pos.y);
-                        if map.visible_tiles[idx] { ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph) }
-                    }
-
-                    gui::draw_ui(&self.ecs, ctx);
-
-                    // Age out particles
-                    let mut particles = self.ecs.write_storage::<ParticleLifetime>();
-                    let entities = self.ecs.entities();
-                    for (entity, mut particle) in (&entities, &mut particles).join() {
-                        particle.lifetime_ms -= ctx.frame_time_ms;
-                        if particle.lifetime_ms < 0.0 {
-                            dead_particles.push(entity);
-                        }
-                    }                    
+                let mut data = (&positions, &renderables).join().collect::<Vec<_>>();
+                data.sort_by(|&a, &b| b.1.render_order.cmp(&a.1.render_order) );
+                for (pos, render) in data.iter() {
+                    let idx = map.xy_idx(pos.x, pos.y);
+                    if map.visible_tiles[idx] { ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph) }
                 }
-                for dead in dead_particles.iter() {
-                    self.ecs.delete_entity(*dead).expect("Particle will not die");
-                } 
+                gui::draw_ui(&self.ecs, ctx);                
             }
         }
         
@@ -373,6 +357,7 @@ fn main() {
             .with(ItemUseSystem{}, "potions", &["melee_combat"])
             .with(ItemDropSystem{}, "drop_items", &["melee_combat"])
             .with(ItemRemoveSystem{}, "remove_items", &["melee_combat"])
+            .with(particle_system::ParticleSpawnSystem{}, "spawn_particles", &["potions", "melee_combat"])
             .build(),
     };
     gs.ecs.register::<Position>();
@@ -422,6 +407,7 @@ fn main() {
     gs.ecs.insert(player_entity);
     gs.ecs.insert(RunState::MainMenu{ menu_selection: gui::MainMenuSelection::NewGame });
     gs.ecs.insert(gamelog::GameLog{ entries : vec!["Welcome to Rusty Roguelike".to_string()] });
+    gs.ecs.insert(particle_system::ParticleBuilder::new());
 
     rltk::main_loop(context, gs);
 }

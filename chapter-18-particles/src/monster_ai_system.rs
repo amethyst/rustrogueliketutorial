@@ -1,6 +1,6 @@
 extern crate specs;
 use specs::prelude::*;
-use super::{Viewshed, Monster, Map, Position, WantsToMelee, RunState, Confusion};
+use super::{Viewshed, Monster, Map, Position, WantsToMelee, RunState, Confusion, particle_system::ParticleBuilder};
 extern crate rltk;
 use rltk::{Point};
 
@@ -17,10 +17,12 @@ impl<'a> System<'a> for MonsterAI {
                         ReadStorage<'a, Monster>,
                         WriteStorage<'a, Position>,
                         WriteStorage<'a, WantsToMelee>,
-                        WriteStorage<'a, Confusion>);
+                        WriteStorage<'a, Confusion>,
+                        WriteExpect<'a, ParticleBuilder>);
 
     fn run(&mut self, data : Self::SystemData) {
-        let (mut map, player_pos, player_entity, runstate, entities, mut viewshed, monster, mut position, mut wants_to_melee, mut confused) = data;
+        let (mut map, player_pos, player_entity, runstate, entities, mut viewshed, 
+            monster, mut position, mut wants_to_melee, mut confused, mut particle_builder) = data;
 
         if *runstate != RunState::MonsterTurn { return; }
 
@@ -34,6 +36,9 @@ impl<'a> System<'a> for MonsterAI {
                     confused.remove(entity);
                 }
                 can_act = false;
+
+                particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), 
+                    rltk::RGB::named(rltk::BLACK), rltk::to_cp437('?'), 100.0);
             }
 
             if can_act {

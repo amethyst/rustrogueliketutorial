@@ -2,8 +2,7 @@ extern crate specs;
 use specs::prelude::*;
 use super::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, WantsToUseItem, 
     Consumable, ProvidesHealing, CombatStats, WantsToDropItem, InflictsDamage, Map, SufferDamage,
-    AreaOfEffect, Confusion, Equippable, Equipped, WantsToRemoveItem, Renderable, ParticleLifetime};
-use rltk::{RGB, Point};
+    AreaOfEffect, Confusion, Equippable, Equipped, WantsToRemoveItem, particle_system::ParticleBuilder};
 
 pub struct ItemCollectionSystem {}
 
@@ -35,15 +34,6 @@ impl<'a> System<'a> for ItemCollectionSystem {
 
 pub struct ItemUseSystem {}
 
-struct ItemParticleRequest {
-    x: i32,
-    y: i32,
-    fg: RGB,
-    bg: RGB,
-    glyph: u8,
-    lifetime: f32
-}
-
 impl<'a> System<'a> for ItemUseSystem {
     #[allow(clippy::type_complexity)]
     type SystemData = ( ReadExpect<'a, Entity>,
@@ -62,20 +52,15 @@ impl<'a> System<'a> for ItemUseSystem {
                         ReadStorage<'a, Equippable>,
                         WriteStorage<'a, Equipped>,
                         WriteStorage<'a, InBackpack>,
-                        WriteStorage<'a, Position>,
-                        ReadExpect<'a, Point>,
-                        WriteStorage<'a, Renderable>,
-                        WriteStorage<'a, ParticleLifetime>
+                        WriteExpect<'a, ParticleBuilder>,
+                        ReadStorage<'a, Position>
                       );
 
     #[allow(clippy::cognitive_complexity)]
     fn run(&mut self, data : Self::SystemData) {
-        let mut particle_requests : Vec<ItemParticleRequest> = Vec::new();
-
         let (player_entity, mut gamelog, map, entities, mut wants_use, names, 
             consumables, healing, inflict_damage, mut combat_stats, mut suffer_damage, 
-            aoe, mut confused, equippable, mut equipped, mut backpack,
-            mut positions, player_pos, mut renderables, mut particle_life) = data;
+            aoe, mut confused, equippable, mut equipped, mut backpack, mut particle_builder, positions) = data;
 
         for (entity, useitem) in (&entities, &wants_use).join() {
             let mut used_item = true;
@@ -102,6 +87,7 @@ impl<'a> System<'a> for ItemUseSystem {
                                 for mob in map.tile_content[idx].iter() {
                                     targets.push(*mob);
                                 }
+                                particle_builder.request(tile_idx.x, tile_idx.y, rltk::RGB::named(rltk::ORANGE), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('░'), 100.0);
                             }
                         }
                     }
@@ -149,20 +135,17 @@ impl<'a> System<'a> for ItemUseSystem {
                     for target in targets.iter() {
                         let stats = combat_stats.get_mut(*target);
                         if let Some(stats) = stats {
-                            stats.hp = i32::max(stats.max_hp, stats.hp + healer.heal_amount);
+                            stats.hp = i32::min(stats.max_hp, stats.hp + healer.heal_amount);
                             if entity == *player_entity {
                                 gamelog.entries.insert(0, format!("You use the {}, healing {} hp.", names.get(useitem.item).unwrap().name, healer.heal_amount));
                             }
-                            used_item = true;                            
-                            particle_requests.push(ItemParticleRequest{
-                                x: player_pos.x,
-                                y: player_pos.y,
-                                fg: RGB::from_f32(0., 0.75, 0.),
-                                bg: RGB::from_f32(0., 0., 0.),
-                                glyph: rltk::to_cp437('♥'),
-                                lifetime: 200.0
-                            });
-                        }                        
+                            used_item = true;
+
+                            let pos = positions.get(*target);
+                            if let Some(pos) = pos {
+                                particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::GREEN), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('♥'), 100.0);
+                            }   
+                        }            
                     }
                 }
             }
@@ -180,16 +163,9 @@ impl<'a> System<'a> for ItemUseSystem {
                             let item_name = names.get(useitem.item).unwrap();
                             gamelog.entries.insert(0, format!("You use {} on {}, inflicting {} hp.", item_name.name, mob_name.name, damage.damage));
 
-                            let mob_pos = positions.get(*mob);
-                            if let Some(mob_pos) = mob_pos {
-                                particle_requests.push(ItemParticleRequest{
-                                    x: mob_pos.x,
-                                    y: mob_pos.y,
-                                    fg: RGB::named(rltk::ORANGE),
-                                    bg: RGB::from_f32(0., 0., 0.),
-                                    glyph: rltk::to_cp437('▒'),
-                                    lifetime: 200.0
-                                });
+                            let pos = positions.get(*mob);
+                            if let Some(pos) = pos {
+                                particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::RED), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('‼'), 100.0);
                             }
                         }
 
@@ -213,16 +189,9 @@ impl<'a> System<'a> for ItemUseSystem {
                                 let item_name = names.get(useitem.item).unwrap();
                                 gamelog.entries.insert(0, format!("You use {} on {}, confusing them.", item_name.name, mob_name.name));
 
-                                let mob_pos = positions.get(*mob);
-                                if let Some(mob_pos) = mob_pos {
-                                    particle_requests.push(ItemParticleRequest{
-                                        x: mob_pos.x,
-                                        y: mob_pos.y,
-                                        fg: RGB::from_f32(0., 0., 0.75),
-                                        bg: RGB::from_f32(0., 0., 0.),
-                                        glyph: rltk::to_cp437('?'),
-                                        lifetime: 200.0
-                                    });
+                                let pos = positions.get(*mob);
+                                if let Some(pos) = pos {
+                                    particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('?'), 100.0);
                                 }
                             }
                         }
@@ -242,17 +211,10 @@ impl<'a> System<'a> for ItemUseSystem {
                         entities.delete(useitem.item).expect("Delete failed");
                     }
                 }
-            }            
+            }
         }
 
         wants_use.clear();
-
-        for part in particle_requests.iter() {
-            let particle = entities.create();
-            positions.insert(particle, Position{ x : part.x, y: part.y }).expect("Unable to insert position");
-            renderables.insert(particle, Renderable{ fg: part.fg, bg: part.bg, glyph: part.glyph, render_order: 0 }).expect("Unable to insert renderable");
-            particle_life.insert(particle, ParticleLifetime{ lifetime_ms: part.lifetime }).expect("Unable to insert particle lifetime");
-        }
     }
 }
 
