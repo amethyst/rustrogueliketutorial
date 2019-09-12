@@ -32,6 +32,7 @@ use inventory_system::{ ItemCollectionSystem, ItemUseSystem, ItemDropSystem, Ite
 pub mod saveload_system;
 pub mod random_table;
 pub mod particle_system;
+pub mod hunger_system;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { AwaitingInput, 
@@ -357,6 +358,7 @@ fn main() {
             .with(ItemUseSystem{}, "potions", &["melee_combat"])
             .with(ItemDropSystem{}, "drop_items", &["melee_combat"])
             .with(ItemRemoveSystem{}, "remove_items", &["melee_combat"])
+            .with(hunger_system::HungerSystem{}, "hunger", &["melee_combat", "potions"])
             .with(particle_system::ParticleSpawnSystem{}, "spawn_particles", &["potions", "melee_combat"])
             .build(),
     };
@@ -389,6 +391,8 @@ fn main() {
     gs.ecs.register::<DefenseBonus>();
     gs.ecs.register::<WantsToRemoveItem>();
     gs.ecs.register::<ParticleLifetime>();
+    gs.ecs.register::<HungerClock>();
+    gs.ecs.register::<ProvidesFood>();
 
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
