@@ -178,6 +178,28 @@ This is pretty straightforward: it reveals the tiles on the current row, and the
 
 ![Screenshot](./c20-s2.gif)
 
+## Remember to lower the spawn priority!
+
+In `spawners.rs` we are currently spawning magic mapping scrolls *everywhere*. That's probably not what we want! Edit the spawn table to have a much lower priority:
+
+```rust
+fn room_table(map_depth: i32) -> RandomTable {
+    RandomTable::new()
+        .add("Goblin", 10)
+        .add("Orc", 1 + map_depth)
+        .add("Health Potion", 7)
+        .add("Fireball Scroll", 2 + map_depth)
+        .add("Confusion Scroll", 2 + map_depth)
+        .add("Magic Missile Scroll", 4)
+        .add("Dagger", 3)
+        .add("Shield", 3)
+        .add("Longsword", map_depth - 1)
+        .add("Tower Shield", map_depth - 1)
+        .add("Rations", 10)
+        .add("Magic Mapping Scroll", 2)
+}
+```
+
 ## Wrap Up
 
 This was a relatively quick chapter, but we now have another staple of the roguelike genre: magic mapping.
