@@ -3,7 +3,7 @@ use specs::prelude::*;
 use super::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, WantsToUseItem, 
     Consumable, ProvidesHealing, CombatStats, WantsToDropItem, InflictsDamage, Map, SufferDamage,
     AreaOfEffect, Confusion, Equippable, Equipped, WantsToRemoveItem, particle_system::ParticleBuilder,
-    ProvidesFood, HungerClock, HungerState, MagicMapper};
+    ProvidesFood, HungerClock, HungerState, MagicMapper, RunState};
 
 pub struct ItemCollectionSystem {}
 
@@ -57,15 +57,16 @@ impl<'a> System<'a> for ItemUseSystem {
                         ReadStorage<'a, Position>,
                         ReadStorage<'a, ProvidesFood>,
                         WriteStorage<'a, HungerClock>,
-                        ReadStorage<'a, MagicMapper>
+                        ReadStorage<'a, MagicMapper>,
+                        WriteExpect<'a, RunState>
                       );
 
     #[allow(clippy::cognitive_complexity)]
     fn run(&mut self, data : Self::SystemData) {
-        let (player_entity, mut gamelog, mut map, entities, mut wants_use, names, 
+        let (player_entity, mut gamelog, map, entities, mut wants_use, names, 
             consumables, healing, inflict_damage, mut combat_stats, mut suffer_damage, 
             aoe, mut confused, equippable, mut equipped, mut backpack, mut particle_builder, positions,
-            provides_food, mut hunger_clocks, magic_mapper) = data;
+            provides_food, mut hunger_clocks, magic_mapper, mut runstate) = data;
 
         for (entity, useitem) in (&entities, &wants_use).join() {
             let mut used_item = true;
@@ -153,10 +154,8 @@ impl<'a> System<'a> for ItemUseSystem {
                 None => {}
                 Some(_) => {
                     used_item = true;
-                    for r in map.revealed_tiles.iter_mut() {
-                        *r = true;
-                    }
                     gamelog.entries.insert(0, "The map is revealed to you!".to_string());
+                    *runstate = RunState::MagicMapReveal{ row : 0};
                 }
             }
 

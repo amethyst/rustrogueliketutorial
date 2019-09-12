@@ -109,6 +109,79 @@ There are some framework changes also (see the source); we've done this often en
 
 ## Making it pretty
 
+While the code presented there is effective, it isn't visually attractive. It's nice to include fluff in games, and let the user be pleasantly surprised by the beauty of an ASCII terminal from time to time! We'll start by modifying `inventory_system.rs` again:
+
+```rust
+// If its a magic mapper...
+let is_mapper = magic_mapper.get(useitem.item);
+match is_mapper {
+    None => {}
+    Some(_) => {
+        used_item = true;
+        gamelog.entries.insert(0, "The map is revealed to you!".to_string());
+        *runstate = RunState::MagicMapReveal{ row : 0};
+    }
+}
+```
+
+Notice that instead of modifying the map, we are just changing the game state to mapping mode. We don't actually support doing that yet, so lets go into the state mapper in `main.rs` and modify `PlayerTurn` to handle it:
+
+```rust
+RunState::PlayerTurn => {
+    self.systems.dispatch(&self.ecs);
+    self.ecs.maintain();
+    match *self.ecs.fetch::<RunState>() {
+        RunState::MagicMapReveal{ .. } => newrunstate = RunState::MagicMapReveal{ row: 0 },
+        _ => newrunstate = RunState::MonsterTurn
+    }                
+}
+```
+
+While we're here, lets add the state to `RunState`:
+
+```rust
+#[derive(PartialEq, Copy, Clone)]
+pub enum RunState { AwaitingInput, 
+    PreRun, 
+    PlayerTurn, 
+    MonsterTurn, 
+    ShowInventory, 
+    ShowDropItem, 
+    ShowTargeting { range : i32, item : Entity},
+    MainMenu { menu_selection : gui::MainMenuSelection },
+    SaveGame,
+    NextLevel,
+    ShowRemoveItem,
+    GameOver,
+    MagicMapReveal { row : i32 }
+}
+```
+
+We also add some logic to the tick loop for the new state:
+
+```rust
+RunState::MagicMapReveal{row} => {
+    let mut map = self.ecs.fetch_mut::<Map>();
+    for x in 0..MAPWIDTH {
+        let idx = map.xy_idx(x as i32,row);
+        map.revealed_tiles[idx] = true;
+    }
+    if row as usize == MAPHEIGHT-1 {
+        newrunstate = RunState::MonsterTurn;
+    } else {
+        newrunstate = RunState::MagicMapReveal{ row: row+1 };
+    }
+}
+```
+
+This is pretty straightforward: it reveals the tiles on the current row, and then if we haven't hit the bottom of the map - it adds to row. If we have, it returns to where we were - `MonsterTurn`. If you `cargo run` now, find a magic mapping scroll and use it, the map fades in nicely:
+
+![Screenshot](./c20-s2.gif)
+
+## Wrap Up
+
+This was a relatively quick chapter, but we now have another staple of the roguelike genre: magic mapping.
+
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-20-magicmapping)**
 
