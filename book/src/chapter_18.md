@@ -190,7 +190,7 @@ Finally, we'll add the request:
 ```rust
 let pos = positions.get(wants_melee.target);
 if let Some(pos) = pos {
-    particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::ORANGE), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('‼'), 100.0);
+    particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::ORANGE), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('‼'), 200.0);
 }
 
 let damage = i32::max(0, (stats.power + offensive_bonus) - (target_stats.defense + defensive_bonus));
@@ -244,7 +244,7 @@ used_item = true;
 
 let pos = positions.get(*target);
 if let Some(pos) = pos {
-    particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::GREEN), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('♥'), 100.0);
+    particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::GREEN), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('♥'), 200.0);
 }
 ```
 
@@ -254,7 +254,7 @@ gamelog.entries.insert(0, format!("You use {} on {}, confusing them.", item_name
 
 let pos = positions.get(*mob);
 if let Some(pos) = pos {
-    particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('?'), 100.0);
+    particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('?'), 200.0);
 }
 ```
 
@@ -265,7 +265,7 @@ gamelog.entries.insert(0, format!("You use {} on {}, inflicting {} hp.", item_na
 
 let pos = positions.get(*mob);
 if let Some(pos) = pos {
-    particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::RED), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('‼'), 100.0);
+    particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::RED), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('‼'), 200.0);
 }
 ```
 
@@ -275,7 +275,7 @@ Lastly, if an effect hits a whole area (for example, a fireball) it would be goo
 for mob in map.tile_content[idx].iter() {
     targets.push(*mob);
 }
-particle_builder.request(tile_idx.x, tile_idx.y, rltk::RGB::named(rltk::ORANGE), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('░'), 100.0);
+particle_builder.request(tile_idx.x, tile_idx.y, rltk::RGB::named(rltk::ORANGE), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('░'), 200.0);
 ```
 
 That wasn't too hard, was it? If you `cargo run` your project now, you'll see various visual effects firing.
@@ -312,7 +312,7 @@ Then we add in a request at the end of the confusion test:
 can_act = false;
 
 particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), 
-                    rltk::RGB::named(rltk::BLACK), rltk::to_cp437('?'), 100.0);
+                    rltk::RGB::named(rltk::BLACK), rltk::to_cp437('?'), 200.0);
 ```
 
 We don't need to worry about getting the `Position` component here, because we already get it as part of the loop. If you `cargo run` your project now, and find a confusion scroll - you have visual feedback as to why a goblin isn't chasing you anymore:

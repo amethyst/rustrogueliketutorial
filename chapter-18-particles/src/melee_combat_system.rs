@@ -46,7 +46,7 @@ impl<'a> System<'a> for MeleeCombatSystem {
 
                     let pos = positions.get(wants_melee.target);
                     if let Some(pos) = pos {
-                        particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::ORANGE), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('‼'), 100.0);
+                        particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::ORANGE), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('‼'), 200.0);
                     }
 
                     let damage = i32::max(0, (stats.power + offensive_bonus) - (target_stats.defense + defensive_bonus));
