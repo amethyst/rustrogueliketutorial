@@ -22,3 +22,4 @@
     - [Bloodstains](./chapter_17.md)
     - [Particle Effects](./chapter_18.md)
     - [Hunger Clock](./chapter_19.md)
+    - [Magic Mapping](./chapter_20.md)

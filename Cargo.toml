@@ -30,5 +30,6 @@ members = [
     "chapter-16-nicewalls",
     "chapter-17-blood",
     "chapter-18-particles",
-    "chapter-19-food"
+    "chapter-19-food",
+    "chapter-20-magicmapping"
     ]
