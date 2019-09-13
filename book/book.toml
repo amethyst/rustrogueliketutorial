@@ -4,3 +4,7 @@ language = "en"
 multilingual = false
 src = "src"
 title = "Roguelike Tutorial - In Rust"
+
+[output.html]
+theme = "rust"
+google-analytics = "UA-132191594-2"

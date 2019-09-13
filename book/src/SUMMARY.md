@@ -3,8 +3,7 @@
 [Introduction](./chapter_0.md)
 
 - [Section 1 - Hello Rust](./chapter_1.md)
-    - [Hello Rust](./chapter_1.md)
-    - [Entities & Components](./chapter_2.md)
+    - [Entities and Components](./chapter_2.md)
     - [Walking A Map](./chapter_3.md)
     - [A More Interesting Map](./chapter_4.md)
     - [Field of View](./chapter_5.md)
