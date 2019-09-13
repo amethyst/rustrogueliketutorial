@@ -1,7 +1,6 @@
 # Summary
 
-[Introduction](./chapter_0.md)
-
+- [Introduction](./chapter_0.md)
 - [Section 1 - Hello Rust](./chapter_1.md)
     - [Hello Rust](./chapter_1.md)
     - [Entities & Components](./chapter_2.md)
