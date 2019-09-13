@@ -115,7 +115,7 @@ impl BaseMap for Map {
     fn get_pathing_distance(&self, idx1:i32, idx2:i32) -> f32 {
         let p1 = Point::new(idx1 % self.width, idx1 / self.width);
         let p2 = Point::new(idx2 % self.width, idx2 / self.width);
-        rltk::distance2d(rltk::DistanceAlg::Pythagoras, p1, p2)
+        rltk::DistanceAlg::Pythagoras.distance2d(p1, p2)
     }
 }
 
