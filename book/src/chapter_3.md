@@ -157,9 +157,7 @@ Run the program (`cargo run`) now, and you have a player in a map - and can move
 The full program now looks like this:
 
 ```rust
-extern crate rltk;
 use rltk::{Console, GameState, Rltk, RGB, VirtualKeyCode};
-extern crate specs;
 use specs::prelude::*;
 #[macro_use]
 extern crate specs_derive;
