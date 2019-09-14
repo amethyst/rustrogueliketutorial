@@ -1,4 +1,3 @@
-extern crate rltk;
 use rltk::{Rltk, GameState, Console};
 
 struct State {}
