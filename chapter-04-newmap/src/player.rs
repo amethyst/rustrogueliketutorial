@@ -1,6 +1,4 @@
-extern crate rltk;
 use rltk::{VirtualKeyCode, Rltk};
-extern crate specs;
 use specs::prelude::*;
 use super::{Position, Player, TileType, xy_idx, State};
 

@@ -1,4 +1,3 @@
-extern crate rltk;
 use rltk::{ RGB, Rltk, Console, RandomNumberGenerator };
 use super::{Rect};
 use std::cmp::{max, min};
