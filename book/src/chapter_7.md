@@ -724,7 +724,7 @@ fn tick(&mut self, ctx : &mut Rltk) {
 
 Notice how we now have a state machine going, with a "pre-run" phase for starting the game! It's much cleaner, and quite obvious what's going on. There's a bit of scope magic in use to keep the borrow-checker happy: if you declare and use a variable inside a scope, it is dropped on scope exit (you can also manually drop things, but I think this is cleaner looking).
 
-In `player.rs` we simply replace all `Paued` with `AwaitingInput`, and `Running` with `PlayerTurn`.
+In `player.rs` we simply replace all `Paused` with `AwaitingInput`, and `Running` with `PlayerTurn`.
 
 Lastly, we modify `monster_ai_system` to only run if the state is `MonsterTurn` (snippet):
 
