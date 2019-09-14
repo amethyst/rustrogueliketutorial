@@ -14,7 +14,7 @@ A Roguelike without a map to explore is a bit pointless, so in this chapter we'l
 
 ## Defining the map tiles
 
-We'll start by allowing two tile types: walls and floors. We can represent this with an `enum`:
+We'll start by allowing two tile types: walls and floors. We can represent this with an `enum` (to learn more about enumerations, [The Rust Book](https://doc.rust-lang.org/book/ch06-00-enums.html) has a *large* section on them):
 
 ```rust
 #[derive(PartialEq, Copy, Clone)]
@@ -23,7 +23,7 @@ enum TileType {
 }
 ```
 
-Notice that we've included some derived features: `Copy` and `Clone` allow this to be used as a "value" type (that is, it just passes around the value instead of pointers), and `PartialEq` allows us to use `==` to see if two tile types match.
+Notice that we've included some derived features (more usage of derive macros, this time built into Rust itself): `Copy` and `Clone` allow this to be used as a "value" type (that is, it just passes around the value instead of pointers), and `PartialEq` allows us to use `==` to see if two tile types match. If we *didn't* derive these features, `if tile_type == TileType::Wall` would fail to compile!
 
 ## Building a simple map
 
@@ -37,7 +37,9 @@ pub fn xy_idx(x: i32, y: i32) -> usize {
 
 This is simple: it multiplies the `y` position by the map width (80), and adds `x`. This guarantees one tile per location, and efficiently maps it in memory for left-to-right reading.
 
-Then we write the map function:
+We're using a Rust function shorthand here. Notice that the function returns a `usize` (equivalent to `size_t` in C/C++ - whatever the basic size type used for a platform is) - and the function body lacks a `;` at the end? Any function that ends with a statement that lacks a semicolon treats that line as a `return` statement. So it's the same as typing `return (y as usize * 80) + x as usize`. This comes from the Rust author's *other* favorite language, `ML` - which uses the same shorthand. It's considered "Rustacean" (canonical Rust; I always picture a Rust Monster with cute little claws and shell) to use this style, so we've adopted it for the tutorial.
+
+Then we write a *constructor* function to make a map:
 ```rust
 fn new_map() -> Vec<TileType> {
     let mut map = vec![TileType::Floor; 80*50];
@@ -69,6 +71,27 @@ fn new_map() -> Vec<TileType> {
 }
 ```
 
+There's a fair amount of syntax that we haven't encountered before here, so lets break this down:
+
+1. `fn new_map() -> Vec<TileType>` species a function named `new_map`. It doesn't take any parameters, so it can be called from anywhere.
+2. It *returns* a `Vec`. `Vec` is a Rust *Vector* (if you're familiar with C++, it's pretty much exactly the same as a C++ `std::vector`). A vector is like an *array* (see [this Rust by Example chapter](https://doc.rust-lang.org/rust-by-example/primitives/array.html)), which lets you put a bunch of data into a list and access each element. Unlike an *array*, a `Vec` doesn't have a size limit - and the size can change while the program runs. So you can `push` (add) new items, and `remove` them as you go. [Rust by Example has a great chapter on Vectors](https://doc.rust-lang.org/rust-by-example/std/vec.html); it's a good idea to learn about them - they are used *everywhere*.
+3. `let mut map = vec![TileType::Floor; 80*50];` is a confusing looking statement! Lets break it down:
+    1. `let mut map` is saying "make a new variable" (let), "let me change it" (mut) and call it "map".
+    2. `vec!` is a *macro*, another one build into the Rust standard library. The exclamation mark is Rust's way of saying "this is a procedural macro" (as opposed to a derive macro, like we've seen before). Procedural macros run like a function - they define a *procedure*, they just greatly reduce your typing.
+    3. Macros take their parameters in square brackets.
+    4. The first parameter is the *value* for each element of the new vector. In this case, we're setting every entry we create to be a `Floor` (from the `TileType` enumeration).
+    5. The second parameter is how many tiles we should create. They will all be set to the value we set above. In this case, our map is 80x50 tiles (4,000 tiles - but we'll let the compiler do the math for us!). So we need to make 4,000 tiles.
+    6. You could have replaced the `vec!` call with `for _i in 0..4000 { map.push(TileType::Floor); }`. In fact, that's pretty much what the macro did for you - but it's definitely less typing to have the macro do it for you!
+4. `for x in 0..80 {` is a `for loop` ([see here](https://doc.rust-lang.org/rust-by-example/flow_control/for.html)), just like we used in the previous example. In this case, we're iterating `x` from 0 to 79.
+5. `map[xy_idx(x, 0)] = TileType::Wall;` first calls the `xy_idx` function we defined above to get the vector index for `x, 0`. It then *indexes* the vector, telling it to set the vector entry at that position to be a wall. We do this again for `x,49`.
+6. We do the same thing, but looping `y` from 0..49 - and setting the vertical walls on our map.
+7. `let mut rng = rltk::RandomNumberGenerator::new();` calls the `RandomNumberGenerator` type in `RLTK`'s `new` function, and assigns it to a variable called `rng`. We are asking RLTK to give us a new dice roller.
+8. `for _i in 0..400 {` is the same as other `for` loops, but notice the `_` before `i`. We aren't actually looking at the value of `i` - we just want the loop to run 400 times. Rust will give you a warning if you have a variable you don't use; adding the underscore prefix tells Rust that it's ok, we meant to do that.
+9. `let x = rng.roll_dice(1, 79);` calls the `rng` we grabbed in 7, and asks it for a random number from 1 to 79. RLTK does *not* go with an exclusive range, because it is trying to mirror the old D&D convention of dice being `1d20` or similar. In this case, we should be glad that computers don't care about the geometric difficulty of inventing a 79-sided dice! We also obtain a `y` value between 1 and 49. We've rolled imaginary dice, and found a random location on the map.
+10. We set the variable `idx` (short for "index") to the vector index (via `xy_idx` we defined earlier) for the coordinates we rolled.
+11. `if idx != xy_idx(40, 25) {` checks that `idx` isn't the exact middle (we'll be starting there, so we don't want to start inside a wall!).
+12. If it isn't the middle, we set the randomly rolled location to be a wall.
+
 It's pretty simple: it places walls around the outer edges of the map, and then adds 400 random walls anywhere that isn't the player's starting point.
 
 ## Making the map visible to the world
@@ -79,7 +102,7 @@ Specs includes a concept of "resources" - shared data the whole ECS can use. So 
 gs.ecs.insert(new_map());
 ```
 
-The map is now available from anywhere the ECS can see! Now inside your code, you can access the map with the rather unwieldy `let map = self.ecs.get_mut::<Vec<TileType>>();`; it's available to systems in an easier fashion.
+The map is now available from anywhere the ECS can see! Now inside your code, you can access the map with the rather unwieldy `let map = self.ecs.get_mut::<Vec<TileType>>();`; it's available to systems in an easier fashion. There's actually *several* ways to get the value of map, including `ecs.get`, `ecs.fetch`. `get_mut` obtains a "mutable" (you can change it) reference to the map - wrapped in an optional (in case the map isn't there). `fetch` skips the `Option` type and gives you a map directly. You can learn more about this [in the Specs Book](https://slide-rs.github.io/specs/04_resources.html).
 
 ## Draw the map
 
@@ -110,7 +133,7 @@ fn draw_map(map: &[TileType], ctx : &mut Rltk) {
 }
 ```
 
-This is mostly straightforward. In the declaration, we pass the map as `&[TileType]` rather than `&Vec<TileType>`; this allows us to pass in "slices" (parts of) a map if we so choose. We won't do that yet, but it may be useful later. It's also considered a more "rustic" (that is: idiomatic Rust) way to do things, and the linter (`clippy`) warns about it.
+This is mostly straightforward, and uses concepts we've already visited. In the declaration, we pass the map as `&[TileType]` rather than `&Vec<TileType>`; this allows us to pass in "slices" (parts of) a map if we so choose. We won't do that yet, but it may be useful later. It's also considered a more "rustic" (that is: idiomatic Rust) way to do things, and the linter (`clippy`) warns about it. [The Rust Book can teach you about slices, if you are interested](https://doc.rust-lang.org/rust-by-example/primitives/array.html).
 
 Otherwise, it takes advantage of the way we are storing our map - rows together, one after the other. So it iterates through the entire map structure, adding 1 to the `x` position for each tile. If it hits the map width, it zeroes `x` and adds one to `y`. This way we aren't repeatedly reading all over the array - which can get slow. The actual rendering is very simple: we `match` the tile type, and draw either a period or a hash for walls/floors.
 
@@ -120,6 +143,8 @@ We should also call the function! In our `tick` function, add:
 let map = self.ecs.fetch::<Vec<TileType>>();
 draw_map(&map, ctx);
 ```
+
+The `fetch` call is new (we mentioned it above). `fetch` requires that you promise that you know that the resource you are requesting really does exist - and will crash if it doesn't. It doesn't *quite* return a reference - it's a `shred` type, which *acts* like a reference most of the time but occasionally needs a bit of coercing to *be* one. We'll worry about that bridge when it comes time to cross it, but consider yourself warned!
 
 ## Making walls solid
 
