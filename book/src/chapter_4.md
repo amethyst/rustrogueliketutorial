@@ -32,6 +32,8 @@ pub fn new_map_test() -> Vec<TileType> {
 }
 ```
 
+In canonical Rust, if you prefix a function with comments starting with `///`, it makes it into a *function comment*. Your IDE will then show you your comment text when you hover the mouse over the function header, and you can use [Cargo's documentation features](https://doc.rust-lang.org/cargo/commands/cargo-doc.html) to make pretty documentation pages for the system you are writing. It's mostly handy if you plan on sharing your code, or working with others - but it's nice to have!
+
 So now, in the spirit of the [original libtcod tutorial](http://rogueliketutorials.com/tutorials/tcod/part-3/), we'll start making a map. Our goal is to randomly place rooms, and join them together with corridors.
 
 ## Making a couple of rectangular rooms
@@ -46,7 +48,7 @@ pub fn new_map_rooms_and_corridors() -> Vec<TileType> {
 }
 ```
 
-This makes a solid 80x50 map, with walls on all tiles - you can't move! We've kept the function signature, so changing the map we want to use in `main.rs` just requires changing `gs.ecs.insert(new_map_test());` to `gs.ecs.insert(new_map_rooms_and_corridors());`.
+This makes a solid 80x50 map, with walls on all tiles - you can't move! We've kept the function signature, so changing the map we want to use in `main.rs` just requires changing `gs.ecs.insert(new_map_test());` to `gs.ecs.insert(new_map_rooms_and_corridors());`. Once again we're using the `vec!` macro to make our life easier - see the previous chapter for a discussion of how that works.
 
 Since this algorithm makes heavy use of rectangles, and a `Rect` type - we'll start by making one in `rect.rs`. We'll include some utility functions that will be useful later on in this chapter:
 
@@ -74,6 +76,13 @@ impl Rect {
 }
 ```
 
+There's nothing really new here, but lets break it down a bit:
+
+1. We define a `struct` called `Rect`. We added the `pub` tag to make it *public* - it's available outside of this module (by putting it into a new file, we automatically created a code module; that's a built-in Rust way to compartmentalize your code). Over in `main.rs`, we can add `pub mod Rect` to say "we use `Rect`, and because we put a `pub` in front of it anything can get `Rect` from us as `super::rect::Rect`. That's not very ergonomic to type, so a second line `use rect::Rect` shortens that to `super::Rect`.
+2. We make a new *constructor*, entitled `new`. It uses the return shorthand and returns a rectangle based on the `x`, `y`, `width` and `height` we pass in.
+3. We define a *member* method, `intersect`. It has an `&self`, meaning it can see into the `Rect` to which it is attached - but can't modify it (it's a "pure" function). It returns a bool: `true` if the two rectangles overlap, `false` otherwise.
+4. We define `center`, also as a pure member method. It simply returns the coordinates of the middle of the rectangle, as a *tuple* of `x` and `y` in `val.0` and `val.1`. 
+
 We'll also make a new function to apply a room to a map:
 
 ```rust
@@ -85,6 +94,8 @@ fn apply_room_to_map(room : &Rect, map: &mut [TileType]) {
     }
 }
 ```
+
+Notice that we are using `for y in room.y1 +1 ..= room.y2` - that's an *inclusive range*. We want to go all the way to the value of `y2`, and not `y2-1`! Otherwise, it's relatively straightforward: use two for loops to visit every tile inside the room's rectangle, and set that tile to be a `Floor`.
 
 With these two bits of code, we can create a new rectangle anywhere with `Rect::new(x, y, width, height)`. We can add it to the map as floors with `apply_room_to_map(rect, map)`. That's enough to add a couple of test rooms. Our map function now looks like this:
 
@@ -106,7 +117,9 @@ If you `cargo run` your project, you'll see that we now have two rooms - not lin
 
 ## Making a corridor
 
-Two disconnected rooms isn't much fun, so lets add a corridor between them. We're going to need some comparison functions, so we have to tell Rust to import them (at the top of `map.rs`): `use std::cmp::{max, min};`. Then we make two functions, for horizontal and vertical tunnels:
+Two disconnected rooms isn't much fun, so lets add a corridor between them. We're going to need some comparison functions, so we have to tell Rust to import them (at the top of `map.rs`): `use std::cmp::{max, min};`. `min` and `max` do what they say: they return the minimum or maximum of two values. You could use `if` statements to do the same thing, but some computers will optimize this into a simple (FAST) call for you; we let Rust figure that out! 
+
+Then we make two functions, for horizontal and vertical tunnels:
 
 ```rust
 fn apply_horizontal_tunnel(map: &mut [TileType], x1:i32, x2:i32, y:i32) {
@@ -167,7 +180,7 @@ pub fn new_map_rooms_and_corridors() -> Vec<TileType> {
 
 There's quite a bit changed there:
 
-* We've added `const` constants for the maximum number of rooms to make, and the minimum and maximum size of the rooms.
+* We've added `const` constants for the maximum number of rooms to make, and the minimum and maximum size of the rooms. This is the first time we've encountered `const`: it just says "setup this value at the beginning, and it can never change". It's the only easy way to have global variables in Rust; since they can never change, they often don't even exist and get baked into the functions where you use them. If they *do* exist, because they can't change there are no concerns when multiple threads access them. It's often cleaner to setup a named constant than to use a "magic number" - that is, a hard-coded value with no real clue as to why you picked that value.
 * We acquire a `RandomNumberGenerator` from RLTK (which required that we add to the `use` statement at the top of `map.rs`)
 * We're randomly building a width and height.
 * We're then placing the room randomly so that `x` and `y` are greater than 0 and less than the maximum map size minus one.
