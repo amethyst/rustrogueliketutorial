@@ -149,7 +149,7 @@ Now we'll make a new component, `BlocksTile`. You should know the drill by now; 
 ```rust
 #[derive(Component, Debug)]
 pub struct BlocksTile {}
-```rust
+```
 
 Then register it in `main.rs`: `gs.ecs.register::<BlocksTile>();`
 
