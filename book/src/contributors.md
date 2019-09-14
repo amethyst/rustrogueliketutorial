@@ -13,7 +13,7 @@
 The following people have contributed to this project:
 
 * Herbert Wolverson, the primary author.
-* [Marius Gedminas](https://github.com/mgedmin) provided some fixes to the visibility system, and chapter 5.
+* [Marius Gedminas](https://github.com/mgedmin) provided some fixes to the visibility system, and chapter 5. Corrected a typo in chapter 7.
 
 ---
 
