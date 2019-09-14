@@ -210,8 +210,8 @@ let num_spawns = rng.roll_dice(1, MAX_MONSTERS + 3) + (map_depth - 1) - 3;
 We'll have to change a couple of calls in `main.rs` to pass in the depth:
 ```rust
 for room in map.rooms.iter().skip(1) {
-        spawner::spawn_room(&mut gs.ecs, room, 1);
-    }
+    spawner::spawn_room(&mut gs.ecs, room, 1);
+}
 ```
 
 ```rust
