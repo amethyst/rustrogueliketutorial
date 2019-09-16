@@ -87,7 +87,7 @@ impl<'a> System<'a> for HungerSystem {
                 }
                 RunState::MonsterTurn => {
                     if entity != *player_entity {
-                        proceed = false;
+                        proceed = true;
                     }
                 }
                 _ => proceed = false
