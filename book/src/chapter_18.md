@@ -102,7 +102,7 @@ In `main.rs`, we'll turn it into a *resource*:
 gs.ecs.insert(particle_system::ParticleBuilder::new());
 ```
 
-Now, we'll return to `particle_systemrs` and build an actual system to spawn particles. The system looks like this:
+Now, we'll return to `particle_system.rs` and build an actual system to spawn particles. The system looks like this:
 
 ```rust
 pub struct ParticleSpawnSystem {}
