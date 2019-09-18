@@ -25,8 +25,7 @@ struct LeftMover {}
 struct Player {}
 
 struct State {
-    ecs: World,
-    systems: fn(&mut World)
+    ecs: World
 }
 
 fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
@@ -63,7 +62,7 @@ impl GameState for State {
         ctx.cls();
 
         player_input(self, ctx);
-        (self.systems)(&mut self.ecs);
+        self.run_systems();
 
         let positions = self.ecs.read_storage::<Position>();
         let renderables = self.ecs.read_storage::<Renderable>();
@@ -88,17 +87,18 @@ impl<'a> System<'a> for LeftWalker {
     }
 }
 
-fn run_systems(ecs : &mut World) {
-    let mut lw = LeftWalker{};
-    lw.run_now(&ecs);
-    ecs.maintain();
+impl State {
+    fn run_systems(&mut self) {
+        let mut lw = LeftWalker{};
+        lw.run_now(&self.ecs);
+        self.ecs.maintain();
+    }
 }
 
 fn main() {
     let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "resources");
     let mut gs = State {
-        ecs: World::new(),
-        systems : run_systems
+        ecs: World::new()
     };
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
