@@ -187,6 +187,8 @@ use specs::prelude::*;
 #[macro_use]
 extern crate specs_derive;
 
+rltk::add_wasm_support!();
+
 #[derive(Component)]
 struct Position {
     x: i32,
@@ -209,8 +211,7 @@ enum TileType {
 }
 
 struct State {
-    ecs: World,
-    systems: Dispatcher<'static, 'static>
+    ecs: World
 }
 
 pub fn xy_idx(x: i32, y: i32) -> usize {
@@ -307,7 +308,7 @@ impl GameState for State {
         ctx.cls();
 
         player_input(self, ctx);
-        self.systems.dispatch(&self.ecs);
+        self.run_systems();
 
         let map = self.ecs.fetch::<Vec<TileType>>();
         draw_map(&map, ctx);
@@ -321,12 +322,16 @@ impl GameState for State {
     }
 }
 
+impl State {
+    fn run_systems(&mut self) {
+        self.ecs.maintain();
+    }
+}
+
 fn main() {
-    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "../resources");
+    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "resources");
     let mut gs = State {
-        ecs: World::new(),
-        systems : DispatcherBuilder::new()
-            .build()
+        ecs: World::new()
     };
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
