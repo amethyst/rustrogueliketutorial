@@ -3,6 +3,8 @@ use specs::prelude::*;
 #[macro_use]
 extern crate specs_derive;
 
+rltk::add_wasm_support!();
+
 #[derive(Component)]
 struct Position {
     x: i32,
@@ -24,7 +26,7 @@ struct Player {}
 
 struct State {
     ecs: World,
-    systems: Dispatcher<'static, 'static>
+    systems: fn(&mut World)
 }
 
 fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
@@ -61,7 +63,7 @@ impl GameState for State {
         ctx.cls();
 
         player_input(self, ctx);
-        self.systems.dispatch(&self.ecs);
+        (self.systems)(&mut self.ecs);
 
         let positions = self.ecs.read_storage::<Position>();
         let renderables = self.ecs.read_storage::<Renderable>();
@@ -86,13 +88,17 @@ impl<'a> System<'a> for LeftWalker {
     }
 }
 
+fn run_systems(ecs : &mut World) {
+    let mut lw = LeftWalker{};
+    lw.run_now(&ecs);
+    ecs.maintain();
+}
+
 fn main() {
-    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "../resources");
+    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "resources");
     let mut gs = State {
         ecs: World::new(),
-        systems : DispatcherBuilder::new()
-            .with(LeftWalker{}, "left_walker", &[])
-            .build()
+        systems : run_systems
     };
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
