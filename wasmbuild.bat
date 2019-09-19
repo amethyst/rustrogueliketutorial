@@ -5,6 +5,7 @@ CALL :Stage chapter-02-helloecs
 CALL :Stage chapter-03-walkmap
 CALL :Stage chapter-04-newmap
 CALL :Stage chapter-05-fov
+CALL :Stage chapter-06-monsters
 
 REM Publish or perish
 cd book\book\wasm
