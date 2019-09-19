@@ -229,7 +229,7 @@ Our `main.rs` file also required adjustment, to get accept the new format. We ch
 
 ```rust
 fn main() {
-    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "../resources");
+    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "resources");
     let mut gs = State {
         ecs: World::new()
     };

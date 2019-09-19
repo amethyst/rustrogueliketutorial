@@ -7,6 +7,7 @@ CALL :Stage chapter-04-newmap
 CALL :Stage chapter-05-fov
 CALL :Stage chapter-06-monsters
 CALL :Stage chapter-07-damage
+CALL :Stage chapter-08-ui
 
 REM Publish or perish
 cd book\book\wasm
