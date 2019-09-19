@@ -692,6 +692,8 @@ This has been a long chapter, with quite heavy content. The great news is that w
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-11-loadsave)**
 
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-11-loadsave/)
+
 ---
 
 Copyright (C) 2019, Herbert Wolverson.

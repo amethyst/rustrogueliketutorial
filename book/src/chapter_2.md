@@ -738,6 +738,8 @@ This chapter was a lot to digest, but provides a really solid base on which to b
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-02-helloecs)**
 
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-02-helloecs/)
+
 ---
 
 Copyright (C) 2019, Herbert Wolverson.

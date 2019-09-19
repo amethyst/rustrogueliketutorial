@@ -754,6 +754,8 @@ This chapter has shown a fair amount of the power of using an ECS: picking up, u
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-09-items)**
 
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-09-items/)
+
 ---
 
 Copyright (C) 2019, Herbert Wolverson.

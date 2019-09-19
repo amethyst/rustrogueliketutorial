@@ -215,6 +215,8 @@ There's a number of ways to get help:
 * The fine people on [/r/rust](https://www.reddit.com/r/rust/) are VERY helpful with Rust language issues.
 * The awesome people of [/r/roguelikedev](https://www.reddit.com/r/roguelikedev/) are VERY helpful when it comes to Roguelike issues. Their Discord is pretty active, too.
 
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-01-hellorust/)
+
 ---
 
 Copyright (C) 2019, Herbert Wolverson.

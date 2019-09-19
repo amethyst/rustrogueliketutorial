@@ -340,6 +340,8 @@ And that's a wrap for chapter 6; we've added a variety of foul-mouthed monsters 
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-06-monsters)**
 
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-06-monsters/)
+
 ---
 
 Copyright (C) 2019, Herbert Wolverson.
