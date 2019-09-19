@@ -326,7 +326,8 @@ impl<'a> System<'a> for ItemCollectionSystem {
 This iterates the requests to pick up an item, removes their position component, and adds an `InBackpack` component assigned to the collector. Don't forget to add it to the systems list in `main.rs`:
 
 ```rust
-.with(ItemCollectionSystem{}, "pickup", &["melee_combat"])
+let mut pickup = ItemCollectionSystem{};
+pickup.run_now(&self.ecs);
 ```
 
 The next step is to add an input command to pick up an item. `g` is a popular key for this, so we'll go with that (we can always change it!). In `player.rs`, in the ever-growing `match` statement of inputs, we add:
@@ -551,7 +552,8 @@ impl<'a> System<'a> for PotionUseSystem {
 
 And register it in the list of systems to run:
 ```rust
-.with(PotionUseSystem{}, "potions", &["melee_combat"])
+let mut potions = PotionUseSystem{};
+potions.run_now(&self.ecs);
 ```
 
 Like other systems we've looked at, this iterates all of the `WantsToDrinkPotion` intent objects. It then heals up the drinker by the amount set in the `Potion` component, and deletes the potion. Since all of the placement information is attached to the potion itself, there's no need to chase around making sure it is removed from the appropriate backpack: the entity ceases to exist, and takes its components with it.
@@ -560,12 +562,12 @@ Testing this with `cargo run` gives a surprise: the potion isn't deleted after u
 
 ```rust
 RunState::PlayerTurn => {
-    self.systems.dispatch(&self.ecs);
+    self.run_systems();
     self.ecs.maintain();
     newrunstate = RunState::MonsterTurn;
 }
 RunState::MonsterTurn => {
-    self.systems.dispatch(&self.ecs);
+    self.run_systems();
     self.ecs.maintain();
     newrunstate = RunState::AwaitingInput;
 }
@@ -627,7 +629,8 @@ impl<'a> System<'a> for ItemDropSystem {
 
 Register it in the dispatch builder in `main.rs`:
 ```rust
-.with(ItemDropSystem{}, "drop_items", &["melee_combat"])
+let mut drop_items = ItemDropSystem{};
+drop_items.run_now(&self.ecs);
 ```
 
 We'll add a new `RunState` in `main.rs`:

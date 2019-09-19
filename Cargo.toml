@@ -38,3 +38,6 @@ members = [
     "chapter-20-magicmapping",
     "chapter-21-rexmenu"
     ]
+
+[profile.dev]
+opt-level = 1
