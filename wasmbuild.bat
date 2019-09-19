@@ -9,6 +9,7 @@ CALL :Stage chapter-06-monsters
 CALL :Stage chapter-07-damage
 CALL :Stage chapter-08-ui
 CALL :Stage chapter-09-items
+CALL :Stage chapter-10-ranged
 
 REM Publish or perish
 cd book\book\wasm
