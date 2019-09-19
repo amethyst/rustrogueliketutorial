@@ -13,6 +13,7 @@ CALL :Stage chapter-10-ranged
 CALL :Stage chapter-11-loadsave
 CALL :Stage chapter-12-delvingdeeper
 CALL :Stage chapter-13-difficulty
+CALL :Stage chapter-14-gear
 
 REM Publish or perish
 cd book\book\wasm
