@@ -20,6 +20,11 @@ macro_rules! serialize_individually {
     };
 }
 
+#[cfg(target_arch = "wasm32")]
+pub fn save_game(_ecs : &mut World) {
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 pub fn save_game(ecs : &mut World) {
     // Create helper
     let mapcopy = ecs.get_mut::<super::map::Map>().unwrap().clone();
@@ -55,7 +60,7 @@ macro_rules! deserialize_individually {
         $(
         DeserializeComponents::<NoError, _>::deserialize(
             &mut ( &mut $ecs.write_storage::<$type>(), ),
-            &mut $data.0, // entities
+            &$data.0, // entities
             &mut $data.1, // marker
             &mut $data.2, // allocater
             &mut $de,

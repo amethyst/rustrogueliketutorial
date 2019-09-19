@@ -657,6 +657,35 @@ gui::MainMenuSelection::LoadGame => {
 }
 ```
 
+## Web Assembly
+
+The example as-is will compile and run on the web assembly (`wasm32`) platform: but as soon as you try to save the game, it crashes. Unfortunately (well, fortunately if you like your computer not being attacked by every website you go to!), `wasm` is sandboxed - and doesn't have the ability to save files locally.
+
+Supporting saving via `LocalStorage` (a browser/JavaScript feature) is planned for a future version of RLTK. In the meantime, we'll add some wrappers to avoid the crash - and simply not actually save the game on `wasm32`.
+
+Rust offers *conditional compilation* (if you are familiar with C, it's a lot like the `#define` madness you find in big, cross-platform libraries). In `saveload_system.rs`, we'll modify `save_game` to only compile on non-web assembly platforms:
+
+```rust
+#[cfg(not(target_arch = "wasm32"))]
+pub fn save_game(ecs : &mut World) {
+```
+
+That `#` tag is scary looking, but it makes sense if you unwrap it. `#[cfg()]` means "only compile if the current configuration matches the contents of the parentheses. `not()` inverts the result of a check, so when we check that `target_arch = "wasm32")` (are we compiling for `wasm32`) the result is inverted. The end result of this is that the function only compiles if you *aren't* building for `wasm32`.
+
+That's all well and good, but there are calls to that function - so compilation on `wasm` will fail. We'll add a *stub* function to take its place:
+
+```rust
+#[cfg(target_arch = "wasm32")]
+pub fn save_game(_ecs : &mut World) {
+}
+```
+
+The `#[cfg(target_arch = "wasm32")]` prefix means "only compile this for web assembly". We've kept the function signature the same, but added a `_` before `_ecs` - telling the compiler that we intend not to use that variable. Then we keep the function empty.
+
+The result? You can compile for `wasm32` and the `save_game` function simply doesn't *do* anything at all. The rest of the structure remains, so the game correctly returns to the main menu - but with no resume function.
+
+(Why does the check that the file exists work? Rust is smart enough to say "no filesystem, so the file can't exist". Thanks, Rust!)
+
 # Wrap-up
 
 This has been a long chapter, with quite heavy content. The great news is that we now have a framework for loading and saving the game whenever we want to. Adding components has gained some steps: we have to register them in `main`, tag them for `Serialize, Deserialize`, and remember to add them to our component type lists in `saveload_system.rs`. That could be easier - but it's a very solid foundation.
