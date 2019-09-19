@@ -17,6 +17,7 @@ CALL :Stage chapter-14-gear
 CALL :Stage chapter-16-nicewalls
 CALL :Stage chapter-17-blood
 CALL :Stage chapter-18-particles
+CALL :Stage chapter-19-food
 
 REM Publish or perish
 cd book\book\wasm
