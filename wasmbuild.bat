@@ -4,6 +4,7 @@ CALL :Stage chapter-01-hellorust
 CALL :Stage chapter-02-helloecs
 CALL :Stage chapter-03-walkmap
 CALL :Stage chapter-04-newmap
+CALL :Stage chapter-05-fov
 
 REM Publish or perish
 cd book\book\wasm

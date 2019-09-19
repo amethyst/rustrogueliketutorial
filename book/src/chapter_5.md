@@ -178,15 +178,16 @@ impl<'a> System<'a> for VisibilitySystem {
 }
 ```
 
-We adjust the systems registration in `main.rs`:
+Now we have to adjust `run_systems` in `main.rs` to actually call the system:
 
 ```rust
-let mut gs = State {
-    ecs: World::new(),
-    systems : DispatcherBuilder::new()
-        .with(VisibilitySystem{}, "visibility_system", &[])
-        .build()
-};
+impl State {
+    fn run_systems(&mut self) {
+        let mut vis = VisibilitySystem{};
+        vis.run_now(&self.ecs);
+        self.ecs.maintain();
+    }
+}
 ```
 
 We also have to tell `main.rs` to use the new module:
