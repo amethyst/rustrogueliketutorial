@@ -637,7 +637,7 @@ pub fn delete_the_dead(ecs : &mut World) {
                 let player = players.get(entity);
                 match player {
                     None => dead.push(entity),
-                    Some(_) => println!("You are dead")
+                    Some(_) => console::log("You are dead")
                 }
             }
         }
