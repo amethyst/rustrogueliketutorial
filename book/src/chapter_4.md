@@ -231,9 +231,7 @@ Our `main.rs` file also required adjustment, to get accept the new format. We ch
 fn main() {
     let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "../resources");
     let mut gs = State {
-        ecs: World::new(),
-        systems : DispatcherBuilder::new()
-            .build()
+        ecs: World::new()
     };
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
