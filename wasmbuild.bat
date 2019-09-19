@@ -11,6 +11,7 @@ CALL :Stage chapter-08-ui
 CALL :Stage chapter-09-items
 CALL :Stage chapter-10-ranged
 CALL :Stage chapter-11-loadsave
+CALL :Stage chapter-12-delvingdeeper
 
 REM Publish or perish
 cd book\book\wasm
