@@ -1,6 +1,7 @@
 extern crate specs;
 use specs::prelude::*;
 use super::{CombatStats, WantsToMelee, Name, SufferDamage};
+use rltk::console;
 
 pub struct MeleeCombatSystem {}
 
@@ -24,9 +25,9 @@ impl<'a> System<'a> for MeleeCombatSystem {
                     let damage = i32::max(0, stats.power - target_stats.defense);
 
                     if damage == 0 {
-                        println!("{} is unable to hurt {}", &name.name, &target_name.name);
+                        console::log(&format!("{} is unable to hurt {}", &name.name, &target_name.name));
                     } else {
-                        println!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage);
+                        console::log(&format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));
                         inflict_damage.insert(wants_melee.target, SufferDamage{ amount: damage }).expect("Unable to do damage");
                     }
                 }

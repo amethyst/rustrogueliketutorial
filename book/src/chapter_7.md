@@ -52,7 +52,7 @@ extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Monster, Name, Map, Position};
 extern crate rltk;
-use rltk::{Point};
+use rltk::{Point, console};
 
 pub struct MonsterAI {}
 
@@ -70,7 +70,7 @@ impl<'a> System<'a> for MonsterAI {
 
         for (mut viewshed,_monster,name,mut pos) in (&mut viewshed, &monster, &name, &mut position).join() {
             if viewshed.visible_tiles.contains(&*player_pos) {
-                println!("{} shouts insults", name.name);
+                console::log(&format!("{} shouts insults", name.name));
                 let path = rltk::a_star_search(
                     map.xy_idx(pos.x, pos.y) as i32, 
                     map.xy_idx(player_pos.x, player_pos.y) as i32, 
@@ -196,18 +196,20 @@ impl<'a> System<'a> for MapIndexingSystem {
 }
 ```
 
-This tells the map to setup blocking from the terrain, and then iterates all entities with a `BlocksTile` component, and applies them to the blocked list. We need to register it with the dispatcher; in `main.rs`:
+This tells the map to setup blocking from the terrain, and then iterates all entities with a `BlocksTile` component, and applies them to the blocked list. We need to register it with `run_systems`; in `main.rs`:
 
 ```rust
-let mut gs = State {
-    ecs: World::new(),
-    systems : DispatcherBuilder::new()
-        .with(MapIndexingSystem{}, "map_indexing_system", &[])
-        .with(VisibilitySystem{}, "visibility_system", &[])
-        .with(MonsterAI{}, "monster_ai", &["visibility_system", "map_indexing_system"])
-        .build(),
-    runstate : RunState::Running
-};
+impl State {
+    fn run_systems(&mut self) {
+        let mut mapindex = MapIndexingSystem{};
+        mapindex.run_now(&self.ecs);
+        let mut vis = VisibilitySystem{};
+        vis.run_now(&self.ecs);
+        let mut mob = MonsterAI{};
+        mob.run_now(&self.ecs);
+        self.ecs.maintain();
+    }
+}
 ```
 
 We didn't specify any dependencies, we're relying upon Specs to figure out if it can run concurrently with anything. We do however add it to the dependency list for `MonsterAI` - the AI relies on its results, so it has to be done.
@@ -218,7 +220,7 @@ If you `cargo run` now, monsters no longer end up on top of each other - but the
 let distance = rltk::DistanceAlg::Pythagoras.distance2d(Point::new(pos.x, pos.y), *player_pos);
 if distance < 1.5 {
     // Attack goes here
-    println!("{} shouts insults", name.name);
+    console::log(&format!("{} shouts insults", name.name));
     return;
 }
 ```
@@ -408,7 +410,7 @@ for (_player, pos, viewshed) in (&mut players, &mut positions, &mut viewsheds).j
             None => {}
             Some(t) => {
                 // Attack it
-                println!("From Hell's Heart, I stab thee!");
+                console::log(&format!("From Hell's Heart, I stab thee!"));
                 return; // So we don't move after attacking
             }
         }
@@ -478,9 +480,9 @@ impl<'a> System<'a> for MeleeCombatSystem {
                     let damage = i32::max(0, stats.power - target_stats.defense);
 
                     if damage == 0 {
-                        println!("{} is unable to hurt {}", &name.name, &target_name.name);
+                        console::log(&format!("{} is unable to hurt {}", &name.name, &target_name.name));
                     } else {
-                        println!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage);
+                        console::log(&format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));
                         inflict_damage.insert(wants_melee.target, SufferDamage{ amount: damage }).expect("Unable to do damage");
                     }
                 }
@@ -686,18 +688,18 @@ fn tick(&mut self, ctx : &mut Rltk) {
         
         match newrunstate {
             RunState::PreRun => {
-                self.systems.dispatch(&self.ecs);
+                self.run_systems();
                 newrunstate = RunState::AwaitingInput;
             }
             RunState::AwaitingInput => {
                 newrunstate = player_input(self, ctx);
             }
             RunState::PlayerTurn => {
-                self.systems.dispatch(&self.ecs);
+                self.run_systems();
                 newrunstate = RunState::MonsterTurn;
             }
             RunState::MonsterTurn => {
-                self.systems.dispatch(&self.ecs);
+                self.run_systems();
                 newrunstate = RunState::AwaitingInput;
             }
         }
@@ -728,7 +730,7 @@ In `player.rs` we simply replace all `Paused` with `AwaitingInput`, and `Running
 
 Lastly, we modify `monster_ai_system` to only run if the state is `MonsterTurn` (snippet):
 
-```
+```rust
 impl<'a> System<'a> for MonsterAI {
 #[allow(clippy::type_complexity)]
 type SystemData = ( WriteExpect<'a, Map>,
