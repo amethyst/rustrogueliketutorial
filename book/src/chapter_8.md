@@ -174,7 +174,7 @@ pub fn delete_the_dead(ecs : &mut World) {
                         }
                         dead.push(entity)
                     }
-                    Some(_) => println!("You are dead")
+                    Some(_) => console::log("You are dead")
                 }
             }
         }
@@ -266,7 +266,7 @@ If you `cargo run` your project now, it looks like this:
 Since we're on look and feel, lets consider enabling an RLTK feature: post-processing to give scanlines and screen burn, for that truly retro feel. It's entirely up to you if you want to use this! In `main.rs`, the initial setup simply replaced the first `init` command with:
 
 ```rust
-let mut context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "../resources");
+let mut context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "resources");
 context.with_post_scanlines(true);
 ```
 
@@ -279,6 +279,8 @@ If you choose to do this, the game looks a bit like the classic *Caves of Qud*:
 Now that we have a GUI, it's starting to look pretty good!
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-08-ui)**
+
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-08-ui/)
 
 ---
 

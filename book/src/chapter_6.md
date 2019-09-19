@@ -117,7 +117,7 @@ extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Position, Map, Monster};
 extern crate rltk;
-use rltk::{field_of_view, Point};
+use rltk::{field_of_view, Point, console};
 
 pub struct MonsterAI {}
 
@@ -130,19 +130,26 @@ impl<'a> System<'a> for MonsterAI {
         let (viewshed, pos, monster) = data;
 
         for (viewshed,pos,_monster) in (&viewshed, &pos, &monster).join() {
-            println!("Monster considers their own existence");
+            console::log("Monster considers their own existence");
         }
     }
 }
 ```
 
-We'll also extend the system builder in `main.rs` to call it:
+Note that we're importing `console` from `rltk` - and printing with `console::log`. This is a helper provided by RLTK that detects if you are compiling to a regular program or a Web Assembly; if you are using a regular program, it calls `println!` and outputs to the console. If you are in `WASM`, it outputs to the *browser* console.
+
+We'll also extend the system runner in `main.rs` to call it:
 
 ```rust
-systems : DispatcherBuilder::new()
-    .with(VisibilitySystem{}, "visibility_system", &[])
-    .with(MonsterAI{}, "monster_ai", &["visibility_system"])
-    .build()
+impl State {
+    fn run_systems(&mut self) {
+        let mut vis = VisibilitySystem{};
+        vis.run_now(&self.ecs);
+        let mut mob = MonsterAI{};
+        mob.run_now(&self.ecs);
+        self.ecs.maintain();
+    }
+}
 ```
 
 The `&["visibility_system"]` is new - it says "run this after visibility, since we depend upon its results. At this point, we don't actually care - but we will, so we'll put it in there now.
@@ -234,7 +241,7 @@ extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Monster};
 extern crate rltk;
-use rltk::{Point};
+use rltk::{Point, console};
 
 pub struct MonsterAI {}
 
@@ -248,7 +255,7 @@ impl<'a> System<'a> for MonsterAI {
 
         for (viewshed,_monster) in (&viewshed, &monster).join() {
             if viewshed.visible_tiles.contains(&*player_pos) {
-                println!("Monster shouts insults");
+                console::log(format!("Monster shouts insults"));
             }
         }
     }
@@ -318,7 +325,7 @@ impl<'a> System<'a> for MonsterAI {
 
         for (viewshed,_monster,name) in (&viewshed, &monster, &name).join() {
             if viewshed.visible_tiles.contains(&*player_pos) {
-                println!("{} shouts insults", name.name);
+                console::log(&format!("{} shouts insults", name.name));
             }
         }
     }
@@ -332,6 +339,8 @@ If you `cargo run` the project, you now see things like *Goblin #9 shouts insult
 And that's a wrap for chapter 6; we've added a variety of foul-mouthed monsters to hurl insults at your fragile ego! In this chapter, we've begun to see some of the benefits of using an Entity Component System: it was really easy to add newly rendered monsters, with a bit of variety, and start storing names for things. The Viewshed code we wrote earlier worked with minimal modification to give visibility to monsters - and our new monster AI was able to take advantage of what we've already built to quite efficiently say bad things to the player.
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-06-monsters)**
+
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-06-monsters/)
 
 ---
 

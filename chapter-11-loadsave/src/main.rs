@@ -31,6 +31,8 @@ mod inventory_system;
 use inventory_system::{ ItemCollectionSystem, ItemUseSystem, ItemDropSystem };
 pub mod saveload_system;
 
+rltk::add_wasm_support!();
+
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { AwaitingInput, 
     PreRun, 
@@ -44,8 +46,30 @@ pub enum RunState { AwaitingInput,
 }
 
 pub struct State {
-    pub ecs: World,
-    pub systems: Dispatcher<'static, 'static>
+    pub ecs: World
+}
+
+impl State {
+    fn run_systems(&mut self) {
+        let mut mapindex = MapIndexingSystem{};
+        mapindex.run_now(&self.ecs);
+        let mut vis = VisibilitySystem{};
+        vis.run_now(&self.ecs);
+        let mut mob = MonsterAI{};
+        mob.run_now(&self.ecs);
+        let mut melee = MeleeCombatSystem{};
+        melee.run_now(&self.ecs);
+        let mut damage = DamageSystem{};
+        damage.run_now(&self.ecs);
+        let mut pickup = ItemCollectionSystem{};
+        pickup.run_now(&self.ecs);
+        let mut itemuse = ItemUseSystem{};
+        itemuse.run_now(&self.ecs);
+        let mut drop_items = ItemDropSystem{};
+        drop_items.run_now(&self.ecs);
+
+        self.ecs.maintain();
+    }
 }
 
 impl GameState for State {
@@ -82,7 +106,7 @@ impl GameState for State {
         
         match newrunstate {
             RunState::PreRun => {
-                self.systems.dispatch(&self.ecs);
+                self.run_systems();
                 self.ecs.maintain();
                 newrunstate = RunState::AwaitingInput;
             }
@@ -90,12 +114,12 @@ impl GameState for State {
                 newrunstate = player_input(self, ctx);
             }
             RunState::PlayerTurn => {
-                self.systems.dispatch(&self.ecs);
+                self.run_systems();
                 self.ecs.maintain();
                 newrunstate = RunState::MonsterTurn;
             }
             RunState::MonsterTurn => {
-                self.systems.dispatch(&self.ecs);
+                self.run_systems();
                 self.ecs.maintain();
                 newrunstate = RunState::AwaitingInput;
             }
@@ -162,7 +186,7 @@ impl GameState for State {
             }
             RunState::SaveGame => {
                 saveload_system::save_game(&mut self.ecs);
-                newrunstate = RunState::MainMenu{ menu_selection : gui::MainMenuSelection::LoadGame };
+                newrunstate = RunState::MainMenu{ menu_selection : gui::MainMenuSelection::Quit };
             }
         }
 
@@ -175,20 +199,10 @@ impl GameState for State {
 }
 
 fn main() {
-    let mut context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "../resources");
+    let mut context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "resources");
     context.with_post_scanlines(true);
     let mut gs = State {
-        ecs: World::new(),
-        systems : DispatcherBuilder::new()
-            .with(MapIndexingSystem{}, "map_indexing_system", &[])
-            .with(VisibilitySystem{}, "visibility_system", &[])
-            .with(MonsterAI{}, "monster_ai", &["visibility_system", "map_indexing_system"])
-            .with(MeleeCombatSystem{}, "melee_combat", &["monster_ai"])
-            .with(DamageSystem{}, "damage", &["melee_combat"])
-            .with(ItemCollectionSystem{}, "pickup", &["melee_combat"])
-            .with(ItemUseSystem{}, "potions", &["melee_combat"])
-            .with(ItemDropSystem{}, "drop_items", &["melee_combat"])
-            .build(),
+        ecs: World::new()
     };
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();

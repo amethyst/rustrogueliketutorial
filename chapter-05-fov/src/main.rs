@@ -15,9 +15,18 @@ pub use rect::Rect;
 mod visibility_system;
 use visibility_system::VisibilitySystem;
 
+rltk::add_wasm_support!();
+
 pub struct State {
-    pub ecs: World,
-    pub systems: Dispatcher<'static, 'static>
+    pub ecs: World
+}
+
+impl State {
+    fn run_systems(&mut self) {
+        let mut vis = VisibilitySystem{};
+        vis.run_now(&self.ecs);
+        self.ecs.maintain();
+    }
 }
 
 impl GameState for State {
@@ -25,7 +34,7 @@ impl GameState for State {
         ctx.cls();
 
         player_input(self, ctx);
-        self.systems.dispatch(&self.ecs);
+        self.run_systems();
 
         draw_map(&self.ecs, ctx);
 
@@ -39,12 +48,9 @@ impl GameState for State {
 }
 
 fn main() {
-    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "../resources");
+    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "resources");
     let mut gs = State {
-        ecs: World::new(),
-        systems : DispatcherBuilder::new()
-            .with(VisibilitySystem{}, "visibility_system", &[])
-            .build()
+        ecs: World::new()
     };
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();

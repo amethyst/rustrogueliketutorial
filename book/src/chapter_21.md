@@ -26,22 +26,33 @@ We'll introduce a new file, `rex_assets.rs` to store our REX sprites. The file l
 
 ```rust
 use rltk::{rex::XpFile};
-use std::fs::File;
+
+rltk::embedded_resource!(SMALL_DUNGEON, "../../resources/SmallDungeon_80x50.xp");
 
 pub struct RexAssets {
     pub menu : XpFile
 }
 
 impl RexAssets {
+    #[allow(clippy::new_without_default)]
     pub fn new() -> RexAssets {
+        rltk::link_resource!(SMALL_DUNGEON, "../../resources/SmallDungeon_80x50.xp");
+
         RexAssets{
-            menu : XpFile::read(&mut File::open("../resources/SmallDungeon_80x50.xp").unwrap()).unwrap()
+            menu : XpFile::from_resource("../../resources/SmallDungeon_80x50.xp").unwrap()
         }
     }
 }
 ```
 
-Very simple - it defines a structure, and loads the dungeon graphic into it when `new` is called. We'll also insert it into Specs as a resource so we can access our sprites anywhere. In `main.rs`:
+Very simple - it defines a structure, and loads the dungeon graphic into it when `new` is called. We'll also insert it into Specs as a resource so we can access our sprites anywhere. There are some new concepts here:
+
+1. We're using `rltk::embedded_resource!` to include the file in our binary. This gets around having to ship the binary with your executable (and makes life easier in `wasm` land).
+2. `#[allow(clippy::new_without_default)]` tells the linter to stop telling me to write a default implementation, when we don't need one!
+3. `rltk::link_resource!` is the second-half the the embedded resource; the first stores it in memory, this one tells RLTK where to find it.
+4. `menu : XpFile::from_resource("../../resources/SmallDungeon_80x50.xp").unwrap()` loads the Rex paint file from memory.
+
+In `main.rs`:
 
 ```rust
 gs.ecs.insert(rex_assets::RexAssets::new());
@@ -112,6 +123,8 @@ If you `cargo run` now, it looks better:
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-21-rexmenu)**
 
+
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-21-rexmenu/)
 ---
 
 Copyright (C) 2019, Herbert Wolverson.

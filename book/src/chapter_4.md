@@ -229,11 +229,9 @@ Our `main.rs` file also required adjustment, to get accept the new format. We ch
 
 ```rust
 fn main() {
-    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "../resources");
+    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "resources");
     let mut gs = State {
-        ecs: World::new(),
-        systems : DispatcherBuilder::new()
-            .build()
+        ecs: World::new()
     };
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
@@ -295,6 +293,8 @@ You should now get something like this when you `cargo run` your project:
 ![Screenshot](./c4-s1.gif)
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-04-newmap)**
+
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-04-newmap/)
 
 ---
 

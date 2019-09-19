@@ -17,13 +17,24 @@ use visibility_system::VisibilitySystem;
 mod monster_ai_system;
 use monster_ai_system::MonsterAI;
 
+rltk::add_wasm_support!();
+
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { Paused, Running }
 
 pub struct State {
     pub ecs: World,
-    pub systems: Dispatcher<'static, 'static>,
     pub runstate : RunState
+}
+
+impl State {
+    fn run_systems(&mut self) {
+        let mut vis = VisibilitySystem{};
+        vis.run_now(&self.ecs);
+        let mut mob = MonsterAI{};
+        mob.run_now(&self.ecs);
+        self.ecs.maintain();
+    }
 }
 
 impl GameState for State {
@@ -31,7 +42,7 @@ impl GameState for State {
         ctx.cls();
         
         if self.runstate == RunState::Running {
-            self.systems.dispatch(&self.ecs);
+            self.run_systems();
             self.runstate = RunState::Paused;
         } else {
             self.runstate = player_input(self, ctx);
@@ -51,13 +62,9 @@ impl GameState for State {
 }
 
 fn main() {
-    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "../resources");
+    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "resources");
     let mut gs = State {
         ecs: World::new(),
-        systems : DispatcherBuilder::new()
-            .with(VisibilitySystem{}, "visibility_system", &[])
-            .with(MonsterAI{}, "monster_ai", &["visibility_system"])
-            .build(),
         runstate : RunState::Running
     };
     gs.ecs.register::<Position>();

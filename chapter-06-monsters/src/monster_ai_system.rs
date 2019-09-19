@@ -2,7 +2,7 @@ extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Monster, Name};
 extern crate rltk;
-use rltk::{Point};
+use rltk::{Point, console};
 
 pub struct MonsterAI {}
 
@@ -17,7 +17,7 @@ impl<'a> System<'a> for MonsterAI {
 
         for (viewshed,_monster,name) in (&viewshed, &monster, &name).join() {
             if viewshed.visible_tiles.contains(&*player_pos) {
-                println!("{} shouts insults", name.name);
+                console::log(&format!("{} shouts insults", name.name));
             }
         }
     }

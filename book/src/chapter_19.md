@@ -138,22 +138,34 @@ It works by iterating all entities that have a `HungerClock`. If they are the pl
 Now we need to add it to the list of systems running in `main.rs`:
 
 ```rust
-let mut gs = State {
-    ecs: World::new(),
-    systems : DispatcherBuilder::new()
-        .with(MapIndexingSystem{}, "map_indexing_system", &[])
-        .with(VisibilitySystem{}, "visibility_system", &[])
-        .with(MonsterAI{}, "monster_ai", &["visibility_system", "map_indexing_system"])
-        .with(MeleeCombatSystem{}, "melee_combat", &["monster_ai"])
-        .with(DamageSystem{}, "damage", &["melee_combat"])
-        .with(ItemCollectionSystem{}, "pickup", &["melee_combat"])
-        .with(ItemUseSystem{}, "potions", &["melee_combat"])
-        .with(ItemDropSystem{}, "drop_items", &["melee_combat"])
-        .with(ItemRemoveSystem{}, "remove_items", &["melee_combat"])
-        .with(hunger_system::HungerSystem{}, "hunger", &["melee_combat", "potions"])
-        .with(particle_system::ParticleSpawnSystem{}, "spawn_particles", &["potions", "melee_combat"])
-        .build(),
-};
+impl State {
+    fn run_systems(&mut self) {
+        let mut mapindex = MapIndexingSystem{};
+        mapindex.run_now(&self.ecs);
+        let mut vis = VisibilitySystem{};
+        vis.run_now(&self.ecs);
+        let mut mob = MonsterAI{};
+        mob.run_now(&self.ecs);
+        let mut melee = MeleeCombatSystem{};
+        melee.run_now(&self.ecs);
+        let mut damage = DamageSystem{};
+        damage.run_now(&self.ecs);
+        let mut pickup = ItemCollectionSystem{};
+        pickup.run_now(&self.ecs);
+        let mut itemuse = ItemUseSystem{};
+        itemuse.run_now(&self.ecs);
+        let mut drop_items = ItemDropSystem{};
+        drop_items.run_now(&self.ecs);
+        let mut item_remove = ItemRemoveSystem{};
+        item_remove.run_now(&self.ecs);
+        let mut hunger = hunger_system::HungerSystem{};
+        hunger.run_now(&self.ecs);
+        let mut particles = particle_system::ParticleSpawnSystem{};
+        particles.run_now(&self.ecs);
+
+        self.ecs.maintain();
+    }
+}
 ```
 
 If you `cargo run` now, and hit wait a *lot* - you'll starve to death.
@@ -321,6 +333,8 @@ if can_heal {
 We now have a working hunger clock system. You may want to tweak the durations to suit your taste (or skip it completely if it isn't your cup of tea) - but it's a mainstay of the genre, so it's good to have it included in the tutorials.
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-19-food)**
+
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-19-food/)
 
 ---
 

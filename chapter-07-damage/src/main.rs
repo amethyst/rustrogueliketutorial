@@ -23,12 +23,29 @@ use melee_combat_system::MeleeCombatSystem;
 mod damage_system;
 use damage_system::DamageSystem;
 
+rltk::add_wasm_support!();
+
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { AwaitingInput, PreRun, PlayerTurn, MonsterTurn }
 
 pub struct State {
-    pub ecs: World,
-    pub systems: Dispatcher<'static, 'static>
+    pub ecs: World
+}
+
+impl State {
+    fn run_systems(&mut self) {
+        let mut mapindex = MapIndexingSystem{};
+        mapindex.run_now(&self.ecs);
+        let mut vis = VisibilitySystem{};
+        vis.run_now(&self.ecs);
+        let mut mob = MonsterAI{};
+        mob.run_now(&self.ecs);
+        let mut melee = MeleeCombatSystem{};
+        melee.run_now(&self.ecs);
+        let mut damage = DamageSystem{};
+        damage.run_now(&self.ecs);
+        self.ecs.maintain();
+    }
 }
 
 impl GameState for State {
@@ -42,18 +59,18 @@ impl GameState for State {
         
         match newrunstate {
             RunState::PreRun => {
-                self.systems.dispatch(&self.ecs);
+                self.run_systems();
                 newrunstate = RunState::AwaitingInput;
             }
             RunState::AwaitingInput => {
                 newrunstate = player_input(self, ctx);
             }
             RunState::PlayerTurn => {
-                self.systems.dispatch(&self.ecs);
+                self.run_systems();
                 newrunstate = RunState::MonsterTurn;
             }
             RunState::MonsterTurn => {
-                self.systems.dispatch(&self.ecs);
+                self.run_systems();
                 newrunstate = RunState::AwaitingInput;
             }
         }
@@ -78,16 +95,9 @@ impl GameState for State {
 }
 
 fn main() {
-    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "../resources");
+    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "resources");
     let mut gs = State {
         ecs: World::new(),
-        systems : DispatcherBuilder::new()
-            .with(MapIndexingSystem{}, "map_indexing_system", &[])
-            .with(VisibilitySystem{}, "visibility_system", &[])
-            .with(MonsterAI{}, "monster_ai", &["visibility_system", "map_indexing_system"])
-            .with(MeleeCombatSystem{}, "melee_combat", &["monster_ai"])
-            .with(DamageSystem{}, "damage", &["melee_combat"])
-            .build(),
     };
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();

@@ -270,7 +270,7 @@ impl GameState for State {
 }
 
 fn main() {
-    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "../resources");
+    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "resources");
     let mut gs = State {
         ecs: World::new()
     };
@@ -370,32 +370,32 @@ This isn't as nice/simple as I'd like, but it does make sense when you understan
 
 Notice that this is *very* similar to how we wrote the rendering code - but instead of calling *in* to the ECS, the ECS system is calling *into* our function/system. It can be a tough judgment call on which to use. If your system *just* needs data from the ECS, then a system is the right place to put it. If it also needs access to other parts of your program, it is probably better implemented on the outside - calling in.
 
-Now that we've *written* our system, we need to be able to use it. Specs includes a `dispatch` system that is *very* powerful (it can run systems concurrently, handle dependencies to figure out execution order, and so on). We're not going to use the bells and whistles yet, but it would be nice to include as a foundation to build on. Dispatchers exist on a level above the `World` (you can specify which world they run on!), so we'll add one to our `State`:
+Now that we've *written* our system, we need to be able to use it. We'll add a `run_systems` function to our `State`:
 
 ```rust
-struct State {
-    ecs: World,
-    systems: Dispatcher<'static, 'static>
+impl State {
+    fn run_systems(&mut self) {
+        let mut lw = LeftWalker{};
+        lw.run_now(&self.ecs);
+        self.ecs.maintain();
+    }
 }
 ```
 
+This is relatively straightforward:
+
+1. `impl State` means we would like to implement functionality for `State`.
+2. `fn run_systems(&mut self)` means we are defining a *function*, and it needs *mutable* (i.e. it is allowed to change things) access to *self*; this means it can access the data in its instance of `State` with the `self.` keyword.
+3. `let mut lw = LeftWalker{}` makes a new (changeable) instance of the `LeftWalker` system.
+4. `lw.run_now(&self.ecs)` tells the system to run, and tells it how to find the ECS.
+5. `self.ecs.maintain()` tells Specs that if any changes were queued up by the systems, they should apply to the world now.
+
 There's some more lifetimes in there, which you can not worry about for now (`'static` is saying that the dispatcher will last as long as the program, so Rust can stop worrying about it; this is a pretty advanced topic, so I recommend not worrying about it for now!). We also need to build the dispatcher when we put together our state in `main`:
-
-```rust
-let mut gs = State {
-    ecs: World::new(),
-    systems : DispatcherBuilder::new()
-        .with(LeftWalker{}, "left_walker", &[])
-        .build()
-};
-```
-
-We've extended `State` to build a dispatcher, with the `LeftWalker` system we made earlier. Systems also get names, and the cryptic `&[]` will be useful later: you use it to specify which systems depend upon the results of other systems (for now, we leave it empty). More on that later, when we have more systems! Once again, we're using the *builder* pattern here: `DispatchBuilder` starts the process of collecting the information about our systems. Each `.with` call teaches the dispatcher about a system we'd like to call. Finally, `.build` assembles the data - and does the hard work of actually putting it all together.
 
 Finally, we actually want to run our systems. In the `tick` function, we add:
 
 ```rust
-self.systems.dispatch(&self.ecs);
+self.run_systems();
 ```
 
 The nice thing is that this will run *all* systems we register into our dispatcher; so as we add more, we don't have to worry about calling them (or even calling them in the right order). You still sometimes need more access than the dispatcher has; our renderer isn't a system because it needs the `Context` from RLTK (we'll improve that in a future chapter).
@@ -432,7 +432,7 @@ impl GameState for State {
     fn tick(&mut self, ctx : &mut Rltk) {
         ctx.cls();
 
-        self.systems.dispatch(&self.ecs);
+        self.run_systems();
 
         let positions = self.ecs.read_storage::<Position>();
         let renderables = self.ecs.read_storage::<Renderable>();
@@ -457,13 +457,18 @@ impl<'a> System<'a> for LeftWalker {
     }
 }
 
+impl State {
+    fn run_systems(&mut self) {
+        let mut lw = LeftWalker{};
+        lw.run_now(&self.ecs);
+        self.ecs.maintain();
+    }
+}
+
 fn main() {
-    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "../resources");
+    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "resources");
     let mut gs = State {
-        ecs: World::new(),
-        systems : DispatcherBuilder::new()
-            .with(LeftWalker{}, "left_walker", &[])
-            .build()
+        ecs: World::new()
     };
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
@@ -599,6 +604,8 @@ use specs::prelude::*;
 #[macro_use]
 extern crate specs_derive;
 
+rltk::add_wasm_support!();
+
 #[derive(Component)]
 struct Position {
     x: i32,
@@ -619,8 +626,7 @@ struct LeftMover {}
 struct Player {}
 
 struct State {
-    ecs: World,
-    systems: Dispatcher<'static, 'static>
+    ecs: World
 }
 
 fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
@@ -657,7 +663,7 @@ impl GameState for State {
         ctx.cls();
 
         player_input(self, ctx);
-        self.systems.dispatch(&self.ecs);
+        self.run_systems();
 
         let positions = self.ecs.read_storage::<Position>();
         let renderables = self.ecs.read_storage::<Renderable>();
@@ -682,13 +688,18 @@ impl<'a> System<'a> for LeftWalker {
     }
 }
 
+impl State {
+    fn run_systems(&mut self) {
+        let mut lw = LeftWalker{};
+        lw.run_now(&self.ecs);
+        self.ecs.maintain();
+    }
+}
+
 fn main() {
-    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "../resources");
+    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "resources");
     let mut gs = State {
-        ecs: World::new(),
-        systems : DispatcherBuilder::new()
-            .with(LeftWalker{}, "left_walker", &[])
-            .build()
+        ecs: World::new()
     };
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
@@ -726,6 +737,8 @@ fn main() {
 This chapter was a lot to digest, but provides a really solid base on which to build. The great part is: you've now got further than many aspiring developers! You have entities on the screen, and can move around with the keyboard.
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-02-helloecs)**
+
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-02-helloecs/)
 
 ---
 
