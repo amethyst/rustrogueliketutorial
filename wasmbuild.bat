@@ -18,6 +18,7 @@ CALL :Stage chapter-16-nicewalls
 CALL :Stage chapter-17-blood
 CALL :Stage chapter-18-particles
 CALL :Stage chapter-19-food
+CALL :Stage chapter-20-magicmapping
 
 REM Publish or perish
 cd book\book\wasm
