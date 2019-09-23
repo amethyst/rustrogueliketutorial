@@ -390,8 +390,6 @@ This is relatively straightforward:
 4. `lw.run_now(&self.ecs)` tells the system to run, and tells it how to find the ECS.
 5. `self.ecs.maintain()` tells Specs that if any changes were queued up by the systems, they should apply to the world now.
 
-There's some more lifetimes in there, which you can not worry about for now (`'static` is saying that the dispatcher will last as long as the program, so Rust can stop worrying about it; this is a pretty advanced topic, so I recommend not worrying about it for now!). We also need to build the dispatcher when we put together our state in `main`:
-
 Finally, we actually want to run our systems. In the `tick` function, we add:
 
 ```rust
@@ -425,7 +423,6 @@ struct LeftMover {}
  
 struct State {
     ecs: World,
-    systems: Dispatcher<'static, 'static>
 }
 
 impl GameState for State {
