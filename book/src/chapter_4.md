@@ -223,7 +223,7 @@ Try `cargo run` now. It's really starting to look like a roguelike!
 
 ## Placing the player
 
-Currently, the player always starts in the center of the map - which with the new generator, may not be a valid starting point! We *could* simply move the player to the center of the first room, but it's likely that our generator will need to know where all the rooms are - so we can put things in them - rather than just the player's location. So we'll modify our `new_map_rooms_and_corridors` function to also return the room list. So we change the method signature to: ```rust pub fn new_map_rooms_and_corridors() -> (Vec<Rect>, Vec<TileType>) {```, and the return statement to ```rust (rooms, map) ```
+Currently, the player always starts in the center of the map - which with the new generator, may not be a valid starting point! We *could* simply move the player to the center of the first room, but it's likely that our generator will need to know where all the rooms are - so we can put things in them - rather than just the player's location. So we'll modify our `new_map_rooms_and_corridors` function to also return the room list. So we change the method signature to: `pub fn new_map_rooms_and_corridors() -> (Vec<Rect>, Vec<TileType>) {`, and the return statement to `(rooms, map)`
 
 Our `main.rs` file also required adjustment, to get accept the new format. We change our `main` function in `main.rs` to:
 
