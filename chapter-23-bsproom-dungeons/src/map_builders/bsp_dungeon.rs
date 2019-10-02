@@ -40,13 +40,13 @@ fn get_random_sub_rect(rect : Rect, rng : &mut RandomNumberGenerator) -> Rect {
 }
 
 fn is_possible(map : &mut Map, mut rect : Rect) -> bool {
-    if rect.x1 > 0 {
-        rect.x1 -= 1;
-        rect.x2 += 1;
+    if rect.x1 > 1 {
+        rect.x1 -= 2;
+        rect.x2 += 2;
     }
-    if rect.y1 > 0 {
-        rect.y1 -= 1;
-        rect.y1 += 1;
+    if rect.y1 > 1 {
+        rect.y1 -= 2;
+        rect.y1 += 2;
     }
 
     for y in rect.y1 ..= rect.y2 {
