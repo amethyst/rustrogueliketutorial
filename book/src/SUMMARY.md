@@ -23,5 +23,6 @@
     - [Hunger Clock](./chapter_19.md)
     - [Magic Mapping](./chapter_20.md)
     - [REX Paint Menu](./chapter_21.md)
+    - [Simple Traps](./chapter_22.md)
 
 [Contributors](./contributors.md)

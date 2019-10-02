@@ -20,6 +20,7 @@ CALL :Stage chapter-18-particles
 CALL :Stage chapter-19-food
 CALL :Stage chapter-20-magicmapping
 CALL :Stage chapter-21-rexmenu
+CALL :Stage chapter-22-simpletraps
 
 REM Publish or perish
 cd book\book\wasm
