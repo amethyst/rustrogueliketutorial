@@ -16,6 +16,7 @@ The following people have contributed to this project:
 * [Marius Gedminas](https://github.com/mgedmin) provided some fixes to the visibility system, and chapter 5. Corrected a typo in chapter 7, fixed a Markdown error in chapter 7, fixed indentation in chapter 13, and a typo in chapter 18. He also fixed some code in my hunger clock to let monsters get hungry too, if we so desire.
 * [Ben Morrison](https://github.com/gbmor) fixed an issue in chapter 4, correctly matching room passing-by-reference with the accompanying source code.
 * [Tommi Jalkanen](https://github.com/Koura) helped me remove some Dispatcher code that I'd accidentally left in place.
+* [Gabriel Martinez](https://github.com/mystal) helped me fix the Vi keys.
 
 ---
 
