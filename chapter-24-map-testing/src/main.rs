@@ -36,8 +36,6 @@ pub mod hunger_system;
 pub mod rex_assets;
 pub mod trigger_system;
 pub mod map_builders;
-#[macro_use]
-extern crate generator;
 
 rltk::add_wasm_support!();
 
@@ -380,9 +378,8 @@ impl State {
         self.mapgen_timer = 0.0;
         self.mapgen_history.clear();
         let mut builder = map_builders::random_builder(new_depth);
-        for map in builder.build_map() {
-            self.mapgen_history.push(map);
-        };
+        builder.build_map();
+        self.mapgen_history = builder.get_snapshot_history();
         let player_start;
         {
             let mut worldmap_resource = self.ecs.write_resource::<Map>();

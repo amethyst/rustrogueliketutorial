@@ -21,6 +21,8 @@ CALL :Stage chapter-19-food
 CALL :Stage chapter-20-magicmapping
 CALL :Stage chapter-21-rexmenu
 CALL :Stage chapter-22-simpletraps
+CALL :Stage chapter-23-generic-map
+CALL :Stage chapter-24-map-testing
 
 REM Publish or perish
 cd book\book\wasm

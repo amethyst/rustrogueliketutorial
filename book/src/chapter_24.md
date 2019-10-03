@@ -155,6 +155,8 @@ It's surprisingly difficult to combine two paradigms, sometimes:
 * The graphical "tick" nature of RLTK (and the underlying GUI environment) encourages you to do everything fast, in one fell swoop.
 * Actually visualizing progress while you generate a map encourages you to run in lots of phases as a "state machine", yielding map results along the way.
 
+TODO: Remove coroutine talk. WASM didn't like it.
+
 Rust is getting support for *coroutine generators*, but it isn't in the stable language yet. That's a shame, because `yield` - and yielding progress - is *exactly* what they are designed for. Instead, we turn to `cargo` and find the `generator` crate. It is quite similar to the language proposal, so when it hits stable it shouldn't be *too* hard to migrate.
 
 In `cargo.toml`, we add this to the dependencies:

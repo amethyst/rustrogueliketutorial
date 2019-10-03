@@ -3,13 +3,13 @@ use super::{MapBuilder, Map, Rect, apply_room_to_map,
     Position, spawner};
 use rltk::RandomNumberGenerator;
 use specs::prelude::*;
-use generator::{Generator, Gn};
 
 pub struct SimpleMapBuilder {
     map : Map,
     starting_position : Position,
     depth: i32,
-    rooms: Vec<Rect>
+    rooms: Vec<Rect>,
+    history: Vec<Map>
 }
 
 impl MapBuilder for SimpleMapBuilder {
@@ -21,12 +21,12 @@ impl MapBuilder for SimpleMapBuilder {
         self.starting_position.clone()
     }
 
-    fn build_map(&mut self) -> Generator<(), Map> {
-        Gn::new_scoped(move |mut s| {
-            println!("Running build map");
-            self.rooms_and_corridors(&mut s);
-            done!();
-        })
+    fn get_snapshot_history(&self) -> Vec<Map> {
+        self.history.clone()
+    }
+
+    fn build_map(&mut self)  {
+        self.rooms_and_corridors();
     }
 
     fn spawn_entities(&mut self, ecs : &mut World) {
@@ -42,11 +42,12 @@ impl SimpleMapBuilder {
             map : Map::new(new_depth),
             starting_position : Position{ x: 0, y : 0 },
             depth : new_depth,
-            rooms: Vec::new()
+            rooms: Vec::new(),
+            history: Vec::new()
         }
     }
 
-    fn rooms_and_corridors(&mut self, scope: &mut generator::Scope<(), Map>) {
+    fn rooms_and_corridors(&mut self) {
         const MAX_ROOMS : i32 = 30;
         const MIN_SIZE : i32 = 6;
         const MAX_SIZE : i32 = 10;
@@ -65,7 +66,7 @@ impl SimpleMapBuilder {
             }
             if ok {
                 apply_room_to_map(&mut self.map, &new_room);
-                scope.yield_(self.map.clone());
+                self.history.push(self.map.clone());
 
                 if !self.rooms.is_empty() {
                     let (new_x, new_y) = new_room.center();
@@ -80,7 +81,7 @@ impl SimpleMapBuilder {
                 }
 
                 self.rooms.push(new_room);
-                scope.yield_(self.map.clone());
+                self.history.push(self.map.clone());
             }
         }
 
