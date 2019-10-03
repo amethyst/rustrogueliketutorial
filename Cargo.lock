@@ -419,6 +419,10 @@ name = "chapter-24-bsproom-dungeons"
 version = "0.1.0"
 
 [[package]]
+name = "chapter-24-map-testing"
+version = "0.1.0"
+
+[[package]]
 name = "cloudabi"
 version = "0.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
