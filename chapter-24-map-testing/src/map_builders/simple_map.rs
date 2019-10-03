@@ -3,6 +3,7 @@ use super::{MapBuilder, Map, Rect, apply_room_to_map,
     Position, spawner};
 use rltk::RandomNumberGenerator;
 use specs::prelude::*;
+use generator::{Generator, Gn};
 
 pub struct SimpleMapBuilder {
     map : Map,
