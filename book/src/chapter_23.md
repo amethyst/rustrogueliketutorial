@@ -543,6 +543,120 @@ We basically repeat those changes for the others (see the source). We now have a
 
 If you `cargo run` the project now: once again, nothing visible has changed - it still works the way it did before. When you are refactoring, that's a good thing!
 
+## So why do maps still have rooms?
+
+Rooms don't actually do much in the game itself: they are an artifact of how we build the map. It's quite possible that later map builders won't actually *care* about rooms, at least not in the "here's a rectangle, we're calling a room" sense. Lets try and move that abstraction out of the map, and also out of the spawner.
+
+As a first step, in `map.rs` we remove the `rooms` structure completely:
+
+```rust
+#[derive(Default, Serialize, Deserialize, Clone)]
+pub struct Map {
+    pub tiles : Vec<TileType>,
+    pub width : i32,
+    pub height : i32,
+    pub revealed_tiles : Vec<bool>,
+    pub visible_tiles : Vec<bool>,
+    pub blocked : Vec<bool>,
+    pub depth : i32,
+    pub bloodstains : HashSet<usize>,
+
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    pub tile_content : Vec<Vec<Entity>>
+}
+```
+
+We also remove it from the `new` function. Take a look at your IDE, and you'll notice that you've only broken code in `simple_map.rs`! We weren't *using* the `rooms` anywhere else - which is a pretty big clue that they don't belong in the map we're passing around throughout the main program.
+
+We can fix `simple_map` by putting `rooms` into the builder rather than the map. We'll put it into the structure:
+
+```rust
+pub struct SimpleMapBuilder {
+    map : Map,
+    starting_position : Position,
+    depth: i32,
+    rooms: Vec<Rect>
+}
+```
+
+This requires that we fixup the constructor:
+
+```rust
+pub fn new(new_depth : i32) -> SimpleMapBuilder {
+    SimpleMapBuilder{
+        map : Map::new(new_depth),
+        starting_position : Position{ x: 0, y : 0 },
+        depth : new_depth,
+        rooms: Vec::new()
+    }
+}
+```
+
+The spawn function becomes:
+
+```rust
+fn spawn_entities(&mut self, ecs : &mut World) {
+    for room in self.rooms.iter().skip(1) {
+        spawner::spawn_room(ecs, room, self.depth);
+    }
+}
+```
+
+And we replace *every* instance of `map.rooms` with `self.rooms` in `rooms_and_corridors`:
+
+```rust
+fn rooms_and_corridors(&mut self) {
+    const MAX_ROOMS : i32 = 30;
+    const MIN_SIZE : i32 = 6;
+    const MAX_SIZE : i32 = 10;
+
+    let mut rng = RandomNumberGenerator::new();
+
+    for _i in 0..MAX_ROOMS {
+        let w = rng.range(MIN_SIZE, MAX_SIZE);
+        let h = rng.range(MIN_SIZE, MAX_SIZE);
+        let x = rng.roll_dice(1, self.map.width - w - 1) - 1;
+        let y = rng.roll_dice(1, self.map.height - h - 1) - 1;
+        let new_room = Rect::new(x, y, w, h);
+        let mut ok = true;
+        for other_room in self.rooms.iter() {
+            if new_room.intersect(other_room) { ok = false }
+        }
+        if ok {
+            apply_room_to_map(&mut self.map, &new_room);
+
+            if !self.rooms.is_empty() {
+                let (new_x, new_y) = new_room.center();
+                let (prev_x, prev_y) = self.rooms[self.rooms.len()-1].center();
+                if rng.range(0,1) == 1 {
+                    apply_horizontal_tunnel(&mut self.map, prev_x, new_x, prev_y);
+                    apply_vertical_tunnel(&mut self.map, prev_y, new_y, new_x);
+                } else {
+                    apply_vertical_tunnel(&mut self.map, prev_y, new_y, prev_x);
+                    apply_horizontal_tunnel(&mut self.map, prev_x, new_x, new_y);
+                }
+            }
+
+            self.rooms.push(new_room);
+        }
+    }
+
+    let stairs_position = self.rooms[self.rooms.len()-1].center();
+    let stairs_idx = self.map.xy_idx(stairs_position.0, stairs_position.1);
+    self.map.tiles[stairs_idx] = TileType::DownStairs;
+
+    let start_pos = self.rooms[0].center();
+    self.starting_position = Position{ x: start_pos.0, y: start_pos.1 };
+}
+```
+
+Once again, `cargo run` the project: and nothing should have changed.
+
+## Wrap-up
+
+This was an interesting chapter to write, because the objective is to finish with code that operates *exactly* as it did before - but with the map builder cleaned into its own module, completely isolated from the rest of the code. That gives us a great starting point to start building new map builders, without having to change the game itself.
+
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-23-generic-map)**
 
 
