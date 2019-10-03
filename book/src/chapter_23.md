@@ -309,161 +309,244 @@ Now, we can go into `main.rs` and find every time we loop through calling `spawn
 
 Once again, `cargo run` should give you the same game we've been looking at for 22 chapters!
 
-## Implementing a new map - subdivided BSP
+## Maintaining builder state
 
-Now that we have a framework to *allow* us to make a new map, lets do so! Nethack started out using a relatively simple map generation system that still produces satisfying maps. You subdivide your map rectangle into ever-smaller rectangles, sub-dividing each rectangle in turn - until you hit a minimum size. Then you randomly join them together to give a more interesting map.
+If you look closely at what we have so far, there's one problem: the builder has no way of knowing what should be used for the *second* call to the builder (spawning things). That's because our functions are *stateless* - we don't actually create a builder and give it a way to remember anything. Since we want to support a wide variety of builders, we should correct that.
 
-We'll start by making a new file in `map_builders` - `bsp_dungeon.rs`. A skeleton implementation of a new builder goes here:
+This introduces a new Rust concept: *dynamic dispatch*. [The Rust Book](https://doc.rust-lang.org/1.8.0/book/trait-objects.html) has a good section on this if you are familiar with the concept. If you've previously used an Object Oriented Programming language, then you will have encountered this also. The basic idea is that you have a "base object" that specifies an *interface* - and multiple objects *implement* the functions from the interface. You can then, at run-time (when the program runs, rather than when it compiles) put *any* object that implements the interface into a variable typed by the *interface* - and when you call the methods from the interface, the *implementation* runs from the actual type. This is nice because your underlying program doesn't have to know about the actual implementations - just how to talk to the interface. That helps keep your program clean.
+
+Dynamic dispatch does come with a cost, which is why Entity Component Systems (and Rust in general) prefer not to use it for performance-critical code. There's actually *two* costs:
+
+1. Since you don't know what type the object is up-front, you have to allocate it via a *pointer*. Rust makes this easy by providing the `Box` system (more on that in a moment), but there is a cost: rather than just jumping to a readily defined piece of memory (which your CPU/memory can generally figure out easily in advance and make sure the cache is ready) the code has to follow the pointer - and then run what it finds at the end of the pointer. That's why some C++ programmers call `->` (dereference operator) the "cache miss operator". Simply by being boxed, your code is slowed down by a tiny amount.
+2. Since multiple types can implement methods, the computer needs to know which one to run. It does this with a `vtable` - that is, a "virtual table" of method implementations. So each call has to check the table, find out which method to run, and then run from there. That's *another* cache miss, and more time for your CPU to figure out what to do.
+
+In this case, we're just generating the map - and making very few calls into the builder. That makes the slowdown acceptable, since it's *really small* and not being run frequently. You wouldn't want to do this in your main loop, if you can avoid it!
+
+So - implementation. We'll start by changing our trait to be *public*, and have the methods accept an `&mut self` - which means "this method is a *member* of the trait, and should receive access to `self` - the attached object when we call it. The code looks like this:
 
 ```rust
-use super::{MapBuilder, Map, Rect, apply_room_to_map, 
-    apply_horizontal_tunnel, apply_vertical_tunnel, TileType,
-    Position, spawner};
-use rltk::RandomNumberGenerator;
-use specs::prelude::*;
+pub trait MapBuilder {
+    fn build_map(&mut self, new_depth: i32) -> (Map, Position);
+    fn spawn_entities(&mut self, map : &Map, ecs : &mut World, new_depth: i32);
+}
+```
 
-pub struct BspDungeonBuilder {}
+Notice that I've also taken the time to make the names a bit more descriptive! Now we replace our free function calls with a *factory* function: it creates a `MapBuilder` and returns it. The name is a bit of a lie until we have more map implementations - it claims to be random, but when there's only one choice it's not hard to guess which one it will pick (just ask Soviet election systems!):
 
-impl MapBuilder for BspDungeonBuilder {
-    fn build(new_depth: i32) -> (Map, Position) {
-        let mut map = Map::new(new_depth);
-        (map, Position{x:0, y:0})
+```rust
+pub fn random_builder() -> Box<dyn MapBuilder> {
+    // Note that until we have a second map type, this isn't even slighlty random
+    Box::new(SimpleMapBuilder{})
+}
+```
+
+Notice that it doesn't return a `MapBuilder` - rather it returns a `Box<dyn MapBuilder>`! That's rather convoluted (and in earlier versions of Rust, the `dyn` is optional). A `Box` is a type wrapped in a pointer, whose size may not be known at compile time. It's the same as a C++ `MapBuilder *` - it *points* to a `MapBuilder` rather than actually *being* one. The `dyn` is a flag to say "this should use dynamic dispatch"; the code will work without it (it will be inferred), but it's good practice to flag that you are doing something complicated/expensive here.
+
+The function simply returns `Box::new(SimpleMapBuilder{})`. This is actually two calls, now: we make a box with `Box::new(...)`, and we place an empty `SimpleMapBuilder` into the box.
+
+Over in `main.rs`, we once again have to change all three calls to the map builder. We now need to use the following pattern:
+
+1. Obtain a boxed `MapBuilder` object, from the factory.
+2. Call `build_map` as a *method* - that is, a function attached to the *object*.
+3. Call `spawn_entities` also as a *method*.
+
+The implementation from `goto_next_level` now reads as follows:
+
+```rust
+// Build a new map and place the player
+let mut builder = map_builders::random_builder(current_depth + 1);
+let worldmap;
+let current_depth;
+let player_start;
+{
+    let mut worldmap_resource = self.ecs.write_resource::<Map>();
+    current_depth = worldmap_resource.depth;
+    let (newmap, start) = builder.build_map(current_depth + 1);
+    *worldmap_resource = newmap;
+    player_start = start;
+    worldmap = worldmap_resource.clone();
+}
+
+// Spawn bad guys
+builder.spawn_entities(&worldmap, &mut self.ecs, current_depth+1);
+```
+
+It's not very different, but now we're *keeping* the builder object around - so subsequent calls to the builder will apply to the same *implementation* (sometimes called "concrete object" - the object that actually physically exists).
+
+If we were to add 5 more map builders, the code in `main.rs` wouldn't care! We can add them to the *factory*, and the rest of the program is blissfully unaware of the workings of the map builder. This is a very good example of how dynamic dispatch can be useful: you have a clearly defined interface, and the rest of the program doesn't *need* to understand the inner workings.
+
+## Adding a constructor to SimpleMapBuilder
+
+We're currently making a SimpleMapBuilder as an empty object. What if it *needs* to keep track of some data? In case we need it, lets add a simple constructor to it and use that instead of a blank object. In `simple_map.rs`, modify the `struct` implementation as follows:
+
+```rust
+impl SimpleMapBuilder {
+    pub fn new(new_depth : i32) -> SimpleMapBuilder {
+        SimpleMapBuilder{}
+    }
+    ...
+```
+
+That simply returns an empty object for now. In `mod.rs`, change the `random_map_builder` function to use it:
+
+```rust
+pub fn random_builder(new_depth : i32) -> Box<dyn MapBuilder> {
+    // Note that until we have a second map type, this isn't even slighlty random
+    Box::new(SimpleMapBuilder::new(new_depth))
+}
+```
+
+This hasn't gained us anything, but is a bit cleaner - when you write more maps, they may do something in their constructors!
+
+## Cleaning up the trait - simple, obvious steps and single return types
+
+Now that we've come this far, lets extend the trait a bit to obtain the player's position in one function, the map in another, and build/spawn separately. Using small functions tends to make the code easier to read, which is a worthwhile goal in and of itself. In `mod.rs`, we change the interface as follows:
+
+```rust
+pub trait MapBuilder {
+    fn build_map(&mut self);
+    fn spawn_entities(&mut self, ecs : &mut World);
+    fn get_map(&mut self) -> Map;
+    fn get_starting_position(&mut self) -> Position;
+}
+```
+
+There's a few things to note here:
+
+1. `build_map` no longer returns anything at all. We're using it as a function to build map state.
+2. `spawn_entities` no longer asks for a Map parameter. Since all map builders *have* to implement a map in order to make sense, we're going to assume that the map builder has one.
+3. `get_map` returns a map. Again, we're assuming that the builder implementation keeps one.
+4. `get_starting_position` also assumes that the builder will keep one around.
+
+Obviously, our `SimpleMapBuilder` now needs to be modified to work this way. We'll start by modifying the `struct` to include the required variables. This is the map builder's *state* - and since we're doing dynamic object-oriented code, the state remains attached to the object. Here's the code from `simple_map.rs`:
+
+```rust
+pub struct SimpleMapBuilder {
+    map : Map,
+    starting_position : Position,
+    depth: i32
+}
+```
+
+Next, we'll implement the *getter* functions. These are very simple: they simply return the variables from the structure's state:
+
+```rust
+impl MapBuilder for SimpleMapBuilder {
+    fn get_map(&self) -> Map {
+        self.map.clone()
     }
 
-    fn spawn(map : &Map, ecs : &mut World, new_depth: i32) {
-        for room in map.rooms.iter().skip(1) {
-            spawner::spawn_room(ecs, room, new_depth);
-        }
+    fn get_starting_position(&self) -> Position {
+        self.starting_position.clone()
+    }
+    ...
+```
+
+We'll also update the constructor to create the state:
+
+```rust
+pub fn new(new_depth : i32) -> SimpleMapBuilder {
+    SimpleMapBuilder{
+        map : Map::new(new_depth),
+        starting_position : Position{ x: 0, y : 0 },
+        depth : new_depth
     }
 }
 ```
 
-This makes an unusable map - but gives us a starting point. We'll modify `mod.rs` to always use *this* builder, while we work on it:
+This also simplifies `build_map` and `spawn_entities`:
 
 ```rust
-pub fn build_random_map(new_depth: i32) -> (Map, Position) {
-    BspDungeonBuilder::build(new_depth)
+fn build_map(&mut self) {
+    SimpleMapBuilder::rooms_and_corridors();
 }
 
-pub fn spawn(map : &Map, ecs : &mut World, new_depth: i32) {
-    BspDungeonBuilder::spawn(map, ecs, new_depth);
+fn spawn_entities(&mut self, ecs : &mut World) {
+    for room in self.map.rooms.iter().skip(1) {
+        spawner::spawn_room(ecs, room, self.depth);
+    }
 }
 ```
 
-We'll worry about swapping out map types later. Onto making the map! Note that this implementation is ported from my C++ game, *One Knight in the Dungeon*. We'll start with room generation:
+Lastly, we need to modify `rooms_and_corridors` to work with this interface:
 
 ```rust
-fn build(new_depth: i32) -> (Map, Position) {
-    let mut map = Map::new(new_depth);
+fn rooms_and_corridors(&mut self) {
+    const MAX_ROOMS : i32 = 30;
+    const MIN_SIZE : i32 = 6;
+    const MAX_SIZE : i32 = 10;
+
     let mut rng = RandomNumberGenerator::new();
 
-    let mut rects : Vec<Rect> = Vec::new(); // Vector to hold our rectangles as we divide
-    rects.push( Rect::new(2, 2, map.width-5, map.height-5) ); // Start with a single map-sized rectangle
-    let first_room = rects[0];
-    add_subrects(&mut rects, first_room); // Divide the first room
-
-    // Up to 240 times, we get a random rectangle and divide it. If its possible to squeeze a
-    // room in there, we place it and add it to the rooms list.
-    let mut n_rooms = 0;
-    while n_rooms < 240 {
-        let rect = get_random_rect(&mut rects, &mut rng);
-        let candidate = get_random_sub_rect(rect, &mut rng);
-
-        if is_possible(&mut map, candidate) {
-            apply_room_to_map(&mut map, &candidate);
-            map.rooms.push(candidate);
-            add_subrects(&mut rects, rect);
+    for _i in 0..MAX_ROOMS {
+        let w = rng.range(MIN_SIZE, MAX_SIZE);
+        let h = rng.range(MIN_SIZE, MAX_SIZE);
+        let x = rng.roll_dice(1, self.map.width - w - 1) - 1;
+        let y = rng.roll_dice(1, self.map.height - h - 1) - 1;
+        let new_room = Rect::new(x, y, w, h);
+        let mut ok = true;
+        for other_room in self.map.rooms.iter() {
+            if new_room.intersect(other_room) { ok = false }
         }
+        if ok {
+            apply_room_to_map(&mut self.map, &new_room);
 
-        n_rooms += 1;
+            if !self.map.rooms.is_empty() {
+                let (new_x, new_y) = new_room.center();
+                let (prev_x, prev_y) = self.map.rooms[self.map.rooms.len()-1].center();
+                if rng.range(0,1) == 1 {
+                    apply_horizontal_tunnel(&mut self.map, prev_x, new_x, prev_y);
+                    apply_vertical_tunnel(&mut self.map, prev_y, new_y, new_x);
+                } else {
+                    apply_vertical_tunnel(&mut self.map, prev_y, new_y, prev_x);
+                    apply_horizontal_tunnel(&mut self.map, prev_x, new_x, new_y);
+                }
+            }
+
+            self.map.rooms.push(new_room);
+        }
     }
-    let player_start = map.rooms[0].center();
-    (map, Position{ x : player_start.0, y : player_start.1 })
+
+    let stairs_position = self.map.rooms[self.map.rooms.len()-1].center();
+    let stairs_idx = self.map.xy_idx(stairs_position.0, stairs_position.1);
+    self.map.tiles[stairs_idx] = TileType::DownStairs;
+
+    let start_pos = self.map.rooms[0].center();
+    self.starting_position = Position{ x: start_pos.0, y: start_pos.1 };
 }
 ```
 
-So what on Earth does this do?
+This is very similar to what we had before, but now uses `self.map` to refer to its own copy of the map, and stores the player position in `self.starting_position`.
 
-1. We start by initializing a new map and random number generator to use.
-2. We create a new vector of `Rect` structures.
-3. We create the "first room" - which is really the whole map. We've trimmed a bit to add some padding to the sides of the map.
-4. We call `add_subrects`, passing it the rectangle list - and the first room. We'll implement that in a minute, but what it does is: it divides the rectangle into four quadrants, and adds each of the quadrants to the rectangle list.
-5. Now we setup a room counter, so we don't infinitely loop.
-6. While that counter is less than 240 (a relatively arbitrary limit that gives fun results):
-    1. We call `get_random_rect` to retrieve a random rectangle from the rectangles list.
-    2. We call `get_random_sub_rect` using this rectangle as an outer boundary. It creates a random room from 3 to 10 tiles in size (on each axis), somewhere within the parent rectangle.
-    3. We ask `is_possible` if the candidate can be drawn to the map; every tile must be within the map boundaries, and not already a room. If it IS possible:
-        1. We mark it on the map.
-        2. We add it to the rooms list.
-        3. We call `add_subrects` to sub-divide the rectangle we just used (not the candidate!).
-
-If you `cargo run` now, you will be in a room with no exits. That's a great start.
-
-Now, we sort the rooms by left coordinate. You don't *have* to do this, but it helps make connected rooms line up.
+The calls into the new code in `main.rs` once again change. The call from `goto_next_level` now looks like this:
 
 ```rust
-map.rooms.sort_by(|a,b| a.x1.cmp(&b.x1) );
-```
-
-`sort_by` takes a *closure* - that is, an inline function (known as a "lambda" in other languages) as a parameter. You could specify a whole other function if you wanted to, or implement traits on `Rect` to make it sortable - but this is easy enough. It sorts by comparing the `x1` value of each rectangle.
-
-Now we'll add some corridors:
-
-```rust
-for i in 0..map.rooms.len()-1 {
-    let room = map.rooms[i];
-    let next_room = map.rooms[i+1];
-    let start_x = room.x1 + (rng.roll_dice(1, i32::abs(room.x1 - room.x2))-1);
-    let start_y = room.y1 + (rng.roll_dice(1, i32::abs(room.y1 - room.y2))-1);
-    let end_x = next_room.x1 + (rng.roll_dice(1, i32::abs(next_room.x1 - next_room.x2))-1);
-    let end_y = next_room.y1 + (rng.roll_dice(1, i32::abs(next_room.y1 - next_room.y2))-1);
-    draw_corridor(&mut map, start_x, start_y, end_x, end_y);
+let mut builder;
+let worldmap;
+let current_depth;
+let player_start;
+{
+    let mut worldmap_resource = self.ecs.write_resource::<Map>();
+    current_depth = worldmap_resource.depth;
+    builder = map_builders::random_builder(current_depth + 1);
+    builder.build_map();
+    *worldmap_resource = builder.get_map();
+    player_start = builder.get_starting_position();
+    worldmap = worldmap_resource.clone();
 }
+
+// Spawn bad guys
+builder.spawn_entities(&mut self.ecs);
 ```
 
-This iterates the rooms list, ignoring the last one. It fetches the current room, and the next one in the list and calculates a random location (`start_x`/`start_y` and `end_x`/`end_y`) within each room. It then calls the mysterious `draw_corridor` function with these coordinates. Draw corridor adds a line from the start to the end, using only north/south or east/west (it can give 90-degree bends). It won't give you a staggered, hard to navigate perfect line like Bresenham would.
+We basically repeat those changes for the others (see the source). We now have a pretty comfortable interface into the map builder: it exposes enough to be easy to use, without exposing the details of the magic it uses to actually *build* the map!
 
-Finally, we need to wrap up and create the exit:
+If you `cargo run` the project now: once again, nothing visible has changed - it still works the way it did before. When you are refactoring, that's a good thing!
 
-```rust
-let stairs = map.rooms[map.rooms.len()-1].center();
-let stairs_idx = map.xy_idx(stairs.0, stairs.1);
-map.tiles[stairs_idx] = TileType::DownStairs;
-```
-
-We place the exit in the last room, guaranteeing that the poor player has a ways to walk.
-
-If you `cargo run` now, you'll see something like this:
-
-![Screenshot](./c23-s1.jpg).
-
-We have a different dungeon, this one quite suited to sewers or similar.
-
-## Randomizing the dungeon per level
-
-Rather than *always* using the BSP sewer algorithm, we would like to sometimes use one or the other. In `map_builders/mod.rs`, replace the `build` function:
-
-```rust
-pub fn build_random_map(new_depth: i32) -> (Map, Position) {
-    let mut rng = rltk::RandomNumberGenerator::new();
-    let builder = rng.roll_dice(1, 2);
-    match builder {
-        1 => SimpleMapBuilder::build(new_depth),
-        _ => BspDungeonBuilder::build(new_depth)
-    }    
-}
-```
-
-Now when you play, it's a coin toss what type of map you encounter. The `spawn` functions for the types are the same - so we're not going to worry about map builder state until the next chapter.
-
-## Wrap-Up
-
-You've refactored your map building into a new module, and built a simple BSP (Binary Space Partitioning) based map. The game randomly picks a map type, and you have more variety. The next chapter will further refactor map generation, and introduce another technique.
-
-**The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-23-bsproom-dungeons)**
+**The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-23-generic-map)**
 
 
-[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-23-generic-map/)
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-23-generic-map/). There isn't a lot of point, since refactoring aims to *not* change the visible result!
 ---
 
 Copyright (C) 2019, Herbert Wolverson.
