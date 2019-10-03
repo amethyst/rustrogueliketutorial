@@ -24,6 +24,7 @@
     - [Magic Mapping](./chapter_20.md)
     - [REX Paint Menu](./chapter_21.md)
     - [Simple Traps](./chapter_22.md)
-    - [BSP Room Dungeons](./chapter_23.md)
+    - [Refactor Map Building](./chapter_23.md)
+    - [BSP Room Dungeons](./chapter_24.md)
 
 [Contributors](./contributors.md)

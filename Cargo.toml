@@ -38,7 +38,8 @@ members = [
     "chapter-20-magicmapping",
     "chapter-21-rexmenu",
     "chapter-22-simpletraps",
-    "chapter-23-bsproom-dungeons"
+    "chapter-23-generic-map",
+    "chapter-24-bsproom-dungeons"
     ]
 
 [profile.dev]

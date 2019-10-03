@@ -402,7 +402,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "chapter-23-bsproom-dungeons"
+name = "chapter-23-generic-map"
 version = "0.1.0"
 dependencies = [
  "rltk 0.3.1 (git+https://github.com/thebracket/rltk_rs)",
@@ -413,6 +413,10 @@ dependencies = [
  "wasm-bindgen 0.2.50 (registry+https://github.com/rust-lang/crates.io-index)",
  "web-sys 0.3.27 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
+
+[[package]]
+name = "chapter-24-bsproom-dungeons"
+version = "0.1.0"
 
 [[package]]
 name = "cloudabi"

@@ -1,4 +1,4 @@
-# BSP Room Dungeons (beta quality)
+# Refactor: Generic Map Interface
 
 ---
 
@@ -463,7 +463,7 @@ You've refactored your map building into a new module, and built a simple BSP (B
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-23-bsproom-dungeons)**
 
 
-[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-23-bsproom-dungeons/)
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-23-generic-map/)
 ---
 
 Copyright (C) 2019, Herbert Wolverson.
