@@ -41,6 +41,8 @@ extern crate generator;
 
 rltk::add_wasm_support!();
 
+const SHOW_MAPGEN_VISUALIZER : bool = true;
+
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { AwaitingInput, 
     PreRun, 
@@ -54,11 +56,16 @@ pub enum RunState { AwaitingInput,
     NextLevel,
     ShowRemoveItem,
     GameOver,
-    MagicMapReveal { row : i32 }
+    MagicMapReveal { row : i32 },
+    MapGeneration
 }
 
 pub struct State {
-    pub ecs: World
+    pub ecs: World,
+    mapgen_next_state : Option<RunState>,
+    mapgen_history : Vec<Map>,
+    mapgen_index : usize,
+    mapgen_timer : f32
 }
 
 impl State {
@@ -107,7 +114,7 @@ impl GameState for State {
             RunState::MainMenu{..} => {}
             RunState::GameOver{..} => {}
             _ => {
-                draw_map(&self.ecs, ctx);
+                draw_map(&self.ecs.fetch::<Map>(), ctx);
                 let positions = self.ecs.read_storage::<Position>();
                 let renderables = self.ecs.read_storage::<Renderable>();
                 let hidden = self.ecs.read_storage::<Hidden>();
@@ -124,6 +131,25 @@ impl GameState for State {
         }
         
         match newrunstate {
+            RunState::MapGeneration => {
+                if !SHOW_MAPGEN_VISUALIZER {
+                    newrunstate = self.mapgen_next_state.unwrap();
+                }
+                ctx.cls();
+                for v in self.mapgen_history[self.mapgen_index].revealed_tiles.iter_mut() {
+                    *v = true;
+                }
+                draw_map(&self.mapgen_history[self.mapgen_index], ctx);
+
+                self.mapgen_timer += ctx.frame_time_ms;
+                if self.mapgen_timer > 500.0 {
+                    self.mapgen_timer = 0.0;
+                    self.mapgen_index += 1;
+                    if self.mapgen_index == self.mapgen_history.len() {
+                        newrunstate = self.mapgen_next_state.unwrap();
+                    }
+                }
+            }
             RunState::PreRun => {
                 self.run_systems();
                 self.ecs.maintain();
@@ -225,7 +251,8 @@ impl GameState for State {
                     gui::GameOverResult::NoSelection => {}
                     gui::GameOverResult::QuitToMenu => {
                         self.game_over_cleanup();
-                        newrunstate = RunState::MainMenu{ menu_selection: gui::MainMenuSelection::NewGame };
+                        newrunstate = RunState::MapGeneration;
+                        self.mapgen_next_state = Some(RunState::MainMenu{ menu_selection: gui::MainMenuSelection::NewGame });
                     }
                 }
             }
@@ -234,8 +261,9 @@ impl GameState for State {
                 newrunstate = RunState::MainMenu{ menu_selection : gui::MainMenuSelection::LoadGame };
             }
             RunState::NextLevel => {
-                self.goto_next_level();                
-                newrunstate = RunState::PreRun;
+                self.goto_next_level();
+                self.mapgen_next_state = Some(RunState::PreRun);
+                newrunstate = RunState::MapGeneration;
             }
             RunState::MagicMapReveal{row} => {
                 let mut map = self.ecs.fetch_mut::<Map>();
@@ -348,8 +376,13 @@ impl State {
     }
 
     fn generate_world_map(&mut self, new_depth : i32) {
+        self.mapgen_index = 0;
+        self.mapgen_timer = 0.0;
+        self.mapgen_history.clear();
         let mut builder = map_builders::random_builder(new_depth);
-        builder.build_map();
+        for map in builder.build_map() {
+            self.mapgen_history.push(map);
+        };
         let player_start;
         {
             let mut worldmap_resource = self.ecs.write_resource::<Map>();
@@ -385,7 +418,11 @@ fn main() {
     let mut context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "resources");
     context.with_post_scanlines(true);
     let mut gs = State {
-        ecs: World::new()
+        ecs: World::new(),
+        mapgen_next_state : Some(RunState::MainMenu{ menu_selection: gui::MainMenuSelection::NewGame }),
+        mapgen_index : 0,
+        mapgen_history: Vec::new(),
+        mapgen_timer: 0.0
     };
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
@@ -431,7 +468,7 @@ fn main() {
     gs.ecs.insert(rltk::RandomNumberGenerator::new());
     let player_entity = spawner::player(&mut gs.ecs, 0, 0);
     gs.ecs.insert(player_entity);
-    gs.ecs.insert(RunState::MainMenu{ menu_selection: gui::MainMenuSelection::NewGame });
+    gs.ecs.insert(RunState::MapGeneration{} );
     gs.ecs.insert(gamelog::GameLog{ entries : vec!["Welcome to Rusty Roguelike".to_string()] });
     gs.ecs.insert(particle_system::ParticleBuilder::new());
     gs.ecs.insert(rex_assets::RexAssets::new());

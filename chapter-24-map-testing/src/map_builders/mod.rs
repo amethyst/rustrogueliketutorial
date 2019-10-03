@@ -4,9 +4,10 @@ use simple_map::SimpleMapBuilder;
 mod common;
 use common::*;
 use specs::prelude::*;
+use generator::Generator;
 
 pub trait MapBuilder {
-    fn build_map(&mut self);
+    fn build_map(&mut self) -> Generator<(), Map>;
     fn spawn_entities(&mut self, ecs : &mut World);
     fn get_map(&self) -> Map;
     fn get_starting_position(&self) -> Position;

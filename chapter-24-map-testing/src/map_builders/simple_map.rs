@@ -21,8 +21,12 @@ impl MapBuilder for SimpleMapBuilder {
         self.starting_position.clone()
     }
 
-    fn build_map(&mut self) {
-        self.rooms_and_corridors();
+    fn build_map(&mut self) -> Generator<(), Map> {
+        Gn::new_scoped(move |mut s| {
+            println!("Running build map");
+            self.rooms_and_corridors(&mut s);
+            done!();
+        })
     }
 
     fn spawn_entities(&mut self, ecs : &mut World) {
@@ -42,7 +46,7 @@ impl SimpleMapBuilder {
         }
     }
 
-    fn rooms_and_corridors(&mut self) {
+    fn rooms_and_corridors(&mut self, scope: &mut generator::Scope<(), Map>) {
         const MAX_ROOMS : i32 = 30;
         const MIN_SIZE : i32 = 6;
         const MAX_SIZE : i32 = 10;
@@ -61,6 +65,7 @@ impl SimpleMapBuilder {
             }
             if ok {
                 apply_room_to_map(&mut self.map, &new_room);
+                scope.yield_(self.map.clone());
 
                 if !self.rooms.is_empty() {
                     let (new_x, new_y) = new_room.center();
@@ -75,6 +80,7 @@ impl SimpleMapBuilder {
                 }
 
                 self.rooms.push(new_room);
+                scope.yield_(self.map.clone());
             }
         }
 
