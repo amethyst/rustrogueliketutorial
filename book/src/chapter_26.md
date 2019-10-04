@@ -241,6 +241,87 @@ This repeats until we have a lot of small rooms.
 
 You can `cargo run` the code right now, to see the rooms appearing.
 
+![Screenshot](./c26-s1.gif)
+
+## Adding some doorways
+
+It's all well and good to have rooms, but without doors connecting them it's not going to be a very fun experience! Fortunately, the *exact same code* from the previous chapter will work here, also.
+
+```rust
+// Now we want corridors
+for i in 0..self.rooms.len()-1 {
+    let room = self.rooms[i];
+    let next_room = self.rooms[i+1];
+    let start_x = room.x1 + (rng.roll_dice(1, i32::abs(room.x1 - room.x2))-1);
+    let start_y = room.y1 + (rng.roll_dice(1, i32::abs(room.y1 - room.y2))-1);
+    let end_x = next_room.x1 + (rng.roll_dice(1, i32::abs(next_room.x1 - next_room.x2))-1);
+    let end_y = next_room.y1 + (rng.roll_dice(1, i32::abs(next_room.y1 - next_room.y2))-1);
+    self.draw_corridor(start_x, start_y, end_x, end_y);
+    self.take_snapshot();
+}
+```
+
+This in turn calls the unchanged `draw_corridor` function:
+
+```rust
+fn draw_corridor(&mut self, x1:i32, y1:i32, x2:i32, y2:i32) {
+    let mut x = x1;
+    let mut y = y1;
+
+    while x != x2 || y != y2 {
+        if x < x2 {
+            x += 1;
+        } else if x > x2 {
+            x -= 1;
+        } else if y < y2 {
+            y += 1;
+        } else if y > y2 {
+            y -= 1;
+        }
+
+        let idx = self.map.xy_idx(x, y);
+        self.map.tiles[idx] = TileType::Floor;
+    }
+}
+```
+
+## Don't forget the stairs (I nearly did, AGAIN!)
+
+Finally, we need to wrap up and create the exit:
+
+```rust
+// Don't forget the stairs
+let stairs = self.rooms[self.rooms.len()-1].center();
+let stairs_idx = self.map.xy_idx(stairs.0, stairs.1);
+self.map.tiles[stairs_idx] = TileType::DownStairs;
+```
+
+We place the exit in the last room, guaranteeing that the poor player has a ways to walk.
+
+If you `cargo run` now, you'll see something like this:
+
+![Screenshot](./c26-s2.gif).
+
+## Restoring randomness - again
+
+Lastly, we go back to `map_builders/mod.rs` and edit our `random_builder` to once gain provide a random dungeon per level:
+
+```rust
+pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
+    let mut rng = rltk::RandomNumberGenerator::new();
+    let builder = rng.roll_dice(1, 3);
+    match builder {
+        1 => Box::new(BspDungeonBuilder::new(new_depth)),
+        2 => Box::new(BspInteriorBuilder::new(new_depth))
+        _ => Box::new(SimpleMapBuilder::new(new_depth))
+    }
+}
+```
+
+## Wrap Up
+
+This type of dungeon can represent an interior, maybe of a space ship, a castle, or even a home. You can tweak dimensions, door placement, and bias the splitting as you see fit - but you'll get a map that makes most of the available space usable by the game. It's probably worth being sparing with these levels (or incorporating them into other levels) - they can lack variety, even though they are random.
+
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-26-bsp-interiors)**
 
 
