@@ -40,7 +40,8 @@ members = [
     "chapter-22-simpletraps",
     "chapter-23-generic-map",
     "chapter-24-map-testing",
-    "chapter-25-bsproom-dungeons"
+    "chapter-25-bsproom-dungeons",
+    "chapter-26-bsp-interiors"
     ]
 
 [profile.dev]
