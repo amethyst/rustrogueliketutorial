@@ -312,7 +312,7 @@ pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
     let builder = rng.roll_dice(1, 3);
     match builder {
         1 => Box::new(BspDungeonBuilder::new(new_depth)),
-        2 => Box::new(BspInteriorBuilder::new(new_depth))
+        2 => Box::new(BspInteriorBuilder::new(new_depth)),
         _ => Box::new(SimpleMapBuilder::new(new_depth))
     }
 }
