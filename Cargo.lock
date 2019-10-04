@@ -420,7 +420,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "chapter-24-bsproom-dungeons"
+name = "chapter-24-map-testing"
 version = "0.1.0"
 dependencies = [
  "rltk 0.3.1 (git+https://github.com/thebracket/rltk_rs)",
@@ -433,7 +433,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "chapter-24-map-testing"
+name = "chapter-25-bsproom-dungeons"
 version = "0.1.0"
 dependencies = [
  "rltk 0.3.1 (git+https://github.com/thebracket/rltk_rs)",
