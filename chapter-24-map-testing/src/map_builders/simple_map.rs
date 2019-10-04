@@ -1,6 +1,6 @@
 use super::{MapBuilder, Map, Rect, apply_room_to_map, 
     apply_horizontal_tunnel, apply_vertical_tunnel, TileType,
-    Position, spawner};
+    Position, spawner, SHOW_MAPGEN_VISUALIZER};
 use rltk::RandomNumberGenerator;
 use specs::prelude::*;
 
@@ -32,6 +32,16 @@ impl MapBuilder for SimpleMapBuilder {
     fn spawn_entities(&mut self, ecs : &mut World) {
         for room in self.rooms.iter().skip(1) {
             spawner::spawn_room(ecs, room, self.depth);
+        }
+    }
+
+    fn take_snapshot(&mut self) {
+        if SHOW_MAPGEN_VISUALIZER {
+            let mut snapshot = self.map.clone();
+            for v in snapshot.revealed_tiles.iter_mut() {
+                *v = true;
+            }
+            self.history.push(snapshot);
         }
     }
 }
@@ -66,7 +76,7 @@ impl SimpleMapBuilder {
             }
             if ok {
                 apply_room_to_map(&mut self.map, &new_room);
-                self.history.push(self.map.clone());
+                self.take_snapshot();
 
                 if !self.rooms.is_empty() {
                     let (new_x, new_y) = new_room.center();
@@ -81,7 +91,7 @@ impl SimpleMapBuilder {
                 }
 
                 self.rooms.push(new_room);
-                self.history.push(self.map.clone());
+                self.take_snapshot();
             }
         }
 

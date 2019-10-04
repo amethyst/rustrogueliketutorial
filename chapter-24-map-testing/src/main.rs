@@ -133,14 +133,11 @@ impl GameState for State {
                 if !SHOW_MAPGEN_VISUALIZER {
                     newrunstate = self.mapgen_next_state.unwrap();
                 }
-                ctx.cls();
-                for v in self.mapgen_history[self.mapgen_index].revealed_tiles.iter_mut() {
-                    *v = true;
-                }
+                ctx.cls();                
                 draw_map(&self.mapgen_history[self.mapgen_index], ctx);
 
                 self.mapgen_timer += ctx.frame_time_ms;
-                if self.mapgen_timer > 500.0 {
+                if self.mapgen_timer > 300.0 {
                     self.mapgen_timer = 0.0;
                     self.mapgen_index += 1;
                     if self.mapgen_index == self.mapgen_history.len() {

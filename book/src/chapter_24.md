@@ -155,101 +155,102 @@ It's surprisingly difficult to combine two paradigms, sometimes:
 * The graphical "tick" nature of RLTK (and the underlying GUI environment) encourages you to do everything fast, in one fell swoop.
 * Actually visualizing progress while you generate a map encourages you to run in lots of phases as a "state machine", yielding map results along the way.
 
-TODO: Remove coroutine talk. WASM didn't like it.
+My first thought was to use *coroutines*, specifically [Generators](https://doc.rust-lang.org/beta/unstable-book/language-features/generators.html). They really are ideal for this type of thing: you can write code in a function that runs synchronously (in order) and "yields" values as the computation continues. I even went so far as to get a working implementation - but it required *nightly* support (unstable, unfinished Rust) and didn't play nicely with web assembly. So I scrapped it. There's a lesson here: sometimes the tooling isn't quite ready for what you really want!
 
-Rust is getting support for *coroutine generators*, but it isn't in the stable language yet. That's a shame, because `yield` - and yielding progress - is *exactly* what they are designed for. Instead, we turn to `cargo` and find the `generator` crate. It is quite similar to the language proposal, so when it hits stable it shouldn't be *too* hard to migrate.
+Instead, I decided to go with a more traditional route. Maps can take a "snapshot" while they generate, and that big pile of snapshots can be played frame-by-frame in the visualizer. This isn't quite as nice as a coroutine, but it works and is stable. Those are desirable traits!
 
-In `cargo.toml`, we add this to the dependencies:
-
-```toml
-generator = "0.6.18"
-```
-
-In `main.rs`, we have to tell it to import the macros:
+To get started, we should make sure that visualizing map generation is entirely optional. When you ship your game to players, you probably don't want to show them the whole map while they get started - but while you are working on map algorithms, it's very valuable. So towards the top of `main.rs`, we add a constant:
 
 ```rust
-#[macro_use]
-extern crate generator;
+const SHOW_MAPGEN_VISUALIZER : bool = true;
 ```
 
-And we refactor our map generators to run as coroutine generators. Here's the interface from `mod.rs`:
+A *constant* is just that: a variable that cannot change once the program has started. Rust makes read-only constants pretty easy, and the compiler generally optimizes them out completely since the value is known ahead of time. In this case, we're stating that a `bool` called `SHOW_MAPGEN_VISUALIZER` is `true`. The idea is that we can set it to `false` when we don't want to display our map generation progress.
+
+With that in place, it's time to add snapshot support to our map builder interface. In `map_builders/mod.rs` we extend the interface a bit:
 
 ```rust
-fn build_map(&mut self) -> Generator<(), Map>;
-```
-
-And here is the implementation from `simple_map.rs`:
-
-```rust
-fn build_map(&mut self) -> Generator<(), Map> {
-    Gn::new_scoped(move |mut s| {
-        println!("Running build map");
-        self.rooms_and_corridors();
-        done!();
-    })
+pub trait MapBuilder {
+    fn build_map(&mut self);
+    fn spawn_entities(&mut self, ecs : &mut World);
+    fn get_map(&self) -> Map;
+    fn get_starting_position(&self) -> Position;
+    fn get_snapshot_history(&self) -> Vec<Map>;
+    fn take_snapshot(&mut self);
 }
 ```
 
-That's a bit messy; it does the following:
+Notice the new entries: `get_snapshot_history` and `take_snapshot`. The former will be used to ask the generator for its history of map frames; the latter tells generators to support taking snapshots (and leaves it up to them how they do it). 
 
-1. Create a new "scoped" generator, a closure.
-2. It moves the generator state into the closure.
-3. It prints out a note that we're making a map - for debugging purposes.
-4. It calls `rooms_and_corridors` as before.
-5. It calls the `generator` crate's `done!` macro to finish up.
+This is a good time to mention one *major* difference between Rust and C++ (and other languages that provide Object Oriented Programming support). Rust traits *do not* support adding variables to the trait signature. So you can't include a `history : Vec<Map>` within the trait, even if that's exactly what you're using to store the snapshot in all the implementations. I honestly don't know why this is the case, but it's workable - just an odd departure from OOP norms.
 
-If you were to run the project now, it would crash with no map generated. That's because the `generator` system actually returns an `iterator` - a range of yielded values. We're not actually yielding anything yet, but we need to visit `main.rs` and edit the `generate_world_map` function we just made (see? It was useful in reducing typing! Now we don't have to change it in three places). The `build_map` function call becomes:
+Inside `simple_map.rs`, we need to implement these methods for our `SimpleMapBuilder`. We start by adding supporting variables to our `struct`:
 
 ```rust
-for _i in builder.build_map() {};
-```
-
-This tells the program to go through each value of the iterator - which forces it to run. If you run the project now, you'll see "Running build map" on the console and the game plays as before.
-
-## Actually yielding map results
-
-Lets update `generate_world_map` again to tell us whenever we receive a yielded map update:
-
-```rust
-for _i in builder.build_map() {
-    println!("Map update");
-};
-```
-
-Running now will show this just the once - when the map finished. That's not really useful for iteratively updating the map, but it's a start. Now in `simple_map.rs`, we'll update the `build_map` function to pass the scope to `rooms_and_corridors`:
-
-```rust
-fn build_map(&mut self) -> Generator<(), Map> {
-    Gn::new_scoped(move |mut s| {
-        println!("Running build map");
-        self.rooms_and_corridors(&mut s);
-        done!();
-    })
+pub struct SimpleMapBuilder {
+    map : Map,
+    starting_position : Position,
+    depth: i32,
+    rooms: Vec<Rect>,
+    history: Vec<Map>
 }
 ```
 
-The only change is that we're passing `s` (the scope) as a mutable reference. We update the function signature to match:
+Notice that we've added `history: Vec<Map>` to the structure. It's what it says on the tin: a vector (resizable array) of `Map` structures. The idea is that we'll keep adding copies of the map into it for each "frame" of map generation.
+
+Onto the trait implementations:
 
 ```rust
-fn rooms_and_corridors(&mut self, scope: &mut generator::Scope<(), Map>) {
+fn get_snapshot_history(&self) -> Vec<Map> {
+    self.history.clone()
+}
 ```
 
-Now, whenever we want to submit an updated map to the caller - we can call `scope.yield_(map)`! Notice the underscore after the name; `yield` is a reserved keyword in Rust, and *will* be used when they finish the generator system. Adding the underscore fixes the name collision.
-
-So now, whenever we `push` a room to the map - we also submit an updated map to the caller:
+This is *very* simple: we return a copy of the history vector to the caller. We also need:
 
 ```rust
-self.rooms.push(new_room);
-scope.yield_(self.map.clone());
+fn take_snapshot(&mut self) {
+    if SHOW_MAPGEN_VISUALIZER {
+        let mut snapshot = self.map.clone();
+        for v in snapshot.revealed_tiles.iter_mut() {
+            *v = true;
+        }
+        self.history.push(snapshot);
+    }
+}
 ```
 
-We clone the map to ensure that we don't accidentally *move* it out of our function. It makes another copy in memory, which is a fast operation.
+We first check to see if we're using the snapshot feature (no point in wasting memory if we aren't!). If we are, we take a copy of the current map, iterate every `revealed_tiles` cell and set it to `true` (so the map render will display everything, including inaccessible walls), and add it to the history list.
 
-`cargo run` now shows a whole bunch of "Map update" outputs on the console: one for every room that was pushed, and one more for the finished map.
+We can now call `self.take_snapshot()` at any point during map generation, and it gets added as a frame to the map generator. In `simple_map.rs` we add a couple of calls after we add rooms or corridors:
 
-## Iteratively displaying progress
+```rust
+...
+if ok {
+    apply_room_to_map(&mut self.map, &new_room);
+    self.take_snapshot();
 
-We need to incorporate map generation into our running state, so we can display each cycle on the screen. A natural first step is to add an entry to our `RunState` enum:
+    if !self.rooms.is_empty() {
+        let (new_x, new_y) = new_room.center();
+        let (prev_x, prev_y) = self.rooms[self.rooms.len()-1].center();
+        if rng.range(0,1) == 1 {
+            apply_horizontal_tunnel(&mut self.map, prev_x, new_x, prev_y);
+            apply_vertical_tunnel(&mut self.map, prev_y, new_y, new_x);
+        } else {
+            apply_vertical_tunnel(&mut self.map, prev_y, new_y, prev_x);
+            apply_horizontal_tunnel(&mut self.map, prev_x, new_x, new_y);
+        }
+    }
+
+    self.rooms.push(new_room);
+    self.take_snapshot();
+}
+...
+```
+
+## Rendering the visualizer
+
+Visualizing map development is another *game state*, so we add it to our `RunState` enumeration in `main.rs`:
 
 ```rust
 #[derive(PartialEq, Copy, Clone)]
@@ -270,22 +271,7 @@ pub enum RunState { AwaitingInput,
 }
 ```
 
-This also requires handling in our `tick` function. For now, we'll just change state.
-
-```rust
-match newrunstate {
-    RunState::MapGeneration => {
-        newrunstate = RunState::MainMenu{ menu_selection: gui::MainMenuSelection::NewGame };
-    }
-```
-
-We also tell the game to start in the new mode:
-
-```rust
-gs.ecs.insert(RunState::MapGeneration);
-```
-
-Now, lets add some variables to our state to help us:
+Visualization actually requires a few variables, but I ran into a problem: one of the variables really should be the *next* state to which we transition after visualizing. We might be building a new map from one of three sources (new game, game over, next level) - and they have different states following the generation. Unfortunately, you can't put a second `RunState` into the first one - Rust gives you cycle errors, and it won't compile. You *can* use a `Box<RunState>` - but that doesn't work with `RunState` deriving from `Copy`! I fought this for a while, and settled on adding to `State` instead:
 
 ```rust
 pub struct State {
@@ -297,7 +283,14 @@ pub struct State {
 }
 ```
 
-And in the beginning of `main` where it creates the state, give it some values:
+We've added:
+
+* `mapgen_next_state` - which is where the game should go next.
+* `mapgen_history` - a copy of the map history frames to play.
+* `mapgen_index` - how far through the history we are during playback.
+* `mapgen_timer` - used for frame timing during playback.
+
+Since we've modified `State`, we also have to modify our creation of the `State` object:
 
 ```rust
 let mut gs = State {
@@ -309,33 +302,25 @@ let mut gs = State {
 };
 ```
 
-Now, we adjust our `generate_world_map` to actually store the history as it is generated:
+We've made the next state the same as the starting state we have been using: so the game will render map creation and then go to the menu. We can change our initial state to `MapGeneration`:
 
 ```rust
-fn generate_world_map(&mut self, new_depth : i32) {
-    self.mapgen_index = 0;
-    self.mapgen_timer = 0.0;
-    self.mapgen_history.clear();
-    let mut builder = map_builders::random_builder(new_depth);
-    for map in builder.build_map() {
-        self.mapgen_history.push(map);
-    };
-    ...
+gs.ecs.insert(RunState::MapGeneration{} );
 ```
 
-That's progress! We store each map generation as a "frame", setting up the ability to render generation progress. Now we adjust our `tick` function to actually display it:
+Now we need to implement the renderer. In our `tick` function, we add the following state:
 
 ```rust
 match newrunstate {
     RunState::MapGeneration => {
-        ctx.cls();
-        for v in self.mapgen_history[self.mapgen_index].revealed_tiles.iter_mut() {
-            *v = true;
+        if !SHOW_MAPGEN_VISUALIZER {
+            newrunstate = self.mapgen_next_state.unwrap();
         }
+        ctx.cls();                
         draw_map(&self.mapgen_history[self.mapgen_index], ctx);
 
         self.mapgen_timer += ctx.frame_time_ms;
-        if self.mapgen_timer > 500.0 {
+        if self.mapgen_timer > 300.0 {
             self.mapgen_timer = 0.0;
             self.mapgen_index += 1;
             if self.mapgen_index == self.mapgen_history.len() {
@@ -346,59 +331,51 @@ match newrunstate {
     ...
 ```
 
-This is similar to the particle code: it clears the screen, ensures the whole map is visible, and passes the current iteration to the map render code. We then increment the timer by the frame time, and if 500ms have passed we reset the timer to zero and move to the next "frame" in the map history. If its the end of the list, we move to the next state.
+This is relatively straight-forward:
 
-If you `cargo run` now, you'll get to watch the map be generated:
+1. If the visualizer isn't enabled, simply transition to the next state immediately.
+2. Clear the screen.
+3. Call `draw_map`, with the map history from our state - at the current frame.
+4. Add the frame duration to the `mapgen_timer`, and if it is greater than 300ms:
+    1. Set the timer back to 0.
+    2. Increment the frame counter.
+    3. If the frame counter has reached the end of our history, transition to the next game state.
 
-(TODO: screenshot)
-
-## Extending to render other transitions
-
-We should also visualize map generation when the game ends, and when we go to the next level. Modify the following in `tick`:
+The eagle-eyed reader will have noticed a subtle change here. `draw_map` didn't used to take a `map` - it would pull it from the ECS! In `map.rs`, the beginning of `draw_map` changes to:
 
 ```rust
-RunState::GameOver => {
-    let result = gui::game_over(ctx);
-    match result {
-        gui::GameOverResult::NoSelection => {}
-        gui::GameOverResult::QuitToMenu => {
-            self.game_over_cleanup();
-            newrunstate = RunState::MapGeneration;
-            self.mapgen_next_state = Some(RunState::MainMenu{ menu_selection: gui::MainMenuSelection::NewGame });
+pub fn draw_map(map : &Map, ctx : &mut Rltk) {
+```
+
+Our regular call to `draw_map` in `tick` also changes to:
+
+```rust
+draw_map(&self.ecs.fetch::<Map>(), ctx);
+```
+
+This is a tiny change that allowed us to render whatever `Map` structure we need!
+
+Lastly, we need to actually give the visualizer some data to render. We adjust `generate_world_map` to reset the various `mapgen_` variables, clear the history, and retrieve the snapshot history once it has run:
+
+```rust
+fn generate_world_map(&mut self, new_depth : i32) {
+        self.mapgen_index = 0;
+        self.mapgen_timer = 0.0;
+        self.mapgen_history.clear();
+        let mut builder = map_builders::random_builder(new_depth);
+        builder.build_map();
+        self.mapgen_history = builder.get_snapshot_history();
+        let player_start;
+        {
+            let mut worldmap_resource = self.ecs.write_resource::<Map>();
+            *worldmap_resource = builder.get_map();
+            player_start = builder.get_starting_position();
         }
-    }
-}
 ```
 
-And:
+If you `cargo run` the project now, you get to watch the simple map generator build your level before you start.
 
-```rust
-RunState::NextLevel => {
-    self.goto_next_level();
-    self.mapgen_next_state = Some(RunState::PreRun);
-    newrunstate = RunState::MapGeneration;
-}
-```
-
-## Making it optional
-
-We probably only want to show the visualizer when we are working on maps - otherwise we are showing the player the complete level! Towards the top of `main.rs` add:
-
-```rust
-const SHOW_MAPGEN_VISUALIZER : bool = true;
-```
-
-Then we modify the map visualizer state:
-
-```rust
-RunState::MapGeneration => {
-    if !SHOW_MAPGEN_VISUALIZER {
-        newrunstate = self.mapgen_next_state.unwrap();
-    }
-    ...
-```
-
-Now you can change the global to `false` when you don't want the player to see maps being generated.
+![Screenshot](./c24-s1.gif)
 
 ## Wrap-Up
 
