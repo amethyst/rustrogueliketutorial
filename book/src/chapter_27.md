@@ -1,4 +1,4 @@
-# Cellular Automota Maps
+# Cellular Automata Maps
 
 ---
 
@@ -10,7 +10,7 @@
 
 ---
 
-Sometimes, you need a break from rectangular rooms. You might want a nice, organic looking cavern; a winding forest trail, or a spooky quarry. *One Knight in the Dungeon* uses cellular automota for this purpose, inspired by [this excellent article](http://www.roguebasin.com/index.php?title=Cellular_Automata_Method_for_Generating_Random_Cave-Like_Levels). This chapter will help you create natural looking maps.
+Sometimes, you need a break from rectangular rooms. You might want a nice, organic looking cavern; a winding forest trail, or a spooky quarry. *One Knight in the Dungeon* uses cellular automata for this purpose, inspired by [this excellent article](http://www.roguebasin.com/index.php?title=Cellular_Automata_Method_for_Generating_Random_Cave-Like_Levels). This chapter will help you create natural looking maps.
 
 ## Scaffolding
 
@@ -454,7 +454,7 @@ pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
 
 ## Wrap-Up
 
-We've made a pretty nice map generator, and fixed our dependency upon rooms. Cellular Automota are a *really* flexible algorithm, and can be used for all kinds of organic looking maps. With a bit of tweaking to the rules, you can make a really large variety of maps.
+We've made a pretty nice map generator, and fixed our dependency upon rooms. Cellular Automata are a *really* flexible algorithm, and can be used for all kinds of organic looking maps. With a bit of tweaking to the rules, you can make a really large variety of maps.
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-27-cellular-automota)**
 
