@@ -28,5 +28,6 @@
     - [Map Building Test Harness](./chapter_24.md)
     - [BSP Room Dungeons](./chapter_25.md)
     - [BSP Interior Design](./chapter_26.md)
+    - [Cellular Automota Maps](./chapter_27.md)
 
 [Contributors](./contributors.md)

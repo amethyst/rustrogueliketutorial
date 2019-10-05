@@ -25,6 +25,7 @@ CALL :Stage chapter-23-generic-map
 CALL :Stage chapter-24-map-testing
 CALL :Stage chapter-25-bsproom-dungeons
 CALL :Stage chapter-26-bsp-interiors
+CALL :Stage chapter-27-cellular-automota
 
 REM Publish or perish
 cd book\book\wasm
