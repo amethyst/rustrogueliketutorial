@@ -433,13 +433,28 @@ This is quite simple: it iterates through each area, and calls the new `spawn_re
 
 The game is now quite playable on these new maps:
 
-(SCREENSHOT)
+![Screenshot](./c27-s2.gif).
 
 ## Restoring randomness
 
+Once again, we should restore randomness to our map building. In `map_builders/mod.rs`:
+
+```rust
+pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
+    let mut rng = rltk::RandomNumberGenerator::new();
+    let builder = rng.roll_dice(1, 4);
+    match builder {
+        1 => Box::new(BspDungeonBuilder::new(new_depth)),
+        2 => Box::new(BspInteriorBuilder::new(new_depth)),
+        3 => Box::new(CellularAutomotaBuilder::new(new_depth)),
+        _ => Box::new(SimpleMapBuilder::new(new_depth))
+    }
+}
+```
+
 ## Wrap-Up
 
-We've
+We've made a pretty nice map generator, and fixed our dependency upon rooms. Cellular Automota are a *really* flexible algorithm, and can be used for all kinds of organic looking maps. With a bit of tweaking to the rules, you can make a really large variety of maps.
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-27-cellular-automota)**
 
