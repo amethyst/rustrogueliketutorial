@@ -165,7 +165,7 @@ fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
             pos.y += delta_y;
 
             if pos.x < 0 { pos.x = 0; }
-            if pos.x > 79 { pos.y = 79; }
+            if pos.x > 79 { pos.x = 79; }
             if pos.y < 0 { pos.y = 0; }
             if pos.y > 49 { pos.y = 49; }
         }
@@ -259,7 +259,7 @@ fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
             pos.y += delta_y;
 
             if pos.x < 0 { pos.x = 0; }
-            if pos.x > 79 { pos.y = 79; }
+            if pos.x > 79 { pos.x = 79; }
             if pos.y < 0 { pos.y = 0; }
             if pos.y > 49 { pos.y = 49; }
         }
