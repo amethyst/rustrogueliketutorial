@@ -57,6 +57,7 @@ At the top of `main.rs` we add a few lines of code:
 ```rust
 use rltk::{Console, GameState, Rltk, RGB, VirtualKeyCode};
 use specs::prelude::*;
+use std::cmp::{max, min};
 #[macro_use]
 extern crate specs_derive;
 ```
@@ -237,6 +238,7 @@ If you've typed all of that in correctly, your `main.rs` now looks like this:
 ```rust
 use rltk::{Console, GameState, Rltk, RGB};
 use specs::prelude::*;
+use std::cmp::{max, min};
 #[macro_use]
 extern crate specs_derive;
 
@@ -402,6 +404,7 @@ So your code now looks like this:
 ```rust
 use rltk::{Console, GameState, Rltk, RGB};
 use specs::prelude::*;
+use std::cmp::{max, min};
 #[macro_use]
 extern crate specs_derive;
 
@@ -540,13 +543,8 @@ fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
     let mut players = ecs.write_storage::<Player>();
 
     for (_player, pos) in (&mut players, &mut positions).join() {
-        pos.x += delta_x;
-        pos.y += delta_y;
-
-        if pos.x < 0 { pos.x = 0; }
-        if pos.x > 79 { pos.x = 79; }
-        if pos.y < 0 { pos.y = 0; }
-        if pos.y > 49 { pos.y = 49; }
+        pos.x = min(79 , max(0, pos.x + delta_x));
+        pos.y = min(49, max(0, pos.y + delta_y));
     }
 }
 ```
@@ -598,6 +596,7 @@ The source code for this completed example may be found ready-to-run in `chapter
 ```rust
 use rltk::{Console, GameState, Rltk, RGB, VirtualKeyCode};
 use specs::prelude::*;
+use std::cmp::{max, min};
 #[macro_use]
 extern crate specs_derive;
 
@@ -631,13 +630,8 @@ fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
     let mut players = ecs.write_storage::<Player>();
 
     for (_player, pos) in (&mut players, &mut positions).join() {
-        pos.x += delta_x;
-        pos.y += delta_y;
-
-        if pos.x < 0 { pos.x = 0; }
-        if pos.x > 79 { pos.x = 79; }
-        if pos.y < 0 { pos.y = 0; }
-        if pos.y > 49 { pos.y = 49; }
+        pos.x = min(79 , max(0, pos.x + delta_x));
+        pos.y = min(49, max(0, pos.y + delta_y));
     }
 }
 

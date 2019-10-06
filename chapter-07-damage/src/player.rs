@@ -2,6 +2,7 @@ extern crate rltk;
 use rltk::{VirtualKeyCode, Rltk, Point};
 extern crate specs;
 use specs::prelude::*;
+use std::cmp::{max, min};
 use super::{Position, Player, Viewshed, State, Map, RunState, CombatStats, WantsToMelee};
 
 pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
@@ -25,13 +26,8 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
         }
 
         if !map.blocked[destination_idx] {
-            pos.x += delta_x;
-            pos.y += delta_y;
-
-            if pos.x < 0 { pos.x = 0; }
-            if pos.x > 79 { pos.x = 79; }
-            if pos.y < 0 { pos.y = 0; }
-            if pos.y > 49 { pos.y = 49; }
+            pos.x = min(79 , max(0, pos.x + delta_x));
+            pos.y = min(49, max(0, pos.y + delta_y));
 
             viewshed.dirty = true;
             let mut ppos = ecs.write_resource::<Point>();
