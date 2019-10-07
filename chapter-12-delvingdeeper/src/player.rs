@@ -80,33 +80,33 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
     match ctx.key {
         None => { return RunState::AwaitingInput } // Nothing happened
         Some(key) => match key {
-            VirtualKeyCode::Left => try_move_player(-1, 0, &mut gs.ecs),
-            VirtualKeyCode::Numpad4 => try_move_player(-1, 0, &mut gs.ecs),
+            VirtualKeyCode::Left |
+            VirtualKeyCode::Numpad4 |
             VirtualKeyCode::H => try_move_player(-1, 0, &mut gs.ecs),
 
-            VirtualKeyCode::Right => try_move_player(1, 0, &mut gs.ecs),
-            VirtualKeyCode::Numpad6 => try_move_player(1, 0, &mut gs.ecs),            
+            VirtualKeyCode::Right |
+            VirtualKeyCode::Numpad6 |
             VirtualKeyCode::L => try_move_player(1, 0, &mut gs.ecs),
 
-            VirtualKeyCode::Up => try_move_player(0, -1, &mut gs.ecs),
-            VirtualKeyCode::Numpad8 => try_move_player(0, -1, &mut gs.ecs),
+            VirtualKeyCode::Up |
+            VirtualKeyCode::Numpad8 |
             VirtualKeyCode::K => try_move_player(0, -1, &mut gs.ecs),
 
-            VirtualKeyCode::Down => try_move_player(0, 1, &mut gs.ecs),
-            VirtualKeyCode::Numpad2 => try_move_player(0, 1, &mut gs.ecs),
+            VirtualKeyCode::Down |
+            VirtualKeyCode::Numpad2 |
             VirtualKeyCode::J => try_move_player(0, 1, &mut gs.ecs),
 
             // Diagonals
-            VirtualKeyCode::Numpad9 => try_move_player(1, -1, &mut gs.ecs),
+            VirtualKeyCode::Numpad9 |
             VirtualKeyCode::U => try_move_player(1, -1, &mut gs.ecs),
 
-            VirtualKeyCode::Numpad7 => try_move_player(-1, -1, &mut gs.ecs),
+            VirtualKeyCode::Numpad7 |
             VirtualKeyCode::Y => try_move_player(-1, -1, &mut gs.ecs),
 
-            VirtualKeyCode::Numpad3 => try_move_player(1, 1, &mut gs.ecs),
+            VirtualKeyCode::Numpad3 |
             VirtualKeyCode::N => try_move_player(1, 1, &mut gs.ecs),
 
-            VirtualKeyCode::Numpad1 => try_move_player(-1, 1, &mut gs.ecs),
+            VirtualKeyCode::Numpad1 |
             VirtualKeyCode::B => try_move_player(-1, 1, &mut gs.ecs),
 
             // Level changes
