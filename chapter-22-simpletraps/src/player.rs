@@ -2,6 +2,7 @@ extern crate rltk;
 use rltk::{VirtualKeyCode, Rltk, Point};
 extern crate specs;
 use specs::prelude::*;
+use std::cmp::{max, min};
 use super::{Position, Player, Viewshed, State, Map, RunState, CombatStats, WantsToMelee, Item,
     gamelog::GameLog, WantsToPickupItem, TileType, Monster, HungerClock, HungerState, EntityMoved};
 
@@ -27,14 +28,9 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
         }
 
         if !map.blocked[destination_idx] {
-            pos.x += delta_x;
-            pos.y += delta_y;
+            pos.x = min(79 , max(0, pos.x + delta_x));
+            pos.y = min(49, max(0, pos.y + delta_y));
             entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
-
-            if pos.x < 0 { pos.x = 0; }
-            if pos.x > 79 { pos.y = 79; }
-            if pos.y < 0 { pos.y = 0; }
-            if pos.y > 49 { pos.y = 49; }
 
             viewshed.dirty = true;
             let mut ppos = ecs.write_resource::<Point>();
@@ -125,37 +121,37 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
     match ctx.key {
         None => { return RunState::AwaitingInput } // Nothing happened
         Some(key) => match key {
-            VirtualKeyCode::Left => try_move_player(-1, 0, &mut gs.ecs),
-            VirtualKeyCode::Numpad4 => try_move_player(-1, 0, &mut gs.ecs),
+            VirtualKeyCode::Left |
+            VirtualKeyCode::Numpad4 |
             VirtualKeyCode::H => try_move_player(-1, 0, &mut gs.ecs),
 
-            VirtualKeyCode::Right => try_move_player(1, 0, &mut gs.ecs),
-            VirtualKeyCode::Numpad6 => try_move_player(1, 0, &mut gs.ecs),            
+            VirtualKeyCode::Right |
+            VirtualKeyCode::Numpad6 |
             VirtualKeyCode::L => try_move_player(1, 0, &mut gs.ecs),
 
-            VirtualKeyCode::Up => try_move_player(0, -1, &mut gs.ecs),
-            VirtualKeyCode::Numpad8 => try_move_player(0, -1, &mut gs.ecs),
+            VirtualKeyCode::Up |
+            VirtualKeyCode::Numpad8 |
             VirtualKeyCode::K => try_move_player(0, -1, &mut gs.ecs),
 
-            VirtualKeyCode::Down => try_move_player(0, 1, &mut gs.ecs),
-            VirtualKeyCode::Numpad2 => try_move_player(0, 1, &mut gs.ecs),
+            VirtualKeyCode::Down |
+            VirtualKeyCode::Numpad2 |
             VirtualKeyCode::J => try_move_player(0, 1, &mut gs.ecs),
 
             // Diagonals
-            VirtualKeyCode::Numpad9 => try_move_player(1, -1, &mut gs.ecs),
+            VirtualKeyCode::Numpad9 |
             VirtualKeyCode::U => try_move_player(1, -1, &mut gs.ecs),
 
-            VirtualKeyCode::Numpad7 => try_move_player(-1, -1, &mut gs.ecs),
+            VirtualKeyCode::Numpad7 |
             VirtualKeyCode::Y => try_move_player(-1, -1, &mut gs.ecs),
 
-            VirtualKeyCode::Numpad3 => try_move_player(1, 1, &mut gs.ecs),
+            VirtualKeyCode::Numpad3 |
             VirtualKeyCode::N => try_move_player(1, 1, &mut gs.ecs),
 
-            VirtualKeyCode::Numpad1 => try_move_player(-1, 1, &mut gs.ecs),
+            VirtualKeyCode::Numpad1 |
             VirtualKeyCode::B => try_move_player(-1, 1, &mut gs.ecs),
 
             // Skip Turn
-            VirtualKeyCode::Numpad5 => return skip_turn(&mut gs.ecs),
+            VirtualKeyCode::Numpad5 |
             VirtualKeyCode::Space => return skip_turn(&mut gs.ecs),
 
             // Level changes
