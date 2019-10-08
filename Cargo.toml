@@ -42,7 +42,8 @@ members = [
     "chapter-24-map-testing",
     "chapter-25-bsproom-dungeons",
     "chapter-26-bsp-interiors",
-    "chapter-27-cellular-automota"
+    "chapter-27-cellular-automota",
+    "chapter-28-drunkards-walk"
     ]
 
 [profile.dev]

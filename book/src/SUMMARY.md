@@ -29,5 +29,6 @@
     - [BSP Room Dungeons](./chapter_25.md)
     - [BSP Interior Design](./chapter_26.md)
     - [Cellular Automota Maps](./chapter_27.md)
+    - [Drunkard's Walk Maps](./chapter_28.md)
 
 [Contributors](./contributors.md)

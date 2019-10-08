@@ -26,6 +26,7 @@ CALL :Stage chapter-24-map-testing
 CALL :Stage chapter-25-bsproom-dungeons
 CALL :Stage chapter-26-bsp-interiors
 CALL :Stage chapter-27-cellular-automota
+CALL :Stage chapter-28-drunkards-walk
 
 REM Publish or perish
 cd book\book\wasm
