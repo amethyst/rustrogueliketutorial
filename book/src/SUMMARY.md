@@ -33,6 +33,7 @@
     - [Drunkard's Walk Maps](./chapter_28.md)
     - [Mazes and Labyrinths](./chapter_29.md)
     - [Diffusion-limited aggregation maps](./chapter_30.md)
+    - Symmetrical DLA
     - Voronoi
     - Noise
     - Quantum Waveform Collapse

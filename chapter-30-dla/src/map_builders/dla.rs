@@ -62,8 +62,6 @@ impl DLABuilder {
     fn build(&mut self) {
         let mut rng = RandomNumberGenerator::new();
 
-        // DLA goes here
-
         // Carve a starting seed
         self.starting_position = Position{ x: self.map.width/2, y : self.map.height/2 };
         let start_idx = self.map.xy_idx(self.starting_position.x, self.starting_position.y);
