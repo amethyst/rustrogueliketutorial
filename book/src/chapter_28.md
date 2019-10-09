@@ -305,7 +305,7 @@ This implementation expands a lot of things out, and could be *much* shorter - b
 
 If you `cargo run` now, you'll get a pretty nice open map:
 
-![Screenshot](./c27-s1.gif).
+![Screenshot](./c28-s1.gif).
 
 ## Managing The Diggers' Alcoholism
 
@@ -387,7 +387,7 @@ while floor_tile_count  < desired_floor_tiles {
 
 This is a relatively easy change: if we're in "random" mode, the starting position for the drunkard is the center of the map for the first digger (to ensure that we have some space around the stairs), and then a random map location for each subsequent iteration. It produces maps like this:
 
-![Screenshot](./c27-s2.gif).
+![Screenshot](./c28-s2.gif).
 
 This is a much more spread out map. Less of a big central area, and more like a sprawling cavern. A handy variation!
 
@@ -421,7 +421,7 @@ That's a *simple* change - and drastically alters the nature of the resulting ma
 
 `cargo run` with the 100 lifespan, randomly placed drunkards produces something like this:
 
-![Screenshot](./c27-s3.gif).
+![Screenshot](./c28-s3.gif).
 
 ## Changing the desired fill percentage
 
@@ -453,7 +453,7 @@ Box::new(DrunkardsWalkBuilder::new(new_depth, DrunkardSettings{
 
 If you `cargo run` now, you'll see that we have even fewer open areas forming:
 
-![Screenshot](./c27-s4.gif).
+![Screenshot](./c28-s4.gif).
 
 ## Building some preset constructors
 
