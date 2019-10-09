@@ -32,4 +32,5 @@
     - [Cellular Automota Maps](./chapter_27.md)
     - [Drunkard's Walk Maps](./chapter_28.md)
     - [Mazes and Labyrinths](./chapter_29.md)
+    - [Diffusion-limited aggregation maps](./chapter_30.md)
 [Contributors](./contributors.md)

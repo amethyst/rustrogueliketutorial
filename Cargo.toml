@@ -44,7 +44,8 @@ members = [
     "chapter-26-bsp-interiors",
     "chapter-27-cellular-automota",
     "chapter-28-drunkards-walk",
-    "chapter-29-mazes"
+    "chapter-29-mazes",
+    "chapter-30-dla"
     ]
 
 [profile.dev]
