@@ -31,5 +31,5 @@
     - [BSP Interior Design](./chapter_26.md)
     - [Cellular Automota Maps](./chapter_27.md)
     - [Drunkard's Walk Maps](./chapter_28.md)
-
+    - [Mazes and Labyrinths](./chapter_29.md)
 [Contributors](./contributors.md)
