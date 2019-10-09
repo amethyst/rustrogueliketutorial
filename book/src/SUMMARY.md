@@ -24,6 +24,7 @@
     - [Magic Mapping](./chapter_20.md)
     - [REX Paint Menu](./chapter_21.md)
     - [Simple Traps](./chapter_22.md)
+- [Section 3 - Generating Maps](./chapter23-prefix.md)
     - [Refactor Map Building](./chapter_23.md)
     - [Map Building Test Harness](./chapter_24.md)
     - [BSP Room Dungeons](./chapter_25.md)

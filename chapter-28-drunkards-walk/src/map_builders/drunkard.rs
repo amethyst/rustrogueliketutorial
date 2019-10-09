@@ -1,5 +1,6 @@
 use super::{MapBuilder, Map,  
-    TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER};
+    TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER, 
+    remove_unreachable_areas_returning_most_distant, generate_voronoi_spawn_regions};
 use rltk::RandomNumberGenerator;
 use specs::prelude::*;
 use std::collections::HashMap;
@@ -56,8 +57,7 @@ impl DrunkardsWalkBuilder {
             noise_areas : HashMap::new()
         }
     }
-
-    #[allow(clippy::map_entry)]
+    
     fn build(&mut self) {
         let mut rng = RandomNumberGenerator::new();
 
@@ -86,10 +86,10 @@ impl DrunkardsWalkBuilder {
 
                 let stagger_direction = rng.roll_dice(1, 4);
                 match stagger_direction {
-                    1 => { if drunk_x > 1 { drunk_x -= 1; } }
-                    2 => { if drunk_x < self.map.width-1 { drunk_x += 1; } }
-                    3 => { if drunk_y > 1 { drunk_y -=1; } }
-                    _ => { if drunk_y < self.map.height-1 { drunk_y += 1; } }
+                    1 => { if drunk_x > 2 { drunk_x -= 1; } }
+                    2 => { if drunk_x < self.map.width-2 { drunk_x += 1; } }
+                    3 => { if drunk_y > 2 { drunk_y -=1; } }
+                    _ => { if drunk_y < self.map.height-2 { drunk_y += 1; } }
                 }
 
                 drunk_life -= 1;
@@ -110,50 +110,14 @@ impl DrunkardsWalkBuilder {
         println!("{} dwarves gave up their sobriety, of whom {} actually found a wall.", digger_count, active_digger_count);
 
         // Find all tiles we can reach from the starting point
-        let map_starts : Vec<i32> = vec![start_idx as i32];
-        let dijkstra_map = rltk::DijkstraMap::new(self.map.width, self.map.height, &map_starts , &self.map, 200.0);
-        let mut exit_tile = (0, 0.0f32);
-        for (i, tile) in self.map.tiles.iter_mut().enumerate() {
-            if *tile == TileType::Floor {
-                let distance_to_start = dijkstra_map.map[i];
-                // We can't get to this tile - so we'll make it a wall
-                if distance_to_start == std::f32::MAX {
-                    *tile = TileType::Wall;
-                } else {
-                    // If it is further away than our current exit candidate, move the exit
-                    if distance_to_start > exit_tile.1 {
-                        exit_tile.0 = i;
-                        exit_tile.1 = distance_to_start;
-                    }
-                }
-            }
-        }
+        let exit_tile = remove_unreachable_areas_returning_most_distant(&mut self.map, start_idx);
         self.take_snapshot();
 
         // Place the stairs
-        self.map.tiles[exit_tile.0] = TileType::DownStairs;
+        self.map.tiles[exit_tile] = TileType::DownStairs;
         self.take_snapshot();
 
         // Now we build a noise map for use in spawning entities later
-        let mut noise = rltk::FastNoise::seeded(rng.roll_dice(1, 65536) as u64);
-        noise.set_noise_type(rltk::NoiseType::Cellular);
-        noise.set_frequency(0.08);
-        noise.set_cellular_distance_function(rltk::CellularDistanceFunction::Manhattan);
-
-        for y in 1 .. self.map.height-1 {
-            for x in 1 .. self.map.width-1 {
-                let idx = self.map.xy_idx(x, y);
-                if self.map.tiles[idx] == TileType::Floor {
-                    let cell_value_f = noise.get_noise(x as f32, y as f32) * 10240.0;
-                    let cell_value = cell_value_f as i32;
-
-                    if self.noise_areas.contains_key(&cell_value) {
-                        self.noise_areas.get_mut(&cell_value).unwrap().push(idx);
-                    } else {
-                        self.noise_areas.insert(cell_value, vec![idx]);
-                    }
-                }
-            }
-        }
+        self.noise_areas = generate_voronoi_spawn_regions(&self.map, &mut rng);
     }
 }
