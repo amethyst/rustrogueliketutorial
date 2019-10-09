@@ -25,8 +25,8 @@ pub trait MapBuilder {
 }
 
 pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
-    /*let mut rng = rltk::RandomNumberGenerator::new();
-    let builder = rng.roll_dice(1, 7);
+    let mut rng = rltk::RandomNumberGenerator::new();
+    let builder = rng.roll_dice(1, 8);
     match builder {
         1 => Box::new(BspDungeonBuilder::new(new_depth)),
         2 => Box::new(BspInteriorBuilder::new(new_depth)),
@@ -34,8 +34,8 @@ pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
         4 => Box::new(DrunkardsWalkBuilder::open_area(new_depth)),
         5 => Box::new(DrunkardsWalkBuilder::open_halls(new_depth)),
         6 => Box::new(DrunkardsWalkBuilder::winding_passages(new_depth)),
+        7 => Box::new(MazeBuilder::new(new_depth))
         _ => Box::new(SimpleMapBuilder::new(new_depth))
-    }*/
-    Box::new(MazeBuilder::new(new_depth))
+    }    
 }
 

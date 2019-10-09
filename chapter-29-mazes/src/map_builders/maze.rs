@@ -67,13 +67,9 @@ impl MazeBuilder {
         maze.generate_maze(self);
 
         // Find a starting point; start at the middle and walk left until we find an open tile
-        self.starting_position = Position{ x: self.map.width / 2, y : self.map.height / 2 };
-        let mut start_idx = self.map.xy_idx(self.starting_position.x, self.starting_position.y);
-        /*while self.map.tiles[start_idx] != TileType::Floor {
-            self.starting_position.x -= 1;
-            start_idx = self.map.xy_idx(self.starting_position.x, self.starting_position.y);
-        }
-        self.take_snapshot();*/
+        self.starting_position = Position{ x: 2, y : 2 };
+        let start_idx = self.map.xy_idx(self.starting_position.x, self.starting_position.y);
+        self.take_snapshot();
 
         // Find all tiles we can reach from the starting point
         let exit_tile = remove_unreachable_areas_returning_most_distant(&mut self.map, start_idx);
@@ -208,6 +204,7 @@ impl<'a> Grid<'a> {
     }
 
     fn generate_maze(&mut self, generator : &mut MazeBuilder) {
+        let mut i = 0;
         loop {
             self.cells[self.current].visited = true;
             let next = self.find_next_cell();
@@ -233,8 +230,11 @@ impl<'a> Grid<'a> {
                 }
             }
 
-            self.copy_to_map(&mut generator.map);
-            generator.take_snapshot();    
+            if i % 50 == 0 {
+                self.copy_to_map(&mut generator.map);
+                generator.take_snapshot();    
+            }
+            i += 1;
         }
     }
 
