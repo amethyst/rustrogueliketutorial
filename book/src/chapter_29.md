@@ -1,4 +1,4 @@
-# Drunkard's Walk Maps
+# Maze/Labyrinth Generation
 
 ---
 
