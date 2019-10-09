@@ -11,6 +11,8 @@ mod drunkard;
 use drunkard::*;
 mod maze;
 use maze::*;
+mod dla;
+use dla::*;
 mod common;
 use common::*;
 use specs::prelude::*;
@@ -25,6 +27,7 @@ pub trait MapBuilder {
 }
 
 pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
+    /*
     let mut rng = rltk::RandomNumberGenerator::new();
     let builder = rng.roll_dice(1, 8);
     match builder {
@@ -36,6 +39,7 @@ pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
         6 => Box::new(DrunkardsWalkBuilder::winding_passages(new_depth)),
         7 => Box::new(MazeBuilder::new(new_depth)),
         _ => Box::new(SimpleMapBuilder::new(new_depth))
-    }    
+    }*/
+    Box::new(DLABuilder::new(new_depth))
 }
 

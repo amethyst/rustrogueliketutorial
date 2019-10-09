@@ -12,6 +12,9 @@
 
 See this [excellent article on Rogue Basin](http://www.roguebasin.com/index.php?title=Diffusion-limited_aggregation).
 
+Scaffolding
+
+
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-30-dla)**
 
