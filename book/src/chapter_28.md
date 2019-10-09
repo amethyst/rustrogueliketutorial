@@ -10,7 +10,7 @@
 
 ---
 
-Ever wondered what would happen if an Umber Hulk (or other tunneling creature) got *really* drunk, and went on a dungeon craving bender? The *Drunkard's Walk* algorithm answers the question - or more precisely, what would happen if a *whole bunch* of monsters had far too much to drink. As crazy it sounds, this is a good way to make organic dungeons.
+Ever wondered what would happen if an Umber Hulk (or other tunneling creature) got *really* drunk, and went on a dungeon carving bender? The *Drunkard's Walk* algorithm answers the question - or more precisely, what would happen if a *whole bunch* of monsters had far too much to drink. As crazy it sounds, this is a good way to make organic dungeons.
 
 ## Initial scaffolding
 
@@ -307,7 +307,237 @@ If you `cargo run` now, you'll get a pretty nice open map:
 
 ![Screenshot](./c27-s1.gif).
 
+## Managing The Diggers' Alcoholism
 
+There's a *lot* of ways to tweak the "drunkard's walk" algorithm to generate different map types. Since these can produce *radically* different maps, lets customize the interface to the algorithm to provide a few different ways to run. We'll start by creating a `struct` to hold the parameter sets:
+
+```rust
+#[derive(PartialEq, Copy, Clone)]
+pub enum DrunkSpawnMode { StartingPoint, Random }
+
+pub struct DrunkardSettings {
+    pub spawn_mode : DrunkSpawnMode
+}
+```
+
+Now we'll modify `new` and the structure itself to accept it:
+
+```rust
+pub struct DrunkardsWalkBuilder {
+    map : Map,
+    starting_position : Position,
+    depth: i32,
+    history: Vec<Map>,
+    noise_areas : HashMap<i32, Vec<usize>>,
+    settings : DrunkardSettings
+}
+
+...
+
+impl DrunkardsWalkBuilder {
+    pub fn new(new_depth : i32, settings: DrunkardSettings) -> DrunkardsWalkBuilder {
+        DrunkardsWalkBuilder{
+            map : Map::new(new_depth),
+            starting_position : Position{ x: 0, y : 0 },
+            depth : new_depth,
+            history: Vec::new(),
+            noise_areas : HashMap::new(),
+            settings
+        }
+    }
+    ...
+```
+
+We'll also modify the "random" builder to take settings:
+
+```rust
+Box::new(DrunkardsWalkBuilder::new(new_depth, DrunkardSettings{ spawn_mode: DrunkSpawnMode::StartingPoint }))
+```
+
+Now we have a mechanism to tune the inebriation of our diggers!
+
+## Varying the drunken rambler's starting point
+
+We alluded to it in the previous section with the creation of `DrunkSpawnMode` - we're going to see what happens if we change the way drunken diggers - after the first - spawn. Change the `random_builder` to `DrunkSpawnMode::Random`, and then modify `build` (in `drunkard.rs`) to use it:
+
+```rust
+...
+while floor_tile_count  < desired_floor_tiles {
+    let mut did_something = false;
+    let mut drunk_x;
+    let mut drunk_y;
+    match self.settings.spawn_mode {
+        DrunkSpawnMode::StartingPoint => {
+            drunk_x = self.starting_position.x;
+            drunk_y = self.starting_position.y;
+        }
+        DrunkSpawnMode::Random => {
+            if digger_count == 0 {
+                drunk_x = self.starting_position.x;
+                drunk_y = self.starting_position.y;
+            } else {
+                drunk_x = rng.roll_dice(1, self.map.width - 3) + 1;
+                drunk_y = rng.roll_dice(1, self.map.height - 3) + 1;
+            }
+        }
+    }
+    let mut drunk_life = 400;
+    ...
+```
+
+This is a relatively easy change: if we're in "random" mode, the starting position for the drunkard is the center of the map for the first digger (to ensure that we have some space around the stairs), and then a random map location for each subsequent iteration. It produces maps like this:
+
+![Screenshot](./c27-s2.gif).
+
+This is a much more spread out map. Less of a big central area, and more like a sprawling cavern. A handy variation!
+
+## Modifying how long it takes for the drunkard to pass out
+
+Another parameter to tweak is how long the drunkard stays awake. This can seriously change the character of the resultant map. We'll add it into the settings:
+
+```rust
+pub struct DrunkardSettings {
+    pub spawn_mode : DrunkSpawnMode,
+    pub drunken_lifetime : i32
+}
+```
+
+We'll tell the `random_builder` function to use a shorter lifespan:
+
+```rust
+Box::new(DrunkardsWalkBuilder::new(new_depth, DrunkardSettings{ 
+    spawn_mode: DrunkSpawnMode::Random, 
+    drunken_lifetime: 100 
+}))
+```
+
+And we'll modify the `build` code to actually *use* it:
+
+```rust
+let mut drunk_life = self.settings.drunken_lifetime;
+```
+
+That's a *simple* change - and drastically alters the nature of the resulting map. Each digger can only go one quarter the distance of the previous ones (stronger beer!), so they tend to carve out less of the map. That leads to more iterations, and since they start randomly you tend to see more distinct map areas forming - and hope they join up (if they don't, they will be culled at the end).
+
+`cargo run` with the 100 lifespan, randomly placed drunkards produces something like this:
+
+![Screenshot](./c27-s3.gif).
+
+## Changing the desired fill percentage
+
+Lastly, we'll play with how much of the map we want to cover with floors. The lower the number, the more walls (and less open areas) you generate. We'll once again modify `DrunkardSettings`:
+
+```rust
+pub struct DrunkardSettings {
+    pub spawn_mode : DrunkSpawnMode,
+    pub drunken_lifetime : i32,
+    pub floor_percent: f32
+}
+```
+
+We also change one line in our builder:
+
+```rust
+let desired_floor_tiles = (self.settings.floor_percent * total_tiles as f32) as usize;
+```
+
+We previously had `desired_floor_tiles` as `total_tiles / 2` - which would be represented by `0.5` in the new system. Lets try changing that to `0.4` in `random_builder`:
+
+```rust
+Box::new(DrunkardsWalkBuilder::new(new_depth, DrunkardSettings{ 
+        spawn_mode: DrunkSpawnMode::Random, 
+        drunken_lifetime: 200,
+        floor_percent: 0.4
+    }))
+```
+
+If you `cargo run` now, you'll see that we have even fewer open areas forming:
+
+![Screenshot](./c27-s4.gif).
+
+## Building some preset constructors
+
+Now that we've got these parameters to play with, lets make a few more constructors to remove the need for the caller in `mod.rs` to know about the algorithm details:
+
+```rust
+pub fn new(new_depth : i32, settings: DrunkardSettings) -> DrunkardsWalkBuilder {
+    DrunkardsWalkBuilder{
+        map : Map::new(new_depth),
+        starting_position : Position{ x: 0, y : 0 },
+        depth : new_depth,
+        history: Vec::new(),
+        noise_areas : HashMap::new(),
+        settings
+    }
+}
+
+pub fn open_area(new_depth : i32) -> DrunkardsWalkBuilder {
+    DrunkardsWalkBuilder{
+        map : Map::new(new_depth),
+        starting_position : Position{ x: 0, y : 0 },
+        depth : new_depth,
+        history: Vec::new(),
+        noise_areas : HashMap::new(),
+        settings : DrunkardSettings{
+            spawn_mode: DrunkSpawnMode::StartingPoint,
+            drunken_lifetime: 400,
+            floor_percent: 0.5
+        }
+    }
+}
+
+pub fn open_halls(new_depth : i32) -> DrunkardsWalkBuilder {
+    DrunkardsWalkBuilder{
+        map : Map::new(new_depth),
+        starting_position : Position{ x: 0, y : 0 },
+        depth : new_depth,
+        history: Vec::new(),
+        noise_areas : HashMap::new(),
+        settings : DrunkardSettings{
+            spawn_mode: DrunkSpawnMode::Random,
+            drunken_lifetime: 400,
+            floor_percent: 0.5
+        }
+    }
+}
+
+pub fn winding_passages(new_depth : i32) -> DrunkardsWalkBuilder {
+    DrunkardsWalkBuilder{
+        map : Map::new(new_depth),
+        starting_position : Position{ x: 0, y : 0 },
+        depth : new_depth,
+        history: Vec::new(),
+        noise_areas : HashMap::new(),
+        settings : DrunkardSettings{
+            spawn_mode: DrunkSpawnMode::Random,
+            drunken_lifetime: 100,
+            floor_percent: 0.4
+        }
+    }
+}
+```
+
+Now we can modify our `random_builder` function to be once again random - and offer *three* different map types:
+
+```rust
+pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
+    let mut rng = rltk::RandomNumberGenerator::new();
+    let builder = rng.roll_dice(1, 7);
+    match builder {
+        1 => Box::new(BspDungeonBuilder::new(new_depth)),
+        2 => Box::new(BspInteriorBuilder::new(new_depth)),
+        3 => Box::new(CellularAutomotaBuilder::new(new_depth)),
+        4 => Box::new(DrunkardsWalkBuilder::open_area(new_depth)),
+        5 => Box::new(DrunkardsWalkBuilder::open_halls(new_depth)),
+        6 => Box::new(DrunkardsWalkBuilder::winding_passages(new_depth)),
+        _ => Box::new(SimpleMapBuilder::new(new_depth))
+    }
+}
+```
+
+## Wrap-Up
+
+And we're done with drunken map building (words I never expected to type...)! It's a *very* flexible algorithm, and can be used to make a lot of different map types. It also combines well with other algorithms, as we'll see in future chapters.
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-28-drunkards-walk)**
 
