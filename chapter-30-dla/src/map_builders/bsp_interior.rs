@@ -1,5 +1,5 @@
-use super::{MapBuilder, Map, Rect, apply_room_to_map, 
-    TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER};
+use super::{MapBuilder, Map, Rect, TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER,
+    draw_corridor};
 use rltk::RandomNumberGenerator;
 use specs::prelude::*;
 
@@ -93,7 +93,7 @@ impl BspInteriorBuilder {
             let start_y = room.y1 + (rng.roll_dice(1, i32::abs(room.y1 - room.y2))-1);
             let end_x = next_room.x1 + (rng.roll_dice(1, i32::abs(next_room.x1 - next_room.x2))-1);
             let end_y = next_room.y1 + (rng.roll_dice(1, i32::abs(next_room.y1 - next_room.y2))-1);
-            self.draw_corridor(start_x, start_y, end_x, end_y);
+            draw_corridor(&mut self.map, start_x, start_y, end_x, end_y);
             self.take_snapshot();
         }
 
@@ -138,26 +138,6 @@ impl BspInteriorBuilder {
             let v2 = Rect::new( rect.x1, rect.y1 + half_height, width, half_height );
             self.rects.push(v2);
             if half_height > MIN_ROOM_SIZE { self.add_subrects(v2, rng); }
-        }
-    }
-
-    fn draw_corridor(&mut self, x1:i32, y1:i32, x2:i32, y2:i32) {
-        let mut x = x1;
-        let mut y = y1;
-
-        while x != x2 || y != y2 {
-            if x < x2 {
-                x += 1;
-            } else if x > x2 {
-                x -= 1;
-            } else if y < y2 {
-                y += 1;
-            } else if y > y2 {
-                y -= 1;
-            }
-
-            let idx = self.map.xy_idx(x, y);
-            self.map.tiles[idx] = TileType::Floor;
         }
     }
 }
