@@ -29,6 +29,7 @@ CALL :Stage chapter-27-cellular-automota
 CALL :Stage chapter-28-drunkards-walk
 CALL :Stage chapter-29-mazes
 CALL :Stage chapter-30-dla
+CALL :Stage chapter-31-symmetry
 
 REM Publish or perish
 cd book\book\wasm

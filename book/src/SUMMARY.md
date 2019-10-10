@@ -33,7 +33,7 @@
     - [Drunkard's Walk Maps](./chapter_28.md)
     - [Mazes and Labyrinths](./chapter_29.md)
     - [Diffusion-limited aggregation maps](./chapter_30.md)
-    - Add Symmetry and Brush Size to Drunkard's Walk, Make Generic
+    - [Add symmetry and brushes to the library](./chapter_31.md)
     - Voronoi
     - Noise
     - Quantum Waveform Collapse

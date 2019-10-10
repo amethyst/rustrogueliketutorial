@@ -45,7 +45,8 @@ members = [
     "chapter-27-cellular-automota",
     "chapter-28-drunkards-walk",
     "chapter-29-mazes",
-    "chapter-30-dla"
+    "chapter-30-dla",
+    "chapter-31-symmetry"
     ]
 
 [profile.dev]
