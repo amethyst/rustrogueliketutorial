@@ -34,7 +34,7 @@
     - [Mazes and Labyrinths](./chapter_29.md)
     - [Diffusion-limited aggregation maps](./chapter_30.md)
     - [Add symmetry and brushes to the library](./chapter_31.md)
-    - Voronoi
+    - [Voronoi Hive Maps](./chapter_32.md)
     - Noise
     - Quantum Waveform Collapse
 [Contributors](./contributors.md)
