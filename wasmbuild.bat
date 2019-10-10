@@ -30,6 +30,7 @@ CALL :Stage chapter-28-drunkards-walk
 CALL :Stage chapter-29-mazes
 CALL :Stage chapter-30-dla
 CALL :Stage chapter-31-symmetry
+CALL :Stage chapter-32-voronoi
 
 REM Publish or perish
 cd book\book\wasm

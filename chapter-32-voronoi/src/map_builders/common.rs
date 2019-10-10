@@ -38,13 +38,13 @@ pub fn apply_vertical_tunnel(map : &mut Map, y1:i32, y2:i32, x:i32) {
 pub fn remove_unreachable_areas_returning_most_distant(map : &mut Map, start_idx : usize) -> usize {
     map.populate_blocked();
     let map_starts : Vec<i32> = vec![start_idx as i32];
-    let dijkstra_map = rltk::DijkstraMap::new(map.width, map.height, &map_starts , map, 300.0);
+    let dijkstra_map = rltk::DijkstraMap::new(map.width, map.height, &map_starts , map, 400.0);
     let mut exit_tile = (0, 0.0f32);
     for (i, tile) in map.tiles.iter_mut().enumerate() {
         if *tile == TileType::Floor {
             let distance_to_start = dijkstra_map.map[i];
             // We can't get to this tile - so we'll make it a wall
-            if distance_to_start > 300.0 {
+            if distance_to_start == std::f32::MAX {
                 *tile = TileType::Wall;
             } else {
                 // If it is further away than our current exit candidate, move the exit
