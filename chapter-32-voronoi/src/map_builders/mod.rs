@@ -15,6 +15,8 @@ mod dla;
 use dla::*;
 mod common;
 use common::*;
+mod voronoi;
+use voronoi::*;
 use specs::prelude::*;
 
 pub trait MapBuilder {
@@ -27,6 +29,7 @@ pub trait MapBuilder {
 }
 
 pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
+    /*
     let mut rng = rltk::RandomNumberGenerator::new();
     let builder = rng.roll_dice(1, 14);
     match builder {
@@ -44,6 +47,7 @@ pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
         12 => Box::new(DLABuilder::central_attractor(new_depth)),
         13 => Box::new(DLABuilder::insectoid(new_depth)),
         _ => Box::new(SimpleMapBuilder::new(new_depth))
-    }
+    }*/
+    Box::new(VoronoiCellBuilder::new(new_depth))
 }
 
