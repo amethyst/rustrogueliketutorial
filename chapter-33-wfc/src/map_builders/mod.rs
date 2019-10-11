@@ -17,8 +17,8 @@ mod common;
 use common::*;
 mod voronoi;
 use voronoi::*;
-mod wfc;
-use wfc::*;
+mod waveform_collapse;
+use waveform_collapse::*;
 use specs::prelude::*;
 
 pub trait MapBuilder {

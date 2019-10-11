@@ -137,7 +137,7 @@ impl GameState for State {
                 draw_map(&self.mapgen_history[self.mapgen_index], ctx);
 
                 self.mapgen_timer += ctx.frame_time_ms;
-                if self.mapgen_timer > 200.0 {
+                if self.mapgen_timer > 2000.0 {
                     self.mapgen_timer = 0.0;
                     self.mapgen_index += 1;
                     if self.mapgen_index == self.mapgen_history.len() {
@@ -409,7 +409,12 @@ impl State {
     }
 }
 
+// This is a helper macro to embed a file in your binary.
+rltk::embedded_resource!(WFC_DEMO_IMAGE, "../../resources/wfc-demo1.xp");
+
 fn main() {
+    rltk::link_resource!(WFC_DEMO_IMAGE, "../../resources/wfc-demo1.xp");
+
     let mut context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "resources");
     context.with_post_scanlines(true);
     let mut gs = State {
