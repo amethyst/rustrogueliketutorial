@@ -66,7 +66,7 @@ The `use rltk::` is a short-hand; you *can* type `rltk::Console` every time you 
 
 The command `#[macro_use]` is a little scarier looking; it just means "the next crate will contain macro code, please use it". This exists to avoid the C++ problem of `#define` commands leaking everywhere and confusing you. Rust is all about being explicit, to avoid confusing yourself later!
 
-Finally, we call `extern crate specs_derive`. This crate contains a bunch of helpers to reduce the amount of typing you need. You'll see its benefits shortly. Rust 2018 doesn't requite that you use an `extern crate` for *every* crate you use - but if you are including macros, you *have* to use one with `#[macro_use]` - you are telling Rust that you explicitly *want* macros from that crate.
+Finally, we call `extern crate specs_derive`. This crate contains a bunch of helpers to reduce the amount of typing you need. You'll see its benefits shortly. Rust 2018 doesn't require that you use an `extern crate` for *every* crate you use - but if you are including macros, you *have* to use one with `#[macro_use]` - you are telling Rust that you explicitly *want* macros from that crate.
 
 ## Defining a position component
 
