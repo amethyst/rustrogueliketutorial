@@ -4,7 +4,6 @@ use rltk::RandomNumberGenerator;
 mod image_loader;
 use image_loader::*;
 use specs::prelude::*;
-use wfc_image::*;
 use std::collections::HashMap;
 
 pub struct WaveformCollapseBuilder {
@@ -58,28 +57,39 @@ impl WaveformCollapseBuilder {
             history: Vec::new(),
             noise_areas : HashMap::new()
         }
-    }
+    }    
 
     fn build(&mut self) {
-        use std::num::NonZeroU32;
         let mut rng = RandomNumberGenerator::new();
+
+        const CHUNK_SIZE :i32 = 8;
 
         //let mut rng = RandomNumberGenerator::new();
         self.map = image_loader::load_test_image(self.depth);
         self.take_snapshot();
 
-        let image = map_to_image(&self.map);
-        let output_image = wfc_image::generate_image(
-            &image,
-            NonZeroU32::new(3).unwrap(),
-            Size::new(self.map.width as u32, self.map.height as u32),
-            &[Orientation::Original],
-            wfc_image::wrap::WrapNone,
-            ForbidNothing,
-            retry::NumTimes(10),
-        )
-        .expect("Too many contradictions");
-        self.map = image_to_map(&output_image, self.depth);
+        let patterns = build_patterns(&self.map, CHUNK_SIZE);
+        /*for p in patterns.iter() {
+            self.map = Map::new(self.depth);
+
+            let mut i = 0usize;
+            for y in 0..CHUNK_SIZE {
+                for x in 0..CHUNK_SIZE {
+                    let idx = self.map.xy_idx(x+10, y+10);
+                    self.map.tiles[idx] = p[i];
+                    i += 1;
+                }
+            }
+
+            self.take_snapshot();
+        }*/
+
+        let constraints = patterns_to_constaints(patterns, CHUNK_SIZE);
+        self.map = Map::new(self.depth);
+        let mut solver = Solver::new(constraints, CHUNK_SIZE, &self.map);
+        while !solver.iteration(&mut self.map, &mut rng) {
+            self.take_snapshot();
+        }
         self.take_snapshot();
 
         // Find a starting point; start at the middle and walk left until we find an open tile
