@@ -71,7 +71,7 @@ impl WaveformCollapseBuilder {
         let image = map_to_image(&self.map);
         let output_image = wfc_image::generate_image(
             &image,
-            NonZeroU32::new(2).unwrap(),
+            NonZeroU32::new(3).unwrap(),
             Size::new(self.map.width as u32, self.map.height as u32),
             &[Orientation::Original],
             wfc_image::wrap::WrapNone,
