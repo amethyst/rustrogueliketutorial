@@ -62,19 +62,13 @@ impl WaveformCollapseBuilder {
     fn build(&mut self) {
         let mut rng = RandomNumberGenerator::new();
 
-        const CHUNK_SIZE :i32 = 8;
+        const CHUNK_SIZE :i32 = 3;
 
         //let mut rng = RandomNumberGenerator::new();
-        //self.map = image_loader::load_test_image(self.depth);
-        let mut pre_builder = super::CellularAutomotaBuilder::new(self.depth);
-        pre_builder.build_map();
-        self.map = pre_builder.get_map();
-        for t in self.map.tiles.iter_mut() { if *t == TileType::DownStairs { *t = TileType::Floor; } }
-        self.take_snapshot();
-        self.take_snapshot();
+        self.map = image_loader::load_test_image(self.depth);
         self.take_snapshot();
 
-        let patterns = build_patterns(&self.map, CHUNK_SIZE, false, false);
+        let patterns = build_patterns(&self.map, CHUNK_SIZE, true, true);
         let constraints = patterns_to_constaints(patterns, CHUNK_SIZE);
         
         self.map = Map::new(self.depth);
