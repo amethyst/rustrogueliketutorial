@@ -33,13 +33,14 @@ pub struct MapChunk {
     compatible_with: [Vec<usize>; 4]
 }
 
-pub fn build_patterns(map : &Map, chunk_size: i32) -> Vec<Vec<TileType>> {
+pub fn build_patterns(map : &Map, chunk_size: i32, include_flipping: bool, dedupe: bool) -> Vec<Vec<TileType>> {
     let chunks_x = map.width / chunk_size;
     let chunks_y = map.height / chunk_size;
     let mut patterns = Vec::new();
 
     for cy in 0..chunks_y {
         for cx in 0..chunks_x {
+            // Normal orientation
             let mut pattern : Vec<TileType> = Vec::new();
             let start_x = cx * chunk_size;
             let end_x = (cx+1) * chunk_size;
@@ -53,14 +54,45 @@ pub fn build_patterns(map : &Map, chunk_size: i32) -> Vec<Vec<TileType>> {
                 }
             }
             patterns.push(pattern);
+
+            if include_flipping {
+                // Flip horizontal
+                pattern = Vec::new();
+                for y in start_y .. end_y {
+                    for x in start_x .. end_x {
+                        let idx = map.xy_idx(end_x - x, y);
+                        pattern.push(map.tiles[idx]);
+                    }
+                }
+
+                // Flip vertical
+                pattern = Vec::new();
+                for y in start_y .. end_y {
+                    for x in start_x .. end_x {
+                        let idx = map.xy_idx(x, end_y - y);
+                        pattern.push(map.tiles[idx]);
+                    }
+                }
+
+                // Flip both
+                pattern = Vec::new();
+                for y in start_y .. end_y {
+                    for x in start_x .. end_x {
+                        let idx = map.xy_idx(end_x - x, end_y - y);
+                        pattern.push(map.tiles[idx]);
+                    }
+                }
+            }
         }
     }
 
     // Dedupe
-    /*println!("Pre de-duplication, there are {} patterns", patterns.len());
-    let set: HashSet<Vec<TileType>> = patterns.drain(..).collect(); // dedup
-    patterns.extend(set.into_iter());
-    println!("There are {} patterns", patterns.len());*/
+    if dedupe {
+        println!("Pre de-duplication, there are {} patterns", patterns.len());
+        let set: HashSet<Vec<TileType>> = patterns.drain(..).collect(); // dedup
+        patterns.extend(set.into_iter());
+        println!("There are {} patterns", patterns.len());
+    }
 
     patterns
 }
