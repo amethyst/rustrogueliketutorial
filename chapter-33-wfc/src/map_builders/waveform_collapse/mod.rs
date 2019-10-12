@@ -69,28 +69,17 @@ impl WaveformCollapseBuilder {
         self.take_snapshot();
 
         let patterns = build_patterns(&self.map, CHUNK_SIZE);
-        /*for p in patterns.iter() {
-            self.map = Map::new(self.depth);
-
-            let mut i = 0usize;
-            for y in 0..CHUNK_SIZE {
-                for x in 0..CHUNK_SIZE {
-                    let idx = self.map.xy_idx(x+10, y+10);
-                    self.map.tiles[idx] = p[i];
-                    i += 1;
-                }
-            }
-
-            self.take_snapshot();
-        }*/
-
         let constraints = patterns_to_constaints(patterns, CHUNK_SIZE);
+        
         self.map = Map::new(self.depth);
-        let mut solver = Solver::new(constraints, CHUNK_SIZE, &self.map);
-        while !solver.iteration(&mut self.map, &mut rng) {
+        loop {
+            let mut solver = Solver::new(constraints.clone(), CHUNK_SIZE, &self.map);
+            while !solver.iteration(&mut self.map, &mut rng) {
+                self.take_snapshot();
+            }
             self.take_snapshot();
+            if solver.possible { break; } // If it has hit an impossible condition, try again
         }
-        self.take_snapshot();
 
         // Find a starting point; start at the middle and walk left until we find an open tile
         self.starting_position = Position{ x: self.map.width / 2, y : self.map.height / 2 };
