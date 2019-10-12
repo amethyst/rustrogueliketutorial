@@ -5,6 +5,12 @@ mod image_loader;
 use image_loader::*;
 use specs::prelude::*;
 use std::collections::HashMap;
+mod common;
+use common::*;
+mod patterns;
+use patterns::*;
+mod solver;
+use solver::*;
 
 pub struct WaveformCollapseBuilder {
     map : Map,
@@ -65,7 +71,7 @@ impl WaveformCollapseBuilder {
         const CHUNK_SIZE :i32 = 3;
 
         //let mut rng = RandomNumberGenerator::new();
-        self.map = image_loader::load_test_image(self.depth);
+        self.map = load_test_image(self.depth);
         self.take_snapshot();
 
         let patterns = build_patterns(&self.map, CHUNK_SIZE, true, true);
