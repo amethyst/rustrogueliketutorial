@@ -1,4 +1,4 @@
-use super::{MapBuilder, Map, Rect, TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER,
+use super::{MapBuilder, Map, TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER,
     generate_voronoi_spawn_regions, remove_unreachable_areas_returning_most_distant};
 use rltk::RandomNumberGenerator;
 mod image_loader;

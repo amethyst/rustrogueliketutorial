@@ -157,7 +157,7 @@ pub fn patterns_to_constaints(patterns: Vec<Vec<TileType>>, chunk_size : i32) ->
 
     // Build compatibility matrix
     let ch = constraints.clone();
-    for (i, c) in constraints.iter_mut().enumerate() {
+    for c in constraints.iter_mut() {
         for (j,potential) in ch.iter().enumerate() {
             // If there are no exits at all, it's compatible
             if !c.has_exits || !potential.has_exits {
