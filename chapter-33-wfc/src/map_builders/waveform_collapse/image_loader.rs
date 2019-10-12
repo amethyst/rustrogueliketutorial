@@ -1,6 +1,5 @@
 use rltk::rex::XpFile;
-use super::{Map, TileType, MapChunk};
-use std::collections::HashSet;
+use super::{Map, TileType};
 
 /// Loads a RexPaint file, and converts it into our map format
 pub fn load_test_image(new_depth: i32) -> Map {
