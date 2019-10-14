@@ -71,7 +71,7 @@ impl WaveformCollapseBuilder {
 
         const CHUNK_SIZE :i32 = 7;
 
-        self.map = load_rex_map(self.depth, &rltk::rex::XpFile::from_resource("../../resources/wfc-demo1.xp").unwrap());
+        self.map = load_rex_map(self.depth, &rltk::rex::XpFile::from_resource("../../resources/wfc-demo2.xp").unwrap());
         self.take_snapshot();
 
         let patterns = build_patterns(&self.map, CHUNK_SIZE, true, true);

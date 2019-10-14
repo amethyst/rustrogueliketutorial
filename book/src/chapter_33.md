@@ -1039,6 +1039,16 @@ So while it's a *long* function, it isn't a really *complicated* one. It looks f
 
 The caller is already taking snapshots of each iteration, so if we `cargo run` the project with our `wfc-test1.xp` file we get something like this:
 
+![Screenshot](./c33-s8.gif).
+
+Not the greatest map, but you can watch the solver chug along - placing tiles one at a time. Now lets try it with `wfc-test2.xmp`, a set of tiles designed for tiling:
+
+![Screenshot](./c33-s9.gif).
+
+This is kind-of fun - it lays it out like a jigsaw, and eventually gets a map! The map isn't as well connected as one might hope, the edges with no exit lead to a smaller play area (which is culled at the end). It's still a good start!
+
+## Reducing the chunk size
+
 
 
 
