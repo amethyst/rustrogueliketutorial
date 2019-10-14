@@ -71,11 +71,10 @@ impl WaveformCollapseBuilder {
 
         const CHUNK_SIZE :i32 = 3;
 
-        //let mut rng = RandomNumberGenerator::new();
         self.map = load_rex_map(self.depth, &rltk::rex::XpFile::from_resource("../../resources/wfc-demo1.xp").unwrap());
         self.take_snapshot();
 
-        let patterns = build_patterns(&self.map, CHUNK_SIZE, true, true);
+        /*let patterns = build_patterns(&self.map, CHUNK_SIZE, true, true);
         let constraints = patterns_to_constaints(patterns, CHUNK_SIZE);
         
         self.map = Map::new(self.depth);
@@ -86,7 +85,7 @@ impl WaveformCollapseBuilder {
             }
             self.take_snapshot();
             if solver.possible { break; } // If it has hit an impossible condition, try again
-        }
+        }*/
 
         // Find a starting point; start at the middle and walk left until we find an open tile
         self.starting_position = Position{ x: self.map.width / 2, y : self.map.height / 2 };

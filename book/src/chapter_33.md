@@ -134,6 +134,35 @@ impl WaveformCollapseBuilder {
 }
 ```
 
+We'll also modify `map_builders/mod.rs`'s `random_builder` function to always return the algorithm we're currently working with:
+
+```rust
+pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
+    /*
+    let mut rng = rltk::RandomNumberGenerator::new();
+    let builder = rng.roll_dice(1, 16);
+    match builder {
+        1 => Box::new(BspDungeonBuilder::new(new_depth)),
+        2 => Box::new(BspInteriorBuilder::new(new_depth)),
+        3 => Box::new(CellularAutomotaBuilder::new(new_depth)),
+        4 => Box::new(DrunkardsWalkBuilder::open_area(new_depth)),
+        5 => Box::new(DrunkardsWalkBuilder::open_halls(new_depth)),
+        6 => Box::new(DrunkardsWalkBuilder::winding_passages(new_depth)),
+        7 => Box::new(DrunkardsWalkBuilder::fat_passages(new_depth)),
+        8 => Box::new(DrunkardsWalkBuilder::fearful_symmetry(new_depth)),
+        9 => Box::new(MazeBuilder::new(new_depth)),
+        10 => Box::new(DLABuilder::walk_inwards(new_depth)),
+        11 => Box::new(DLABuilder::walk_outwards(new_depth)),
+        12 => Box::new(DLABuilder::central_attractor(new_depth)),
+        13 => Box::new(DLABuilder::insectoid(new_depth)),
+        14 => Box::new(VoronoiCellBuilder::pythagoras(new_depth)),
+        15 => Box::new(VoronoiCellBuilder::manhattan(new_depth)),
+        _ => Box::new(SimpleMapBuilder::new(new_depth))
+    }*/
+    Box::new(WaveformCollapseBuilder::new(new_depth))
+}
+```
+
 This will give you an empty map (all walls) if you `cargo run` it - but it's a good starting point.
 
 ## Loading the source image - REX Paint
@@ -173,6 +202,66 @@ impl RexAssets {
 }
 ```
 
+Finally, we should *load* the map itself! Inside the `waveform_collapse` directory, make a new file: `image_loader.rs`:
+
+```rust
+use rltk::rex::XpFile;
+use super::{Map, TileType};
+
+/// Loads a RexPaint file, and converts it into our map format
+pub fn load_rex_map(new_depth: i32, xp_file : &XpFile) -> Map {
+    let mut map : Map = Map::new(new_depth);
+
+    for layer in &xp_file.layers {
+        for y in 0..layer.height {
+            for x in 0..layer.width {
+                let cell = layer.get(x, y).unwrap();
+                if x < map.width as usize && y < map.height as usize {
+                    let idx = map.xy_idx(x as i32, y as i32);
+                    match cell.ch {
+                        32 => map.tiles[idx] = TileType::Floor, // #
+                        35 => map.tiles[idx] = TileType::Wall, // #
+                        _ => {}
+                    }
+                }
+            }
+        }
+    }
+
+    map
+}
+```
+
+This is really simple, and if you remember the main menu graphic tutorial it should be quite self-explanatory. This function:
+
+1. Accepts arguments for `new_depth` (because maps want it) and a *reference* to an `XpFile` - a REX Paint map. It will be made completely solid, walls everywhere by the constructor.
+2. It creates a new map, using the `new_depth` parameter.
+3. For each *layer* in the REX Paint file (there should be only one at this point):
+    1. For each `y` and `x` on that layer:
+        1. Load the tile information for that coordinate.
+        2. Ensure that we're within the map boundaries (in case we have a mismatch in sizes).
+        3. Calculate the `tiles` index for the cell.
+        4. Match on the cell glyph; if its a `#` (35) we place a wall, if its a space (32) we place a floor.
+
+Now we can modify our `build` function (in `mod.rs`) to load the map:
+
+```rust
+fn build(&mut self) {
+    let mut rng = RandomNumberGenerator::new();
+
+    self.map = load_rex_map(self.depth, &rltk::rex::XpFile::from_resource("../../resources/wfc-demo1.xp").unwrap());
+    self.take_snapshot();
+
+    // Find a starting point; start at the middle and walk left until we find an open tile
+    self.starting_position = Position{ x: self.map.width / 2, y : self.map.height / 2 };
+    ...
+```
+
+In and of itself, this is cool - we can now load any REX Paint designed level and play it! If you `cargo run` now, you'll find that you can play the new map:
+
+![Screenshot](./c33-s3.jpg).
+
+We'll make use of this in later chapters for *vaults*, *prefabs* and *pre-designed levels* - but for now, we'll just use it as source data for later in the Waveform Collapse implementation.
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-33-wfc)**
 
