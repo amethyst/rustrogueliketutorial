@@ -1,4 +1,4 @@
-use super::{Map, Rect, TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER};
+use super::{Map, Rect, TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER, rex_assets};
 mod simple_map;
 use simple_map::SimpleMapBuilder;
 mod bsp_dungeon;

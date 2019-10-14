@@ -2,11 +2,10 @@ use rltk::rex::XpFile;
 use super::{Map, TileType};
 
 /// Loads a RexPaint file, and converts it into our map format
-pub fn load_test_image(new_depth: i32) -> Map {
-    let xp = XpFile::from_resource("../../resources/wfc-demo1.xp").unwrap();
+pub fn load_rex_map(new_depth: i32, xp_file : &XpFile) -> Map {
     let mut map : Map = Map::new(new_depth);
 
-    for layer in &xp.layers {
+    for layer in &xp_file.layers {
         for y in 0..layer.height {
             for x in 0..layer.width {
                 let cell = layer.get(x, y).unwrap();

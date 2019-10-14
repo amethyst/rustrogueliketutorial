@@ -1,5 +1,6 @@
 use super::{MapBuilder, Map, TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER,
-    generate_voronoi_spawn_regions, remove_unreachable_areas_returning_most_distant};
+    generate_voronoi_spawn_regions, remove_unreachable_areas_returning_most_distant,
+    rex_assets::RexAssets};
 use rltk::RandomNumberGenerator;
 mod image_loader;
 use image_loader::*;
@@ -71,7 +72,7 @@ impl WaveformCollapseBuilder {
         const CHUNK_SIZE :i32 = 3;
 
         //let mut rng = RandomNumberGenerator::new();
-        self.map = load_test_image(self.depth);
+        self.map = load_rex_map(self.depth, &rltk::rex::XpFile::from_resource("../../resources/wfc-demo1.xp").unwrap());
         self.take_snapshot();
 
         let patterns = build_patterns(&self.map, CHUNK_SIZE, true, true);
