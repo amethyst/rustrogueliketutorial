@@ -28,28 +28,31 @@ pub fn build_patterns(map : &Map, chunk_size: i32, include_flipping: bool, dedup
                 pattern = Vec::new();
                 for y in start_y .. end_y {
                     for x in start_x .. end_x {
-                        let idx = map.xy_idx(end_x - x, y);
+                        let idx = map.xy_idx(end_x - (x+1), y);
                         pattern.push(map.tiles[idx]);
                     }
                 }
+                patterns.push(pattern);
 
                 // Flip vertical
                 pattern = Vec::new();
                 for y in start_y .. end_y {
                     for x in start_x .. end_x {
-                        let idx = map.xy_idx(x, end_y - y);
+                        let idx = map.xy_idx(x, end_y - (y+1));
                         pattern.push(map.tiles[idx]);
                     }
                 }
+                patterns.push(pattern);
 
                 // Flip both
                 pattern = Vec::new();
                 for y in start_y .. end_y {
                     for x in start_x .. end_x {
-                        let idx = map.xy_idx(end_x - x, end_y - y);
+                        let idx = map.xy_idx(end_x - (x+1), end_y - (y+1));
                         pattern.push(map.tiles[idx]);
                     }
                 }
+                patterns.push(pattern);
             }
         }
     }
@@ -63,6 +66,18 @@ pub fn build_patterns(map : &Map, chunk_size: i32, include_flipping: bool, dedup
     }
 
     patterns
+}
+
+pub fn render_pattern_to_map(map : &mut Map, pattern: &Vec<TileType>, chunk_size: i32, start_x : i32, start_y: i32) {
+    let mut i = 0usize;
+    for tile_y in 0..chunk_size {
+        for tile_x in 0..chunk_size {
+            let map_idx = map.xy_idx(start_x + tile_x, start_y + tile_y);
+            map.tiles[map_idx] = pattern[i];
+            map.visible_tiles[map_idx] = true;
+            i += 1;
+        }
+    }
 }
 
 pub fn patterns_to_constaints(patterns: Vec<Vec<TileType>>, chunk_size : i32) -> Vec<MapChunk> {

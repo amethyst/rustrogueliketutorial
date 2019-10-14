@@ -257,11 +257,215 @@ fn build(&mut self) {
     ...
 ```
 
+At the top, we have to tell it to *use* the new `image_loader` file:
+
+```rust
+mod image_loader;
+use image_loader::*;
+```
+
+Note that we're *not* putting `pub` in front of these: we're using them, but not exposing them outside of the module. This helps us keep our code clean, and our compile times short!
+
 In and of itself, this is cool - we can now load any REX Paint designed level and play it! If you `cargo run` now, you'll find that you can play the new map:
 
 ![Screenshot](./c33-s3.jpg).
 
 We'll make use of this in later chapters for *vaults*, *prefabs* and *pre-designed levels* - but for now, we'll just use it as source data for later in the Waveform Collapse implementation.
+
+## Carving up our map into tiles
+
+We discussed earlier that WFC works by carving the original image into chunks/tiles, and optionally flipping them in different directions. It does this as the first part of building *constraints* - how the map can be laid out. So now we need to start carving up our image.
+
+We'll start by picking a tile size (we're going to call it `chunk_size`). We'll make it a constant for now (it'll become tweakable later), and start with a size of `7` - because that was the size of the tiles in our second REX demo file. We'll also call a function we'll write in a moment:
+
+```rust
+fn build(&mut self) {
+    let mut rng = RandomNumberGenerator::new();
+
+    const CHUNK_SIZE :i32 = 7;
+
+    self.map = load_rex_map(self.depth, &rltk::rex::XpFile::from_resource("../../resources/wfc-demo2.xp").unwrap());
+    self.take_snapshot();
+
+    let patterns = build_patterns(&self.map, CHUNK_SIZE, true, true);
+    ...
+```
+
+Since we're dealing with *constraints*, we'll make a new file in our `map_builders/waveform_collapse` directory - `constraints.rs`. We're going to make a function called `build_patterns`:
+
+```rust
+use super::{TileType, Map};
+use std::collections::HashSet;
+
+pub fn build_patterns(map : &Map, chunk_size: i32, include_flipping: bool, dedupe: bool) -> Vec<Vec<TileType>> {
+    let chunks_x = map.width / chunk_size;
+    let chunks_y = map.height / chunk_size;
+    let mut patterns = Vec::new();
+
+    for cy in 0..chunks_y {
+        for cx in 0..chunks_x {
+            // Normal orientation
+            let mut pattern : Vec<TileType> = Vec::new();
+            let start_x = cx * chunk_size;
+            let end_x = (cx+1) * chunk_size;
+            let start_y = cy * chunk_size;
+            let end_y = (cy+1) * chunk_size;
+
+            for y in start_y .. end_y {
+                for x in start_x .. end_x {
+                    let idx = map.xy_idx(x, y);
+                    pattern.push(map.tiles[idx]);
+                }
+            }
+            patterns.push(pattern);
+
+            if include_flipping {
+                // Flip horizontal
+                pattern = Vec::new();
+                for y in start_y .. end_y {
+                    for x in start_x .. end_x {
+                        let idx = map.xy_idx(end_x - (x+1), y);
+                        pattern.push(map.tiles[idx]);
+                    }
+                }
+                patterns.push(pattern);
+
+                // Flip vertical
+                pattern = Vec::new();
+                for y in start_y .. end_y {
+                    for x in start_x .. end_x {
+                        let idx = map.xy_idx(x, end_y - (y+1));
+                        pattern.push(map.tiles[idx]);
+                    }
+                }
+                patterns.push(pattern);
+
+                // Flip both
+                pattern = Vec::new();
+                for y in start_y .. end_y {
+                    for x in start_x .. end_x {
+                        let idx = map.xy_idx(end_x - (x+1), end_y - (y+1));
+                        pattern.push(map.tiles[idx]);
+                    }
+                }
+                patterns.push(pattern);
+            }
+        }
+    }
+
+    // Dedupe
+    if dedupe {
+        println!("Pre de-duplication, there are {} patterns", patterns.len());
+        let set: HashSet<Vec<TileType>> = patterns.drain(..).collect(); // dedup
+        patterns.extend(set.into_iter());
+        println!("There are {} patterns", patterns.len());
+    }
+
+    patterns
+}
+```
+
+That's quite the mouthful of a function, so let's walk through it:
+
+1. At the top, we're importing some items from elsewhere in the project: `Map`, `TileType`, and the built-in collection `HashMap`.
+2. We declare our `build_patterns` function, with parameters for a *reference* to the source map, the `chunk_size` to use (tile size), and *flags* (`bool` variables) for `include_flipping` and `dedupe`. These indicate which features we'd like to use when reading the source map. We're returning a `vector`, containing a series of `vector`s of different `TileType`s. The outer container holds each *pattern*. The inner vector holds the `TileType`s that make up the pattern itself.
+3. We determine how many chunks there are in each direction and store it in `chunks_x` and `chunks_y`.
+4. We create a new `vector` called `patterns`. This will hold the result of the function; we don't declare it's type, because Rust is smart enough to see that we're returning it at the end of the function - and can figure out what type it is for us.
+5. We iterate every vertical chunk in the variable `cy`:
+    1. We iterate every horizontal chunk in the variable `cx`:
+        1. We make a new `vector` to hold this pattern.
+        2. We calculate `start_x`, `end_x`, `start_y` and `end_y` to hold the four corner coordinates of this chunk - on the original map.
+        3. We iterate the pattern in `y`/`x` order (to match our map format), read in the `TileType` of each map tile within the chunk, and add it to the pattern.
+        4. We push the pattern to the `patterns` result vector.
+        5. If `include_flipping` is set to `true` (because we'd like to flip our tiles, making more tiles!):
+            1. Repeat iterating `y`/`x` in different orders, giving 3 more tiles. Each is added to the `patterns` result vector.
+6. If `dedupe` is set, then we are "de-duplicating" the pattern buffer. Basically, removing any pattern that occurs more than once. This is good for a map with lots of wasted space, if you don't want to make an equally sparse result map. We de-duplicate by adding the patterns into a `HashMap` (which can only store one of each entry) and then reading it back out again.
+
+For this to compile, we have to make `TileType` know how to convert itself into a *hash*. `HashMap` uses "hashes" (basically a checksum of the contained values) to determine if an entry is unique, and to help find it. In `map.rs`, we can simply add one more derived attribute to the `TileType` enumeration:
+
+```rust
+#[derive(PartialEq, Eq, Hash, Copy, Clone, Serialize, Deserialize)]
+pub enum TileType {
+    Wall, Floor, DownStairs
+}
+```
+
+This code should get you every 7x7 tile within your source file - but it'd be *great* to be able to prove that it works! As Reagan's speech-writer once wrote, *Trust - But Verify*. In `constraints.rs`, we'll add another function: `render_pattern_to_map`:
+
+```rust
+fn render_pattern_to_map(map : &mut Map, pattern: &Vec<TileType>, chunk_size: i32, start_x : i32, start_y: i32) {
+    let mut i = 0usize;
+    for tile_y in 0..chunk_size {
+        for tile_x in 0..chunk_size {
+            let map_idx = map.xy_idx(start_x + tile_x, start_y + tile_y);
+            map.tiles[map_idx] = pattern[i];
+            map.visible_tiles[map_idx] = true;
+            i += 1;
+        }
+    }
+}
+```
+
+This is pretty simple: iterate the pattern, and copy to a location on the map - offset by the `start_x` and `start_y` coordinates. Note that we're also marking the tile as `visible` - this will make the renderer display our tiles in color.
+
+Now we just need to display our tiles as part of the `snapshot` system. In `waveform_collapse/mod.rs` add a new function as part of the *implementation* of `WaveformCollapseBuilder` (underneath `build`). It's a *member* function because it needs access to the `take_snapshot` command:
+
+```rust
+fn render_tile_gallery(&mut self, patterns: &Vec<Vec<TileType>>, chunk_size: i32) {
+    self.map = Map::new(0);
+    let mut counter = 0;
+    let mut x = 1;
+    let mut y = 1;
+    while counter < patterns.len() {
+        render_pattern_to_map(&mut self.map, &patterns[counter], chunk_size, x, y);
+
+        x += chunk_size + 1;
+        if x + chunk_size > self.map.width {
+            // Move to the next row
+            x = 1;
+            y += chunk_size + 1;
+
+            if y + chunk_size > self.map.height {
+                // Move to the next page
+                self.take_snapshot();
+                self.map = Map::new(0);
+
+                x = 1;
+                y = 1;
+            }
+        }
+
+        counter += 1;
+    }
+    self.take_snapshot();
+}
+```
+
+Now, we need to call it. In `build`:
+
+```rust
+let patterns = build_patterns(&self.map, CHUNK_SIZE, true, true);
+self.render_tile_gallery(&patterns, CHUNK_SIZE);
+```
+
+Also, comment out some code so that it doesn't crash from not being able to find a starting point:
+
+```rust
+let mut start_idx = self.map.xy_idx(self.starting_position.x, self.starting_position.y);
+/*while self.map.tiles[start_idx] != TileType::Floor {
+    self.starting_position.x -= 1;
+    start_idx = self.map.xy_idx(self.starting_position.x, self.starting_position.y);
+}*/
+```
+
+If you `cargo run` now, it'll show you the tile patterns from map sample 2:
+
+![Screenshot](./c33-s4.jpg).
+
+Notice how *flipping* has given us multiple variants of each tile. If we change the image loading code to load `wfc-demo1` (by changing the loader to `self.map = load_rex_map(self.depth, &rltk::rex::XpFile::from_resource("../../resources/wfc-demo1.xp").unwrap());`), we get chunks of our hand-drawn map:
+
+![Screenshot](./c33-s5.jpg).
+
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-33-wfc)**
 
