@@ -75,9 +75,9 @@ impl WaveformCollapseBuilder {
         self.take_snapshot();
 
         let patterns = build_patterns(&self.map, CHUNK_SIZE, true, true);
-        self.render_tile_gallery(&patterns, CHUNK_SIZE);
-        /*let constraints = patterns_to_constaints(patterns, CHUNK_SIZE);
-        
+        let constraints = patterns_to_constaints(patterns, CHUNK_SIZE);
+        self.render_tile_gallery(&constraints, CHUNK_SIZE);
+                
         self.map = Map::new(self.depth);
         loop {
             let mut solver = Solver::new(constraints.clone(), CHUNK_SIZE, &self.map);
@@ -86,15 +86,15 @@ impl WaveformCollapseBuilder {
             }
             self.take_snapshot();
             if solver.possible { break; } // If it has hit an impossible condition, try again
-        }*/
+        }
 
         // Find a starting point; start at the middle and walk left until we find an open tile
         self.starting_position = Position{ x: self.map.width / 2, y : self.map.height / 2 };
         let mut start_idx = self.map.xy_idx(self.starting_position.x, self.starting_position.y);
-        /*while self.map.tiles[start_idx] != TileType::Floor {
+        while self.map.tiles[start_idx] != TileType::Floor {
             self.starting_position.x -= 1;
             start_idx = self.map.xy_idx(self.starting_position.x, self.starting_position.y);
-        }*/
+        }
         self.take_snapshot();
 
         // Find all tiles we can reach from the starting point
@@ -109,13 +109,13 @@ impl WaveformCollapseBuilder {
         self.noise_areas = generate_voronoi_spawn_regions(&self.map, &mut rng);
     }
 
-    fn render_tile_gallery(&mut self, patterns: &Vec<Vec<TileType>>, chunk_size: i32) {
+    fn render_tile_gallery(&mut self, constraints: &Vec<MapChunk>, chunk_size: i32) {
         self.map = Map::new(0);
         let mut counter = 0;
         let mut x = 1;
         let mut y = 1;
-        while counter < patterns.len() {
-            render_pattern_to_map(&mut self.map, &patterns[counter], chunk_size, x, y);
+        while counter < constraints.len() {
+            render_pattern_to_map(&mut self.map, &constraints[counter], chunk_size, x, y);
 
             x += chunk_size + 1;
             if x + chunk_size > self.map.width {
