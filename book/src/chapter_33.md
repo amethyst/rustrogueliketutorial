@@ -1084,7 +1084,22 @@ Notice that we're removing down stairs - the Cellular Automata generator will pl
 
 ## Improving adjacency - and increasing the risk of rejection!
 
-What we have already is quite a workable solution - you can make decent maps with it, especially when you use other generators as the seed. On winding jigsaw maps, it's not generating the adjacency we'd like.
+What we have already is quite a workable solution - you can make decent maps with it, especially when you use other generators as the seed. On winding jigsaw maps, it's not generating the adjacency we'd like. There's a small risk by making the matcher more specific that we will see some failures, but lets give it a go anyway. In our code that builds a compatibility matrix, find the comment `There's no exits on this side` and replace the section with this code:
+
+```rust
+if !has_any {
+    // There's no exits on this side, let's match only if 
+    // the other edge also has no exits
+    let matching_exit_count = potential.exits[opposite].iter().filter(|a| !**a).count();
+    if matching_exit_count == 0 {
+        c.compatible_with[direction].push(j);
+    }
+}
+```
+
+Run against the jigsaw puzzle, we see some immediate improvement:
+
+![Screenshot](./c33-s14.gif).
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-33-wfc)**
 

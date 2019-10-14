@@ -193,9 +193,11 @@ pub fn patterns_to_constaints(patterns: Vec<Vec<TileType>>, chunk_size : i32) ->
                         c.compatible_with[direction].push(j);
                     }
                     if !has_any {
-                        // There's no exits on this side, we don't care what goes there
-                        for compat in c.compatible_with.iter_mut() {
-                            compat.push(j);
+                        // There's no exits on this side, let's match only if 
+                        // the other edge also has no exits
+                        let matching_exit_count = potential.exits[opposite].iter().filter(|a| !**a).count();
+                        if matching_exit_count == 0 {
+                            c.compatible_with[direction].push(j);
                         }
                     }
                 }
