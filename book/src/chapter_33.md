@@ -1049,8 +1049,42 @@ This is kind-of fun - it lays it out like a jigsaw, and eventually gets a map! T
 
 ## Reducing the chunk size
 
+We can significantly improve the resulting map in this case by reducing our `CHUNK_SIZE` constant to 3. Running it with test map 1 produces something like this:
 
+![Screenshot](./c33-s10.gif).
 
+That's a much more interesting map! You can try it with `wfc-test2.xp` as well:
+
+![Screenshot](./c33-s11.gif).
+
+Once again, it's an interesting and playable map! The problem is that we've got *such* a small chunk size that there really aren't all that many interesting options for adjacency - 3x3 grids really limits the amount of variability you can have on your map! So we'll try `wfc-test1.xp` with a chunk size of 5:
+
+![Screenshot](./c33-s12.gif).
+
+That's more like it! It's not dissimilar from a map we might try and generate in another fashion.
+
+## Taking advantage of the ability to read other map types
+
+Rather than loading one of our `.xp` files, lets feed in the results of a `CellularAutomata` run, and use that as the seed with a large (8) chunk. This is surprisingly easy with the structure we have! In our `build` function:
+
+```rust
+const CHUNK_SIZE :i32 = 8;
+
+let mut ca = super::CellularAutomotaBuilder::new(0);
+ca.build_map();
+self.map = ca.get_map();
+for t in self.map.tiles.iter_mut() {
+    if *t == TileType::DownStairs { *t = TileType::Floor; }
+}
+```
+
+Notice that we're removing down stairs - the Cellular Automata generator will place one, and we don't want stairs everywhere! This gives a very pleasing result:
+
+![Screenshot](./c33-s13.gif).
+
+## Improving adjacency - and increasing the risk of rejection!
+
+What we have already is quite a workable solution - you can make decent maps with it, especially when you use other generators as the seed. On winding jigsaw maps, it's not generating the adjacency we'd like.
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-33-wfc)**
 
