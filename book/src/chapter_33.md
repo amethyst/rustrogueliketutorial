@@ -1097,9 +1097,124 @@ if !has_any {
 }
 ```
 
-Run against the jigsaw puzzle, we see some immediate improvement:
+Run against the our cellular automata example, we see a bit of a change:
 
 ![Screenshot](./c33-s14.gif).
+
+It also looks pretty good with our map test 1:
+
+![Screenshot](./c33-s15.gif).
+
+Overall, that change is a winner! It doesn't look very good with our jigsaw puzzle anymore; there just aren't enough tiles to make good patterns.
+
+## Offering different build options to the game
+
+We're going to offer three modes to our `random_builder` function: `TestMap` (just the REX Paint map), and `Derived` (run on an existing algorithm). So, in `mod.rs` we add an enumeration and extend our structure to hold some related data:
+
+```rust
+#[derive(PartialEq, Copy, Clone)]
+pub enum WaveformMode { TestMap, Derived }
+
+pub struct WaveformCollapseBuilder {
+    map : Map,
+    starting_position : Position,
+    depth: i32,
+    history: Vec<Map>,
+    noise_areas : HashMap<i32, Vec<usize>>,
+    mode : WaveformMode,
+    derive_from : Option<Box<dyn MapBuilder>>
+}
+```
+
+We'll extend our `new` constructor to include these:
+
+```rust
+impl WaveformCollapseBuilder {
+    pub fn new(new_depth : i32, mode : WaveformMode, derive_from : Option<Box<dyn MapBuilder>>) -> WaveformCollapseBuilder {
+        WaveformCollapseBuilder{
+            map : Map::new(new_depth),
+            starting_position : Position{ x: 0, y : 0 },
+            depth : new_depth,
+            history: Vec::new(),
+            noise_areas : HashMap::new(),
+            mode,
+            derive_from
+        }
+    }  
+```
+
+Then we'll add some functionality into the top of our `build` function:
+
+```rust
+fn build(&mut self) {
+    if self.mode == WaveformMode::TestMap {
+        self.map = load_rex_map(self.depth, &rltk::rex::XpFile::from_resource("../../resources/wfc-demo1.xp").unwrap());
+        self.take_snapshot();
+        return;
+    }
+
+    let mut rng = RandomNumberGenerator::new();
+
+    const CHUNK_SIZE :i32 = 8;
+
+    let prebuilder = &mut self.derive_from.as_mut().unwrap();
+    prebuilder.build_map();
+    self.map = prebuilder.get_map();
+    for t in self.map.tiles.iter_mut() {
+        if *t == TileType::DownStairs { *t = TileType::Floor; }
+    }
+    self.take_snapshot();
+    ...
+```
+
+Now we'll add a couple of constructors to make it easier for `random_builder` to not have to know about the innards of the WFC algorithm:
+
+```rust
+pub fn test_map(new_depth: i32) -> WaveformCollapseBuilder {
+    WaveformCollapseBuilder::new(new_depth, WaveformMode::TestMap, None)
+}
+
+pub fn derived_map(new_depth: i32, builder: Box<dyn MapBuilder>) -> WaveformCollapseBuilder {
+    WaveformCollapseBuilder::new(new_depth, WaveformMode::Derived, Some(builder))
+}
+```
+
+Lastly, we'll modify our `random_builder` (in `map_builders/mod.rs`) to sometimes return the test map - and sometimes run WFC on whatever map we've created:
+
+```rust
+pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
+    let mut rng = rltk::RandomNumberGenerator::new();
+    let builder = rng.roll_dice(1, 17);
+    let mut result : Box<dyn MapBuilder>;
+    match builder {
+        1 => { result = Box::new(BspDungeonBuilder::new(new_depth)); }
+        2 => { result = Box::new(BspInteriorBuilder::new(new_depth)); }
+        3 => { result = Box::new(CellularAutomotaBuilder::new(new_depth)); }
+        4 => { result = Box::new(DrunkardsWalkBuilder::open_area(new_depth)); }
+        5 => { result = Box::new(DrunkardsWalkBuilder::open_halls(new_depth)); }
+        6 => { result = Box::new(DrunkardsWalkBuilder::winding_passages(new_depth)); }
+        7 => { result = Box::new(DrunkardsWalkBuilder::fat_passages(new_depth)); }
+        8 => { result = Box::new(DrunkardsWalkBuilder::fearful_symmetry(new_depth)); }
+        9 => { result = Box::new(MazeBuilder::new(new_depth)); }
+        10 => { result = Box::new(DLABuilder::walk_inwards(new_depth)); }
+        11 => { result = Box::new(DLABuilder::walk_outwards(new_depth)); }
+        12 => { result = Box::new(DLABuilder::central_attractor(new_depth)); }
+        13 => { result = Box::new(DLABuilder::insectoid(new_depth)); }
+        14 => { result = Box::new(VoronoiCellBuilder::pythagoras(new_depth)); }
+        15 => { result = Box::new(VoronoiCellBuilder::manhattan(new_depth)); }
+        16 => { result = Box::new(WaveformCollapseBuilder::test_map(new_depth)); }
+        _ => { result = Box::new(SimpleMapBuilder::new(new_depth)); }
+    }
+
+    if rng.roll_dice(1, 3)==1 {
+        result = Box::new(WaveformCollapseBuilder::derived_map(new_depth, result));
+    }
+
+    result
+}
+```
+
+That's quite a change. We roll a 17-sided dice (wouldn't it be nice if those really existed?), and pick a builder - as before, but with the option to use the `.xp` file from `wfc_test1.xp`. We store it in `result`. Then we roll `1d3`; if it comes up `1`, we wrap the builder in the `WaveformCollapseBuilder` in `derived` mode - so it will take the original map and rebuild it with WFC. Effectively, we just added *another* 17 options!
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-33-wfc)**
 
