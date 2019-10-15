@@ -1216,6 +1216,49 @@ pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
 
 That's quite a change. We roll a 17-sided dice (wouldn't it be nice if those really existed?), and pick a builder - as before, but with the option to use the `.xp` file from `wfc_test1.xp`. We store it in `result`. Then we roll `1d3`; if it comes up `1`, we wrap the builder in the `WaveformCollapseBuilder` in `derived` mode - so it will take the original map and rebuild it with WFC. Effectively, we just added *another* 17 options!
 
+## Cleaning Up Dead Code Warnings
+
+Let's take a moment to do a little housekeeping on our code.
+
+There are quite a few warnings in the project when you compile. They are almost all "this function is never used" (or equivalent). Since we're building a *library* of map builders, it's ok to not always call the constructors. You can add an annotation above a function definition - `#[allow(dead_code)]` to tell the compiler to stop worrying about this. For example, in `drunkard.rs`:
+
+```rust
+impl DrunkardsWalkBuilder {
+    #[allow(dead_code)]
+    pub fn new(new_depth : i32, settings: DrunkardSettings) -> DrunkardsWalkBuilder {
+```
+
+I've gone through and applied these where necessary in the example code to silence the compiler.
+
+## Cleaning Up Unused Embedded Files
+
+We're not using `wfc-test2.xp` anymore, so lets remove it from `rex-assets.rs`:
+
+```rust
+use rltk::{rex::XpFile};
+
+rltk::embedded_resource!(SMALL_DUNGEON, "../../resources/SmallDungeon_80x50.xp");
+rltk::embedded_resource!(WFC_DEMO_IMAGE1, "../../resources/wfc-demo1.xp");
+
+pub struct RexAssets {
+    pub menu : XpFile
+}
+
+impl RexAssets {
+    #[allow(clippy::new_without_default)]
+    pub fn new() -> RexAssets {
+        rltk::link_resource!(SMALL_DUNGEON, "../../resources/SmallDungeon_80x50.xp");
+        rltk::link_resource!(WFC_DEMO_IMAGE1, "../../resources/wfc-demo1.xp");
+
+        RexAssets{
+            menu : XpFile::from_resource("../../resources/SmallDungeon_80x50.xp").unwrap()
+        }
+    }
+}
+```
+
+This saves a little bit of space in the resulting binary (never a bad thing: smaller binaries fit into your CPU's cache better, and generally run faster).
+
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-33-wfc)**
 
 

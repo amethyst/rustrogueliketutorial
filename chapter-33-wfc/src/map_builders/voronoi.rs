@@ -54,6 +54,7 @@ impl MapBuilder for VoronoiCellBuilder {
 }
 
 impl VoronoiCellBuilder {
+    #[allow(dead_code)]
     pub fn new(new_depth : i32) -> VoronoiCellBuilder {
         VoronoiCellBuilder{
             map : Map::new(new_depth),
