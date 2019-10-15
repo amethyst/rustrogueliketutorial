@@ -473,6 +473,214 @@ If you `cargo run` the project now, you start in the specified location - and en
 
 ![Screenshot](./c34-s3.gif).
 
+## Rex-free prefabs
+
+It's possible that you don't like Rex Paint (don't worry, I won't tell Kyzrati!), maybe you are on a platform that doesn't support it - or maybe you'd just like to not have to rely on an external tool. We'll extend our reader to *also* support string output for maps. This will be handy later when we get to small room prefabs/vaults.
+
+I cheated a bit, and opened the `wfc-populated.xp` file in Rex and typed `ctrl-t` to save in `TXT` format. That gave me a nice `Notepad` friendly map file:
+
+![Screenshot](./c34-s4.jpg).
+
+I also realized that `prefab_builder` was going to outgrow a single file! Fortunately, Rust makes it pretty easy to turn a module into a multi-file monster. In `map_builders`, I made a new directory called `prefab_builder`. I then moved `prefab_builder.rs` into it, and renamed it `mod.rs`. The game compiles and runs exactly as before.
+
+Make a new file in your `prefab_builder` folder, and name it `prefab_levels.rs`. We'll paste in the map definition, and decorate it a bit:
+
+```rust
+#[derive(PartialEq, Copy, Clone)]
+pub struct PrefabLevel {
+    pub template : &'static str,
+    pub width : usize,
+    pub height: usize
+}
+
+pub const WFC_POPULATED : PrefabLevel = PrefabLevel{
+    template : LEVEL_MAP,
+    width: 80,
+    height: 43
+};
+
+const LEVEL_MAP : &str = 
+"
+################################################################################
+#          ########################################################    #########
+#    @     ######    #########       ####     ###################        #######
+#          ####   g  #                          ###############            #####
+#          #### #    # #######       ####       #############                ###
+##### ######### #    # #######       #########  ####    #####                ###
+##### ######### ###### #######   o   #########  #### ## #####                ###
+##                        ####       #########   ### ##         o            ###
+##### ######### ###       ####       #######         ## #####                ###
+##### ######### ###       ####       ####### #   ### ## #####                ###
+##### ######### ###       ####       ####### #######    #####     o          ###
+###          ## ###       ####       ####### ################                ###
+###          ## ###   o   ###### ########### #   ############                ###
+###          ## ###       ###### ###########     ###                         ###
+###    %                  ###### ########### #   ###   !   ##                ###
+###          ## ###              ######   ## #######       ##                ###
+###          ## ###       ## ### #####     # ########################      #####
+###          ## ###       ## ### #####     # #   ######################    #####
+#### ## ####### ###### ##### ### ####          o ###########     ######    #####
+#### ## ####### ###### ####   ## ####        #   #########         ###### ######
+#    ## ####### ###### ####   ## ####        ############           ##### ######
+# g  ## ####### ###### ####   ##        %    ###########   o      o  #### #    #
+#    ## ###            ####   ## ####        #   #######   ##    ##  ####   g  #
+#######                  ####### ####            ######     !    !    ### #    #
+######                     ##### ####        #   ######               ### ######
+#####                            #####     # ##########               ### ######
+#####           !           ### ######     # ##########      o##o     ### #   ##
+#####                       ### #######   ## #   ######               ###   g ##
+#   ##                     #### ######## ###   o #######  ^########^ #### #   ##
+# g    #                 ###### ######## #####   #######  ^        ^ #### ######
+#   ##g####           ######    ######## ################           ##### ######
+#   ## ########## ##########    ######## #################         ######      #
+#####   ######### ########## %  ######## ###################     ######## ##   #
+#### ### ######## ##########    ######## #################### ##########   #   #
+### ##### ######   #########    ########          ########### #######   # g#   #
+### #####           ###############      ###      ########### #######   ####   #
+### ##### ####       ############## ######## g  g ########### ####         # ^ #
+#### ###^####         ############# ########      #####       ####      # g#   #
+#####   ######       ###            ########      ##### g     ####   !  ####^^ #
+#!%^## ###  ##           ########## ########  gg                 g         # > #
+#!%^   ###  ###     ############### ########      ##### g     ####      # g#   #
+# %^##  ^   ###     ############### ########      #####       ##################
+################################################################################
+";
+```
+
+So we start by defining a new `struct` type: `PrefabLevel`. This holds a map template, a width and a height. Then we make a constant, `WFC_POPULATED` and create an always-available level definition in it. Lastly, we paste our Notepad file into a new constant, currently called `MY_LEVEL`. This is a big string, and will be stored like any other string.
+
+Lets modify the `mode` to also allow this type:
+
+```rust
+#[derive(PartialEq, Copy, Clone)]
+#[allow(dead_code)]
+pub enum PrefabMode { 
+    RexLevel{ template : &'static str },
+    Constant{ level : prefab_levels::PrefabLevel }
+}
+```
+
+We'll modify our `build` function to also handle this `match` pattern:
+
+```rust
+fn build(&mut self) {
+    match self.mode {
+        PrefabMode::RexLevel{template} => self.load_rex_map(&template),
+        PrefabMode::Constant{level} => self.load_ascii_map(&level)
+    }
+    self.take_snapshot();
+    ...
+```
+
+And modify our constructor to use it:
+
+```rust
+impl PrefabBuilder {
+    #[allow(dead_code)]
+    pub fn new(new_depth : i32) -> PrefabBuilder {
+        PrefabBuilder{
+            map : Map::new(new_depth),
+            starting_position : Position{ x: 0, y : 0 },
+            depth : new_depth,
+            history : Vec::new(),
+            mode : PrefabMode::Constant{level : prefab_levels::WFC_POPULATED},
+            spawns: Vec::new()
+        }
+    }
+```
+
+Now we need to create a loader that can handle it. We'll modify our `load_rex_map` to share some code with it, so we aren't typing everything repeatedly - and make our new `load_ascii_map` function:
+
+```rust
+fn char_to_map(&mut self, ch : char, idx: usize) {
+    match ch {
+        ' ' => self.map.tiles[idx] = TileType::Floor,
+        '#' => self.map.tiles[idx] = TileType::Wall,
+        '@' => {
+            let x = idx as i32 % self.map.width;
+            let y = idx as i32 / self.map.width;
+            self.map.tiles[idx] = TileType::Floor;
+            self.starting_position = Position{ x:x as i32, y:y as i32 };
+        }
+        '>' => self.map.tiles[idx] = TileType::DownStairs,
+        'g' => {
+            self.map.tiles[idx] = TileType::Floor;
+            self.spawns.push((idx, "Goblin".to_string()));
+        }
+        'o' => {
+            self.map.tiles[idx] = TileType::Floor;
+            self.spawns.push((idx, "Orc".to_string()));
+        }
+        '^' => {
+            self.map.tiles[idx] = TileType::Floor;
+            self.spawns.push((idx, "Bear Trap".to_string()));
+        }
+        '%' => {
+            self.map.tiles[idx] = TileType::Floor;
+            self.spawns.push((idx, "Rations".to_string()));
+        }
+        '!' => {
+            self.map.tiles[idx] = TileType::Floor;
+            self.spawns.push((idx, "Health Potion".to_string()));
+        }
+        _ => {
+            println!("Unknown glyph loading map: {}", (ch as u8) as char);
+        }
+    }
+}
+
+#[allow(dead_code)]
+fn load_rex_map(&mut self, path: &str) {
+    let xp_file = rltk::rex::XpFile::from_resource(path).unwrap();
+
+    for layer in &xp_file.layers {
+        for y in 0..layer.height {
+            for x in 0..layer.width {
+                let cell = layer.get(x, y).unwrap();
+                if x < self.map.width as usize && y < self.map.height as usize {
+                    let idx = self.map.xy_idx(x as i32, y as i32);
+                    // We're doing some nasty casting to make it easier to type things like '#' in the match
+                    self.char_to_map(cell.ch as u8 as char, idx);
+                }
+            }
+        }
+    }
+}
+
+#[allow(dead_code)]
+fn load_ascii_map(&mut self, level: &prefab_levels::PrefabLevel) {
+    // Start by converting to a vector, with newlines removed
+    let mut string_vec : Vec<char> = level.template.chars().filter(|a| *a != '\r' && *a !='\n').collect();
+    for c in string_vec.iter_mut() { if *c as u8 == 160u8 { *c = ' '; } }
+
+    let mut i = 0;
+    for ty in 0..level.height {
+        for tx in 0..level.width {
+            if tx < self.map.width as usize && ty < self.map.height as usize {
+                let idx = self.map.xy_idx(tx as i32, ty as i32);
+                self.char_to_map(string_vec[i], idx);
+            }
+            i += 1;
+        }
+    }
+}
+```
+
+The first thing to notice is that the giant `match` in `load_rex_map` is now a function - `char_to_map`. Since we're using the functionality more than once, this is good practice: now we only have to fix it once if we messed it up! Otherwise, `load_rex_map` is pretty much the same. Our new function is `load_ascii_map`. It starts with some ugly code that bears explanation:
+
+1. `let mut string_vec : Vec<char> = level.template.chars().filter(|a| *a != '\r' && *a !='\n').collect();` is a common Rust pattern, but isn't really self-explanatory at all. It *chains* methods together, in left-to-right order. So it's really a big collection of instructions glued together:
+    1. `let mut string_vec : Vec<char>` is just saying "make a variable named `string_vec`, or the type `Vec<char>` and let me edit it.
+    2. `level.template` is the string in which our level template lives.
+    3. `.chars()` turns the string into an *iterator* - the same as when we've previously typed `myvector.iter()`.
+    4. `.filter(|a| *a != '\r' && *a !='\n')` is interesting. Filters take a lambda function in, and *keep* any entries that return `true`. So in this case, we're stripping out `\r` and `\n` - the two newline characters. We'll keep everything else.
+    5. `.collect()` says "take the results of everything before me, and put them into a vector."
+2. We then mutably iterate the string vector, and turn the character `160` into spaces. I honestly have *no* idea why the text is reading spaces as character 160 and not 32, but we'll roll with it and just convert it.
+3. We then iterate `y` from `0` to the specified height.
+    1. We then iterate `x` from `0` to the specified width.
+        1. If the `x` and `y` values are within the map we're creating, we calculate the `idx` for the map tile - and call our `char_to_map` function to translate it.
+
+If you `cargo run` now, you'll see *exactly* the same as before - but instead of loading the Rex Paint file, we've loaded it from the constant ASCII in `prefab_levels.rs`.
+
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-34-vaults)**
 
 
