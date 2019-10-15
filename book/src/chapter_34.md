@@ -1088,6 +1088,14 @@ pub fn apply_sectional(&mut self, section : &prefab_sections::PrefabSection) {
 
 If you `cargo run` now, you'll face enemies in both sections of the map.
 
+(TODO: Screenshot)
+
+## Room Vaults
+
+## It's Turtles (Or Meta-Builders) All The Way Down
+
+## Restoring Randomness
+
 ...
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-34-vaults)**
