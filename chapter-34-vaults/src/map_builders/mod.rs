@@ -25,11 +25,17 @@ use specs::prelude::*;
 
 pub trait MapBuilder {
     fn build_map(&mut self);
-    fn spawn_entities(&mut self, ecs : &mut World);
     fn get_map(&self) -> Map;
     fn get_starting_position(&self) -> Position;
     fn get_snapshot_history(&self) -> Vec<Map>;
     fn take_snapshot(&mut self);
+    fn get_spawn_list(&self) -> &Vec<(usize, String)>;
+
+    fn spawn_entities(&mut self, ecs : &mut World) {
+        for entity in self.get_spawn_list().iter() {
+            spawner::spawn_entity(ecs, &(&entity.0, &entity.1));
+        }
+    }
 }
 
 pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {

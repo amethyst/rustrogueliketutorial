@@ -21,7 +21,8 @@ pub struct PrefabBuilder {
     history: Vec<Map>,
     mode: PrefabMode,
     spawns: Vec<(usize, String)>,
-    previous_builder : Option<Box<dyn MapBuilder>>
+    previous_builder : Option<Box<dyn MapBuilder>>,
+    spawn_list: Vec<(usize, String)>
 }
 
 impl MapBuilder for PrefabBuilder {
@@ -41,10 +42,8 @@ impl MapBuilder for PrefabBuilder {
         self.build();
     }
 
-    fn spawn_entities(&mut self, ecs : &mut World) {
-        for entity in self.spawns.iter() {
-            spawner::spawn_entity(ecs, &(&entity.0, &entity.1));
-        }
+    fn get_spawn_list(&self) -> &Vec<(usize, String)> {
+        &self.spawn_list
     }
 
     fn take_snapshot(&mut self) {
@@ -68,7 +67,8 @@ impl PrefabBuilder {
             history : Vec::new(),
             mode : PrefabMode::Sectional{ section: prefab_sections::UNDERGROUND_FORT },
             spawns: Vec::new(),
-            previous_builder
+            previous_builder,
+            spawn_list : Vec::new()
         }
     }
 
@@ -188,13 +188,6 @@ impl PrefabBuilder {
 
     #[allow(dead_code)]
     pub fn apply_sectional(&mut self, section : &prefab_sections::PrefabSection) {
-        // Build the map
-        let prev_builder = self.previous_builder.as_mut().unwrap();
-        prev_builder.build_map();
-        self.starting_position = prev_builder.get_starting_position();
-        self.map = prev_builder.get_map().clone();
-        self.take_snapshot();
-
         use prefab_sections::*;
 
         let string_vec = PrefabBuilder::read_ascii_to_vec(section.template);
@@ -213,7 +206,24 @@ impl PrefabBuilder {
             VerticalPlacement::Center => chunk_y = (self.map.height / 2) - (section.height as i32 / 2),
             VerticalPlacement::Bottom => chunk_y = (self.map.height-1) - section.height as i32
         }
-        println!("{},{}", chunk_x, chunk_y);
+
+        // Build the map
+        let prev_builder = self.previous_builder.as_mut().unwrap();
+        prev_builder.build_map();
+        self.starting_position = prev_builder.get_starting_position();
+        self.map = prev_builder.get_map().clone();        
+        for e in prev_builder.get_spawn_list().iter() {
+            let idx = e.0;
+            let x = idx as i32 % self.map.width;
+            let y = idx as i32 / self.map.width;
+            if x < chunk_x || x > (chunk_x + section.width as i32) ||
+                y < chunk_y || y > (chunk_y + section.height as i32) {
+                    self.spawn_list.push(
+                        (idx, e.1.to_string())
+                    )
+                }
+        }        
+        self.take_snapshot();        
 
         let mut i = 0;
         for ty in 0..section.height {

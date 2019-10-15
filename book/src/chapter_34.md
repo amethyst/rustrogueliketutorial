@@ -894,6 +894,201 @@ If you `cargo run` the example now, you'll see a map built with a cave - and a f
 
 ![Screenshot](./c34-s5.gif).
 
+You may also notice that there aren't any entities at all, outside of the prefab area!
+
+## Adding entities to sectionals
+
+Spawning and determining spawn points have been logically separated, to help keep the map generation code clean. Different maps can have their own strategies for placing entities, so there isn't a straightforward method to simply suck in the data from the previous algorithms and add to it. There should be, and it should enable filtering and all manner of tweaking with later "meta-map builders" (such as WFC or this one). We've stumbled upon a clue for a good interface in the code that places entities in prefabs: the spawn system already supports `tuples` of `(position, type string)`. We'll use that as the basis for the new setup.
+
+We'll start by opening up `map_builders/mod.rs` and editing the `MapBuilder` trait:
+
+```rust
+pub trait MapBuilder {
+    fn build_map(&mut self);
+    fn get_map(&self) -> Map;
+    fn get_starting_position(&self) -> Position;
+    fn get_snapshot_history(&self) -> Vec<Map>;
+    fn take_snapshot(&mut self);
+    fn get_spawn_list(&self) -> &Vec<(usize, String)>;
+
+    fn spawn_entities(&mut self, ecs : &mut World) {
+        for entity in self.get_spawn_list().iter() {
+            spawner::spawn_entity(ecs, &(&entity.0, &entity.1));
+        }
+    }
+}
+```
+
+Congratulations, half your source code just turned red in your IDE. That's the danger of changing a base interface - you wind up implementing it *everywhere*. Also, the setup of `spawn_entities` has changed - there is now a *default implementation*. Implementers of the trait can *override it* if they want to - but otherwise they don't actually need to write it anymore. Since everything *should* be available via the `get_spawn_list` function, the trait has everything it needs to provide that implementation.
+
+We'll go back to `simple_map` and update it to obey the new trait rules. We'll extend the `SimpleMapBuiler` structure to feature a spawn list:
+
+```rust
+pub struct SimpleMapBuilder {
+    map : Map,
+    starting_position : Position,
+    depth: i32,
+    rooms: Vec<Rect>,
+    history: Vec<Map>,
+    spawn_list: Vec<(usize, String)>
+}
+```
+
+The `get_spawn_list` implementation is trivial:
+
+```rust
+fn get_spawn_list(&self) -> &Vec<(usize, String)> {
+    &self.spawn_list
+}
+```
+
+Now for the fun part. Previously, we didn't consider spawning until the call to `spawn_entities`. Lets remind ourselves what it does (it's been a while!):
+
+```rust
+fn spawn_entities(&mut self, ecs : &mut World) {
+    for room in self.rooms.iter().skip(1) {
+        spawner::spawn_room(ecs, room, self.depth);
+    }
+}
+```
+
+It iterates all the rooms, and spawns entities inside the rooms. We're using that pattern a lot, so it's time to visit `spawn_room` in `spawner.rs`. We'll modify it to spawn *into* a `spawn_list` rather than directly onto the map. So we open up `spawner.rs`, and modify `spawn_room` and `spawn_region` (since they are intertwined, we'll fix them together):
+
+```rust
+/// Fills a room with stuff!
+pub fn spawn_room(map: &Map, rng: &mut RandomNumberGenerator, room : &Rect, map_depth: i32, spawn_list : &mut Vec<(usize, String)>) {
+    let mut possible_targets : Vec<usize> = Vec::new();
+    { // Borrow scope - to keep access to the map separated
+        for y in room.y1 + 1 .. room.y2 {
+            for x in room.x1 + 1 .. room.x2 {
+                let idx = map.xy_idx(x, y);
+                if map.tiles[idx] == TileType::Floor {
+                    possible_targets.push(idx);
+                }
+            }
+        }
+    }
+
+    spawn_region(map, rng, &possible_targets, map_depth, spawn_list);
+}
+
+/// Fills a region with stuff!
+pub fn spawn_region(map: &Map, rng: &mut RandomNumberGenerator, area : &[usize], map_depth: i32, spawn_list : &mut Vec<(usize, String)>) {
+    let spawn_table = room_table(map_depth);
+    let mut spawn_points : HashMap<usize, String> = HashMap::new();
+    let mut areas : Vec<usize> = Vec::from(area);
+
+    // Scope to keep the borrow checker happy
+    {
+        let num_spawns = i32::min(areas.len() as i32, rng.roll_dice(1, MAX_MONSTERS + 3) + (map_depth - 1) - 3);
+        if num_spawns == 0 { return; }
+
+        for _i in 0 .. num_spawns {
+            let array_index = if areas.len() == 1 { 0usize } else { (rng.roll_dice(1, areas.len() as i32)-1) as usize };
+
+            let map_idx = areas[array_index];
+            spawn_points.insert(map_idx, spawn_table.roll(rng));
+            areas.remove(array_index);
+        }
+    }
+
+    // Actually spawn the monsters
+    for spawn in spawn_points.iter() {
+        spawn_list.push((*spawn.0, spawn.1.to_string()));
+    }
+}
+```
+
+You'll notice that the biggest change is taking a mutable reference to the `spawn_list` in each function, and instead of *actually* spawning the entity - we defer the operation by pushing the spawn information into the `spawn_list` vector at the end. Instead of passing in the ECS, we're passing in the `Map` and `RandomNumberGenerator`.
+
+Going back to `simple_map.rs`, we move the spawning code into the end of `build`:
+
+```rust
+...
+self.starting_position = Position{ x: start_pos.0, y: start_pos.1 };
+
+// Spawn some entities
+for room in self.rooms.iter().skip(1) {
+    spawner::spawn_room(&self.map, &mut rng, room, self.depth, &mut self.spawn_list);
+}
+```
+
+We can now *delete* `SimpleMapBuilder`'s implementation of `spawn_entities` - the default will work fine.
+
+The same changes can be made to all of the builders that rely on room spawning; for brevity, I won't spell them all out here - you can find them in the source code. The various builders that use Voronoi diagrams are similarly simple to update. For example, Cellular Automata. Add the `spawn_list` to the builder structure, and add a `spawn_list : Vec::new()` into the constructor. Move the monster spawning from `spawn_entities` into the end of `build` and delete the function. Copy the `get_spawn_list` from the other implementations. We changed the region spawning code a little, so here's the implementation from `cellular_automota.rs`:
+
+```rust
+// Now we build a noise map for use in spawning entities later
+self.noise_areas = generate_voronoi_spawn_regions(&self.map, &mut rng);
+
+// Spawn the entities
+for area in self.noise_areas.iter() {
+    spawner::spawn_region(&self.map, &mut rng, area.1, self.depth, &mut self.spawn_list);
+}
+```
+
+Once again, it's rinse and repeat on the other Voronoi spawn algorithms. I've done the work in the source code for you, if you'd like to take a peek.
+
+### Jump to here if refactoring is boring!
+
+SO - now that we've refactored our spawn system, how do we *use* it inside our `PrefabBuilder`? We can add one line to our `apply_sectional` function and get all of the entities from the previous map. You could simply copy it, but that's probably not what you *want*; you need to filter out entities inside the new prefab, both to make room for new ones and to ensure that the spawning makes sense. We'll also need to rearrange a little to keep the borrow checker happy. Here's the function now:
+
+```rust
+pub fn apply_sectional(&mut self, section : &prefab_sections::PrefabSection) {
+    use prefab_sections::*;
+
+    let string_vec = PrefabBuilder::read_ascii_to_vec(section.template);
+    
+    // Place the new section
+    let chunk_x;
+    match section.placement.0 {
+        HorizontalPlacement::Left => chunk_x = 0,
+        HorizontalPlacement::Center => chunk_x = (self.map.width / 2) - (section.width as i32 / 2),
+        HorizontalPlacement::Right => chunk_x = (self.map.width-1) - section.width as i32
+    }
+
+    let chunk_y;
+    match section.placement.1 {
+        VerticalPlacement::Top => chunk_y = 0,
+        VerticalPlacement::Center => chunk_y = (self.map.height / 2) - (section.height as i32 / 2),
+        VerticalPlacement::Bottom => chunk_y = (self.map.height-1) - section.height as i32
+    }
+
+    // Build the map
+    let prev_builder = self.previous_builder.as_mut().unwrap();
+    prev_builder.build_map();
+    self.starting_position = prev_builder.get_starting_position();
+    self.map = prev_builder.get_map().clone();        
+    for e in prev_builder.get_spawn_list().iter() {
+        let idx = e.0;
+        let x = idx as i32 % self.map.width;
+        let y = idx as i32 / self.map.width;
+        if x < chunk_x || x > (chunk_x + section.width as i32) ||
+            y < chunk_y || y > (chunk_y + section.height as i32) {
+                self.spawn_list.push(
+                    (idx, e.1.to_string())
+                )
+            }
+    }        
+    self.take_snapshot();        
+
+    let mut i = 0;
+    for ty in 0..section.height {
+        for tx in 0..section.width {
+            if tx < self.map.width as usize && ty < self.map.height as usize {
+                let idx = self.map.xy_idx(tx as i32 + chunk_x, ty as i32 + chunk_y);
+                self.char_to_map(string_vec[i], idx);
+            }
+            i += 1;
+        }
+    }
+    self.take_snapshot();
+}
+```
+
+
+...
+
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-34-vaults)**
 
 
