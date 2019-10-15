@@ -32,6 +32,7 @@ CALL :Stage chapter-30-dla
 CALL :Stage chapter-31-symmetry
 CALL :Stage chapter-32-voronoi
 CALL :Stage chapter-33-wfc
+CALL :Stage chapter-34-vaults
 
 REM Publish or perish
 cd book\book\wasm

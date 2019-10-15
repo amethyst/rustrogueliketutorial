@@ -763,7 +763,136 @@ const RIGHT_FORT : &str = "
 
 So we have `RIGHT_FORT` as a string, describing a fortification we might encounter. We've built a structure, `PrefabSection` which includes placement hints, and a constant for our actual fort (`UNDERGROUND_FORT`) specifying that we'd like to be at the right of the map, at the top (the vertical doesn't really matter in this example, because it is the full size of the map).
 
-Level *sections* are different from builders we've made before, because they take a *completed* map - and *replace* part of it.
+Level *sections* are different from builders we've made before, because they take a *completed* map - and *replace* part of it. We've done something similar with Waveform Collapse, so we'll adopt a similar pattern. We'll start by modifying our `PrefabBuilder` to know about the new type of map decoration:
+
+```rust
+#[derive(PartialEq, Copy, Clone)]
+#[allow(dead_code)]
+pub enum PrefabMode { 
+    RexLevel{ template : &'static str },
+    Constant{ level : prefab_levels::PrefabLevel },
+    Sectional{ section : prefab_sections::PrefabSection }
+}
+
+#[allow(dead_code)]
+pub struct PrefabBuilder {
+    map : Map,
+    starting_position : Position,
+    depth: i32,
+    history: Vec<Map>,
+    mode: PrefabMode,
+    spawns: Vec<(usize, String)>,
+    previous_builder : Option<Box<dyn MapBuilder>>
+}
+```
+
+As much as I'd *love* to put the `previous_builder` into the enum, I kept running into lifetime problems. Perhaps there's a way to do it (and some kind reader will help me out?), but for now I've put it into `PrefabBuilder`. The requested map section is in the parameter, however. We also update our constructor to use this type of map:
+
+```rust
+impl PrefabBuilder {
+    #[allow(dead_code)]
+    pub fn new(new_depth : i32, previous_builder : Option<Box<dyn MapBuilder>>) -> PrefabBuilder {
+        PrefabBuilder{
+            map : Map::new(new_depth),
+            starting_position : Position{ x: 0, y : 0 },
+            depth : new_depth,
+            history : Vec::new(),
+            mode : PrefabMode::Sectional{ section: prefab_sections::UNDERGROUND_FORT },
+            spawns: Vec::new(),
+            previous_builder
+        }
+    }
+    ...
+```
+
+Over in `map_builders/mod.rs`'s `random_builder`, we'll modify the builder to *first* run a Cellular Automata map, and *then* apply the sectional:
+
+```rust
+Box::new(
+    PrefabBuilder::new(
+        new_depth, 
+        Some(
+            Box::new(
+                CellularAutomotaBuilder::new(new_depth)
+            )
+        )
+    )
+)
+```
+
+This could be one line, but I've separated it out due to the sheer number of parentheses.
+
+Next, we update our `match` statement (in `build()`) to actually *call* the builder:
+
+```rust
+fn build(&mut self) {
+    match self.mode {
+        PrefabMode::RexLevel{template} => self.load_rex_map(&template),
+        PrefabMode::Constant{level} => self.load_ascii_map(&level),
+        PrefabMode::Sectional{section} => self.apply_sectional(&section)
+    }
+    self.take_snapshot();
+    ...
+```
+
+Now, we'll write `apply_sectional`:
+
+```rust
+pub fn apply_sectional(&mut self, section : &prefab_sections::PrefabSection) {
+    // Build the map
+    let prev_builder = self.previous_builder.as_mut().unwrap();
+    prev_builder.build_map();
+    self.starting_position = prev_builder.get_starting_position();
+    self.map = prev_builder.get_map().clone();
+    self.take_snapshot();
+
+    use prefab_sections::*;
+
+    let string_vec = PrefabBuilder::read_ascii_to_vec(section.template);
+    
+    // Place the new section
+    let chunk_x;
+    match section.placement.0 {
+        HorizontalPlacement::Left => chunk_x = 0,
+        HorizontalPlacement::Center => chunk_x = (self.map.width / 2) - (section.width as i32 / 2),
+        HorizontalPlacement::Right => chunk_x = (self.map.width-1) - section.width as i32
+    }
+
+    let chunk_y;
+    match section.placement.1 {
+        VerticalPlacement::Top => chunk_y = 0,
+        VerticalPlacement::Center => chunk_y = (self.map.height / 2) - (section.height as i32 / 2),
+        VerticalPlacement::Bottom => chunk_y = (self.map.height-1) - section.height as i32
+    }
+    println!("{},{}", chunk_x, chunk_y);
+
+    let mut i = 0;
+    for ty in 0..section.height {
+        for tx in 0..section.width {
+            if tx < self.map.width as usize && ty < self.map.height as usize {
+                let idx = self.map.xy_idx(tx as i32 + chunk_x, ty as i32 + chunk_y);
+                self.char_to_map(string_vec[i], idx);
+            }
+            i += 1;
+        }
+    }
+    self.take_snapshot();
+}
+```
+
+This a lot like other code we've written, but lets step through it anyway:
+
+1. `let prev_builder = self.previous_builder.as_mut().unwrap();` is quite the mouthful. The previous builder is an `Option` - but if we're calling this code, it *has* to have a value. So we want to `unwrap` it (which will panic and crash if there is no value), but we can't! The borrow checker will complain if we just call `previous_builder.unwrap` - so we have to inject an `as_mut()` in there, which `Option` provides for just this purpose.
+2. We call `build_map` on the previous builder, to construct the base map.
+3. We copy the starting position from the previous builder to our new builder.
+4. We copy the map from the previous builder to our self (the new builder).
+5. We call `read_ascii_to_vec`, which is the same as the string-to-vector code from the level example; we've actually updated the level example to use it also, in the source code.
+6. We create two variables, `chunk_x` and `chunk_y` and query the section's placement preference to determine where to put the new chunk.
+7. We iterate the section just like when we were iterating a level earlier - but adding `chunk_x` to `tx` and `chunk_y` to `ty` to offset the section inside the level.
+
+If you `cargo run` the example now, you'll see a map built with a cave - and a fortification to the right.
+
+![Screenshot](./c34-s5.gif).
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-34-vaults)**
 
