@@ -36,4 +36,5 @@
     - [Add symmetry and brushes to the library](./chapter_31.md)
     - [Voronoi Hive Maps](./chapter_32.md)
     - [Waveform Collapse](./chapter_33.md)
+    - [Prefabs & Vaults](./chapter_34.md)
 [Contributors](./contributors.md)
