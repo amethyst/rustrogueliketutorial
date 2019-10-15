@@ -681,6 +681,90 @@ The first thing to notice is that the giant `match` in `load_rex_map` is now a f
 
 If you `cargo run` now, you'll see *exactly* the same as before - but instead of loading the Rex Paint file, we've loaded it from the constant ASCII in `prefab_levels.rs`.
 
+## Building a level section
+
+*Your brave adventurer emerges from the twisting tunnels, and comes across the walls of an ancient underground fortification!* That's the stuff of great D&D stories, and also an occasional occurrence in games such as Dungeon Crawl: Stone Soup. It's quite likely that what actually happened is *your brave adventurer emerges from a procedurally generated map and finds a level section prefab!*
+
+We'll extend our mapping system to explicitly support this: a regular builder makes a map, and then a *sectional prefab* replaces part of the map with your exciting premade content. We'll start by making a new file (in `map_builders/prefab_builder`) called `prefab_sections.rs`, and place a description of what we want:
+
+```rust
+#[allow(dead_code)]
+#[derive(PartialEq, Copy, Clone)]
+pub enum HorizontalPlacement { Left, Center, Right }
+
+#[allow(dead_code)]
+#[derive(PartialEq, Copy, Clone)]
+pub enum VerticalPlacement { Top, Center, Bottom }
+
+#[allow(dead_code)]
+#[derive(PartialEq, Copy, Clone)]
+pub struct PrefabSection {
+    pub template : &'static str,
+    pub width : usize,
+    pub height: usize,
+    pub placement : (HorizontalPlacement, VerticalPlacement)
+}
+
+#[allow(dead_code)]
+pub const UNDERGROUND_FORT : PrefabSection = PrefabSection{
+    template : RIGHT_FORT,
+    width: 15,
+    height: 43,
+    placement: ( HorizontalPlacement::Right, VerticalPlacement::Top )
+};
+
+#[allow(dead_code)]
+const RIGHT_FORT : &str = "
+     #         
+  #######      
+  #     #      
+  #     #######
+  #  g        #
+  #     #######
+  #     #      
+  ### ###      
+    # #        
+    # #        
+    # ##       
+    ^          
+    ^          
+    # ##       
+    # #        
+    # #        
+    # #        
+    # #        
+  ### ###      
+  #     #      
+  #     #      
+  #  g  #      
+  #     #      
+  #     #      
+  ### ###      
+    # #        
+    # #        
+    # #        
+    # ##       
+    ^          
+    ^          
+    # ##       
+    # #        
+    # #        
+    # #        
+  ### ###      
+  #     #      
+  #     #######
+  #  g        #
+  #     #######
+  #     #      
+  #######      
+     #         
+";
+```
+
+So we have `RIGHT_FORT` as a string, describing a fortification we might encounter. We've built a structure, `PrefabSection` which includes placement hints, and a constant for our actual fort (`UNDERGROUND_FORT`) specifying that we'd like to be at the right of the map, at the top (the vertical doesn't really matter in this example, because it is the full size of the map).
+
+Level *sections* are different from builders we've made before, because they take a *completed* map - and *replace* part of it.
+
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-34-vaults)**
 
 
