@@ -6,6 +6,7 @@ use specs::prelude::*;
 use std::collections::HashMap;
 
 #[derive(PartialEq, Copy, Clone)]
+#[allow(dead_code)]
 pub enum DistanceAlgorithm { Pythagoras, Manhattan, Chebyshev }
 
 pub struct VoronoiCellBuilder {

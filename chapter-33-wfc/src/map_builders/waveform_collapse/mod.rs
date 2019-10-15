@@ -1,6 +1,5 @@
 use super::{MapBuilder, Map, TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER,
-    generate_voronoi_spawn_regions, remove_unreachable_areas_returning_most_distant,
-    rex_assets::RexAssets};
+    generate_voronoi_spawn_regions, remove_unreachable_areas_returning_most_distant};
 use rltk::RandomNumberGenerator;
 mod image_loader;
 use image_loader::*;
@@ -13,9 +12,13 @@ use constraints::*;
 mod solver;
 use solver::*;
 
+/// Modes supported by Waveform Collapse algorithm. 
+/// TestMap loads the baked-in map, made in Rex.
+/// Derived takes a builder, runs it, and then runs the algorithm on that map.
 #[derive(PartialEq, Copy, Clone)]
 pub enum WaveformMode { TestMap, Derived }
 
+/// Provides a map builder using the Waveform Collapse algorithm.
 pub struct WaveformCollapseBuilder {
     map : Map,
     starting_position : Position,
@@ -61,6 +64,10 @@ impl MapBuilder for WaveformCollapseBuilder {
 }
 
 impl WaveformCollapseBuilder {
+    /// Generic constructor for waveform collapse.
+    /// # Arguments
+    /// * new_depth - the new map depth
+    /// * derive_from - either None, or a boxed MapBuilder, as output by `random_builder`
     pub fn new(new_depth : i32, mode : WaveformMode, derive_from : Option<Box<dyn MapBuilder>>) -> WaveformCollapseBuilder {
         WaveformCollapseBuilder{
             map : Map::new(new_depth),
@@ -73,10 +80,17 @@ impl WaveformCollapseBuilder {
         }
     }
 
+    /// Creates a Waveform Collapse builder using the baked-in WFC test map.
+    /// # Arguments
+    /// * new_depth - the new map depth
     pub fn test_map(new_depth: i32) -> WaveformCollapseBuilder {
         WaveformCollapseBuilder::new(new_depth, WaveformMode::TestMap, None)
     }
     
+    /// Derives a map from a pre-existing map builder.
+    /// # Arguments
+    /// * new_depth - the new map depth
+    /// * derive_from - either None, or a boxed MapBuilder, as output by `random_builder`
     pub fn derived_map(new_depth: i32, builder: Box<dyn MapBuilder>) -> WaveformCollapseBuilder {
         WaveformCollapseBuilder::new(new_depth, WaveformMode::Derived, Some(builder))
     }
@@ -135,7 +149,7 @@ impl WaveformCollapseBuilder {
         self.noise_areas = generate_voronoi_spawn_regions(&self.map, &mut rng);
     }
 
-    fn render_tile_gallery(&mut self, constraints: &Vec<MapChunk>, chunk_size: i32) {
+    fn render_tile_gallery(&mut self, constraints: &[MapChunk], chunk_size: i32) {
         self.map = Map::new(0);
         let mut counter = 0;
         let mut x = 1;
