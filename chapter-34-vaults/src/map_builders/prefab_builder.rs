@@ -15,7 +15,8 @@ pub struct PrefabBuilder {
     starting_position : Position,
     depth: i32,
     history: Vec<Map>,
-    mode: PrefabMode
+    mode: PrefabMode,
+    spawns: Vec<(usize, String)>
 }
 
 impl MapBuilder for PrefabBuilder {
@@ -36,6 +37,9 @@ impl MapBuilder for PrefabBuilder {
     }
 
     fn spawn_entities(&mut self, ecs : &mut World) {
+        for entity in self.spawns.iter() {
+            spawner::spawn_entity(ecs, &(&entity.0, &entity.1));
+        }
     }
 
     fn take_snapshot(&mut self) {
@@ -57,7 +61,8 @@ impl PrefabBuilder {
             starting_position : Position{ x: 0, y : 0 },
             depth : new_depth,
             history : Vec::new(),
-            mode : PrefabMode::RexLevel{ template : "../../resources/wfc-demo1.xp" }
+            mode : PrefabMode::RexLevel{ template : "../../resources/wfc-populated.xp" },
+            spawns: Vec::new()
         }
     }
 
@@ -65,23 +70,26 @@ impl PrefabBuilder {
         match self.mode {
             PrefabMode::RexLevel{template} => self.load_rex_map(&template)
         }
+        self.take_snapshot();
 
         // Find a starting point; start at the middle and walk left until we find an open tile
-        self.starting_position = Position{ x: self.map.width / 2, y : self.map.height / 2 };
-        let mut start_idx = self.map.xy_idx(self.starting_position.x, self.starting_position.y);
-        while self.map.tiles[start_idx] != TileType::Floor {
-            self.starting_position.x -= 1;
-            start_idx = self.map.xy_idx(self.starting_position.x, self.starting_position.y);
+        if self.starting_position.x == 0 {
+            self.starting_position = Position{ x: self.map.width / 2, y : self.map.height / 2 };
+            let mut start_idx = self.map.xy_idx(self.starting_position.x, self.starting_position.y);
+            while self.map.tiles[start_idx] != TileType::Floor {
+                self.starting_position.x -= 1;
+                start_idx = self.map.xy_idx(self.starting_position.x, self.starting_position.y);
+            }
+            self.take_snapshot();
+
+            // Find all tiles we can reach from the starting point
+            let exit_tile = remove_unreachable_areas_returning_most_distant(&mut self.map, start_idx);
+            self.take_snapshot();
+
+            // Place the stairs
+            self.map.tiles[exit_tile] = TileType::DownStairs;
+            self.take_snapshot();
         }
-        self.take_snapshot();
-
-        // Find all tiles we can reach from the starting point
-        let exit_tile = remove_unreachable_areas_returning_most_distant(&mut self.map, start_idx);
-        self.take_snapshot();
-
-        // Place the stairs
-        self.map.tiles[exit_tile] = TileType::DownStairs;
-        self.take_snapshot();
     }
 
     #[allow(dead_code)]
@@ -94,10 +102,38 @@ impl PrefabBuilder {
                     let cell = layer.get(x, y).unwrap();
                     if x < self.map.width as usize && y < self.map.height as usize {
                         let idx = self.map.xy_idx(x as i32, y as i32);
+                        // We're doing some nasty casting to make it easier to type things like '#' in the match
                         match (cell.ch as u8) as char {
-                            ' ' => self.map.tiles[idx] = TileType::Floor, // space
-                            '#' => self.map.tiles[idx] = TileType::Wall, // #
-                            _ => {}
+                            ' ' => self.map.tiles[idx] = TileType::Floor,
+                            '#' => self.map.tiles[idx] = TileType::Wall,
+                            '@' => {
+                                self.map.tiles[idx] = TileType::Floor;
+                                self.starting_position = Position{ x:x as i32, y:y as i32 };
+                            }
+                            '>' => self.map.tiles[idx] = TileType::DownStairs,
+                            'g' => {
+                                self.map.tiles[idx] = TileType::Floor;
+                                self.spawns.push((idx, "Goblin".to_string()));
+                            }
+                            'o' => {
+                                self.map.tiles[idx] = TileType::Floor;
+                                self.spawns.push((idx, "Orc".to_string()));
+                            }
+                            '^' => {
+                                self.map.tiles[idx] = TileType::Floor;
+                                self.spawns.push((idx, "Bear Trap".to_string()));
+                            }
+                            '%' => {
+                                self.map.tiles[idx] = TileType::Floor;
+                                self.spawns.push((idx, "Rations".to_string()));
+                            }
+                            '!' => {
+                                self.map.tiles[idx] = TileType::Floor;
+                                self.spawns.push((idx, "Health Potion".to_string()));
+                            }
+                            _ => {
+                                println!("Unknown glyph loading map: {}", (cell.ch as u8) as char);
+                            }
                         }
                     }
                 }
