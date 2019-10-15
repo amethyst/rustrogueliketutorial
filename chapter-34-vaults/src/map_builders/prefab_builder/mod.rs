@@ -226,7 +226,7 @@ impl PrefabBuilder {
         let mut i = 0;
         for ty in 0..section.height {
             for tx in 0..section.width {
-                if tx < self.map.width as usize && ty < self.map.height as usize {
+                if tx > 0 && tx < self.map.width as usize -1 && ty < self.map.height as usize -1 && ty > 0 {
                     let idx = self.map.xy_idx(tx as i32 + chunk_x, ty as i32 + chunk_y);
                     self.char_to_map(string_vec[i], idx);
                 }
