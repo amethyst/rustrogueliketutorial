@@ -1086,6 +1086,7 @@ pub fn apply_sectional(&mut self, section : &prefab_sections::PrefabSection) {
 }
 ```
 
+If you `cargo run` now, you'll face enemies in both sections of the map.
 
 ...
 

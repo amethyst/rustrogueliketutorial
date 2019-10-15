@@ -20,7 +20,6 @@ pub struct PrefabBuilder {
     depth: i32,
     history: Vec<Map>,
     mode: PrefabMode,
-    spawns: Vec<(usize, String)>,
     previous_builder : Option<Box<dyn MapBuilder>>,
     spawn_list: Vec<(usize, String)>
 }
@@ -66,7 +65,6 @@ impl PrefabBuilder {
             depth : new_depth,
             history : Vec::new(),
             mode : PrefabMode::Sectional{ section: prefab_sections::UNDERGROUND_FORT },
-            spawns: Vec::new(),
             previous_builder,
             spawn_list : Vec::new()
         }
@@ -122,23 +120,23 @@ impl PrefabBuilder {
             '>' => self.map.tiles[idx] = TileType::DownStairs,
             'g' => {
                 self.map.tiles[idx] = TileType::Floor;
-                self.spawns.push((idx, "Goblin".to_string()));
+                self.spawn_list.push((idx, "Goblin".to_string()));
             }
             'o' => {
                 self.map.tiles[idx] = TileType::Floor;
-                self.spawns.push((idx, "Orc".to_string()));
+                self.spawn_list.push((idx, "Orc".to_string()));
             }
             '^' => {
                 self.map.tiles[idx] = TileType::Floor;
-                self.spawns.push((idx, "Bear Trap".to_string()));
+                self.spawn_list.push((idx, "Bear Trap".to_string()));
             }
             '%' => {
                 self.map.tiles[idx] = TileType::Floor;
-                self.spawns.push((idx, "Rations".to_string()));
+                self.spawn_list.push((idx, "Rations".to_string()));
             }
             '!' => {
                 self.map.tiles[idx] = TileType::Floor;
-                self.spawns.push((idx, "Health Potion".to_string()));
+                self.spawn_list.push((idx, "Health Potion".to_string()));
             }
             _ => {
                 println!("Unknown glyph loading map: {}", (ch as u8) as char);
