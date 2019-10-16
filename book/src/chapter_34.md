@@ -1,4 +1,4 @@
-# Prefabs and Vaults
+# Prefabricated Levels and Level Sections
 
 ---
 
@@ -1088,13 +1088,16 @@ pub fn apply_sectional(&mut self, section : &prefab_sections::PrefabSection) {
 
 If you `cargo run` now, you'll face enemies in both sections of the map.
 
-(TODO: Screenshot)
+![Screenshot](./c34-s6.gif).
 
-## Room Vaults
+## Wrap Up
 
-## It's Turtles (Or Meta-Builders) All The Way Down
+In this chapter, we've covered quite a bit of ground:
 
-## Restoring Randomness
+* We can load Rex Paint levels, complete with hand-placed entities and play them.
+* We can define ASCII premade maps in our game, and play them (removing the requirement to use Rex Paint).
+* We can load level *sectionals*, and apply them to the level.
+* We can adjust the spawns from previous levels in the builder chain.
 
 ...
 
