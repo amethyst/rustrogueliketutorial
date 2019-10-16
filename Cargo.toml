@@ -49,7 +49,8 @@ members = [
     "chapter-31-symmetry",
     "chapter-32-voronoi",
     "chapter-33-wfc",
-    "chapter-34-vaults"
+    "chapter-34-vaults",
+    "chapter-35-vaults2"
     ]
 
 [profile.dev]
