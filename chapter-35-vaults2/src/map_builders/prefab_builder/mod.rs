@@ -255,7 +255,7 @@ impl PrefabBuilder {
         self.apply_previous_iteration(|_x,_y,_e| true);
 
         // Note that this is a place-holder and will be moved out of this function
-        let master_vault_list = vec![TOTALLY_NOT_A_TRAP];
+        let master_vault_list = vec![TOTALLY_NOT_A_TRAP, CHECKERBOARD, SILLY_SMILE];
 
         // Filter the vault list down to ones that are applicable to the current depth
         let possible_vaults : Vec<&PrefabRoom> = master_vault_list
@@ -311,6 +311,15 @@ impl PrefabBuilder {
 
             let chunk_x = pos.x;
             let chunk_y = pos.y;
+
+            let width = self.map.width; // The borrow checker really doesn't like it
+            let height = self.map.height; // when we access `self` inside the `retain`
+            self.spawn_list.retain(|e| {
+                let idx = e.0 as i32;
+                let x = idx % width;
+                let y = idx / height;
+                x < chunk_x || x > chunk_x + vault.width as i32 || y < chunk_y || y > chunk_y + vault.height as i32
+            });
 
             let string_vec = PrefabBuilder::read_ascii_to_vec(vault.template);
             let mut i = 0;

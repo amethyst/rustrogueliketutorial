@@ -25,3 +25,41 @@ const TOTALLY_NOT_A_TRAP_MAP : &str = "
  ^^^ 
      
 ";
+
+#[allow(dead_code)]
+pub const SILLY_SMILE : PrefabRoom = PrefabRoom{
+    template : SILLY_SMILE_MAP,
+    width: 6,
+    height: 6,
+    first_depth: 0,
+    last_depth: 100
+};
+
+#[allow(dead_code)]
+const SILLY_SMILE_MAP : &str = "
+      
+ ^  ^ 
+  ##  
+      
+ #### 
+      
+";
+
+#[allow(dead_code)]
+pub const CHECKERBOARD : PrefabRoom = PrefabRoom{
+    template : CHECKERBOARD_MAP,
+    width: 6,
+    height: 6,
+    first_depth: 0,
+    last_depth: 100
+};
+
+#[allow(dead_code)]
+const CHECKERBOARD_MAP : &str = "
+      
+ #^#  
+ g#%# 
+ #!#  
+ ^# # 
+      
+";

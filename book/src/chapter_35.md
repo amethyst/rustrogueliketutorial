@@ -390,6 +390,112 @@ If you `cargo run` now, the vault will probably be placed on your map. Here's a 
 
 ## Filtering out entities
 
+We probably don't want to keep entities that are inside our new vault from the previous map iteration. You might have a cunningly placed trap and spawn a goblin on top of it! (While fun, probably not what you had in mind). So we'll extend `apply_room_vaults` to do some filtering when it places the vault. We want to filter *before* we spawn new stuff, and then spawn more stuff with the room. Enter the `retain` feature:
+
+```rust
+...
+let chunk_y = pos.y;
+
+let width = self.map.width; // The borrow checker really doesn't like it
+let height = self.map.height; // when we access `self` inside the `retain`
+self.spawn_list.retain(|e| {
+    let idx = e.0 as i32;
+    let x = idx % width;
+    let y = idx / height;
+    x < chunk_x || x > chunk_x + vault.width as i32 || y < chunk_y || y > chunk_y + vault.height as i32
+});
+...
+```
+
+Calling `retain` on a vector iterates through every entry, and calls the passed closure/lambda function. If it returns `true`, then the element is *retained* (kept) - otherwise it is removed. So here we're catching `width` and `height` (to avoid borrowing `self`), and then calculate the location for each entry. If it is outside of the new vault - we keep it.
+
+## I want more than one vault!
+
+Having only one vault is pretty dull - albeit a good start in terms of proving the functionality works. In `prefab_rooms.rs` we'll go ahead and write a couple more. These aren't intended to be seminal examples of level design, but they illustrate the process. We'll add some more room prefabs:
+
+```rust
+#[allow(dead_code)]
+#[derive(PartialEq, Copy, Clone)]
+pub struct PrefabRoom {
+    pub template : &'static str,
+    pub width : usize,
+    pub height: usize,
+    pub first_depth: i32,
+    pub last_depth: i32
+}
+
+#[allow(dead_code)]
+pub const TOTALLY_NOT_A_TRAP : PrefabRoom = PrefabRoom{
+    template : TOTALLY_NOT_A_TRAP_MAP,
+    width: 5,
+    height: 5,
+    first_depth: 0,
+    last_depth: 100
+};
+
+#[allow(dead_code)]
+const TOTALLY_NOT_A_TRAP_MAP : &str = "
+     
+ ^^^ 
+ ^!^ 
+ ^^^ 
+     
+";
+
+#[allow(dead_code)]
+pub const SILLY_SMILE : PrefabRoom = PrefabRoom{
+    template : SILLY_SMILE_MAP,
+    width: 6,
+    height: 6,
+    first_depth: 0,
+    last_depth: 100
+};
+
+#[allow(dead_code)]
+const SILLY_SMILE_MAP : &str = "
+      
+ ^  ^ 
+  ##  
+      
+ #### 
+      
+";
+
+#[allow(dead_code)]
+pub const CHECKERBOARD : PrefabRoom = PrefabRoom{
+    template : CHECKERBOARD_MAP,
+    width: 6,
+    height: 6,
+    first_depth: 0,
+    last_depth: 100
+};
+
+#[allow(dead_code)]
+const CHECKERBOARD_MAP : &str = "
+      
+ #^#  
+ g#%# 
+ #!#  
+ ^# # 
+      
+";
+```
+
+We've added `CHECKERBOARD` (a grid of walls and spaces with traps, a goblin and goodies in it), and `SILLY_SMILE` which just looks like a silly wall feature. Now open up `apply_room_vaults` in `map_builders/prefab_builder/mod.rs` and add these to the master vector:
+
+```rust
+// Note that this is a place-holder and will be moved out of this function
+let master_vault_list = vec![TOTALLY_NOT_A_TRAP, CHECKERBOARD, SILLY_SMILE];
+```
+
+If you `cargo run` now, you'll most likely encounter one of the three vaults. Each time you advance a depth, you will probably encounter one of the three. My test ran into the checkerboard almost immediately:
+
+![Screenshot](./c35-s2.jpg).
+
+That's a great start, and gives a bit of flair to maps as you descend - but it may not be quite what you were asking for when you said you wanted more than one vault! How about *more than one vault on a level*?
+
+## I don't *always* want a vault!
+
 ## Room Vaults as Part of the World
 
 ## It's Turtles (Or Meta-Builders) All The Way Down
