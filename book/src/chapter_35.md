@@ -663,6 +663,8 @@ pub mod prefab_rooms;
 
 If you `cargo run` this, you get to watch it cycle through the layered building:
 
+![Screenshot](./c35-s4.gif).
+
 ## Restoring Randomness
 
 Now that we've completed a two-chapter marathon of prefabricated, layered map building - it's time to restore the `random_builder` function to provide randomness once more. Here's the new function from `map_builders/mod.rs`:
