@@ -202,7 +202,7 @@ let vault_index = if possible_vaults.len() == 1 { 0 } else { (rng.roll_dice(1, p
 let vault = possible_vaults[vault_index];
 ```
 
-We make a vector of all possible vault types - there's currently only one, but when we have more they go in here. This isn't really ideal, but we'll worry about making it a global resource later. We then make a `possible_vaults` list by taking the `master_vault_list` and *filtering* it to only include those whose `first_depth` and `last_depth` line up with the requested dungeon depth. The `iter().filter(...).collect()` pattern has been described before, and it's a very powerful way to quickly extract what you need from a vector. If there are no possible vaults, we `return` out of the function - nothing to do here! Finally, we use another pattern we've used before: we pick a vault to create by selecting a random member of the `possible_vaults` vector.
+We make a vector of all possible vault types - there's currently only one, but when we have more they go in here. This isn't really ideal, but we'll worry about making it a global resource in a future chapter. We then make a `possible_vaults` list by taking the `master_vault_list` and *filtering* it to only include those whose `first_depth` and `last_depth` line up with the requested dungeon depth. The `iter().filter(...).collect()` pattern has been described before, and it's a very powerful way to quickly extract what you need from a vector. If there are no possible vaults, we `return` out of the function - nothing to do here! Finally, we use another pattern we've used before: we pick a vault to create by selecting a random member of the `possible_vaults` vector.
 
 Next up:
 
@@ -492,13 +492,176 @@ If you `cargo run` now, you'll most likely encounter one of the three vaults. Ea
 
 ![Screenshot](./c35-s2.jpg).
 
-That's a great start, and gives a bit of flair to maps as you descend - but it may not be quite what you were asking for when you said you wanted more than one vault! How about *more than one vault on a level*?
+That's a great start, and gives a bit of flair to maps as you descend - but it may not be quite what you were asking for when you said you wanted more than one vault! How about *more than one vault on a level*? Back to `apply_room_vaults`! It's easy enough to come up with a number of vaults to spawn:
+
+```rust
+let n_vaults = i32::min(rng.roll_dice(1, 3), possible_vaults.len() as i32);
+```
+
+This sets `n_vaults` to the *minimum* value of a dice roll (`1d3`) and the number of possible vaults - so it'll never exceed the number of options, but can vary a bit. It's also pretty easy to wrap the creation function in a `for` loop:
+
+```rust
+if possible_vaults.is_empty() { return; } // Bail out if there's nothing to build
+
+        let n_vaults = i32::min(rng.roll_dice(1, 3), possible_vaults.len() as i32);
+
+        for _i in 0..n_vaults {
+
+            let vault_index = if possible_vaults.len() == 1 { 0 } else { (rng.roll_dice(1, possible_vaults.len() as i32)-1) as usize };
+            let vault = possible_vaults[vault_index];
+
+            ...
+
+                self.take_snapshot();
+
+                possible_vaults.remove(vault_index);
+            }
+        }
+```
+
+Notice that at the *end* of the loop, we're removing the vault we added from `possible_vaults`. We have to change the declaration to be able to do that: `let mut possible_vaults : Vec<&PrefabRoom> = ...` - we add the `mut` to allow us to change the vector. This way, we won't keep adding the *same* vault - they only get spawned once.
+
+Now for the more difficult part: making sure that our new vaults don't overlap the previously spawned ones. We'll create a new `HashSet` of tiles we've consumed:
+
+```rust
+let mut used_tiles : HashSet<usize> = HashSet::new();
+```
+
+Hash sets have the advantage of offering a quick way to say if they contain a value, so they are ideal for what we need. We'll insert the tile `idx` into the set when we add a tile:
+
+```rust
+for ty in 0..vault.height {
+    for tx in 0..vault.width {
+        let idx = self.map.xy_idx(tx as i32 + chunk_x, ty as i32 + chunk_y);
+        self.char_to_map(string_vec[i], idx);
+        used_tiles.insert(idx);
+        i += 1;
+    }
+}
+```
+
+Lastly, in our possibility checking we want to do a check against `used_tiles` to ensure we aren't overlapping:
+
+```rust
+let idx = self.map.xy_idx(tx + x, ty + y);
+if self.map.tiles[idx] != TileType::Floor {
+    possible = false;
+}
+if used_tiles.contains(&idx) {
+    possible = false;
+}
+```
+
+Now if you `cargo run` your project, you might encounter several vaults. Here's a case where we encountered two vaults:
+
+![Screenshot](./c35-s3.jpg).
 
 ## I don't *always* want a vault!
 
-## Room Vaults as Part of the World
+If you offer all of your vaults on every level, the game will be a bit more predictable than you probably want (unless you make a *lot* of vaults!). We'll modify `apply_room_vaults` to only sometimes have any vaults, with an increasing probability as you descend into the dungeon:
+
+```rust
+// Apply the previous builder, and keep all entities it spawns (for now)
+self.apply_previous_iteration(|_x,_y,_e| true);
+
+// Do we want a vault at all?
+let vault_roll = rng.roll_dice(1, 6) + self.depth;
+if vault_roll < 4 { return; }
+```
+
+This is very simple: we roll a six-sided dice and add the current depth. If we rolled less than `4`, we bail out and just provide the previously generated map. If you `cargo run` your project now, you'll sometimes encounter vaults - and sometimes you won't.
+
+## Finishing up: offering some constructors other than just new
+
+We should offer some more friendly ways to build our `PrefabBuilder`, so it's obvious what we're doing when we construct our builder chain. Add the following constructors to `prefab_builder/mod.rs`:
+
+```rust
+#[allow(dead_code)]
+pub fn rex_level(new_depth : i32, template : &'static str) -> PrefabBuilder {
+    PrefabBuilder{
+        map : Map::new(new_depth),
+        starting_position : Position{ x: 0, y : 0 },
+        depth : new_depth,
+        history : Vec::new(),
+        mode : PrefabMode::RexLevel{ template },
+        previous_builder : None,
+        spawn_list : Vec::new()
+    }
+}
+
+#[allow(dead_code)]
+pub fn constant(new_depth : i32, level : prefab_levels::PrefabLevel) -> PrefabBuilder {
+    PrefabBuilder{
+        map : Map::new(new_depth),
+        starting_position : Position{ x: 0, y : 0 },
+        depth : new_depth,
+        history : Vec::new(),
+        mode : PrefabMode::Constant{ level },
+        previous_builder : None,
+        spawn_list : Vec::new()
+    }
+}
+
+#[allow(dead_code)]
+pub fn sectional(new_depth : i32, section : prefab_sections::PrefabSection, previous_builder : Box<dyn MapBuilder>) -> PrefabBuilder {
+    PrefabBuilder{
+        map : Map::new(new_depth),
+        starting_position : Position{ x: 0, y : 0 },
+        depth : new_depth,
+        history : Vec::new(),
+        mode : PrefabMode::Sectional{ section },
+        previous_builder : Some(previous_builder),
+        spawn_list : Vec::new()
+    }
+}
+
+#[allow(dead_code)]
+pub fn vaults(new_depth : i32, previous_builder : Box<dyn MapBuilder>) -> PrefabBuilder {
+    PrefabBuilder{
+        map : Map::new(new_depth),
+        starting_position : Position{ x: 0, y : 0 },
+        depth : new_depth,
+        history : Vec::new(),
+        mode : PrefabMode::RoomVaults,
+        previous_builder : Some(previous_builder),
+        spawn_list : Vec::new()
+    }
+}
+```
+
+We now have a decent interface for creating our meta-builder!
 
 ## It's Turtles (Or Meta-Builders) All The Way Down
+
+The last few chapters have all created *meta builders* - they aren't really *builders* in that they don't create an entirely new map, they modify the results of another algorithm. The really interesting thing here is that you can keep chaining them together to achieve the results you want. For example, lets make a map by starting with a Cellular Automata map, feeding it through Waveform Collapse, possibly adding a castle wall, and then searching for vaults!
+
+The syntax for this is currently quite ugly (that will be a future chapter topic). In `map_builders/mod.rs`:
+
+```rust
+Box::new(
+    PrefabBuilder::vaults(
+        new_depth,
+        Box::new(PrefabBuilder::sectional(
+            new_depth,
+            prefab_builder::prefab_sections::UNDERGROUND_FORT,
+            Box::new(WaveformCollapseBuilder::derived_map(
+                new_depth, 
+                Box::new(CellularAutomotaBuilder::new(new_depth))
+            ))
+        ))
+    )
+)
+```
+
+Also in `map_builders/prefab_builder/mod.rs` make sure that you are publicly sharing the map modules:
+
+```rust
+pub mod prefab_levels;
+pub mod prefab_sections;
+pub mod prefab_rooms;
+```
+
+If you `cargo run` this, you get to watch it cycle through the layered building:
 
 ## Restoring Randomness
 
