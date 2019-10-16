@@ -665,6 +665,58 @@ If you `cargo run` this, you get to watch it cycle through the layered building:
 
 ## Restoring Randomness
 
+Now that we've completed a two-chapter marathon of prefabricated, layered map building - it's time to restore the `random_builder` function to provide randomness once more. Here's the new function from `map_builders/mod.rs`:
+
+```rust
+pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
+    let mut rng = rltk::RandomNumberGenerator::new();
+    let builder = rng.roll_dice(1, 17);
+    let mut result : Box<dyn MapBuilder>;
+    match builder {
+        1 => { result = Box::new(BspDungeonBuilder::new(new_depth)); }
+        2 => { result = Box::new(BspInteriorBuilder::new(new_depth)); }
+        3 => { result = Box::new(CellularAutomotaBuilder::new(new_depth)); }
+        4 => { result = Box::new(DrunkardsWalkBuilder::open_area(new_depth)); }
+        5 => { result = Box::new(DrunkardsWalkBuilder::open_halls(new_depth)); }
+        6 => { result = Box::new(DrunkardsWalkBuilder::winding_passages(new_depth)); }
+        7 => { result = Box::new(DrunkardsWalkBuilder::fat_passages(new_depth)); }
+        8 => { result = Box::new(DrunkardsWalkBuilder::fearful_symmetry(new_depth)); }
+        9 => { result = Box::new(MazeBuilder::new(new_depth)); }
+        10 => { result = Box::new(DLABuilder::walk_inwards(new_depth)); }
+        11 => { result = Box::new(DLABuilder::walk_outwards(new_depth)); }
+        12 => { result = Box::new(DLABuilder::central_attractor(new_depth)); }
+        13 => { result = Box::new(DLABuilder::insectoid(new_depth)); }
+        14 => { result = Box::new(VoronoiCellBuilder::pythagoras(new_depth)); }
+        15 => { result = Box::new(VoronoiCellBuilder::manhattan(new_depth)); }
+        16 => { result = Box::new(PrefabBuilder::constant(new_depth, prefab_builder::prefab_levels::WFC_POPULATED)) },
+        _ => { result = Box::new(SimpleMapBuilder::new(new_depth)); }
+    }
+
+    if rng.roll_dice(1, 3)==1 {
+        result = Box::new(WaveformCollapseBuilder::derived_map(new_depth, result));
+    }
+
+    if rng.roll_dice(1, 20)==1 {
+        result = Box::new(PrefabBuilder::sectional(new_depth, prefab_builder::prefab_sections::UNDERGROUND_FORT ,result));
+    }
+
+    result = Box::new(PrefabBuilder::vaults(new_depth, result));
+
+    result
+}
+```
+
+We're taking full advantage of the composability of our layers system now! Our random builder now:
+
+1. In the first layer, we roll `1d17` and pick a map type; we've included our pre-made level as one of the options. 
+2. Next, we roll `1d3` - and on a 1, we run the `WaveformCollapse` algorithm on *that* builder. 
+3. We roll `1d20`, and on a 1 - we apply a `PrefabBuilder` sectional, and add our fortress. That way, you'll only occasionally run into it.
+4. We run whatever builder we came up with against our `PrefabBuilder`'s Room Vault system (the focus of this chapter!), to add premade rooms to the mix.
+
+## Wrap-Up
+
+In this chapter, we've gained the ability to prefabricate rooms and include them if they fit into our level design. We've also explored the ability to add algorithms together, giving even more layers of randomness.
+
 ...
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-35-vaults2)**
