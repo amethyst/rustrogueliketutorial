@@ -50,7 +50,8 @@ members = [
     "chapter-32-voronoi",
     "chapter-33-wfc",
     "chapter-34-vaults",
-    "chapter-35-vaults2"
+    "chapter-35-vaults2",
+    "chapter-36-layers"
     ]
 
 [profile.dev]

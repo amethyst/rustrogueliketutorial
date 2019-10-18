@@ -38,3 +38,4 @@
     - [Waveform Collapse](./chapter_33.md)
     - [Prefabs & Sectionals](./chapter_34.md)
     - [Room Vaults](./chapter_35.md)
+    - [Layering/Builder Chaining](./chapter_36.md)
