@@ -128,7 +128,7 @@ impl PrefabBuilder {
         match self.mode {
             PrefabMode::RexLevel{template} => self.load_rex_map(&template),
             PrefabMode::Constant{level} => self.load_ascii_map(&level),
-            PrefabMode::Sectional{section} => self.apply_sectional(&section),
+            PrefabMode::Sectional{section} => self.apply_sectional(&section, rng),
             PrefabMode::RoomVaults => self.apply_room_vaults(rng)
         }
         self.take_snapshot();
@@ -239,12 +239,12 @@ impl PrefabBuilder {
         }
     }
 
-    fn apply_previous_iteration<F>(&mut self, mut filter: F) 
+    fn apply_previous_iteration<F>(&mut self, mut filter: F, rng: &mut RandomNumberGenerator) 
         where F : FnMut(i32, i32, &(usize, String)) -> bool
     {
         // Build the map
         let prev_builder = self.previous_builder.as_mut().unwrap();
-        prev_builder.build_map();
+        prev_builder.build_map(rng);
         self.starting_position = prev_builder.get_starting_position();
         self.map = prev_builder.get_map().clone();
         self.history = prev_builder.get_snapshot_history();
@@ -262,7 +262,7 @@ impl PrefabBuilder {
     }
 
     #[allow(dead_code)]
-    fn apply_sectional(&mut self, section : &prefab_sections::PrefabSection) {
+    fn apply_sectional(&mut self, section : &prefab_sections::PrefabSection, rng: &mut RandomNumberGenerator) {
         use prefab_sections::*;
 
         let string_vec = PrefabBuilder::read_ascii_to_vec(section.template);
@@ -285,7 +285,7 @@ impl PrefabBuilder {
         // Build the map
         self.apply_previous_iteration(|x,y,_e| {
             x < chunk_x || x > (chunk_x + section.width as i32) || y < chunk_y || y > (chunk_y + section.height as i32)
-        });       
+        }, rng);       
 
         let mut i = 0;
         for ty in 0..section.height {
@@ -304,7 +304,7 @@ impl PrefabBuilder {
         use prefab_rooms::*;
 
         // Apply the previous builder, and keep all entities it spawns (for now)
-        self.apply_previous_iteration(|_x,_y,_e| true);
+        self.apply_previous_iteration(|_x,_y,_e| true, rng);
 
         // Do we want a vault at all?
         let vault_roll = rng.roll_dice(1, 6) + self.depth;

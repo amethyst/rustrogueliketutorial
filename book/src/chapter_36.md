@@ -117,6 +117,15 @@ fn rooms_and_corridors(&mut self, rng : &mut rltk::RandomNumberGenerator) {
 
 Notice that we've *deleted* the line that creates a new RNG - and are using the one we pass in, instead.
 
+**Why does this help?**
+
+This helps on two levels:
+
+1. We aren't creating new objects when we have a perfectly good one to use. This saves memory and speeds up the program.
+2. Random Number Generators aren't *actually* random. They start with a "seed", and apply math to it to make it *really hard* to predict what the next number will be! If you specify the *seed* up front, you will always get the same results from your RNG. A lot of games let you specify a "seed" to ensure a level playing field in things like tournaments. The map builder now supports it.
+
+Again, this is a refactor that shouldn't *change* anything visible - but I recommend `cargo run` on your project and make sure that it still works. Better safe than sorry!
+
 ...
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-36-layers)**

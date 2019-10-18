@@ -64,7 +64,7 @@ impl BspInteriorBuilder {
         self.rects.clear();
         self.rects.push( Rect::new(1, 1, self.map.width-2, self.map.height-2) ); // Start with a single map-sized rectangle
         let first_room = self.rects[0];
-        self.add_subrects(first_room, &mut rng); // Divide the first room
+        self.add_subrects(first_room, rng); // Divide the first room
 
         let rooms = self.rects.clone();
         for r in rooms.iter() {
@@ -107,7 +107,7 @@ impl BspInteriorBuilder {
 
         // Spawn some entities
         for room in self.rooms.iter().skip(1) {
-            spawner::spawn_room(&self.map, &mut rng, room, self.depth, &mut self.spawn_list);
+            spawner::spawn_room(&self.map, rng, room, self.depth, &mut self.spawn_list);
         }
     }
 

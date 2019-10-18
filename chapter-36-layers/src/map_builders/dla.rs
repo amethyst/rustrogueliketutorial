@@ -231,11 +231,11 @@ impl DLABuilder {
         self.take_snapshot();
 
         // Now we build a noise map for use in spawning entities later
-        self.noise_areas = generate_voronoi_spawn_regions(&self.map, &mut rng);
+        self.noise_areas = generate_voronoi_spawn_regions(&self.map, rng);
 
         // Spawn the entities
         for area in self.noise_areas.iter() {
-            spawner::spawn_region(&self.map, &mut rng, area.1, self.depth, &mut self.spawn_list);
+            spawner::spawn_region(&self.map, rng, area.1, self.depth, &mut self.spawn_list);
         }
     }    
 }

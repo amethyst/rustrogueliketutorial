@@ -61,7 +61,7 @@ impl MazeBuilder {
     #[allow(clippy::map_entry)]
     fn build(&mut self, rng : &mut RandomNumberGenerator) {
         // Maze gen
-        let mut maze = Grid::new((self.map.width / 2)-2, (self.map.height / 2)-2, &mut rng);
+        let mut maze = Grid::new((self.map.width / 2)-2, (self.map.height / 2)-2, rng);
         maze.generate_maze(self);
 
         // Find a starting point; start at the middle and walk left until we find an open tile
@@ -78,11 +78,11 @@ impl MazeBuilder {
         self.take_snapshot();
 
         // Now we build a noise map for use in spawning entities later
-        self.noise_areas = generate_voronoi_spawn_regions(&self.map, &mut rng);
+        self.noise_areas = generate_voronoi_spawn_regions(&self.map, rng);
 
         // Spawn the entities
         for area in self.noise_areas.iter() {
-            spawner::spawn_region(&self.map, &mut rng, area.1, self.depth, &mut self.spawn_list);
+            spawner::spawn_region(&self.map, rng, area.1, self.depth, &mut self.spawn_list);
         }
     }
 }

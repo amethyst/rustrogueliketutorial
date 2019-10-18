@@ -102,7 +102,7 @@ impl SimpleMapBuilder {
 
         // Spawn some entities
         for room in self.rooms.iter().skip(1) {
-            spawner::spawn_room(&self.map, &mut rng, room, self.depth, &mut self.spawn_list);
+            spawner::spawn_room(&self.map, rng, room, self.depth, &mut self.spawn_list);
         }
     }
 }

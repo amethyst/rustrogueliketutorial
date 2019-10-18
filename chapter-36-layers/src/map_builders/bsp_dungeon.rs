@@ -68,8 +68,8 @@ impl BspDungeonBuilder {
         // room in there, we place it and add it to the rooms list.
         let mut n_rooms = 0;
         while n_rooms < 240 {
-            let rect = self.get_random_rect(&mut rng);
-            let candidate = self.get_random_sub_rect(rect, &mut rng);
+            let rect = self.get_random_rect(rng);
+            let candidate = self.get_random_sub_rect(rect, rng);
 
             if self.is_possible(candidate) {
                 apply_room_to_map(&mut self.map, &candidate);
@@ -108,7 +108,7 @@ impl BspDungeonBuilder {
 
         // Spawn some entities
         for room in self.rooms.iter().skip(1) {
-            spawner::spawn_room(&self.map, &mut rng, room, self.depth, &mut self.spawn_list);
+            spawner::spawn_room(&self.map, rng, room, self.depth, &mut self.spawn_list);
         }
     }
 
