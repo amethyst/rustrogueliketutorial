@@ -19,6 +19,17 @@ The following people have contributed to this project:
 * [Gabriel Martinez](https://github.com/mystal) helped me fix the Vi keys.
 * [Dominic D](https://github.com/DominicD) found some issues with chapter 7.
 
+## Supporters
+
+I'd also like to take a moment to thank everyone who has sent me kind words, contributed with issue reports, and the following Patrons (from patreon.com):
+
+* Ben Gamble
+* Noah
+* Ryan Orlando
+* Shane Sveller
+* Tom Leys
+
+
 ---
 
 Copyright (C) 2019, Herbert Wolverson.
