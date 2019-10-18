@@ -25,8 +25,8 @@ impl MapBuilder for SimpleMapBuilder {
         self.history.clone()
     }
 
-    fn build_map(&mut self)  {
-        self.rooms_and_corridors();
+    fn build_map(&mut self, rng : &mut RandomNumberGenerator)  {
+        self.rooms_and_corridors(rng);
     }
 
     fn get_spawn_list(&self) -> &Vec<(usize, String)> {
@@ -57,12 +57,10 @@ impl SimpleMapBuilder {
         })
     }
 
-    fn rooms_and_corridors(&mut self) {
+    fn rooms_and_corridors(&mut self, rng : &mut RandomNumberGenerator) {
         const MAX_ROOMS : i32 = 30;
         const MIN_SIZE : i32 = 6;
         const MAX_SIZE : i32 = 10;
-
-        let mut rng = RandomNumberGenerator::new();
 
         for _i in 0..MAX_ROOMS {
             let w = rng.range(MIN_SIZE, MAX_SIZE);

@@ -33,8 +33,8 @@ impl MapBuilder for WaveformCollapseBuilder {
         self.history.clone()
     }
 
-    fn build_map(&mut self)  {
-        self.build();
+    fn build_map(&mut self, rng : &mut RandomNumberGenerator)  {
+        self.build(rng);
     }
 
     fn get_spawn_list(&self) -> &Vec<(usize, String)> {
@@ -79,13 +79,11 @@ impl WaveformCollapseBuilder {
         WaveformCollapseBuilder::new(new_depth, Some(builder))
     }
 
-    fn build(&mut self) {
-        let mut rng = RandomNumberGenerator::new();
-
+    fn build(&mut self, rng : &mut RandomNumberGenerator) {
         const CHUNK_SIZE :i32 = 8;
 
         let prebuilder = &mut self.derive_from.as_mut().unwrap();
-        prebuilder.build_map();
+        prebuilder.build_map(rng);
         self.map = prebuilder.get_map();
         self.history = prebuilder.get_snapshot_history();
         for t in self.map.tiles.iter_mut() {

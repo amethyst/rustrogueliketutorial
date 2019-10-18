@@ -24,7 +24,7 @@ use prefab_builder::*;
 use specs::prelude::*;
 
 pub trait MapBuilder {
-    fn build_map(&mut self);
+    fn build_map(&mut self, rng : &mut rltk::RandomNumberGenerator);
     fn get_map(&self) -> Map;
     fn get_starting_position(&self) -> Position;
     fn get_snapshot_history(&self) -> Vec<Map>;

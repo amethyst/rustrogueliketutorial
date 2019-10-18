@@ -27,8 +27,8 @@ impl MapBuilder for BspInteriorBuilder {
         self.history.clone()
     }
 
-    fn build_map(&mut self)  {
-        self.build();
+    fn build_map(&mut self, rng : &mut RandomNumberGenerator)  {
+        self.build(rng);
     }
 
     fn get_spawn_list(&self) -> &Vec<(usize, String)> {
@@ -60,9 +60,7 @@ impl BspInteriorBuilder {
         })
     }
 
-    fn build(&mut self) {
-        let mut rng = RandomNumberGenerator::new();
-
+    fn build(&mut self, rng : &mut RandomNumberGenerator) {
         self.rects.clear();
         self.rects.push( Rect::new(1, 1, self.map.width-2, self.map.height-2) ); // Start with a single map-sized rectangle
         let first_room = self.rects[0];

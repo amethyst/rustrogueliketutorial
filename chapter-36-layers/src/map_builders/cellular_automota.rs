@@ -26,8 +26,8 @@ impl MapBuilder for CellularAutomotaBuilder {
         self.history.clone()
     }
 
-    fn build_map(&mut self)  {
-        self.build();
+    fn build_map(&mut self, rng : &mut RandomNumberGenerator)  {
+        self.build(rng);
     }
 
     fn get_spawn_list(&self) -> &Vec<(usize, String)> {
@@ -59,9 +59,7 @@ impl CellularAutomotaBuilder {
     }
 
     #[allow(clippy::map_entry)]
-    fn build(&mut self) {
-        let mut rng = RandomNumberGenerator::new();
-
+    fn build(&mut self, rng : &mut RandomNumberGenerator) {
         // First we completely randomize the map, setting 55% of it to be floor.
         for y in 1..self.map.height-1 {
             for x in 1..self.map.width-1 {

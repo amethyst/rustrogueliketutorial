@@ -39,8 +39,8 @@ impl MapBuilder for PrefabBuilder {
         self.history.clone()
     }
 
-    fn build_map(&mut self)  {
-        self.build();
+    fn build_map(&mut self, rng : &mut RandomNumberGenerator)  {
+        self.build(rng);
     }
 
     fn get_spawn_list(&self) -> &Vec<(usize, String)> {
@@ -124,12 +124,12 @@ impl PrefabBuilder {
         })
     }
 
-    fn build(&mut self) {
+    fn build(&mut self, rng : &mut RandomNumberGenerator) {
         match self.mode {
             PrefabMode::RexLevel{template} => self.load_rex_map(&template),
             PrefabMode::Constant{level} => self.load_ascii_map(&level),
             PrefabMode::Sectional{section} => self.apply_sectional(&section),
-            PrefabMode::RoomVaults => self.apply_room_vaults()
+            PrefabMode::RoomVaults => self.apply_room_vaults(rng)
         }
         self.take_snapshot();
 
@@ -300,9 +300,8 @@ impl PrefabBuilder {
         self.take_snapshot();
     }
 
-    fn apply_room_vaults(&mut self) {
+    fn apply_room_vaults(&mut self, rng : &mut RandomNumberGenerator) {
         use prefab_rooms::*;
-        let mut rng = RandomNumberGenerator::new();
 
         // Apply the previous builder, and keep all entities it spawns (for now)
         self.apply_previous_iteration(|_x,_y,_e| true);

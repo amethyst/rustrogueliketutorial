@@ -32,8 +32,8 @@ impl MapBuilder for VoronoiCellBuilder {
         self.history.clone()
     }
 
-    fn build_map(&mut self)  {
-        self.build();
+    fn build_map(&mut self, rng: &mut RandomNumberGenerator)  {
+        self.build(rng);
     }
 
     fn get_spawn_list(&self) -> &Vec<(usize, String)> {
@@ -95,9 +95,7 @@ impl VoronoiCellBuilder {
     }
 
     #[allow(clippy::map_entry)]
-    fn build(&mut self) {
-        let mut rng = RandomNumberGenerator::new();
-
+    fn build(&mut self, rng : &mut RandomNumberGenerator) {
         // Make a Voronoi diagram. We'll do this the hard way to learn about the technique!
         let mut voronoi_seeds : Vec<(usize, rltk::Point)> = Vec::new();
 

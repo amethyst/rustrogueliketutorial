@@ -26,8 +26,8 @@ impl MapBuilder for MazeBuilder {
         self.history.clone()
     }
 
-    fn build_map(&mut self)  {
-        self.build();
+    fn build_map(&mut self, rng : &mut RandomNumberGenerator)  {
+        self.build(rng);
     }
 
     fn get_spawn_list(&self) -> &Vec<(usize, String)> {
@@ -59,9 +59,7 @@ impl MazeBuilder {
     }
 
     #[allow(clippy::map_entry)]
-    fn build(&mut self) {
-        let mut rng = RandomNumberGenerator::new();
-
+    fn build(&mut self, rng : &mut RandomNumberGenerator) {
         // Maze gen
         let mut maze = Grid::new((self.map.width / 2)-2, (self.map.height / 2)-2, &mut rng);
         maze.generate_maze(self);

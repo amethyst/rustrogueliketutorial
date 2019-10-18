@@ -376,7 +376,9 @@ impl State {
         self.mapgen_timer = 0.0;
         self.mapgen_history.clear();
         let mut builder = map_builders::random_builder(new_depth);
-        builder.build_map();
+        let mut rng = self.ecs.write_resource::<rltk::RandomNumberGenerator>();
+        builder.build_map(&mut rng);
+        std::mem::forget(rng);
         self.mapgen_history = builder.get_snapshot_history();
         let player_start;
         {

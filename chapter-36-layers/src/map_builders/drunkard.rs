@@ -40,8 +40,8 @@ impl MapBuilder for DrunkardsWalkBuilder {
         self.history.clone()
     }
 
-    fn build_map(&mut self)  {
-        self.build();
+    fn build_map(&mut self, rng : &mut RandomNumberGenerator)  {
+        self.build(rng);
     }
 
     fn get_spawn_list(&self) -> &Vec<(usize, String)> {
@@ -168,9 +168,7 @@ impl DrunkardsWalkBuilder {
         })
     }
     
-    fn build(&mut self) {
-        let mut rng = RandomNumberGenerator::new();
-
+    fn build(&mut self, rng : &mut RandomNumberGenerator) {
         // Set a central starting point
         self.starting_position = Position{ x: self.map.width / 2, y: self.map.height / 2 };
         let start_idx = self.map.xy_idx(self.starting_position.x, self.starting_position.y);
