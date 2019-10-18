@@ -1,7 +1,7 @@
 # Summary
 
 [Introduction](./chapter_0.md)
-
+- [Contributors](./contributors.md)
 - [Section 1 - Hello Rust](./chapter_1.md)
     - [Entities and Components](./chapter_2.md)
     - [Walking A Map](./chapter_3.md)
@@ -38,4 +38,3 @@
     - [Waveform Collapse](./chapter_33.md)
     - [Prefabs & Sectionals](./chapter_34.md)
     - [Room Vaults](./chapter_35.md)
-[Contributors](./contributors.md)
