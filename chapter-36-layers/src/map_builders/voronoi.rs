@@ -2,7 +2,6 @@ use super::{MapBuilder, Map,
     TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER,
     remove_unreachable_areas_returning_most_distant, generate_voronoi_spawn_regions};
 use rltk::RandomNumberGenerator;
-use specs::prelude::*;
 use std::collections::HashMap;
 
 #[derive(PartialEq, Copy, Clone)]
@@ -54,8 +53,8 @@ impl MapBuilder for VoronoiCellBuilder {
 
 impl VoronoiCellBuilder {
     #[allow(dead_code)]
-    pub fn new(new_depth : i32) -> VoronoiCellBuilder {
-        VoronoiCellBuilder{
+    pub fn new(new_depth : i32) -> Box<VoronoiCellBuilder> {
+        Box::new(VoronoiCellBuilder{
             map : Map::new(new_depth),
             starting_position : Position{ x: 0, y : 0 },
             depth : new_depth,
@@ -64,12 +63,12 @@ impl VoronoiCellBuilder {
             n_seeds: 64,
             distance_algorithm: DistanceAlgorithm::Pythagoras,
             spawn_list : Vec::new()
-        }
+        })
     }
 
     #[allow(dead_code)]
-    pub fn pythagoras(new_depth : i32) -> VoronoiCellBuilder {
-        VoronoiCellBuilder{
+    pub fn pythagoras(new_depth : i32) -> Box<VoronoiCellBuilder> {
+        Box::new(VoronoiCellBuilder{
             map : Map::new(new_depth),
             starting_position : Position{ x: 0, y : 0 },
             depth : new_depth,
@@ -78,12 +77,12 @@ impl VoronoiCellBuilder {
             n_seeds: 64,
             distance_algorithm: DistanceAlgorithm::Pythagoras,
             spawn_list : Vec::new()
-        }
+        })
     }
 
     #[allow(dead_code)]
-    pub fn manhattan(new_depth : i32) -> VoronoiCellBuilder {
-        VoronoiCellBuilder{
+    pub fn manhattan(new_depth : i32) -> Box<VoronoiCellBuilder> {
+        Box::new(VoronoiCellBuilder{
             map : Map::new(new_depth),
             starting_position : Position{ x: 0, y : 0 },
             depth : new_depth,
@@ -92,7 +91,7 @@ impl VoronoiCellBuilder {
             n_seeds: 64,
             distance_algorithm: DistanceAlgorithm::Manhattan,
             spawn_list : Vec::new()
-        }
+        })
     }
 
     #[allow(clippy::map_entry)]

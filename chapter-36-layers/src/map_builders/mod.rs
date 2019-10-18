@@ -43,34 +43,34 @@ pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
     let builder = rng.roll_dice(1, 17);
     let mut result : Box<dyn MapBuilder>;
     match builder {
-        1 => { result = Box::new(BspDungeonBuilder::new(new_depth)); }
-        2 => { result = Box::new(BspInteriorBuilder::new(new_depth)); }
-        3 => { result = Box::new(CellularAutomotaBuilder::new(new_depth)); }
-        4 => { result = Box::new(DrunkardsWalkBuilder::open_area(new_depth)); }
-        5 => { result = Box::new(DrunkardsWalkBuilder::open_halls(new_depth)); }
-        6 => { result = Box::new(DrunkardsWalkBuilder::winding_passages(new_depth)); }
-        7 => { result = Box::new(DrunkardsWalkBuilder::fat_passages(new_depth)); }
-        8 => { result = Box::new(DrunkardsWalkBuilder::fearful_symmetry(new_depth)); }
-        9 => { result = Box::new(MazeBuilder::new(new_depth)); }
-        10 => { result = Box::new(DLABuilder::walk_inwards(new_depth)); }
-        11 => { result = Box::new(DLABuilder::walk_outwards(new_depth)); }
-        12 => { result = Box::new(DLABuilder::central_attractor(new_depth)); }
-        13 => { result = Box::new(DLABuilder::insectoid(new_depth)); }
-        14 => { result = Box::new(VoronoiCellBuilder::pythagoras(new_depth)); }
-        15 => { result = Box::new(VoronoiCellBuilder::manhattan(new_depth)); }
-        16 => { result = Box::new(PrefabBuilder::constant(new_depth, prefab_builder::prefab_levels::WFC_POPULATED)) },
-        _ => { result = Box::new(SimpleMapBuilder::new(new_depth)); }
+        1 => { result = BspDungeonBuilder::new(new_depth); }
+        2 => { result = BspInteriorBuilder::new(new_depth); }
+        3 => { result = CellularAutomotaBuilder::new(new_depth); }
+        4 => { result = DrunkardsWalkBuilder::open_area(new_depth); }
+        5 => { result = DrunkardsWalkBuilder::open_halls(new_depth); }
+        6 => { result = DrunkardsWalkBuilder::winding_passages(new_depth); }
+        7 => { result = DrunkardsWalkBuilder::fat_passages(new_depth); }
+        8 => { result = DrunkardsWalkBuilder::fearful_symmetry(new_depth); }
+        9 => { result = MazeBuilder::new(new_depth); }
+        10 => { result = DLABuilder::walk_inwards(new_depth); }
+        11 => { result = DLABuilder::walk_outwards(new_depth); }
+        12 => { result = DLABuilder::central_attractor(new_depth); }
+        13 => { result = DLABuilder::insectoid(new_depth); }
+        14 => { result = VoronoiCellBuilder::pythagoras(new_depth); }
+        15 => { result = VoronoiCellBuilder::manhattan(new_depth); }
+        16 => { result = PrefabBuilder::constant(new_depth, prefab_builder::prefab_levels::WFC_POPULATED) },
+        _ => { result = SimpleMapBuilder::new(new_depth); }
     }
 
     if rng.roll_dice(1, 3)==1 {
-        result = Box::new(WaveformCollapseBuilder::derived_map(new_depth, result));
+        result = WaveformCollapseBuilder::derived_map(new_depth, result);
     }
 
     if rng.roll_dice(1, 20)==1 {
-        result = Box::new(PrefabBuilder::sectional(new_depth, prefab_builder::prefab_sections::UNDERGROUND_FORT ,result));
+        result = PrefabBuilder::sectional(new_depth, prefab_builder::prefab_sections::UNDERGROUND_FORT ,result);
     }
 
-    result = Box::new(PrefabBuilder::vaults(new_depth, result));
+    result = PrefabBuilder::vaults(new_depth, result);
 
     result
 }

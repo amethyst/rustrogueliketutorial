@@ -1,7 +1,6 @@
 use super::{MapBuilder, Map, Rect, apply_room_to_map, 
     TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER, draw_corridor};
 use rltk::RandomNumberGenerator;
-use specs::prelude::*;
 
 pub struct BspDungeonBuilder {
     map : Map,
@@ -47,8 +46,8 @@ impl MapBuilder for BspDungeonBuilder {
 
 impl BspDungeonBuilder {
     #[allow(dead_code)]
-    pub fn new(new_depth : i32) -> BspDungeonBuilder {
-        BspDungeonBuilder{
+    pub fn new(new_depth : i32) -> Box<BspDungeonBuilder> {
+        Box::new(BspDungeonBuilder{
             map : Map::new(new_depth),
             starting_position : Position{ x: 0, y : 0 },
             depth : new_depth,
@@ -56,7 +55,7 @@ impl BspDungeonBuilder {
             history: Vec::new(),
             rects: Vec::new(),
             spawn_list: Vec::new()
-        }
+        })
     }
 
     fn build(&mut self) {

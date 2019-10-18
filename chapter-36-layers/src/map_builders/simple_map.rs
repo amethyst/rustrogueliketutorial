@@ -2,7 +2,6 @@ use super::{MapBuilder, Map, Rect, apply_room_to_map,
     apply_horizontal_tunnel, apply_vertical_tunnel, TileType,
     Position, spawner, SHOW_MAPGEN_VISUALIZER};
 use rltk::RandomNumberGenerator;
-use specs::prelude::*;
 
 pub struct SimpleMapBuilder {
     map : Map,
@@ -47,15 +46,15 @@ impl MapBuilder for SimpleMapBuilder {
 
 impl SimpleMapBuilder {
     #[allow(dead_code)]
-    pub fn new(new_depth : i32) -> SimpleMapBuilder {
-        SimpleMapBuilder{
+    pub fn new(new_depth : i32) -> Box<SimpleMapBuilder> {
+        Box::new(SimpleMapBuilder{
             map : Map::new(new_depth),
             starting_position : Position{ x: 0, y : 0 },
             depth : new_depth,
             rooms: Vec::new(),
             history: Vec::new(),
             spawn_list: Vec::new()
-        }
+        })
     }
 
     fn rooms_and_corridors(&mut self) {

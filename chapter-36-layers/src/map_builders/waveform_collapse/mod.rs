@@ -1,7 +1,6 @@
 use super::{MapBuilder, Map, TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER,
     generate_voronoi_spawn_regions, remove_unreachable_areas_returning_most_distant};
 use rltk::RandomNumberGenerator;
-use specs::prelude::*;
 use std::collections::HashMap;
 mod common;
 use common::*;
@@ -59,8 +58,8 @@ impl WaveformCollapseBuilder {
     /// * new_depth - the new map depth
     /// * derive_from - either None, or a boxed MapBuilder, as output by `random_builder`
     #[allow(dead_code)]
-    pub fn new(new_depth : i32, derive_from : Option<Box<dyn MapBuilder>>) -> WaveformCollapseBuilder {
-        WaveformCollapseBuilder{
+    pub fn new(new_depth : i32, derive_from : Option<Box<dyn MapBuilder>>) -> Box<WaveformCollapseBuilder> {
+        Box::new(WaveformCollapseBuilder{
             map : Map::new(new_depth),
             starting_position : Position{ x: 0, y : 0 },
             depth : new_depth,
@@ -68,7 +67,7 @@ impl WaveformCollapseBuilder {
             noise_areas : HashMap::new(),
             derive_from,
             spawn_list: Vec::new()
-        }
+        })
     }
     
     /// Derives a map from a pre-existing map builder.
@@ -76,7 +75,7 @@ impl WaveformCollapseBuilder {
     /// * new_depth - the new map depth
     /// * derive_from - either None, or a boxed MapBuilder, as output by `random_builder`
     #[allow(dead_code)]
-    pub fn derived_map(new_depth: i32, builder: Box<dyn MapBuilder>) -> WaveformCollapseBuilder {
+    pub fn derived_map(new_depth: i32, builder: Box<dyn MapBuilder>) -> Box<WaveformCollapseBuilder> {
         WaveformCollapseBuilder::new(new_depth, Some(builder))
     }
 

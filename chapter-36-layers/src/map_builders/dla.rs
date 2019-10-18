@@ -3,7 +3,6 @@ use super::{MapBuilder, Map,
     remove_unreachable_areas_returning_most_distant, generate_voronoi_spawn_regions,
     Symmetry, paint};
 use rltk::RandomNumberGenerator;
-use specs::prelude::*;
 use std::collections::HashMap;
 
 #[derive(PartialEq, Copy, Clone)]
@@ -57,8 +56,8 @@ impl MapBuilder for DLABuilder {
 
 impl DLABuilder {
     #[allow(dead_code)]
-    pub fn new(new_depth : i32) -> DLABuilder {
-        DLABuilder{
+    pub fn new(new_depth : i32) -> Box<DLABuilder> {
+        Box::new(DLABuilder{
             map : Map::new(new_depth),
             starting_position : Position{ x: 0, y : 0 },
             depth : new_depth,
@@ -69,12 +68,12 @@ impl DLABuilder {
             symmetry: Symmetry::None,
             floor_percent: 0.25,
             spawn_list : Vec::new()
-        }
+        })
     }
 
     #[allow(dead_code)]
-    pub fn walk_inwards(new_depth : i32) -> DLABuilder {
-        DLABuilder{
+    pub fn walk_inwards(new_depth : i32) -> Box<DLABuilder> {
+        Box::new(DLABuilder{
             map : Map::new(new_depth),
             starting_position : Position{ x: 0, y : 0 },
             depth : new_depth,
@@ -85,12 +84,12 @@ impl DLABuilder {
             symmetry: Symmetry::None,
             floor_percent: 0.25,
             spawn_list : Vec::new()
-        }
+        })
     }
 
     #[allow(dead_code)]
-    pub fn walk_outwards(new_depth : i32) -> DLABuilder {
-        DLABuilder{
+    pub fn walk_outwards(new_depth : i32) -> Box<DLABuilder> {
+        Box::new(DLABuilder{
             map : Map::new(new_depth),
             starting_position : Position{ x: 0, y : 0 },
             depth : new_depth,
@@ -101,12 +100,12 @@ impl DLABuilder {
             symmetry: Symmetry::None,
             floor_percent: 0.25,
             spawn_list : Vec::new()
-        }
+        })
     }
 
     #[allow(dead_code)]
-    pub fn central_attractor(new_depth : i32) -> DLABuilder {
-        DLABuilder{
+    pub fn central_attractor(new_depth : i32) -> Box<DLABuilder> {
+        Box::new(DLABuilder{
             map : Map::new(new_depth),
             starting_position : Position{ x: 0, y : 0 },
             depth : new_depth,
@@ -117,12 +116,12 @@ impl DLABuilder {
             symmetry: Symmetry::None,
             floor_percent: 0.25,
             spawn_list : Vec::new()
-        }
+        })
     }
 
     #[allow(dead_code)]
-    pub fn insectoid(new_depth : i32) -> DLABuilder {
-        DLABuilder{
+    pub fn insectoid(new_depth : i32) -> Box<DLABuilder> {
+        Box::new(DLABuilder{
             map : Map::new(new_depth),
             starting_position : Position{ x: 0, y : 0 },
             depth : new_depth,
@@ -133,7 +132,7 @@ impl DLABuilder {
             symmetry: Symmetry::Horizontal,
             floor_percent: 0.25,
             spawn_list : Vec::new()
-        }
+        })
     }
 
     #[allow(clippy::map_entry)]

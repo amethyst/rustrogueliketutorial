@@ -3,7 +3,6 @@ use super::{MapBuilder, Map,
     remove_unreachable_areas_returning_most_distant, generate_voronoi_spawn_regions,
     paint, Symmetry};
 use rltk::RandomNumberGenerator;
-use specs::prelude::*;
 use std::collections::HashMap;
 
 #[derive(PartialEq, Copy, Clone)]
@@ -75,8 +74,8 @@ impl DrunkardsWalkBuilder {
     }
 
     #[allow(dead_code)]
-    pub fn open_area(new_depth : i32) -> DrunkardsWalkBuilder {
-        DrunkardsWalkBuilder{
+    pub fn open_area(new_depth : i32) -> Box<DrunkardsWalkBuilder> {
+        Box::new(DrunkardsWalkBuilder{
             map : Map::new(new_depth),
             starting_position : Position{ x: 0, y : 0 },
             depth : new_depth,
@@ -90,12 +89,12 @@ impl DrunkardsWalkBuilder {
                 symmetry: Symmetry::None
             },
             spawn_list : Vec::new()
-        }
+        })
     }
 
     #[allow(dead_code)]
-    pub fn open_halls(new_depth : i32) -> DrunkardsWalkBuilder {
-        DrunkardsWalkBuilder{
+    pub fn open_halls(new_depth : i32) -> Box<DrunkardsWalkBuilder> {
+        Box::new(DrunkardsWalkBuilder{
             map : Map::new(new_depth),
             starting_position : Position{ x: 0, y : 0 },
             depth : new_depth,
@@ -109,12 +108,12 @@ impl DrunkardsWalkBuilder {
                 symmetry: Symmetry::None
             },
             spawn_list : Vec::new()
-        }
+        })
     }
 
     #[allow(dead_code)]
-    pub fn winding_passages(new_depth : i32) -> DrunkardsWalkBuilder {
-        DrunkardsWalkBuilder{
+    pub fn winding_passages(new_depth : i32) -> Box<DrunkardsWalkBuilder> {
+        Box::new(DrunkardsWalkBuilder{
             map : Map::new(new_depth),
             starting_position : Position{ x: 0, y : 0 },
             depth : new_depth,
@@ -128,12 +127,12 @@ impl DrunkardsWalkBuilder {
                 symmetry: Symmetry::None
             },
             spawn_list : Vec::new()
-        }
+        })
     }
 
     #[allow(dead_code)]
-    pub fn fat_passages(new_depth : i32) -> DrunkardsWalkBuilder {
-        DrunkardsWalkBuilder{
+    pub fn fat_passages(new_depth : i32) -> Box<DrunkardsWalkBuilder> {
+        Box::new(DrunkardsWalkBuilder{
             map : Map::new(new_depth),
             starting_position : Position{ x: 0, y : 0 },
             depth : new_depth,
@@ -147,12 +146,12 @@ impl DrunkardsWalkBuilder {
                 symmetry: Symmetry::None
             },
             spawn_list : Vec::new()
-        }
+        })
     }
 
     #[allow(dead_code)]
-    pub fn fearful_symmetry(new_depth : i32) -> DrunkardsWalkBuilder {
-        DrunkardsWalkBuilder{
+    pub fn fearful_symmetry(new_depth : i32) -> Box<DrunkardsWalkBuilder> {
+        Box::new(DrunkardsWalkBuilder{
             map : Map::new(new_depth),
             starting_position : Position{ x: 0, y : 0 },
             depth : new_depth,
@@ -166,7 +165,7 @@ impl DrunkardsWalkBuilder {
                 symmetry: Symmetry::Both
             },
             spawn_list : Vec::new()
-        }
+        })
     }
     
     fn build(&mut self) {

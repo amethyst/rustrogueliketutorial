@@ -1,7 +1,6 @@
 use super::{MapBuilder, Map, Rect, TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER,
     draw_corridor};
 use rltk::RandomNumberGenerator;
-use specs::prelude::*;
 
 const MIN_ROOM_SIZE : i32 = 8;
 
@@ -49,8 +48,8 @@ impl MapBuilder for BspInteriorBuilder {
 
 impl BspInteriorBuilder {
     #[allow(dead_code)]
-    pub fn new(new_depth : i32) -> BspInteriorBuilder {
-        BspInteriorBuilder{
+    pub fn new(new_depth : i32) -> Box<BspInteriorBuilder> {
+        Box::new(BspInteriorBuilder{
             map : Map::new(new_depth),
             starting_position : Position{ x: 0, y : 0 },
             depth : new_depth,
@@ -58,7 +57,7 @@ impl BspInteriorBuilder {
             history: Vec::new(),
             rects: Vec::new(),
             spawn_list: Vec::new()
-        }
+        })
     }
 
     fn build(&mut self) {

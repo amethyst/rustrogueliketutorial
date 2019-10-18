@@ -2,7 +2,6 @@ use super::{MapBuilder, Map,
     TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER,
     remove_unreachable_areas_returning_most_distant, generate_voronoi_spawn_regions};
 use rltk::RandomNumberGenerator;
-use specs::prelude::*;
 use std::collections::HashMap;
 
 pub struct MazeBuilder {
@@ -48,15 +47,15 @@ impl MapBuilder for MazeBuilder {
 
 impl MazeBuilder {
     #[allow(dead_code)]
-    pub fn new(new_depth : i32) -> MazeBuilder {
-        MazeBuilder{
+    pub fn new(new_depth : i32) -> Box<MazeBuilder> {
+        Box::new(MazeBuilder{
             map : Map::new(new_depth),
             starting_position : Position{ x: 0, y : 0 },
             depth : new_depth,
             history: Vec::new(),
             noise_areas : HashMap::new(),
             spawn_list : Vec::new()
-        }
+        })
     }
 
     #[allow(clippy::map_entry)]
