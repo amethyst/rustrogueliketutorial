@@ -50,7 +50,6 @@ With the basic data in place, we need a system for chaining builders. We'll add 
 pub struct BuilderChain {
     starter: Option<Box<dyn InitialMapBuilder>>,
     builders: Vec<Box<dyn MetaMapBuilder>>,
-    new_depth : i32,
     pub build_data : BuilderMap
 }
 ```
@@ -59,7 +58,6 @@ This is a more complicated structure, so let's go through it:
 
 * `starter` is an `Option`, so we know if there is one. Not having a first step (a map that doesn't refer to other maps) would be an error condition, so we'll track it. We're referencing a new trait, `InitialMapBuilder`; we'll get to that in a moment.
 * `builders` is a vector of `MetaMapBuilders`, another new trait (and again - we'll get to it in a moment). These are builders that operate on the results of previous maps.
-* `new_depth` is the same as the map parameter we've been passing around. Rather than keep passing it everywhere, we'll store it once in the builder.
 * `build_data` is a public variable (anyone can read/write it), containing the `BuilderMap` we just made.
 
 We'll implement some functions to support it. First up, a *constructor*:
@@ -70,7 +68,6 @@ impl BuilderChain {
         BuilderChain{
             starter: None,
             builders: Vec::new(),
-            new_depth,
             build_data : BuilderMap {
                 spawn_list: Vec::new(),
                 map: Map::new(new_depth),
