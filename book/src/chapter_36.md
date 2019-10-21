@@ -2119,6 +2119,63 @@ builder
 From common, delete: `remove_unreachable_areas_returning_most_distant` and `generate_voronoi_spawn_regions`
 Delete MapBuilder
 
+## Randomize
+
+```rust
+fn random_initial_builder(rng: &mut rltk::RandomNumberGenerator) -> (Box<dyn InitialMapBuilder>, bool) {
+    let builder = rng.roll_dice(1, 17);
+    let result : (Box<dyn InitialMapBuilder>, bool);
+    match builder {
+        1 => result = (BspDungeonBuilder::new(), true),
+        2 => result = (BspInteriorBuilder::new(), true),
+        3 => result = (CellularAutomotaBuilder::new(), false),
+        4 => result = (DrunkardsWalkBuilder::open_area(), false),
+        5 => result = (DrunkardsWalkBuilder::open_halls(), false),
+        6 => result = (DrunkardsWalkBuilder::winding_passages(), false),
+        7 => result = (DrunkardsWalkBuilder::fat_passages(), false),
+        8 => result = (DrunkardsWalkBuilder::fearful_symmetry(), false),
+        9 => result = (MazeBuilder::new(), false),
+        10 => result = (DLABuilder::walk_inwards(), false),
+        11 => result = (DLABuilder::walk_outwards(), false),
+        12 => result = (DLABuilder::central_attractor(), false),
+        13 => result = (DLABuilder::insectoid(), false),
+        14 => result = (VoronoiCellBuilder::pythagoras(), false),
+        15 => result = (VoronoiCellBuilder::manhattan(), false),
+        16 => result = (PrefabBuilder::constant(prefab_builder::prefab_levels::WFC_POPULATED), false),
+        _ => result = (SimpleMapBuilder::new(), true)
+    }
+    result
+}
+
+pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> BuilderChain {
+    let mut builder = BuilderChain::new(new_depth);
+    let (random_starter, has_rooms) = random_initial_builder(rng);
+    builder.start_with(random_starter);
+    if has_rooms {
+        builder.with(RoomBasedSpawner::new());
+        builder.with(RoomBasedStairs::new());
+        builder.with(RoomBasedStartingPosition::new());
+    } else {
+        builder.with(AreaStartingPosition::new(XStart::CENTER, YStart::CENTER));
+        builder.with(CullUnreachable::new());
+        builder.with(VoronoiSpawning::new());
+        builder.with(DistantExit::new());
+    }
+
+    if rng.roll_dice(1, 3)==1 {
+        builder.with(WaveformCollapseBuilder::new());
+    }
+
+    if rng.roll_dice(1, 20)==1 {
+        builder.with(PrefabBuilder::sectional(prefab_builder::prefab_sections::UNDERGROUND_FORT));
+    }
+
+    builder.with(PrefabBuilder::vaults());
+
+    builder
+}
+```
+
 ...
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-36-layers)**

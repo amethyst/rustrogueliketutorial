@@ -60,7 +60,6 @@ impl BuilderMap {
 pub struct BuilderChain {
     starter: Option<Box<dyn InitialMapBuilder>>,
     builders: Vec<Box<dyn MetaMapBuilder>>,
-    new_depth : i32,
     pub build_data : BuilderMap
 }
 
@@ -69,7 +68,6 @@ impl BuilderChain {
         BuilderChain{
             starter: None,
             builders: Vec::new(),
-            new_depth,
             build_data : BuilderMap {
                 spawn_list: Vec::new(),
                 map: Map::new(new_depth),
@@ -121,51 +119,56 @@ pub trait MetaMapBuilder {
     fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap);
 }
 
-pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> BuilderChain {
-    /*
-    let mut rng = rltk::RandomNumberGenerator::new();
+fn random_initial_builder(rng: &mut rltk::RandomNumberGenerator) -> (Box<dyn InitialMapBuilder>, bool) {
     let builder = rng.roll_dice(1, 17);
-    let mut result : Box<dyn MapBuilder>;
+    let result : (Box<dyn InitialMapBuilder>, bool);
     match builder {
-        1 => { result = BspDungeonBuilder::new(new_depth); }
-        2 => { result = BspInteriorBuilder::new(new_depth); }
-        3 => { result = CellularAutomotaBuilder::new(new_depth); }
-        4 => { result = DrunkardsWalkBuilder::open_area(new_depth); }
-        5 => { result = DrunkardsWalkBuilder::open_halls(new_depth); }
-        6 => { result = DrunkardsWalkBuilder::winding_passages(new_depth); }
-        7 => { result = DrunkardsWalkBuilder::fat_passages(new_depth); }
-        8 => { result = DrunkardsWalkBuilder::fearful_symmetry(new_depth); }
-        9 => { result = MazeBuilder::new(new_depth); }
-        10 => { result = DLABuilder::walk_inwards(new_depth); }
-        11 => { result = DLABuilder::walk_outwards(new_depth); }
-        12 => { result = DLABuilder::central_attractor(new_depth); }
-        13 => { result = DLABuilder::insectoid(new_depth); }
-        14 => { result = VoronoiCellBuilder::pythagoras(new_depth); }
-        15 => { result = VoronoiCellBuilder::manhattan(new_depth); }
-        16 => { result = PrefabBuilder::constant(new_depth, prefab_builder::prefab_levels::WFC_POPULATED) },
-        _ => { result = SimpleMapBuilder::new(new_depth); }
+        1 => result = (BspDungeonBuilder::new(), true),
+        2 => result = (BspInteriorBuilder::new(), true),
+        3 => result = (CellularAutomotaBuilder::new(), false),
+        4 => result = (DrunkardsWalkBuilder::open_area(), false),
+        5 => result = (DrunkardsWalkBuilder::open_halls(), false),
+        6 => result = (DrunkardsWalkBuilder::winding_passages(), false),
+        7 => result = (DrunkardsWalkBuilder::fat_passages(), false),
+        8 => result = (DrunkardsWalkBuilder::fearful_symmetry(), false),
+        9 => result = (MazeBuilder::new(), false),
+        10 => result = (DLABuilder::walk_inwards(), false),
+        11 => result = (DLABuilder::walk_outwards(), false),
+        12 => result = (DLABuilder::central_attractor(), false),
+        13 => result = (DLABuilder::insectoid(), false),
+        14 => result = (VoronoiCellBuilder::pythagoras(), false),
+        15 => result = (VoronoiCellBuilder::manhattan(), false),
+        16 => result = (PrefabBuilder::constant(prefab_builder::prefab_levels::WFC_POPULATED), false),
+        _ => result = (SimpleMapBuilder::new(), true)
+    }
+    result
+}
+
+pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> BuilderChain {
+    let mut builder = BuilderChain::new(new_depth);
+    let (random_starter, has_rooms) = random_initial_builder(rng);
+    builder.start_with(random_starter);
+    if has_rooms {
+        builder.with(RoomBasedSpawner::new());
+        builder.with(RoomBasedStairs::new());
+        builder.with(RoomBasedStartingPosition::new());
+    } else {
+        builder.with(AreaStartingPosition::new(XStart::CENTER, YStart::CENTER));
+        builder.with(CullUnreachable::new());
+        builder.with(VoronoiSpawning::new());
+        builder.with(DistantExit::new());
     }
 
     if rng.roll_dice(1, 3)==1 {
-        result = WaveformCollapseBuilder::derived_map(new_depth, result);
+        builder.with(WaveformCollapseBuilder::new());
     }
 
     if rng.roll_dice(1, 20)==1 {
-        result = PrefabBuilder::sectional(new_depth, prefab_builder::prefab_sections::UNDERGROUND_FORT ,result);
+        builder.with(PrefabBuilder::sectional(prefab_builder::prefab_sections::UNDERGROUND_FORT));
     }
 
-    result = PrefabBuilder::vaults(new_depth, result);
-
-    result*/
-    let mut builder = BuilderChain::new(new_depth);
-    builder.start_with(VoronoiCellBuilder::pythagoras());
-    builder.with(WaveformCollapseBuilder::new());
     builder.with(PrefabBuilder::vaults());
-    builder.with(AreaStartingPosition::new(XStart::CENTER, YStart::CENTER));
-    builder.with(CullUnreachable::new());
-    builder.with(VoronoiSpawning::new());
-    builder.with(PrefabBuilder::sectional(prefab_builder::prefab_sections::UNDERGROUND_FORT));
-    builder.with(DistantExit::new());
+
     builder
 }
 
