@@ -369,6 +369,7 @@ impl RoomBasedStairs {
             let stairs_position = rooms[rooms.len()-1].center();
             let stairs_idx = build_data.map.xy_idx(stairs_position.0, stairs_position.1);
             build_data.map.tiles[stairs_idx] = TileType::DownStairs;
+            build_data.take_snapshot();
         } else {
             panic!("Room Based Stairs only works after rooms have been created");
         }
@@ -400,7 +401,266 @@ If you `cargo run` the project now, you'll let lots of warnings about unused cod
 
 ## Cleaning up the BSP Dungeon Builder
 
+Once again, we can seriously clean-up a map builder! Here's the new version of `bsp_dungeon.rs`:
 
+```rust
+use super::{InitialMapBuilder, BuilderMap, Map, Rect, apply_room_to_map, 
+    TileType, draw_corridor};
+use rltk::RandomNumberGenerator;
+
+pub struct BspDungeonBuilder {
+    rects: Vec<Rect>,
+}
+
+impl InitialMapBuilder for BspDungeonBuilder {
+    #[allow(dead_code)]
+    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap) {
+        self.build(rng, build_data);
+    }
+}
+
+impl BspDungeonBuilder {
+    #[allow(dead_code)]
+    pub fn new() -> Box<BspDungeonBuilder> {
+        Box::new(BspDungeonBuilder{
+            rects: Vec::new(),
+        })
+    }
+
+    fn build(&mut self, rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+        let mut rooms : Vec<Rect> = Vec::new();
+        self.rects.clear();
+        self.rects.push( Rect::new(2, 2, build_data.map.width-5, build_data.map.height-5) ); // Start with a single map-sized rectangle
+        let first_room = self.rects[0];
+        self.add_subrects(first_room); // Divide the first room
+
+        // Up to 240 times, we get a random rectangle and divide it. If its possible to squeeze a
+        // room in there, we place it and add it to the rooms list.
+        let mut n_rooms = 0;
+        while n_rooms < 240 {
+            let rect = self.get_random_rect(rng);
+            let candidate = self.get_random_sub_rect(rect, rng);
+
+            if self.is_possible(candidate, &build_data.map) {
+                apply_room_to_map(&mut build_data.map, &candidate);
+                rooms.push(candidate);
+                self.add_subrects(rect);
+                build_data.take_snapshot();
+            }
+
+            n_rooms += 1;
+        }
+
+        // Now we sort the rooms
+        rooms.sort_by(|a,b| a.x1.cmp(&b.x1) );
+
+        // Now we want corridors
+        for i in 0..rooms.len()-1 {
+            let room = rooms[i];
+            let next_room = rooms[i+1];
+            let start_x = room.x1 + (rng.roll_dice(1, i32::abs(room.x1 - room.x2))-1);
+            let start_y = room.y1 + (rng.roll_dice(1, i32::abs(room.y1 - room.y2))-1);
+            let end_x = next_room.x1 + (rng.roll_dice(1, i32::abs(next_room.x1 - next_room.x2))-1);
+            let end_y = next_room.y1 + (rng.roll_dice(1, i32::abs(next_room.y1 - next_room.y2))-1);
+            draw_corridor(&mut build_data.map, start_x, start_y, end_x, end_y);
+            build_data.take_snapshot();
+        }
+        build_data.rooms = Some(rooms);
+    }
+
+    fn add_subrects(&mut self, rect : Rect) {
+        let width = i32::abs(rect.x1 - rect.x2);
+        let height = i32::abs(rect.y1 - rect.y2);
+        let half_width = i32::max(width / 2, 1);
+        let half_height = i32::max(height / 2, 1);
+
+        self.rects.push(Rect::new( rect.x1, rect.y1, half_width, half_height ));
+        self.rects.push(Rect::new( rect.x1, rect.y1 + half_height, half_width, half_height ));
+        self.rects.push(Rect::new( rect.x1 + half_width, rect.y1, half_width, half_height ));
+        self.rects.push(Rect::new( rect.x1 + half_width, rect.y1 + half_height, half_width, half_height ));
+    }
+
+    fn get_random_rect(&mut self, rng : &mut RandomNumberGenerator) -> Rect {
+        if self.rects.len() == 1 { return self.rects[0]; }
+        let idx = (rng.roll_dice(1, self.rects.len() as i32)-1) as usize;
+        self.rects[idx]
+    }
+
+    fn get_random_sub_rect(&self, rect : Rect, rng : &mut RandomNumberGenerator) -> Rect {
+        let mut result = rect;
+        let rect_width = i32::abs(rect.x1 - rect.x2);
+        let rect_height = i32::abs(rect.y1 - rect.y2);
+
+        let w = i32::max(3, rng.roll_dice(1, i32::min(rect_width, 10))-1) + 1;
+        let h = i32::max(3, rng.roll_dice(1, i32::min(rect_height, 10))-1) + 1;
+
+        result.x1 += rng.roll_dice(1, 6)-1;
+        result.y1 += rng.roll_dice(1, 6)-1;
+        result.x2 = result.x1 + w;
+        result.y2 = result.y1 + h;
+
+        result
+    }
+
+    fn is_possible(&self, rect : Rect, map : &Map) -> bool {
+        let mut expanded = rect;
+        expanded.x1 -= 2;
+        expanded.x2 += 2;
+        expanded.y1 -= 2;
+        expanded.y2 += 2;
+
+        let mut can_build = true;
+
+        for y in expanded.y1 ..= expanded.y2 {
+            for x in expanded.x1 ..= expanded.x2 {
+                if x > map.width-2 { can_build = false; }
+                if y > map.height-2 { can_build = false; }
+                if x < 1 { can_build = false; }
+                if y < 1 { can_build = false; }
+                if can_build {
+                    let idx = map.xy_idx(x, y);
+                    if map.tiles[idx] != TileType::Wall { 
+                        can_build = false; 
+                    }
+                }
+            }
+        }
+
+        can_build
+    }
+}
+```
+
+Just like `SimpleMapBuilder`, we've stripped out all the non-room building code for a much cleaner piece of code. We're referencing the `build_data` struct from the builder, rather than making our own copies of everything - and the *meat* of the code is largely the same.
+
+Now you can modify `random_builder` to make this map type:
+
+```rust
+let mut builder = BuilderChain::new(new_depth);
+builder.start_with(BspDungeonBuilder::new());
+builder.with(RoomBasedSpawner::new());
+builder.with(RoomBasedStartingPosition::new());
+builder.with(RoomBasedStairs::new());
+builder
+```
+
+If you `cargo run` now, you'll get a dungeon based on the `BspDungeonBuilder`. See how you are reusing the spawner, starting position and stairs code? That's definitely an improvement over the older versions - if you change one, it can now help on multiple builders!
+
+## Same again for BSP Interior
+
+Yet again, we can greatly clean up a builder - this time the `BspInteriorBuilder`. Here's the code for `bsp_interior.rs`:
+
+```rust
+use super::{InitialMapBuilder, BuilderMap, Rect, TileType, draw_corridor};
+use rltk::RandomNumberGenerator;
+
+const MIN_ROOM_SIZE : i32 = 8;
+
+pub struct BspInteriorBuilder {
+    rects: Vec<Rect>
+}
+
+impl InitialMapBuilder for BspInteriorBuilder {
+    #[allow(dead_code)]
+    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap) {
+        self.build(rng, build_data);
+    }
+}
+
+impl BspInteriorBuilder {
+    #[allow(dead_code)]
+    pub fn new() -> Box<BspInteriorBuilder> {
+        Box::new(BspInteriorBuilder{
+            rects: Vec::new()
+        })
+    }
+
+    fn build(&mut self, rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+        let mut rooms : Vec<Rect> = Vec::new();
+        self.rects.clear();
+        self.rects.push( Rect::new(1, 1, build_data.map.width-2, build_data.map.height-2) ); // Start with a single map-sized rectangle
+        let first_room = self.rects[0];
+        self.add_subrects(first_room, rng); // Divide the first room
+
+        let rooms_copy = self.rects.clone();
+        for r in rooms_copy.iter() {
+            let room = *r;
+            //room.x2 -= 1;
+            //room.y2 -= 1;
+            rooms.push(room);
+            for y in room.y1 .. room.y2 {
+                for x in room.x1 .. room.x2 {
+                    let idx = build_data.map.xy_idx(x, y);
+                    if idx > 0 && idx < ((build_data.map.width * build_data.map.height)-1) as usize {
+                        build_data.map.tiles[idx] = TileType::Floor;
+                    }
+                }
+            }
+            build_data.take_snapshot();
+        }
+
+        // Now we want corridors
+        for i in 0..rooms.len()-1 {
+            let room = rooms[i];
+            let next_room = rooms[i+1];
+            let start_x = room.x1 + (rng.roll_dice(1, i32::abs(room.x1 - room.x2))-1);
+            let start_y = room.y1 + (rng.roll_dice(1, i32::abs(room.y1 - room.y2))-1);
+            let end_x = next_room.x1 + (rng.roll_dice(1, i32::abs(next_room.x1 - next_room.x2))-1);
+            let end_y = next_room.y1 + (rng.roll_dice(1, i32::abs(next_room.y1 - next_room.y2))-1);
+            draw_corridor(&mut build_data.map, start_x, start_y, end_x, end_y);
+            build_data.take_snapshot();
+        }
+
+        build_data.rooms = Some(rooms);
+    }
+
+    fn add_subrects(&mut self, rect : Rect, rng : &mut RandomNumberGenerator) {
+        // Remove the last rect from the list
+        if !self.rects.is_empty() {
+            self.rects.remove(self.rects.len() - 1);
+        }
+
+        // Calculate boundaries
+        let width  = rect.x2 - rect.x1;
+        let height = rect.y2 - rect.y1;
+        let half_width = width / 2;
+        let half_height = height / 2;
+
+        let split = rng.roll_dice(1, 4);
+
+        if split <= 2 {
+            // Horizontal split
+            let h1 = Rect::new( rect.x1, rect.y1, half_width-1, height );
+            self.rects.push( h1 );
+            if half_width > MIN_ROOM_SIZE { self.add_subrects(h1, rng); }
+            let h2 = Rect::new( rect.x1 + half_width, rect.y1, half_width, height );
+            self.rects.push( h2 );
+            if half_width > MIN_ROOM_SIZE { self.add_subrects(h2, rng); }
+        } else {
+            // Vertical split
+            let v1 = Rect::new( rect.x1, rect.y1, width, half_height-1 );
+            self.rects.push(v1);
+            if half_height > MIN_ROOM_SIZE { self.add_subrects(v1, rng); }
+            let v2 = Rect::new( rect.x1, rect.y1 + half_height, width, half_height );
+            self.rects.push(v2);
+            if half_height > MIN_ROOM_SIZE { self.add_subrects(v2, rng); }
+        }
+    }
+}
+```
+
+You may test it by modifying `random_builder`:
+
+```rust
+let mut builder = BuilderChain::new(new_depth);
+builder.start_with(BspInteriorBuilder::new());
+builder.with(RoomBasedSpawner::new());
+builder.with(RoomBasedStartingPosition::new());
+builder.with(RoomBasedStairs::new());
+builder
+```
+
+`cargo run` will now take you around an interior builder.
 
 ## .. eventually .. Delete the MapBuilder Trait
 
