@@ -1677,6 +1677,108 @@ impl VoronoiCellBuilder {
 }
 ```
 
+## Updating Waveform Collapse
+
+Waveform Collapse is a slightly different one to port, because it already had a concept of a "previous builder". That's gone now (chaining is automatic), so there's a bit more to update. Waveform Collapse is a meta-builder, so it implements that trait, rather than the initial map builder. Overall, these changes make it a *lot* more simple!
+
+```rust
+use super::{MetaMapBuilder, BuilderMap, Map, TileType};
+use rltk::RandomNumberGenerator;
+mod common;
+use common::*;
+mod constraints;
+use constraints::*;
+mod solver;
+use solver::*;
+
+/// Provides a map builder using the Waveform Collapse algorithm.
+pub struct WaveformCollapseBuilder {}
+
+impl MetaMapBuilder for WaveformCollapseBuilder {
+    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap)  {
+        self.build(rng, build_data);
+    }
+}
+
+impl WaveformCollapseBuilder {
+    /// Generic constructor for waveform collapse.
+    /// # Arguments
+    /// * new_depth - the new map depth
+    /// * derive_from - either None, or a boxed MapBuilder, as output by `random_builder`
+    #[allow(dead_code)]
+    pub fn new() -> Box<WaveformCollapseBuilder> {
+        Box::new(WaveformCollapseBuilder{})
+    }
+
+    fn build(&mut self, rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+        const CHUNK_SIZE :i32 = 8;
+        build_data.take_snapshot();
+
+        let patterns = build_patterns(&build_data.map, CHUNK_SIZE, true, true);
+        let constraints = patterns_to_constaints(patterns, CHUNK_SIZE);
+        self.render_tile_gallery(&constraints, CHUNK_SIZE, build_data);
+                
+        build_data.map = Map::new(build_data.map.depth);
+        loop {
+            let mut solver = Solver::new(constraints.clone(), CHUNK_SIZE, &build_data.map);
+            while !solver.iteration(&mut build_data.map, rng) {
+                build_data.take_snapshot();
+            }
+            build_data.take_snapshot();
+            if solver.possible { break; } // If it has hit an impossible condition, try again
+        }
+        build_data.spawn_list.clear();
+    }
+
+    fn render_tile_gallery(&mut self, constraints: &[MapChunk], chunk_size: i32, build_data : &mut BuilderMap) {
+        build_data.map = Map::new(0);
+        let mut counter = 0;
+        let mut x = 1;
+        let mut y = 1;
+        while counter < constraints.len() {
+            render_pattern_to_map(&mut build_data.map, &constraints[counter], chunk_size, x, y);
+
+            x += chunk_size + 1;
+            if x + chunk_size > build_data.map.width {
+                // Move to the next row
+                x = 1;
+                y += chunk_size + 1;
+
+                if y + chunk_size > build_data.map.height {
+                    // Move to the next page
+                    build_data.take_snapshot();
+                    build_data.map = Map::new(0);
+
+                    x = 1;
+                    y = 1;
+                }
+            }
+
+            counter += 1;
+        }
+        build_data.take_snapshot();
+    }
+}
+```
+
+TODO: Text!
+
+Test:
+
+```rust
+let mut builder = BuilderChain::new(new_depth);
+builder.start_with(VoronoiCellBuilder::pythagoras());
+builder.with(WaveformCollapseBuilder::new());
+builder.with(AreaStartingPosition::new(XStart::CENTER, YStart::CENTER));
+builder.with(CullUnreachable::new());
+builder.with(VoronoiSpawning::new());
+builder.with(DistantExit::new());
+builder
+```
+
+## Updating the Prefab Builder
+
+So here's a fun one. The `PrefabBuilder` is both an `InitialMapBuilder` and a `MetaMapBuilder` - with shared code between the two.
 
 ## .. eventually .. Delete the MapBuilder Trait and bits from common
 
