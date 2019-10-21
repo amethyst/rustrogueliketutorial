@@ -121,21 +121,6 @@ pub trait MetaMapBuilder {
     fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap);
 }
 
-pub trait MapBuilder {
-    fn build_map(&mut self, rng : &mut rltk::RandomNumberGenerator);
-    fn get_map(&self) -> Map;
-    fn get_starting_position(&self) -> Position;
-    fn get_snapshot_history(&self) -> Vec<Map>;
-    fn take_snapshot(&mut self);
-    fn get_spawn_list(&self) -> &Vec<(usize, String)>;
-
-    fn spawn_entities(&mut self, ecs : &mut World) {
-        for entity in self.get_spawn_list().iter() {
-            spawner::spawn_entity(ecs, &(&entity.0, &entity.1));
-        }
-    }
-}
-
 pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> BuilderChain {
     /*
     let mut rng = rltk::RandomNumberGenerator::new();
@@ -175,9 +160,11 @@ pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> 
     let mut builder = BuilderChain::new(new_depth);
     builder.start_with(VoronoiCellBuilder::pythagoras());
     builder.with(WaveformCollapseBuilder::new());
+    builder.with(PrefabBuilder::vaults());
     builder.with(AreaStartingPosition::new(XStart::CENTER, YStart::CENTER));
     builder.with(CullUnreachable::new());
     builder.with(VoronoiSpawning::new());
+    builder.with(PrefabBuilder::sectional(prefab_builder::prefab_sections::UNDERGROUND_FORT));
     builder.with(DistantExit::new());
     builder
 }
