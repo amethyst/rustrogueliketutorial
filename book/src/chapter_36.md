@@ -662,6 +662,345 @@ builder
 
 `cargo run` will now take you around an interior builder.
 
+## Cellular Automata
+
+You should understand the basic idea here, now - we're breaking up builders into small chunks, and implementing the appropriate traits for the map type. Looking at Cellular Automata maps, you'll see that we do things a little differently:
+
+* We make a map as usual. This obviously belongs in `CellularAutomotaBuilder`.
+* We search for a starting point close to the middle. This looks like it should be a separate step.
+* We search the map for unreachable areas and cull them. This also looks like a separate step.
+* We place the exit far from the starting position. That's *also* a different algorithm step.
+
+The good news is that the last three of those are used in lots of other builders - so implementing them will let us reuse the code, and not keep repeating ourselves. The bad news is that if we run our cellular automata builder with the existing room-based steps, it will crash - we don't *have* rooms!
+
+So we'll start by constructing the basic map builder. Like the others, this is mostly just rearranging code to fit with the new trait scheme. Here's the new `cellular_automota.rs` file:
+
+```rust
+use super::{InitialMapBuilder, BuilderMap, TileType};
+use rltk::RandomNumberGenerator;
+
+pub struct CellularAutomotaBuilder {}
+
+impl InitialMapBuilder for CellularAutomotaBuilder {
+    #[allow(dead_code)]
+    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap) {
+        self.build(rng, build_data);
+    }
+}
+
+impl CellularAutomotaBuilder {
+    #[allow(dead_code)]
+    pub fn new() -> Box<CellularAutomotaBuilder> {
+        Box::new(CellularAutomotaBuilder{})
+    }
+
+    #[allow(clippy::map_entry)]
+    fn build(&mut self, rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+        // First we completely randomize the map, setting 55% of it to be floor.
+        for y in 1..build_data.map.height-1 {
+            for x in 1..build_data.map.width-1 {
+                let roll = rng.roll_dice(1, 100);
+                let idx = build_data.map.xy_idx(x, y);
+                if roll > 55 { build_data.map.tiles[idx] = TileType::Floor } 
+                else { build_data.map.tiles[idx] = TileType::Wall }
+            }
+        }
+        build_data.take_snapshot();
+
+        // Now we iteratively apply cellular automota rules
+        for _i in 0..15 {
+            let mut newtiles = build_data.map.tiles.clone();
+
+            for y in 1..build_data.map.height-1 {
+                for x in 1..build_data.map.width-1 {
+                    let idx = build_data.map.xy_idx(x, y);
+                    let mut neighbors = 0;
+                    if build_data.map.tiles[idx - 1] == TileType::Wall { neighbors += 1; }
+                    if build_data.map.tiles[idx + 1] == TileType::Wall { neighbors += 1; }
+                    if build_data.map.tiles[idx - build_data.map.width as usize] == TileType::Wall { neighbors += 1; }
+                    if build_data.map.tiles[idx + build_data.map.width as usize] == TileType::Wall { neighbors += 1; }
+                    if build_data.map.tiles[idx - (build_data.map.width as usize - 1)] == TileType::Wall { neighbors += 1; }
+                    if build_data.map.tiles[idx - (build_data.map.width as usize + 1)] == TileType::Wall { neighbors += 1; }
+                    if build_data.map.tiles[idx + (build_data.map.width as usize - 1)] == TileType::Wall { neighbors += 1; }
+                    if build_data.map.tiles[idx + (build_data.map.width as usize + 1)] == TileType::Wall { neighbors += 1; }
+
+                    if neighbors > 4 || neighbors == 0 {
+                        newtiles[idx] = TileType::Wall;
+                    }
+                    else {
+                        newtiles[idx] = TileType::Floor;
+                    }
+                }
+            }
+
+            build_data.map.tiles = newtiles.clone();
+            build_data.take_snapshot();
+        }
+    }
+}
+```
+
+### Non-Room Starting Points
+
+It's entirely possible that we don't actually *want* to start in the middle of the map. Doing so presents lots of opportunities (and helps ensure connectivity), but maybe you would rather the player trudge through lots of map with less opportunity to pick the wrong direction. Maybe your story makes more sense if the player arrives at one end of the map and leaves via another. Lets implement a starting position system that takes a *preferred* starting point, and picks the closest valid tile. Create `area_starting_points.rs`:
+
+```rust
+use super::{MetaMapBuilder, BuilderMap, Position, TileType};
+use rltk::RandomNumberGenerator;
+
+#[allow(dead_code)]
+pub enum XStart { LEFT, CENTER, RIGHT }
+
+#[allow(dead_code)]
+pub enum YStart { TOP, CENTER, BOTTOM }
+
+pub struct AreaStartingPosition {
+    x : XStart, 
+    y : YStart
+}
+
+impl MetaMapBuilder for AreaStartingPosition {
+    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap)  {
+        self.build(rng, build_data);
+    }
+}
+
+impl AreaStartingPosition {
+    #[allow(dead_code)]
+    pub fn new(x : XStart, y : YStart) -> Box<AreaStartingPosition> {
+        Box::new(AreaStartingPosition{
+            x, y
+        })
+    }
+
+    fn build(&mut self, _rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+        let seed_x;
+        let seed_y;
+
+        match self.x {
+            XStart::LEFT => seed_x = 1,
+            XStart::CENTER => seed_x = build_data.map.width / 2,
+            XStart::RIGHT => seed_x = build_data.map.width - 2
+        }
+
+        match self.y {
+            YStart::TOP => seed_y = 1,
+            YStart::CENTER => seed_y = build_data.map.height / 2,
+            YStart::BOTTOM => seed_y = build_data.map.height - 2
+        }
+
+        let mut available_floors : Vec<(usize, f32)> = Vec::new();
+        for (idx, tiletype) in build_data.map.tiles.iter().enumerate() {
+            if *tiletype == TileType::Floor {
+                available_floors.push(
+                    (
+                        idx,
+                        rltk::DistanceAlg::PythagorasSquared.distance2d(
+                            rltk::Point::new(idx as i32 % build_data.map.width, idx as i32 / build_data.map.width),
+                            rltk::Point::new(seed_x, seed_y)
+                        )
+                    )
+                );
+            }
+        }
+        if available_floors.is_empty() {
+            panic!("No valid floors to start on");
+        }
+
+        available_floors.sort_by(|a,b| a.1.partial_cmp(&b.1).unwrap());
+
+        let start_x = available_floors[0].0 as i32 % build_data.map.width;
+        let start_y = available_floors[0].0 as i32 / build_data.map.width;
+
+        build_data.starting_position = Some(Position{x : start_x, y: start_y});
+    }
+}
+```
+
+We've covered the boilerplate enough to not need to go over it again - so lets step through the *build* function:
+
+1. We are taking in a couple of `enum` types: preferred position on the X and Y axes.
+2. So we set `seed_x` and `seed_y` to a point closest to the specified locations.
+3. We iterate through the whole map, adding floor tiles to `available_floors` - and calculating the distance to the preferred starting point.
+4. We sort the available tile list, so the lower distances are first.
+5. We pick the first one on the list.
+
+Note that we also `panic!` if there are no floors at all.
+
+The great part here is that this will work for *any* map type - it searches for floors to stand on, and tries to find the closest starting point.
+
+### Culling Unreachable Areas
+
+We've previously had good luck with culling areas that can't be reached from the starting point. So lets formalize that into its own meta-builder. Create `cull_unreachable.rs`:
+
+```rust
+use super::{MetaMapBuilder, BuilderMap, TileType};
+use rltk::RandomNumberGenerator;
+
+pub struct CullUnreachable {}
+
+impl MetaMapBuilder for CullUnreachable {
+    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap)  {
+        self.build(rng, build_data);
+    }
+}
+
+impl CullUnreachable {
+    #[allow(dead_code)]
+    pub fn new() -> Box<CullUnreachable> {
+        Box::new(CullUnreachable{})
+    }
+
+    fn build(&mut self, _rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+        let starting_pos = build_data.starting_position.as_ref().unwrap().clone();
+        let start_idx = build_data.map.xy_idx(
+            starting_pos.x, 
+            starting_pos.y
+        );
+        build_data.map.populate_blocked();
+        let map_starts : Vec<i32> = vec![start_idx as i32];
+        let dijkstra_map = rltk::DijkstraMap::new(build_data.map.width, build_data.map.height, &map_starts , &build_data.map, 1000.0);
+        for (i, tile) in build_data.map.tiles.iter_mut().enumerate() {
+            if *tile == TileType::Floor {
+                let distance_to_start = dijkstra_map.map[i];
+                // We can't get to this tile - so we'll make it a wall
+                if distance_to_start == std::f32::MAX {
+                    *tile = TileType::Wall;
+                }
+            }
+        }
+    }
+}
+```
+
+You'll notice this is almost exactly the same as `remove_unreachable_areas_returning_most_distant` from `common.rs`, but without returning a Dijkstra map. That's the intent: we remove areas the player can't get to, and *only* do that.
+
+### Voronoi-based spawning
+
+We also need to replicate the functionality of Voronoi-based spawning. Create `voronoi_spawning.rs`:
+
+```rust
+use super::{MetaMapBuilder, BuilderMap, TileType, spawner};
+use rltk::RandomNumberGenerator;
+use std::collections::HashMap;
+
+pub struct VoronoiSpawning {}
+
+impl MetaMapBuilder for VoronoiSpawning {
+    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap)  {
+        self.build(rng, build_data);
+    }
+}
+
+impl VoronoiSpawning {
+    #[allow(dead_code)]
+    pub fn new() -> Box<VoronoiSpawning> {
+        Box::new(VoronoiSpawning{})
+    }
+
+    #[allow(clippy::map_entry)]
+    fn build(&mut self, rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+        let mut noise_areas : HashMap<i32, Vec<usize>> = HashMap::new();
+        let mut noise = rltk::FastNoise::seeded(rng.roll_dice(1, 65536) as u64);
+        noise.set_noise_type(rltk::NoiseType::Cellular);
+        noise.set_frequency(0.08);
+        noise.set_cellular_distance_function(rltk::CellularDistanceFunction::Manhattan);
+
+        for y in 1 .. build_data.map.height-1 {
+            for x in 1 .. build_data.map.width-1 {
+                let idx = build_data.map.xy_idx(x, y);
+                if build_data.map.tiles[idx] == TileType::Floor {
+                    let cell_value_f = noise.get_noise(x as f32, y as f32) * 10240.0;
+                    let cell_value = cell_value_f as i32;
+
+                    if noise_areas.contains_key(&cell_value) {
+                        noise_areas.get_mut(&cell_value).unwrap().push(idx);
+                    } else {
+                        noise_areas.insert(cell_value, vec![idx]);
+                    }
+                }
+            }
+        }
+
+        // Spawn the entities
+        for area in noise_areas.iter() {
+            spawner::spawn_region(&build_data.map, rng, area.1, build_data.map.depth, &mut build_data.spawn_list);
+        }
+    }
+}
+```
+
+TODO - text!
+
+### Spawning a distant exit
+
+TODO...
+
+```rust
+use super::{MetaMapBuilder, BuilderMap, TileType};
+use rltk::RandomNumberGenerator;
+
+pub struct DistantExit {}
+
+impl MetaMapBuilder for DistantExit {
+    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap)  {
+        self.build(rng, build_data);
+    }
+}
+
+impl DistantExit {
+    #[allow(dead_code)]
+    pub fn new() -> Box<DistantExit> {
+        Box::new(DistantExit{})
+    }
+
+    fn build(&mut self, _rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+        let starting_pos = build_data.starting_position.as_ref().unwrap().clone();
+        let start_idx = build_data.map.xy_idx(
+            starting_pos.x, 
+            starting_pos.y
+        );
+        build_data.map.populate_blocked();
+        let map_starts : Vec<i32> = vec![start_idx as i32];
+        let dijkstra_map = rltk::DijkstraMap::new(build_data.map.width, build_data.map.height, &map_starts , &build_data.map, 1000.0);
+        let mut exit_tile = (0, 0.0f32);
+        for (i, tile) in build_data.map.tiles.iter_mut().enumerate() {
+            if *tile == TileType::Floor {
+                let distance_to_start = dijkstra_map.map[i];
+                if distance_to_start != std::f32::MAX {
+                    // If it is further away than our current exit candidate, move the exit
+                    if distance_to_start > exit_tile.1 {
+                        exit_tile.0 = i;
+                        exit_tile.1 = distance_to_start;
+                    }
+                }
+            }
+        }
+
+        // Place a staircase
+        let stairs_idx = exit_tile.0;
+        build_data.map.tiles[stairs_idx] = TileType::DownStairs;
+        build_data.take_snapshot();
+    }
+}
+```
+
+### Testing Cellular Automata
+
+We've finally got all the pieces together, so lets give it a test. In `random_builder`, we'll use the new builder chains:
+
+```rust
+let mut builder = BuilderChain::new(new_depth);
+builder.start_with(CellularAutomotaBuilder::new());
+builder.with(AreaStartingPosition::new(XStart::CENTER, YStart::CENTER));
+builder.with(CullUnreachable::new());
+builder.with(VoronoiSpawning::new());
+builder.with(DistantExit::new());
+builder
+```
+
+If you `cargo run` now, you'll get to play in a Cellular Automata generated map.
+
 ## .. eventually .. Delete the MapBuilder Trait
 
 ...
