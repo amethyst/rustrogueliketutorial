@@ -58,32 +58,5 @@ impl CellularAutomotaBuilder {
             build_data.map.tiles = newtiles.clone();
             build_data.take_snapshot();
         }
-
-        /*
-        // Find a starting point; start at the middle and walk left until we find an open tile
-        self.starting_position = Position{ x: self.map.width / 2, y : self.map.height / 2 };
-        let mut start_idx = self.map.xy_idx(self.starting_position.x, self.starting_position.y);
-        while self.map.tiles[start_idx] != TileType::Floor {
-            self.starting_position.x -= 1;
-            start_idx = self.map.xy_idx(self.starting_position.x, self.starting_position.y);
-        }
-        self.take_snapshot();
-
-        // Find all tiles we can reach from the starting point
-        let exit_tile = remove_unreachable_areas_returning_most_distant(&mut self.map, start_idx);
-        self.take_snapshot();
-
-        // Place the stairs
-        self.map.tiles[exit_tile] = TileType::DownStairs;
-        self.take_snapshot();
-
-        // Now we build a noise map for use in spawning entities later
-        self.noise_areas = generate_voronoi_spawn_regions(&self.map, rng);
-
-        // Spawn the entities
-        for area in self.noise_areas.iter() {
-            spawner::spawn_region(&self.map, rng, area.1, self.depth, &mut self.spawn_list);
-        }
-        */
     }
 }
