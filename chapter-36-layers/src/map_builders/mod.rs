@@ -173,7 +173,7 @@ pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> 
 
     result*/
     let mut builder = BuilderChain::new(new_depth);
-    builder.start_with(DrunkardsWalkBuilder::fearful_symmetry());
+    builder.start_with(DLABuilder::insectoid());
     builder.with(AreaStartingPosition::new(XStart::CENTER, YStart::CENTER));
     builder.with(CullUnreachable::new());
     builder.with(VoronoiSpawning::new());
