@@ -657,6 +657,17 @@ fn sorter(&mut self, _rng : &mut RandomNumberGenerator, build_data : &mut Builde
 That's so simple it's basically cheating! Lets add TOPMOST and BOTTOMMOST as well, for completeness of this type of sort:
 
 ```rust
+#[allow(dead_code)]
+pub enum RoomSort { LEFTMOST, RIGHTMOST, TOPMOST, BOTTOMMOST }
+...
+fn sorter(&mut self, _rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+    match self.sort_by {
+        RoomSort::LEFTMOST => build_data.rooms.as_mut().unwrap().sort_by(|a,b| a.x1.cmp(&b.x1) ),
+        RoomSort::RIGHTMOST => build_data.rooms.as_mut().unwrap().sort_by(|a,b| b.x2.cmp(&a.x2) ),
+        RoomSort::TOPMOST => build_data.rooms.as_mut().unwrap().sort_by(|a,b| a.y1.cmp(&b.y1) ),
+        RoomSort::BOTTOMMOST => build_data.rooms.as_mut().unwrap().sort_by(|a,b| b.y2.cmp(&a.y2) )
+    }
+}
 ```
 
 Here's BOTTOMMOST in action:
@@ -664,6 +675,55 @@ Here's BOTTOMMOST in action:
 ![Screenshot](./c37-s9.gif).
 
 See how that changes the character of the map without really changing the structure? It's amazing what you can do with little tweaks!
+
+We'll add another sort, CENTRAL. This time, we're sorting by *distance* from the map center:
+
+```rust
+#[allow(dead_code)]
+pub enum RoomSort { LEFTMOST, RIGHTMOST, TOPMOST, BOTTOMMOST, CENTRAL }
+...
+fn sorter(&mut self, _rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+    match self.sort_by {
+        RoomSort::LEFTMOST => build_data.rooms.as_mut().unwrap().sort_by(|a,b| a.x1.cmp(&b.x1) ),
+        RoomSort::RIGHTMOST => build_data.rooms.as_mut().unwrap().sort_by(|a,b| b.x2.cmp(&a.x2) ),
+        RoomSort::TOPMOST => build_data.rooms.as_mut().unwrap().sort_by(|a,b| a.y1.cmp(&b.y1) ),
+        RoomSort::BOTTOMMOST => build_data.rooms.as_mut().unwrap().sort_by(|a,b| b.y2.cmp(&a.y2) ),
+        RoomSort::CENTRAL => {
+            let map_center = rltk::Point::new( build_data.map.width / 2, build_data.map.height / 2 );
+            let center_sort = |a : &Rect, b : &Rect| {
+                let a_center = a.center();
+                let a_center_pt = rltk::Point::new(a_center.0, a_center.1);
+                let b_center = b.center();
+                let b_center_pt = rltk::Point::new(b_center.0, b_center.1);
+                let distance_a = rltk::DistanceAlg::Pythagoras.distance2d(a_center_pt, map_center);
+                let distance_b = rltk::DistanceAlg::Pythagoras.distance2d(b_center_pt, map_center);
+                distance_a.partial_cmp(&distance_b).unwrap()
+            };
+
+            build_data.rooms.as_mut().unwrap().sort_by(center_sort);
+        }
+    }
+}
+```
+
+You can modify your `random_builder` function to use this:
+
+```rust
+let mut builder = BuilderChain::new(new_depth);
+builder.start_with(BspDungeonBuilder::new());
+builder.with(RoomSorter::new(RoomSort::CENTRAL));
+builder.with(BspCorridors::new());
+builder.with(RoomBasedSpawner::new());
+builder.with(RoomBasedStairs::new());
+builder.with(RoomBasedStartingPosition::new());
+builder
+```
+
+And `cargo run` will give you something like this:
+
+![Screenshot](./c37-s10.gif).
+
+Notice how all roads now lead to the middle - for a *very* connected map!
 
 ## Wrap-Up
 

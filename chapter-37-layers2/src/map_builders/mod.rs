@@ -183,7 +183,7 @@ pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> 
 
     let mut builder = BuilderChain::new(new_depth);
     builder.start_with(BspDungeonBuilder::new());
-    builder.with(RoomSorter::new(RoomSort::BOTTOMMOST));
+    builder.with(RoomSorter::new(RoomSort::CENTRAL));
     builder.with(BspCorridors::new());
     builder.with(RoomBasedSpawner::new());
     builder.with(RoomBasedStairs::new());
