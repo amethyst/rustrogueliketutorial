@@ -145,6 +145,7 @@ fn random_initial_builder(rng: &mut rltk::RandomNumberGenerator) -> (Box<dyn Ini
 }
 
 pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> BuilderChain {
+    /*
     let mut builder = BuilderChain::new(new_depth);
     let (random_starter, has_rooms) = random_initial_builder(rng);
     builder.start_with(random_starter);
@@ -167,8 +168,16 @@ pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> 
         builder.with(PrefabBuilder::sectional(prefab_builder::prefab_sections::UNDERGROUND_FORT));
     }
 
-    builder.with(PrefabBuilder::vaults());
+    builder.with(PrefabBuilder::vaults());*/
 
+
+    let mut builder = BuilderChain::new(new_depth);
+    builder.start_with(SimpleMapBuilder::new());
+    builder.with(DLABuilder::heavy_erosion());
+    builder.with(AreaStartingPosition::new(XStart::CENTER, YStart::CENTER));
+    builder.with(CullUnreachable::new());
+    builder.with(VoronoiSpawning::new());
+    builder.with(DistantExit::new());
     builder
 }
 
