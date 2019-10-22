@@ -460,7 +460,7 @@ builder.with(RoomBasedStartingPosition::new());
 builder
 ```
 
-Testing it with `cargo run` should show you that rooms are built, and then corners:
+Testing it with `cargo run` should show you that rooms are built, and then corridors:
 
 ![Screenshot](./c37-s6.gif).
 
