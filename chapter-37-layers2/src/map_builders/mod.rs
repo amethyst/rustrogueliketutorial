@@ -18,6 +18,8 @@ mod area_starting_points;
 mod cull_unreachable;
 mod voronoi_spawning;
 mod distant_exit;
+mod room_exploder;
+mod room_corner_rounding;
 use distant_exit::DistantExit;
 use simple_map::SimpleMapBuilder;
 use bsp_dungeon::BspDungeonBuilder;
@@ -36,6 +38,8 @@ use voronoi_spawning::VoronoiSpawning;
 use maze::MazeBuilder;
 use dla::DLABuilder;
 use common::*;
+use room_exploder::RoomExploder;
+use room_corner_rounding::RoomCornerRounder;
 
 pub struct BuilderMap {
     pub spawn_list : Vec<(usize, String)>,
@@ -172,8 +176,8 @@ pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> 
 
 
     let mut builder = BuilderChain::new(new_depth);
-    builder.start_with(SimpleMapBuilder::new());
-    builder.with(DLABuilder::heavy_erosion());
+    builder.start_with(BspDungeonBuilder::new());
+    builder.with(RoomCornerRounder::new());
     builder.with(AreaStartingPosition::new(XStart::CENTER, YStart::CENTER));
     builder.with(CullUnreachable::new());
     builder.with(VoronoiSpawning::new());
