@@ -725,7 +725,185 @@ And `cargo run` will give you something like this:
 
 Notice how all roads now lead to the middle - for a *very* connected map!
 
-## Wrap-Up
+## Cleaning up our random builder
+
+Now that we're getting towards the end of this section (not there yet!), lets take the time to really take advantage of what we've built so far. We're going to completely restructure the way we're selecting a random build pattern.
+
+Room-based spawning isn't as embarrassingly predictable as it used to be, now. So lets make a function that exposes all of the room variety we've built so far:
+
+```rust
+fn random_room_builder(rng: &mut rltk::RandomNumberGenerator, builder : &mut BuilderChain) {
+    let build_roll = rng.roll_dice(1, 3);
+    match build_roll {
+        1 => builder.start_with(SimpleMapBuilder::new()),
+        2 => builder.start_with(BspDungeonBuilder::new()),
+        _ => builder.start_with(BspInteriorBuilder::new())
+    }
+
+    // BSP Interior still makes holes in the walls
+    if build_roll != 3 {
+        // Sort by one of the 5 available algorithms
+        let sort_roll = rng.roll_dice(1, 5);
+        match sort_roll {
+            1 => builder.with(RoomSorter::new(RoomSort::LEFTMOST)),
+            2 => builder.with(RoomSorter::new(RoomSort::RIGHTMOST)),
+            3 => builder.with(RoomSorter::new(RoomSort::TOPMOST)),
+            4 => builder.with(RoomSorter::new(RoomSort::BOTTOMMOST)),
+            _ => builder.with(RoomSorter::new(RoomSort::CENTRAL)),
+        }
+
+        let corridor_roll = rng.roll_dice(1, 2);
+        match corridor_roll {
+            1 => builder.with(DoglegCorridors::new()),
+            _ => builder.with(BspCorridors::new())
+        }
+
+        let modifier_roll = rng.roll_dice(1, 6);
+        match modifier_roll {
+            1 => builder.with(RoomExploder::new()),
+            2 => builder.with(RoomCornerRounder::new()),
+            _ => {}
+        }
+    }
+
+    let start_roll = rng.roll_dice(1, 2);
+    match start_roll {
+        1 => builder.with(RoomBasedStartingPosition::new()),
+        _ => {
+            let (start_x, start_y) = random_start_position(rng);
+            builder.with(AreaStartingPosition::new(start_x, start_y));
+        }
+    }
+
+    let exit_roll = rng.roll_dice(1, 2);
+    match exit_roll {
+        1 => builder.with(RoomBasedStairs::new()),
+        _ => builder.with(DistantExit::new())
+    }
+
+    let spawn_roll = rng.roll_dice(1, 2);
+    match spawn_roll {
+        1 => builder.with(RoomBasedSpawner::new()),
+        _ => builder.with(VoronoiSpawning::new())
+    }
+}
+```
+
+That's a big function, so we'll step through it. It's quite simple, just really spread out and full of branches:
+
+1. We roll 1d3, and pick from BSP Interior, Simple and BSP Dungeon map builders.
+2. If we didn't pick BSP Interior (which does a lot of stuff itself), we:
+    1. Randomly pick a room sorting algorithm.
+    2. Randomly pick one of the two corridor algorithms we now have.
+    3. Randomly pick (or ignore) a room exploder or corner-rounder.
+3. We randomly choose between a Room-based starting position, and an area-based starting position. For the latter, call `random_start_position` to pick between 3 X-axis and 3 Y-axis starting positions to favor.
+4. We randomly choose between a Room-based stairs placement and a "most distant from the start" exit.
+5. We randomly choose between Voronoi-area spawning and room-based spawning.
+
+So that function is all about rolling dice, and making a map! It's a *lot* of combinations, even ignoring the thousands of possible layouts that can come from each starting builder. There are:
+
+```
+2 <starting rooms with options> * 5 <sort> * 2 <corridor> * 3 <modifier> = 60 basic room options.
++1 for BSP Interior Dungeons = 61 room options.
+*2 <starting position options> = 122 room options.
+*2 <exit placements> = 244 room options.
+*2 <spawn options> = 488 room options!
+```
+
+So this function is offering **488 possible builder combinations!**.
+
+Now we'll create a function for the non-room spawners:
+
+```rust
+fn random_shape_builder(rng: &mut rltk::RandomNumberGenerator, builder : &mut BuilderChain) {
+    let builder_roll = rng.roll_dice(1, 16);
+    match builder_roll {
+        1 => builder.start_with(CellularAutomotaBuilder::new()),
+        2 => builder.start_with(DrunkardsWalkBuilder::open_area()),
+        3 => builder.start_with(DrunkardsWalkBuilder::open_halls()),
+        4 => builder.start_with(DrunkardsWalkBuilder::winding_passages()),
+        5 => builder.start_with(DrunkardsWalkBuilder::fat_passages()),
+        6 => builder.start_with(DrunkardsWalkBuilder::fearful_symmetry()),
+        7 => builder.start_with(MazeBuilder::new()),
+        8 => builder.start_with(DLABuilder::walk_inwards()),
+        9 => builder.start_with(DLABuilder::walk_outwards()),
+        10 => builder.start_with(DLABuilder::central_attractor()),
+        11 => builder.start_with(DLABuilder::insectoid()),
+        12 => builder.start_with(VoronoiCellBuilder::pythagoras()),
+        13 => builder.start_with(VoronoiCellBuilder::manhattan()),
+        _ => builder.start_with(PrefabBuilder::constant(prefab_builder::prefab_levels::WFC_POPULATED)),
+    }
+
+    // Set the start to the center and cull
+    builder.with(AreaStartingPosition::new(XStart::CENTER, YStart::CENTER));
+    builder.with(CullUnreachable::new());
+
+    // Now set the start to a random starting area
+    let (start_x, start_y) = random_start_position(rng);
+    builder.with(AreaStartingPosition::new(start_x, start_y));
+
+    // Setup an exit and spawn mobs
+    builder.with(VoronoiSpawning::new());
+    builder.with(DistantExit::new());
+}
+```
+
+This is similar to what we've done before, but with a twist: we now place the player centrally, cull unreachable areas, and *then* place the player in a random location. It's likely that the middle of a generated map is quite connected - so this gets rid of dead space, and minimizes the likelihood of starting in an "orphaned" section and culling the map down to just a few tiles.
+
+This also provides a lot of combinations, but not quite as many.
+
+```
+14 basic room options
+*1 Spawn option
+*1 Exit option
+*6 Starting options
+= 84 options.
+```
+
+So this function is offering **84 room builder combinations**.
+
+Finally, we pull it all together in `random_builder`:
+
+```rust
+pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> BuilderChain {
+    let mut builder = BuilderChain::new(new_depth);
+    let type_roll = rng.roll_dice(1, 2);
+    match type_roll {
+        1 => random_room_builder(rng, &mut builder),
+        _ => random_shape_builder(rng, &mut builder)
+    }
+
+    if rng.roll_dice(1, 3)==1 {
+        builder.with(WaveformCollapseBuilder::new());
+    }
+
+    if rng.roll_dice(1, 20)==1 {
+        builder.with(PrefabBuilder::sectional(prefab_builder::prefab_sections::UNDERGROUND_FORT));
+    }
+
+    builder.with(PrefabBuilder::vaults());
+
+    builder
+}
+```
+
+This is relatively straightforward. We randomly pick either a *room* or a *shape* builder, as defined above. There's a 1 in 3 chance we'll then run `Waveform Collapse` on it, and a 1 in 20 chance that we'll add a sectional to it. Finally, we try to spawn any vaults we might want to use.
+
+So how does our total combinatorial explosion look? Pretty good at this point:
+
+```
+488 possible room builders +
+84 possible shape builders =
+572 builder combinations.
+
+We might run Waveform Collapse, giving another 2 options:
+*2 = 1,144
+
+We might add a sectional:
+*2 = 2,288
+```
+
+So we now have **2,288 possible builder combinations**, just from the last few chapters. Combine that with a random seed, and it's increasingly unlikely that a player will see the exact same combination of maps on a run twice.
 
 ...
 

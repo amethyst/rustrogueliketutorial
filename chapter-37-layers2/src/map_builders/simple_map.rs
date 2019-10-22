@@ -1,5 +1,4 @@
-use super::{InitialMapBuilder, BuilderMap, Rect, apply_room_to_map, 
-    apply_horizontal_tunnel, apply_vertical_tunnel };
+use super::{InitialMapBuilder, BuilderMap, Rect, apply_room_to_map };
 use rltk::RandomNumberGenerator;
 
 pub struct SimpleMapBuilder {}
