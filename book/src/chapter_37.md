@@ -464,9 +464,208 @@ Testing it with `cargo run` should show you that rooms are built, and then corne
 
 ![Screenshot](./c37-s6.gif).
 
-## Allowing Corridor Content
+### Same again with BSP Dungeons
 
-## Playing with placement
+It's easy to do the same to our `BSPDungeonBuilder`. In `bsp_dungeon.rs`, we also trim out the corridor code. We'll just include the `build` function for brevity:
+
+```rust
+fn build(&mut self, rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+        let mut rooms : Vec<Rect> = Vec::new();
+        self.rects.clear();
+        self.rects.push( Rect::new(2, 2, build_data.map.width-5, build_data.map.height-5) ); // Start with a single map-sized rectangle
+        let first_room = self.rects[0];
+        self.add_subrects(first_room); // Divide the first room
+
+        // Up to 240 times, we get a random rectangle and divide it. If its possible to squeeze a
+        // room in there, we place it and add it to the rooms list.
+        let mut n_rooms = 0;
+        while n_rooms < 240 {
+            let rect = self.get_random_rect(rng);
+            let candidate = self.get_random_sub_rect(rect, rng);
+
+            if self.is_possible(candidate, &build_data.map) {
+                apply_room_to_map(&mut build_data.map, &candidate);
+                rooms.push(candidate);
+                self.add_subrects(rect);
+                build_data.take_snapshot();
+            }
+
+            n_rooms += 1;
+        }
+
+        build_data.rooms = Some(rooms);
+    }
+```
+
+We'll also move our BSP corridor code into a new builder, *without* the room sorting (we'll be touching on sorting in the next heading!). Create the new file `map_builders/rooms_corridors_bsp.rs`:
+
+```rust
+use super::{MetaMapBuilder, BuilderMap, Rect, draw_corridor };
+use rltk::RandomNumberGenerator;
+
+pub struct BspCorridors {}
+
+impl MetaMapBuilder for BspCorridors {
+    #[allow(dead_code)]
+    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap) {
+        self.corridors(rng, build_data);
+    }
+}
+
+impl BspCorridors {
+    #[allow(dead_code)]
+    pub fn new() -> Box<BspCorridors> {
+        Box::new(BspCorridors{})
+    }
+
+    fn corridors(&mut self, rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+        let rooms : Vec<Rect>;
+        if let Some(rooms_builder) = &build_data.rooms {
+            rooms = rooms_builder.clone();
+        } else {
+            panic!("BSP Corridors require a builder with room structures");
+        }
+
+        for i in 0..rooms.len()-1 {
+            let room = rooms[i];
+            let next_room = rooms[i+1];
+            let start_x = room.x1 + (rng.roll_dice(1, i32::abs(room.x1 - room.x2))-1);
+            let start_y = room.y1 + (rng.roll_dice(1, i32::abs(room.y1 - room.y2))-1);
+            let end_x = next_room.x1 + (rng.roll_dice(1, i32::abs(next_room.x1 - next_room.x2))-1);
+            let end_y = next_room.y1 + (rng.roll_dice(1, i32::abs(next_room.y1 - next_room.y2))-1);
+            draw_corridor(&mut build_data.map, start_x, start_y, end_x, end_y);
+            build_data.take_snapshot();
+        }
+    }
+}
+```
+
+Again, this *is* the corridor code from `BspDungeonBuilder` - just fitted into its own builder stage. You can prove that it works by modifying `random_builder` once again:
+
+```rust
+let mut builder = BuilderChain::new(new_depth);
+builder.start_with(BspDungeonBuilder::new());
+builder.with(BspCorridors::new());
+builder.with(RoomBasedSpawner::new());
+builder.with(RoomBasedStairs::new());
+builder.with(RoomBasedStartingPosition::new());
+builder
+```
+
+If you `cargo run` it, you'll see something like this:
+
+![Screenshot](./c37-s7.gif).
+
+That *looks* like it works - but if you pay close attention, you'll see why we sorted the rooms in the original algorithm: there's lots of overlap between rooms/corridors, and corridors don't trend towards the shortest path. This was deliberate - we need to make a `RoomSorter` builder, to give us some more map-building options. Lets create `map_builders/room_sorter.rs`:
+
+```rust
+use super::{MetaMapBuilder, BuilderMap };
+use rltk::RandomNumberGenerator;
+
+pub struct RoomSorter {}
+
+impl MetaMapBuilder for RoomSorter {
+    #[allow(dead_code)]
+    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap) {
+        self.sorter(rng, build_data);
+    }
+}
+
+impl RoomSorter {
+    #[allow(dead_code)]
+    pub fn new() -> Box<RoomSorter> {
+        Box::new(RoomSorter{})
+    }
+
+    fn sorter(&mut self, _rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+        build_data.rooms.as_mut().unwrap().sort_by(|a,b| a.x1.cmp(&b.x1) );
+    }
+}
+```
+
+This is *exactly* the same sorting we used before, and we can test it by inserting it into our builder sequence:
+
+```rust
+let mut builder = BuilderChain::new(new_depth);
+builder.start_with(BspDungeonBuilder::new());
+builder.with(RoomSorter::new());
+builder.with(BspCorridors::new());
+builder.with(RoomBasedSpawner::new());
+builder.with(RoomBasedStairs::new());
+builder.with(RoomBasedStartingPosition::new());
+builder
+```
+
+If you `cargo run` it, you'll see something like this:
+
+![Screenshot](./c37-s8.gif).
+
+That's better - we've restored the look and feel of our BSP Dungeon Builder!
+
+## More Room Sorting Options
+
+Breaking the sorter into its own step is only really useful if we're going to come up with some different ways to sort the rooms! We're currently sorting by the left-most entry - giving a map that gradually works its way East, but jumps around.
+
+Lets add an `enum` to give us more sorting options:
+
+```rust
+use super::{MetaMapBuilder, BuilderMap };
+use rltk::RandomNumberGenerator;
+
+pub enum RoomSort { LEFTMOST }
+
+pub struct RoomSorter {
+    sort_by : RoomSort
+}
+
+impl MetaMapBuilder for RoomSorter {
+    #[allow(dead_code)]
+    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap) {
+        self.sorter(rng, build_data);
+    }
+}
+
+impl RoomSorter {
+    #[allow(dead_code)]
+    pub fn new(sort_by : RoomSort) -> Box<RoomSorter> {
+        Box::new(RoomSorter{ sort_by })
+    }
+
+    fn sorter(&mut self, _rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+        match self.sort_by {
+            RoomSort::LEFTMOST => build_data.rooms.as_mut().unwrap().sort_by(|a,b| a.x1.cmp(&b.x1) )
+        }
+    }
+}
+```
+
+Simple enough: we store the sorting algorithm we wish to use in the structure, and `match` on it when it comes time to execute.
+
+Lets add `RIGHTMOST` - which will simply reverse the sort:
+
+```rust
+pub enum RoomSort { LEFTMOST, RIGHTMOST }
+...
+fn sorter(&mut self, _rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+    match self.sort_by {
+        RoomSort::LEFTMOST => build_data.rooms.as_mut().unwrap().sort_by(|a,b| a.x1.cmp(&b.x1) ),
+        RoomSort::RIGHTMOST => build_data.rooms.as_mut().unwrap().sort_by(|a,b| b.x2.cmp(&a.x2) )
+    }
+}
+```
+
+That's so simple it's basically cheating! Lets add TOPMOST and BOTTOMMOST as well, for completeness of this type of sort:
+
+```rust
+```
+
+Here's BOTTOMMOST in action:
+
+![Screenshot](./c37-s9.gif).
+
+See how that changes the character of the map without really changing the structure? It's amazing what you can do with little tweaks!
+
+## Wrap-Up
 
 ...
 
