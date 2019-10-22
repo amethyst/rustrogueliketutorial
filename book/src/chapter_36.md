@@ -16,10 +16,21 @@ The last few chapters have introduced an important concept in procedural generat
 
 Builder chaining is a pretty profound approach to procedurally generating maps, and gives us an opportunity to clean up a lot of the code we've built thus far. We want an interface similar to the way we build entities with `Specs`: a builder, onto which we can keep chaining builders and return it as an "executor" - ready to build the maps. We also want to stop builders from doing more than one thing - they should do one thing, and do it well (that's a good principle of design; it makes debugging easier, and reduces duplication). 
 
+There are two major types of builders: those that *just* make a map (and only make sense to run once), and those that *modify* an existing map. We'll name those `InitialMapBuilder` and `MetaMapBuilder` respectively.
 
+This gives us an idea of the syntax we want to employ:
 
+* Our *Builder* should have:
+    * ONE Initial Builder.
+    * *n* Meta Builders, that run in order.
 
-So we'll start by defining some new structures and interfaces. First of all, we'll make `BuilderMap` in `map_builders/mod.rs`:
+It makes sense then that the builder should have a `start_with` method that accepts the first map, and additional `with` methods to chain builders. The builders should be stored in a container that preserves the order in which they were added - a vector being the obvious choice.
+
+It would also make sense to no longer make individual builders responsible for setting up their predecessors; ideally, a builder shouldn't *have* to know anything about the process beyond what *it* does. So we need to abstract the process, and support snapshotting (so you can view your procedural generation progress) along the way.
+
+## Shared map state - the `BuilderMap`
+
+Rather than each builder defining their own copies of shared data, it would make sense to put the shared data in one place - and pass it around the chain as needed. So we'll start by defining some new structures and interfaces. First of all, we'll make `BuilderMap` in `map_builders/mod.rs`:
 
 ```rust
 pub struct BuilderMap {
@@ -31,7 +42,9 @@ pub struct BuilderMap {
 }
 ```
 
-You'll notice that this has all of the data we've been building into each map builder - and nothing else. It's intentionally generic - we'll be passing it to builders, and letting them work on it. Notice that all the fields are *public* - that's because we're passing it around, and there's a good chance that anything that touches it will need to access any/all of its contents. We're going to put one function into `BuilderMap` - to handle snapshotting development:
+You'll notice that this has all of the data we've been building into each map builder - and nothing else. It's intentionally generic - we'll be passing it to builders, and letting them work on it. Notice that all the fields are *public* - that's because we're passing it around, and there's a good chance that anything that touches it will need to access any/all of its contents. 
+
+The `BuilderMap` also needs to facilitate the task of taking snapshots for debugger viewing of maps as we work on algorithms. We're going to put one function into `BuilderMap` - to handle snapshotting development:
 
 ```rust
 impl BuilderMap {
@@ -49,7 +62,9 @@ impl BuilderMap {
 
 This is the *same* as the `take_snapshot` code we've been mixing into our builders. Since we're using a central repository of map building knowledge, we can promote it to apply to *all* our builders.
 
-With the basic data in place, we need a system for chaining builders. We'll add the `BuilderChain` type:
+## The `BuilderChain` - master builder to manage map creation
+
+Previously, we've passed `MapBuilder` classes around, each capable of building previous maps. Since we've concluded that this is a poor idea, and defined the syntax we *want*, we'll make a replacement. The `BuilderChain` is a *master* builder - it controls the whole build process. To this end, we'll add the `BuilderChain` type:
 
 ```rust
 pub struct BuilderChain {
@@ -133,7 +148,11 @@ Let's walk through the steps here:
 2. We call `build_map` on the starting map.
 3. For each meta-builder, we call `build_map` on it - in the order specified.
 
-That's not too bad! Lets look at the two trait interfaces we've defined, `InitialMapBuilder` and `MetaMapBuilder`. We made them separate types to force the user to only pick *one* starting builder, and not try to put any starting builders in the list of modification layers. The implementation for them is the same:
+That's not a bad syntax! It should enable us to chain builders together, and provide the required overview for constructing complicated, layered maps.
+
+## New Traits - `InitialMapBuilder` and `MetaMapBuilder`
+
+Lets look at the two trait interfaces we've defined, `InitialMapBuilder` and `MetaMapBuilder`. We made them separate types to force the user to only pick *one* starting builder, and not try to put any starting builders in the list of modification layers. The implementation for them is the same:
 
 ```rust
 pub trait InitialMapBuilder {
@@ -147,6 +166,8 @@ pub trait MetaMapBuilder {
 
 `build_map` takes a random-number generator (so we stop creating new ones everywhere!), and a mutable reference to the `BuilderMap` we are working on. So instead of each builder optionally calling the previous one, we're passing along state as we work on it.
 
+## Spawn Function
+
 We'll also want to implement our spawning system:
 
 ```rust
@@ -158,6 +179,8 @@ pub fn spawn_entities(&mut self, ecs : &mut World) {
 ```
 
 This is almost exactly the same code as our previous spawner in `MapBuilder`, but instead we're spawning from the `spawn_list` in our `build_data` structure. Otherwise, it's identical.
+
+## Random Builder - Take 1
 
 Finally, we'll modify `random_builder` to use our `SimpleMapBuilder` with some new types to break out the creation steps:
 
@@ -176,7 +199,7 @@ Notice that we're now taking a `RandomNumberGenerator` parameter. That's because
 
 ## Nice looking interface - but you broke stuff!
 
-In `main.rs`, we need to update our `generate_world_map` function to use the new interface:
+We now have the *interface* we want - a good map of how the system interacts with the world. Unfortunately, the world is still expecting the setup we had before - so we need to fix it. In `main.rs`, we need to update our `generate_world_map` function to use the new interface:
 
 ```rust
 fn generate_world_map(&mut self, new_depth : i32) {
@@ -273,7 +296,11 @@ impl SimpleMapBuilder {
 }
 ```
 
-Notice that we're only applying the `InitialMapBuilder` trait - `MapBuilder` is no more. We're also not setting a starting position, or spawning entities - those are now the purview of other builders in the chain. We've basically distilled it down to just the room building algorithm.
+This is basically the same as the old `SimpleMapBuilder`, but there's a number of changes:
+
+* Notice that we're only applying the `InitialMapBuilder` trait - `MapBuilder` is no more. 
+* We're also not setting a starting position, or spawning entities - those are now the purview of other builders in the chain. We've basically distilled it down to just the room building algorithm.
+* We set `build_data.rooms` to `Some(rooms)`. Not all algorithms support rooms - so our trait leaves the `Option` set to `None` until we fill it. Since the `SimpleMapBuilder` is all about rooms - we fill it in.
 
 ## Room-based spawning
 
@@ -310,6 +337,8 @@ impl RoomBasedSpawner {
 ```
 
 In this sub-module, we're implementing `MetaMapBuilder`: this builder requires that you already have a map. In `build`, we've copied the old room-based spawning code from `SimpleMapBuilder`, and modified it to operate on the builder's `rooms` structure. To that end, if we `if let` to obtain the inner value of the `Option`; if there isn't one, then we `panic!` and the program quits stating that room-based spawning is only going to work if you *have* rooms.
+
+We've reduced the functionality to just one task: if there are rooms, we spawn monsters in them.
 
 ## Room-based starting position
 
@@ -932,11 +961,11 @@ impl VoronoiSpawning {
 }
 ```
 
-TODO - text!
+This is almost exactly the same as the code from `common.rs` we were calling in various builders, just modified to work within the builder chaining/builder map framework.
 
 ### Spawning a distant exit
 
-TODO...
+Another commonly used piece of code generated a Dijkstra map of the level, starting at the player's entry point - and used that map to place the exit at the most distant location from the player. This was in `common.rs`, and we called it a lot. We'll turn this into a map building step; create `map_builders/distant_exit.rs`:
 
 ```rust
 use super::{MetaMapBuilder, BuilderMap, TileType};
@@ -987,6 +1016,8 @@ impl DistantExit {
 }
 ```
 
+Again, this is the same code we've used previously - just tweaked to match the new interface, so we won't go over it in detail.
+
 ### Testing Cellular Automata
 
 We've finally got all the pieces together, so lets give it a test. In `random_builder`, we'll use the new builder chains:
@@ -1005,7 +1036,7 @@ If you `cargo run` now, you'll get to play in a Cellular Automata generated map.
 
 ## Updating Drunkard's Walk
 
-You should have a pretty good picture of what we're doing now, so we'll gloss over `drunkard.rs`:
+You should have a pretty good picture of what we're doing now, so we'll gloss over the changes to `drunkard.rs`:
 
 ```rust
 use super::{InitialMapBuilder, BuilderMap, TileType, Position, paint, Symmetry};
@@ -1188,7 +1219,7 @@ You can `cargo run` and see it in action.
 
 ## Update Diffusion-Limited Aggregation
 
-This is more of the same, so we'll again just provide the code:
+This is more of the same, so we'll again just provide the code for `dla.rs`:
 
 ```rust
 use super::{InitialMapBuilder, BuilderMap, TileType, Position, Symmetry, paint};
@@ -1356,7 +1387,7 @@ impl DLABuilder {
 
 ## Updating the Maze Builder
 
-Once again, here's the code:
+Once again, here's the code for `maze.rs`:
 
 ```rust
 use super::{Map,  InitialMapBuilder, BuilderMap, TileType};
@@ -1560,7 +1591,7 @@ impl<'a> Grid<'a> {
 
 ## Updating Voronoi Maps
 
-Here's the updated code for the Voronoi builder:
+Here's the updated code for the Voronoi builder (in `voronoi.rs`):
 
 ```rust
 use super::{InitialMapBuilder, BuilderMap, TileType};
@@ -1681,7 +1712,7 @@ impl VoronoiCellBuilder {
 
 ## Updating Waveform Collapse
 
-Waveform Collapse is a slightly different one to port, because it already had a concept of a "previous builder". That's gone now (chaining is automatic), so there's a bit more to update. Waveform Collapse is a meta-builder, so it implements that trait, rather than the initial map builder. Overall, these changes make it a *lot* more simple!
+Waveform Collapse is a slightly different one to port, because it already had a concept of a "previous builder". That's gone now (chaining is automatic), so there's a bit more to update. Waveform Collapse is a meta-builder, so it implements that trait, rather than the initial map builder. Overall, these changes make it a *lot* more simple! The changes all take place in `waveform_collapse/mod.rs`:
 
 ```rust
 use super::{MetaMapBuilder, BuilderMap, Map, TileType};
@@ -1780,7 +1811,9 @@ builder
 
 ## Updating the Prefab Builder
 
-So here's a fun one. The `PrefabBuilder` is both an `InitialMapBuilder` and a `MetaMapBuilder` - with shared code between the two.
+So here's a fun one. The `PrefabBuilder` is both an `InitialMapBuilder` and a `MetaMapBuilder` - with shared code between the two. Fortunately, the traits are identical - so we can implement them both and call into the main `build` function from each! Rust is smart enough to figure out which one we're calling based on the trait we are storing - so `PrefabBuilder` can be placed in either an initial or a meta map builder.
+
+The changes all take place in `prefab_builder/mod.rs`:
 
 ```rust
 use super::{InitialMapBuilder, MetaMapBuilder, BuilderMap, TileType, Position};
@@ -2100,9 +2133,8 @@ impl PrefabBuilder {
 }
 ```
 
-TODO - text!
+You can test our recent changes with the following code in `random_builder` (in `map_builders/mod.rs`):
 
-test:
 ```rust
 let mut builder = BuilderChain::new(new_depth);
 builder.start_with(VoronoiCellBuilder::pythagoras());
@@ -2116,12 +2148,26 @@ builder.with(DistantExit::new());
 builder
 ```
 
-## .. eventually .. Delete the MapBuilder Trait and bits from common
+This demonstrates the power of our approach - we're putting a lot of functionality together from small building blocks. In this example we are:
 
-From common, delete: `remove_unreachable_areas_returning_most_distant` and `generate_voronoi_spawn_regions`
-Delete MapBuilder
+1. *Starting* with a map generated with the `VoronoiBuilder` in `Pythagoras` mode.
+2. *Modifying* the map with a `WaveformCollapseBuilder` run, which will rearrange the map like a jigsaw puzzle.
+3. *Modifying* the map by placing vaults, via the `PrefabBuilder` (in Vaults mode).
+4. *Modifying* the map with `AreaStartingPositions` indicating that we'd like to start near the middle of the map.
+5. *Modifying* the map to cull unreachable areas.
+6. *Modifying* the map to spawn entities using a Voronoi spawning method.
+7. *Modifying* the map to add an underground fortress, again using the `PrefabBuilder`.
+8. *Modifying* the map to add an exit staircase, in the most distant location.
+
+## Delete the MapBuilder Trait and bits from common
+
+Now that we have the builder mechanism in place, there's some old code we can delete. From `common.rs`, we can delete `remove_unreachable_areas_returning_most_distant` and `generate_voronoi_spawn_regions`; we've replaced them with builder steps.
+
+We can also open `map_builders/mod.rs` and delete the `MapBuilder` trait and its implementation: we've completely replaced it now.
 
 ## Randomize
+
+As usual, we'd like to go back to having map generation be random. We're going to break the process up into two steps. We'll make a new function, `random_initial_builder` that rolls a dice and picks the *starting* builder. It also returns a `bool`, indicating whether or not we picked an algorithm that provides room data. The basic function should look familiar, but we've got rid of all the `Box::new` calls - the constructors make boxes for us, now:
 
 ```rust
 fn random_initial_builder(rng: &mut rltk::RandomNumberGenerator) -> (Box<dyn InitialMapBuilder>, bool) {
@@ -2148,7 +2194,11 @@ fn random_initial_builder(rng: &mut rltk::RandomNumberGenerator) -> (Box<dyn Ini
     }
     result
 }
+```
 
+This is a pretty straightforward function - we roll a dice, match on the result table and return the builder and room information we picked. Now we'll modify our `random_builder` function to use it:
+
+```rust
 pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> BuilderChain {
     let mut builder = BuilderChain::new(new_depth);
     let (random_starter, has_rooms) = random_initial_builder(rng);
@@ -2177,6 +2227,25 @@ pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> 
     builder
 }
 ```
+
+This should look familiar. This function:
+
+1. Selects a random room using the function we just created.
+2. If the builder provides room data, we chain `RoomBasedSpawner`, `RoomBasedStairs` and `RoomBasedStartingPositiosn` - the three important steps required for room data.
+3. If the builder *doesn't* provide room information, we chain `AreaStartingPosition`, `CullUnreachable`, `VoronoiSpawning` and `DistantExit` - the defaults we used to apply inside each builder.
+4. We roll a 3-sided die; if it comes up 1 - we apply a `WaveformCollapseBuilder` to rearrange the map.
+5. We roll a 20-sided die; if it comes up 1 - we apply our Underground Fort prefab.
+6. We apply vault creation to the final map, giving a chance for pre-made rooms to appear.
+
+## Wrap-Up
+
+This has been an *enormous* chapter, but we've accomplished a lot:
+
+* We now have a consistent builder interface for chaining as many meta-map modifiers as we want to our build chain. This should let us build the maps we want.
+* Each builder now does *just one task* - so it's much more obvious where to go if you need to fix/debug them.
+* Builders are no longer responsible for making other builders - so we've culled a swathe of code and moved the opportunity for bugs to creep in to just one (simple) control flow.
+
+This sets the stage for the next chapter, which will look at more ways to use filters to modify your map.
 
 ...
 
