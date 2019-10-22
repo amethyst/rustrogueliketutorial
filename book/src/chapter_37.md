@@ -346,6 +346,124 @@ The result (if you `cargo run`) should be something like this:
 
 ## Decoupling Rooms and Corridors
 
+There's a fair amount of shared code between BSP room placement and "simple map" room placement - but with different corridor decision-making. What if we were to de-couple the stages - so the room algorithms decide where the rooms go, another algorithm draws them (possibly changing how they are drawn), and a third algorithm places corridors? Our improved framework supports this with just a bit of algorithm tweaking.
+
+Here's `simple_map.rs` with the corridor code removed:
+
+```rust
+use super::{InitialMapBuilder, BuilderMap, Rect, apply_room_to_map, 
+    apply_horizontal_tunnel, apply_vertical_tunnel };
+use rltk::RandomNumberGenerator;
+
+pub struct SimpleMapBuilder {}
+
+impl InitialMapBuilder for SimpleMapBuilder {
+    #[allow(dead_code)]
+    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap) {
+        self.build_rooms(rng, build_data);
+    }
+}
+
+impl SimpleMapBuilder {
+    #[allow(dead_code)]
+    pub fn new() -> Box<SimpleMapBuilder> {
+        Box::new(SimpleMapBuilder{})
+    }
+
+    fn build_rooms(&mut self, rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+        const MAX_ROOMS : i32 = 30;
+        const MIN_SIZE : i32 = 6;
+        const MAX_SIZE : i32 = 10;
+        let mut rooms : Vec<Rect> = Vec::new();
+
+        for _i in 0..MAX_ROOMS {
+            let w = rng.range(MIN_SIZE, MAX_SIZE);
+            let h = rng.range(MIN_SIZE, MAX_SIZE);
+            let x = rng.roll_dice(1, build_data.map.width - w - 1) - 1;
+            let y = rng.roll_dice(1, build_data.map.height - h - 1) - 1;
+            let new_room = Rect::new(x, y, w, h);
+            let mut ok = true;
+            for other_room in rooms.iter() {
+                if new_room.intersect(other_room) { ok = false }
+            }
+            if ok {
+                apply_room_to_map(&mut build_data.map, &new_room);
+                build_data.take_snapshot();
+
+                rooms.push(new_room);
+                build_data.take_snapshot();
+            }
+        }
+        build_data.rooms = Some(rooms);
+    }
+}
+```
+
+Other than renaming `rooms_and_corridors` to just `build_rooms`, the only change is removing the dice roll to place corridors.
+
+Lets make a new file, `map_builders/rooms_corridors_dogleg.rs`. This is where we place the corridors. For now, we'll use the same algorithm we just removed from `SimpleMapBuilder`:
+
+```rust
+use super::{MetaMapBuilder, BuilderMap, Rect, apply_horizontal_tunnel, apply_vertical_tunnel };
+use rltk::RandomNumberGenerator;
+
+pub struct DoglegCorridors {}
+
+impl MetaMapBuilder for DoglegCorridors {
+    #[allow(dead_code)]
+    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap) {
+        self.corridors(rng, build_data);
+    }
+}
+
+impl DoglegCorridors {
+    #[allow(dead_code)]
+    pub fn new() -> Box<DoglegCorridors> {
+        Box::new(DoglegCorridors{})
+    }
+
+    fn corridors(&mut self, rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+        let rooms : Vec<Rect>;
+        if let Some(rooms_builder) = &build_data.rooms {
+            rooms = rooms_builder.clone();
+        } else {
+            panic!("Dogleg Corridors require a builder with room structures");
+        }
+
+        for (i,room) in rooms.iter().enumerate() {
+            if i > 0 {
+                let (new_x, new_y) = room.center();
+                let (prev_x, prev_y) = rooms[rooms.len()-1].center();
+                if rng.range(0,1) == 1 {
+                    apply_horizontal_tunnel(&mut build_data.map, prev_x, new_x, prev_y);
+                    apply_vertical_tunnel(&mut build_data.map, prev_y, new_y, new_x);
+                } else {
+                    apply_vertical_tunnel(&mut build_data.map, prev_y, new_y, prev_x);
+                    apply_horizontal_tunnel(&mut build_data.map, prev_x, new_x, new_y);
+                }
+                build_data.take_snapshot();
+            }
+        }
+    }
+}
+```
+
+Again - this is the code we just removed, but placed into a new builder by itself. So there's really nothing new. We can adjust `random_builder` to test this code:
+
+```rust
+let mut builder = BuilderChain::new(new_depth);
+builder.start_with(SimpleMapBuilder::new());
+builder.with(DoglegCorridors::new());
+builder.with(RoomBasedSpawner::new());
+builder.with(RoomBasedStairs::new());
+builder.with(RoomBasedStartingPosition::new());
+builder
+```
+
+Testing it with `cargo run` should show you that rooms are built, and then corners:
+
+![Screenshot](./c37-s6.gif).
+
 ## Allowing Corridor Content
 
 ## Playing with placement

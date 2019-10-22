@@ -20,6 +20,7 @@ mod voronoi_spawning;
 mod distant_exit;
 mod room_exploder;
 mod room_corner_rounding;
+mod rooms_corridors_dogleg;
 use distant_exit::DistantExit;
 use simple_map::SimpleMapBuilder;
 use bsp_dungeon::BspDungeonBuilder;
@@ -40,6 +41,7 @@ use dla::DLABuilder;
 use common::*;
 use room_exploder::RoomExploder;
 use room_corner_rounding::RoomCornerRounder;
+use rooms_corridors_dogleg::DoglegCorridors;
 
 pub struct BuilderMap {
     pub spawn_list : Vec<(usize, String)>,
@@ -176,12 +178,11 @@ pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> 
 
 
     let mut builder = BuilderChain::new(new_depth);
-    builder.start_with(BspDungeonBuilder::new());
-    builder.with(RoomCornerRounder::new());
-    builder.with(AreaStartingPosition::new(XStart::CENTER, YStart::CENTER));
-    builder.with(CullUnreachable::new());
-    builder.with(VoronoiSpawning::new());
-    builder.with(DistantExit::new());
+    builder.start_with(SimpleMapBuilder::new());
+    builder.with(DoglegCorridors::new());
+    builder.with(RoomBasedSpawner::new());
+    builder.with(RoomBasedStairs::new());
+    builder.with(RoomBasedStartingPosition::new());
     builder
 }
 
