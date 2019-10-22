@@ -39,3 +39,4 @@
     - [Prefabs & Sectionals](./chapter_34.md)
     - [Room Vaults](./chapter_35.md)
     - [Layering/Builder Chaining](./chapter_36.md)
+    - [Fun With Layers](./chapter_37.md)
