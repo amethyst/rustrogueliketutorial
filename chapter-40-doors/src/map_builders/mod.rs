@@ -259,7 +259,7 @@ fn random_shape_builder(rng: &mut rltk::RandomNumberGenerator, builder : &mut Bu
 }
 
 pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> BuilderChain {
-    /*let mut builder = BuilderChain::new(new_depth);
+    let mut builder = BuilderChain::new(new_depth);
     let type_roll = rng.roll_dice(1, 2);
     match type_roll {
         1 => random_room_builder(rng, &mut builder),
@@ -274,19 +274,9 @@ pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> 
         builder.with(PrefabBuilder::sectional(prefab_builder::prefab_sections::UNDERGROUND_FORT));
     }
 
+    builder.with(DoorPlacement::new());
     builder.with(PrefabBuilder::vaults());
 
-    builder*/
-    let mut builder = BuilderChain::new(new_depth);
-    builder.start_with(SimpleMapBuilder::new());
-    builder.with(RoomDrawer::new());
-    builder.with(RoomSorter::new(RoomSort::LEFTMOST));
-    builder.with(StraightLineCorridors::new());
-    builder.with(RoomBasedSpawner::new());
-    builder.with(CorridorSpawner::new());
-    builder.with(RoomBasedStairs::new());
-    builder.with(RoomBasedStartingPosition::new());
-    builder.with(DoorPlacement::new());
     builder
 }
 

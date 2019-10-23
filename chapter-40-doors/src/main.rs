@@ -39,7 +39,7 @@ pub mod map_builders;
 
 rltk::add_wasm_support!();
 
-const SHOW_MAPGEN_VISUALIZER : bool = true;
+const SHOW_MAPGEN_VISUALIZER : bool = false;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { AwaitingInput, 
@@ -132,17 +132,18 @@ impl GameState for State {
             RunState::MapGeneration => {
                 if !SHOW_MAPGEN_VISUALIZER {
                     newrunstate = self.mapgen_next_state.unwrap();
-                }
-                ctx.cls();                
-                draw_map(&self.mapgen_history[self.mapgen_index], ctx);
+                } else {
+                    ctx.cls();                
+                    draw_map(&self.mapgen_history[self.mapgen_index], ctx);
 
-                self.mapgen_timer += ctx.frame_time_ms;
-                if self.mapgen_timer > 200.0 {
-                    self.mapgen_timer = 0.0;
-                    self.mapgen_index += 1;
-                    if self.mapgen_index == self.mapgen_history.len() {
-                        //self.mapgen_index -= 1;
-                        newrunstate = self.mapgen_next_state.unwrap();
+                    self.mapgen_timer += ctx.frame_time_ms;
+                    if self.mapgen_timer > 200.0 {
+                        self.mapgen_timer = 0.0;
+                        self.mapgen_index += 1;
+                        if self.mapgen_index == self.mapgen_history.len() {
+                            //self.mapgen_index -= 1;
+                            newrunstate = self.mapgen_next_state.unwrap();
+                        }
                     }
                 }
             }

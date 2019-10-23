@@ -88,22 +88,25 @@ This is an empty skeleton of a meta-builder. Let's deal with the easiest case fi
 
 ```rust
 fn door_possible(&self, build_data : &mut BuilderMap, idx : usize) -> bool {
+    let x = idx % build_data.map.width as usize;
+    let y = idx / build_data.map.width as usize;
+
     // Check for east-west door possibility
     if build_data.map.tiles[idx] == TileType::Floor &&
-        build_data.map.tiles[idx-1] == TileType::Floor &&
-        build_data.map.tiles[idx+1] == TileType::Floor &&
-        build_data.map.tiles[idx - build_data.map.width as usize] == TileType::Wall &&
-        build_data.map.tiles[idx + build_data.map.width as usize] == TileType::Wall
+        (x > 1 && build_data.map.tiles[idx-1] == TileType::Floor) &&
+        (x < build_data.map.width-2 && build_data.map.tiles[idx+1] == TileType::Floor) &&
+        (y > 1 && build_data.map.tiles[idx - build_data.map.width as usize] == TileType::Wall) &&
+        (y < build_data.map.height-2 && build_data.map.tiles[idx + build_data.map.width as usize] == TileType::Wall)
     {
         return true;
     }
 
     // Check for north-south door possibility
     if build_data.map.tiles[idx] == TileType::Floor &&
-        build_data.map.tiles[idx-1] == TileType::Wall &&
-        build_data.map.tiles[idx+1] == TileType::Wall &&
-        build_data.map.tiles[idx - build_data.map.width as usize] == TileType::Floor &&
-        build_data.map.tiles[idx + build_data.map.width as usize] == TileType::Floor
+        (x > 1 && build_data.map.tiles[idx-1] == TileType::Wall) &&
+        (x < build_data.map.width-2 && build_data.map.tiles[idx+1] == TileType::Wall) &&
+        (y > 1 && build_data.map.tiles[idx - build_data.map.width as usize] == TileType::Floor) &&
+        (y < build_data.map.height-2 && build_data.map.tiles[idx + build_data.map.width as usize] == TileType::Floor)
     {
         return true;
     }
@@ -150,6 +153,84 @@ builder
 We `cargo run` the project, and lo and behold - doors:
 
 ![Screenshot](./c40-s1.jpg).
+
+## What about other designs?
+
+It's certainly possible to scan other maps tile-by-tile looking to see if there is a possibility of a door appearing. Lets do that:
+
+```rust
+if let Some(halls_original) = &build_data.corridors {
+        let halls = halls_original.clone(); // To avoid nested borrowing
+        for hall in halls.iter() {
+            if hall.len() > 2 { // We aren't interested in tiny corridors
+                if self.door_possible(build_data, hall[0]) {
+                    build_data.spawn_list.push((hall[0], "Door".to_string()));
+                }
+            }
+        }
+    } else {        
+        // There are no corridors - scan for possible places
+        let tiles = build_data.map.tiles.clone();
+        for (i, tile) in tiles.iter().enumerate() {
+            if *tile == TileType::Floor && self.door_possible(build_data, i) {
+                build_data.spawn_list.push((i, "Door".to_string()));
+            }
+        }
+    }
+}
+```
+
+Modify your `random_builder` to use a map without hallways:
+
+```rust
+let mut builder = BuilderChain::new(new_depth);
+builder.start_with(BspInteriorBuilder::new());
+builder.with(DoorPlacement::new());
+builder.with(RoomBasedSpawner::new());
+builder.with(RoomBasedStairs::new());
+builder.with(RoomBasedStartingPosition::new());
+builder
+```
+
+You can `cargo run` the project and see doors:
+
+![Screenshot](./c40-s2.jpg).
+
+That worked rather well!
+
+## Restore our random function
+
+We'll but `random_builder` back to how it was, with one change: we'll add a door spawner as the final step:
+
+```rust
+pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> BuilderChain {
+    let mut builder = BuilderChain::new(new_depth);
+    let type_roll = rng.roll_dice(1, 2);
+    match type_roll {
+        1 => random_room_builder(rng, &mut builder),
+        _ => random_shape_builder(rng, &mut builder)
+    }
+
+    if rng.roll_dice(1, 3)==1 {
+        builder.with(WaveformCollapseBuilder::new());
+    }
+
+    if rng.roll_dice(1, 20)==1 {
+        builder.with(PrefabBuilder::sectional(prefab_builder::prefab_sections::UNDERGROUND_FORT));
+    }
+
+    builder.with(DoorPlacement::new());
+    builder.with(PrefabBuilder::vaults());
+
+    builder
+}
+```
+
+Notice that we added it *before* we add vaults; that's deliberate - the vault gets the chance to spawn and remove any doors that would interfere with it.
+
+## Making Doors Do Something
+
+Doors have a few properties: when closed, they block movement and visibility. They can be opened (optionally requiring unlocking, but we're not going there yet), at which point you can see through them just fine.
 
 ...
 
