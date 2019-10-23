@@ -24,7 +24,7 @@ impl<'a> System<'a> for VisibilitySystem {
             mut hidden, mut rng, mut log, names, blocks_visibility) = data;
 
         map.view_blocked.clear();
-        for (block_pos, block) in (&pos, &blocks_visibility).join() {
+        for (block_pos, _block) in (&pos, &blocks_visibility).join() {
             let idx = map.xy_idx(block_pos.x, block_pos.y);
             map.view_blocked.insert(idx);
         }

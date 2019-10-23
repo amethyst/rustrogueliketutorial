@@ -347,7 +347,7 @@ Right after that, we'll loop through all entities that block visibility and set 
 
 ```rust
 map.view_blocked.clear();
-for (block_pos, block) in (&pos, &blocks_visibility).join() {
+for (block_pos, _block) in (&pos, &blocks_visibility).join() {
     let idx = map.xy_idx(block_pos.x, block_pos.y);
     map.view_blocked.insert(idx);
 }
@@ -359,7 +359,55 @@ If you `cargo run` the project now, you'll see that doors now block line-of-sigh
 
 ### Handling Doors
 
-Moving against a closed door should open it, and then you can pass freely through.
+Moving against a closed door should open it, and then you can pass freely through (we could add an `open` and `close` command - maybe we will later - but for now lets keep it simple). Open up `player.rs`, and we'll add the functionality to `try_move_player`:
+
+```rust
+...
+let mut doors = ecs.write_storage::<Door>();
+let mut blocks_visibility = ecs.write_storage::<BlocksVisibility>();
+let mut blocks_movement = ecs.write_storage::<BlocksTile>();
+let mut renderables = ecs.write_storage::<Renderable>();
+
+for (entity, _player, pos, viewshed) in (&entities, &players, &mut positions, &mut viewsheds).join() {
+    let destination_idx = map.xy_idx(pos.x + delta_x, pos.y + delta_y);
+
+    for potential_target in map.tile_content[destination_idx].iter() {
+        let target = combat_stats.get(*potential_target);
+        if let Some(_target) = target {
+            wants_to_melee.insert(entity, WantsToMelee{ target: *potential_target }).expect("Add target failed");
+            return;
+        }
+        let door = doors.get_mut(*potential_target);
+        if let Some(door) = door {
+            door.open = true;
+            blocks_visibility.remove(*potential_target);
+            blocks_movement.remove(*potential_target);
+            let glyph = renderables.get_mut(*potential_target).unwrap();
+            glyph.glyph = rltk::to_cp437('/');
+            entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
+        }
+    }
+    ...
+```
+
+Let's walk through it:
+
+1. We obtain write access to the storages for `Door`, `BlocksVisibility`, `BlocksTile` and `Renderable`.
+2. We iterate potential targets in the movement tile, handling melee as before.
+3. We also check if potential targets are a door. If they are:
+    1. Set the door `open` variable to `true`.
+    2. Remove the `BlocksVisibility` entry - you can see through it, now (and so can monsters!).
+    3. Remove the `BlocksTile` entry - you can move through it, now (and so can everyone else!)
+    4. Update the glyph to show an open doorway.
+    5. We mark the entity as having moved (even though it didn't), forcing visibility updates.
+
+If you `cargo run` the project now, you get the desired functionality:
+
+![Screenshot](./c40-s4.gif).
+
+## Wrap-Up
+
+That's it for doors! There's definitely room for improvement in the future - but the feature is working.
 
 ...
 
