@@ -40,8 +40,8 @@
     - [Room Vaults](./chapter_35.md)
     - [Layering/Builder Chaining](./chapter_36.md)
     - [Fun With Layers](./chapter_37.md)
-    - [Room Builders](./chapter-38.md)
-    - (chapter 38 - corridors)
-    - (chapter 39 - doors)
-    - (chapter 40 - decouple camera and map)
+    - [Room Builders](./chapter_38.md)
+    - (chapter 39 - corridors)
+    - (chapter 40 - doors)
+    - (chapter 41 - decouple camera and map)
     
