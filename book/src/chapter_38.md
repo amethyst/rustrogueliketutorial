@@ -141,7 +141,8 @@ pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> 
     let mut builder = BuilderChain::new(new_depth);
     builder.start_with(SimpleMapBuilder::new());
     builder.with(RoomDrawer::new());
-    builder.with(DoglegCorridors::new());
+    builder.with(RoomSorter::new(RoomSort::LEFTMOST));
+    builder.with(BspCorridors::new());
     builder.with(RoomBasedSpawner::new());
     builder.with(RoomBasedStairs::new());
     builder.with(RoomBasedStartingPosition::new());
@@ -151,7 +152,7 @@ pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> 
 
 If you `cargo run` the project, you'll see our simple map builder run - just like before.
 
-## Different room shapes
+## Circular Rooms
 
 Simply moving the draw code out of the algorithm cleans things up, but doesn't gain us anything new. So we'll look at adding a few shape options for rooms. We'll start by moving the draw code out of the main loop and into its own function. Modify `room_draw.rs` as follows:
 
@@ -207,6 +208,86 @@ fn circle(&mut self, build_data : &mut BuilderMap, room : &Rect) {
 Now replace your call to `rectangle` with `circle`, type `cargo run` and enjoy the new room type:
 
 ![Screenshot](./c38-s1.gif).
+
+## Picking a shape at random
+
+It would be nice for round rooms to be an *occasional* feature. So we'll modify our `build` function to make roughly one quarter of rooms round:
+
+```rust
+fn build(&mut self, rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+    let rooms : Vec<Rect>;
+    if let Some(rooms_builder) = &build_data.rooms {
+        rooms = rooms_builder.clone();
+    } else {
+        panic!("Room Drawing require a builder with room structures");
+    }
+
+    for room in rooms.iter() {
+        let room_type = rng.roll_dice(1,4);
+        match room_type {
+            1 => self.circle(build_data, room),
+            _ => self.rectangle(build_data, room)
+        }
+        build_data.take_snapshot();
+    }
+}
+```
+
+If you `cargo run` the project now, you'll see something like this:
+
+![Screenshot](./c38-s2.gif).
+
+## Restoring randomness
+
+In `map_builders/mod.rs` uncomment the code and remove the test harness:
+
+```rust
+pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> BuilderChain {
+    let mut builder = BuilderChain::new(new_depth);
+    let type_roll = rng.roll_dice(1, 2);
+    match type_roll {
+        1 => random_room_builder(rng, &mut builder),
+        _ => random_shape_builder(rng, &mut builder)
+    }
+
+    if rng.roll_dice(1, 3)==1 {
+        builder.with(WaveformCollapseBuilder::new());
+    }
+
+    if rng.roll_dice(1, 20)==1 {
+        builder.with(PrefabBuilder::sectional(prefab_builder::prefab_sections::UNDERGROUND_FORT));
+    }
+
+    builder.with(PrefabBuilder::vaults());
+
+    builder
+}
+```
+
+In `random_room_builder`, we add in the room drawing:
+
+```rust
+...
+let sort_roll = rng.roll_dice(1, 5);
+match sort_roll {
+    1 => builder.with(RoomSorter::new(RoomSort::LEFTMOST)),
+    2 => builder.with(RoomSorter::new(RoomSort::RIGHTMOST)),
+    3 => builder.with(RoomSorter::new(RoomSort::TOPMOST)),
+    4 => builder.with(RoomSorter::new(RoomSort::BOTTOMMOST)),
+    _ => builder.with(RoomSorter::new(RoomSort::CENTRAL)),
+}
+
+builder.with(RoomDrawer::new());
+
+let corridor_roll = rng.roll_dice(1, 2);
+match corridor_roll {
+    1 => builder.with(DoglegCorridors::new()),
+    _ => builder.with(BspCorridors::new())
+}
+...
+```
+
+You can now get the full gamut of random room creation - but with the occasional round instead of rectangular room. That adds a bit more variety to the mix.
 
 ...
 

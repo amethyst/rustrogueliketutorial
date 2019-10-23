@@ -1,4 +1,4 @@
-use super::{InitialMapBuilder, BuilderMap, Map, Rect, TileType};
+use super::{InitialMapBuilder, BuilderMap, Rect, TileType};
 use rltk::RandomNumberGenerator;
 
 pub struct BspDungeonBuilder {
@@ -95,7 +95,7 @@ impl BspDungeonBuilder {
         result
     }
 
-    fn is_possible(&self, rect : Rect, build_data : &BuilderMap, rooms: &Vec<Rect>) -> bool {
+    fn is_possible(&self, rect : Rect, build_data : &BuilderMap, rooms: &[Rect]) -> bool {
         let mut expanded = rect;
         expanded.x1 -= 2;
         expanded.x2 += 2;

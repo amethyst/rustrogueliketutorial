@@ -1,4 +1,4 @@
-use super::{Map, Rect, TileType};
+use super::{Map, TileType};
 use std::cmp::{max, min};
 
 #[derive(PartialEq, Copy, Clone)]
