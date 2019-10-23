@@ -222,6 +222,303 @@ Then `cargo run` your project, you will see something like this:
 
 ![Screenshot](./c39-s2.gif).
 
+## Storing corridor locations
+
+We might want to do something with our corridor locations in the future, so lets store them. In `map_builders/mod.rs`, lets add a container to store our corridor locations. We'll make it an `Option`, so as to preserve compatibility with map types that don't use the concept:
+
+```rust
+pub struct BuilderMap {
+    pub spawn_list : Vec<(usize, String)>,
+    pub map : Map,
+    pub starting_position : Option<Position>,
+    pub rooms: Option<Vec<Rect>>,
+    pub corridors: Option<Vec<Vec<usize>>>,
+    pub history : Vec<Map>
+}
+```
+
+We also need to adjust the constructor to ensure that `corridors` isn't forgotten:
+
+```rust
+impl BuilderChain {
+    pub fn new(new_depth : i32) -> BuilderChain {
+        BuilderChain{
+            starter: None,
+            builders: Vec::new(),
+            build_data : BuilderMap {
+                spawn_list: Vec::new(),
+                map: Map::new(new_depth),
+                starting_position: None,
+                rooms: None,
+                corridors: None,
+                history : Vec::new()
+            }
+        }
+    }
+    ...
+```
+
+Now in `common.rs`, lets modify our corridor functions to return corridor placement information:
+
+```rust
+pub fn apply_horizontal_tunnel(map : &mut Map, x1:i32, x2:i32, y:i32) -> Vec<usize> {
+    let mut corridor = Vec::new();
+    for x in min(x1,x2) ..= max(x1,x2) {
+        let idx = map.xy_idx(x, y);
+        if idx > 0 && idx < map.width as usize * map.height as usize && map.tiles[idx as usize] != TileType::Floor {
+            map.tiles[idx as usize] = TileType::Floor;
+            corridor.push(idx as usize);
+        }
+    }
+    corridor
+}
+
+pub fn apply_vertical_tunnel(map : &mut Map, y1:i32, y2:i32, x:i32) -> Vec<usize> {
+    let mut corridor = Vec::new();
+    for y in min(y1,y2) ..= max(y1,y2) {
+        let idx = map.xy_idx(x, y);
+        if idx > 0 && idx < map.width as usize * map.height as usize && map.tiles[idx as usize] != TileType::Floor {
+            corridor.push(idx);
+            map.tiles[idx as usize] = TileType::Floor;
+        }
+    }
+    corridor
+}
+
+pub fn draw_corridor(map: &mut Map, x1:i32, y1:i32, x2:i32, y2:i32) -> Vec<usize> {
+    let mut corridor = Vec::new();
+    let mut x = x1;
+    let mut y = y1;
+
+    while x != x2 || y != y2 {
+        if x < x2 {
+            x += 1;
+        } else if x > x2 {
+            x -= 1;
+        } else if y < y2 {
+            y += 1;
+        } else if y > y2 {
+            y -= 1;
+        }
+
+        let idx = map.xy_idx(x, y);
+        if map.tiles[idx] != TileType::Floor {
+            corridor.push(idx);
+            map.tiles[idx] = TileType::Floor;
+        }
+    }
+
+    corridor
+}
+```
+
+Notice that they are essentially unchanged, but now return a vector of tile indices - and only add to them if the tile being modified is a floor? That will give us definitions for each leg of a corridor. Now we need to modify the corridor drawing algorithms to store this information. In `rooms_corridors_bsp.rs`, modify the `corridors` function to do this:
+
+```rust
+...
+let mut corridors : Vec<Vec<usize>> = Vec::new();
+for i in 0..rooms.len()-1 {
+    let room = rooms[i];
+    let next_room = rooms[i+1];
+    let start_x = room.x1 + (rng.roll_dice(1, i32::abs(room.x1 - room.x2))-1);
+    let start_y = room.y1 + (rng.roll_dice(1, i32::abs(room.y1 - room.y2))-1);
+    let end_x = next_room.x1 + (rng.roll_dice(1, i32::abs(next_room.x1 - next_room.x2))-1);
+    let end_y = next_room.y1 + (rng.roll_dice(1, i32::abs(next_room.y1 - next_room.y2))-1);
+    let corridor = draw_corridor(&mut build_data.map, start_x, start_y, end_x, end_y);
+    corridors.push(corridor);
+    build_data.take_snapshot();
+}
+build_data.corridors = Some(corridors);
+...
+```
+
+We do the same again in `rooms_corridors_dogleg.rs`:
+
+```rust
+...
+let mut corridors : Vec<Vec<usize>> = Vec::new();
+for (i,room) in rooms.iter().enumerate() {
+    if i > 0 {
+        let (new_x, new_y) = room.center();
+        let (prev_x, prev_y) = rooms[rooms.len()-1].center();
+        if rng.range(0,1) == 1 {
+            let mut c1 = apply_horizontal_tunnel(&mut build_data.map, prev_x, new_x, prev_y);
+            let mut c2 = apply_vertical_tunnel(&mut build_data.map, prev_y, new_y, new_x);
+            c1.append(&mut c2);
+            corridors.push(c1);
+        } else {
+            let mut c1 = apply_vertical_tunnel(&mut build_data.map, prev_y, new_y, prev_x);
+            let mut c2 = apply_horizontal_tunnel(&mut build_data.map, prev_x, new_x, new_y);
+            c1.append(&mut c2);
+            corridors.push(c1);
+        }
+        build_data.take_snapshot();
+    }
+}
+build_data.corridors = Some(corridors);
+...
+```
+
+You'll notice that we append the second leg of the corridor to the first, so we treat it as one long corridor rather than two hallways. We need to apply the same change to our newly minted `rooms_corridors_lines.rs`:
+
+```rust
+fn corridors(&mut self, _rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+    let rooms : Vec<Rect>;
+    if let Some(rooms_builder) = &build_data.rooms {
+        rooms = rooms_builder.clone();
+    } else {
+        panic!("Straight Line Corridors require a builder with room structures");
+    }
+
+    let mut connected : HashSet<usize> = HashSet::new();
+    let mut corridors : Vec<Vec<usize>> = Vec::new();
+    for (i,room) in rooms.iter().enumerate() {
+        let mut room_distance : Vec<(usize, f32)> = Vec::new();
+        let room_center = room.center();
+        let room_center_pt = rltk::Point::new(room_center.0, room_center.1);
+        for (j,other_room) in rooms.iter().enumerate() {
+            if i != j && !connected.contains(&j) {
+                let other_center = other_room.center();
+                let other_center_pt = rltk::Point::new(other_center.0, other_center.1);
+                let distance = rltk::DistanceAlg::Pythagoras.distance2d(
+                    room_center_pt,
+                    other_center_pt
+                );
+                room_distance.push((j, distance));
+            }
+        }
+
+        if !room_distance.is_empty() {
+            room_distance.sort_by(|a,b| a.1.partial_cmp(&b.1).unwrap() );
+            let dest_center = rooms[room_distance[0].0].center();
+            let line = rltk::line2d(
+                rltk::LineAlg::Bresenham, 
+                room_center_pt, 
+                rltk::Point::new(dest_center.0, dest_center.1)
+            );
+            let mut corridor = Vec::new();
+            for cell in line.iter() {
+                let idx = build_data.map.xy_idx(cell.x, cell.y);
+                if build_data.map.tiles[idx] != TileType::Floor {
+                    build_data.map.tiles[idx] = TileType::Floor;
+                    corridor.push(idx);
+                }
+            }
+            corridors.push(corridor);
+            connected.insert(i);
+            build_data.take_snapshot();
+        }
+    }
+    build_data.corridors = Some(corridors);
+}
+```
+
+We'll also do the same in `rooms_corridors_nearest.rs`:
+
+```rust
+fn corridors(&mut self, _rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+    let rooms : Vec<Rect>;
+    if let Some(rooms_builder) = &build_data.rooms {
+        rooms = rooms_builder.clone();
+    } else {
+        panic!("Nearest Corridors require a builder with room structures");
+    }
+
+    let mut connected : HashSet<usize> = HashSet::new();
+    let mut corridors : Vec<Vec<usize>> = Vec::new();
+    for (i,room) in rooms.iter().enumerate() {
+        let mut room_distance : Vec<(usize, f32)> = Vec::new();
+        let room_center = room.center();
+        let room_center_pt = rltk::Point::new(room_center.0, room_center.1);
+        for (j,other_room) in rooms.iter().enumerate() {
+            if i != j && !connected.contains(&j) {
+                let other_center = other_room.center();
+                let other_center_pt = rltk::Point::new(other_center.0, other_center.1);
+                let distance = rltk::DistanceAlg::Pythagoras.distance2d(
+                    room_center_pt,
+                    other_center_pt
+                );
+                room_distance.push((j, distance));
+            }
+        }
+
+        if !room_distance.is_empty() {
+            room_distance.sort_by(|a,b| a.1.partial_cmp(&b.1).unwrap() );
+            let dest_center = rooms[room_distance[0].0].center();
+            let corridor = draw_corridor(
+                &mut build_data.map,
+                room_center.0, room_center.1,
+                dest_center.0, dest_center.1
+            );
+            connected.insert(i);
+            build_data.take_snapshot();
+            corridors.push(corridor);
+        }
+    }
+    build_data.corridors = Some(corridors);
+}
+```
+
+## Ok, we have corridor data - now what?
+
+One obvious use is to be able to spawn entities inside corridors. We'll make the new `room_corridor_spawner.rs` to do just that:
+
+```rust
+use super::{MetaMapBuilder, BuilderMap, spawner};
+use rltk::RandomNumberGenerator;
+
+pub struct CorridorSpawner {}
+
+impl MetaMapBuilder for CorridorSpawner {
+    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap)  {
+        self.build(rng, build_data);
+    }
+}
+
+impl CorridorSpawner {
+    #[allow(dead_code)]
+    pub fn new() -> Box<CorridorSpawner> {
+        Box::new(CorridorSpawner{})
+    }
+
+    fn build(&mut self, rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+        if let Some(corridors) = &build_data.corridors {
+            for c in corridors.iter() {
+                let depth = build_data.map.depth;
+                spawner::spawn_region(&build_data.map, 
+                    rng, 
+                    &c, 
+                    depth, 
+                    &mut build_data.spawn_list);
+            }
+        } else {
+            panic!("Corridor Based Spawning only works after corridors have been created");
+        }
+    }
+}
+```
+
+This was based off of `room_based_spawner.rs` - copy/pasted and changed the names! Then the `if let` for `rooms` was replaced with `corridors` and instead of spawning per room - we pass the corridor to `spawn_region`. Entities now spawn in the hallways.
+
+You can test this by adding the spawner to your `random_builder`:
+
+```rust
+let mut builder = BuilderChain::new(new_depth);
+builder.start_with(SimpleMapBuilder::new());
+builder.with(RoomDrawer::new());
+builder.with(RoomSorter::new(RoomSort::LEFTMOST));
+builder.with(StraightLineCorridors::new());
+builder.with(RoomBasedSpawner::new());
+builder.with(CorridorSpawner::new());
+builder.with(RoomBasedStairs::new());
+builder.with(RoomBasedStartingPosition::new());
+builder
+```
+
+Once you are playing, you can now find entities inside your corridors:
+
+![Screenshot](./c39-s3.jpg).
+
 ...
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-39-halls)**

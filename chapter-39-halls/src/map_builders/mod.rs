@@ -26,6 +26,7 @@ mod room_sorter;
 mod room_draw;
 mod rooms_corridors_nearest;
 mod rooms_corridors_lines;
+mod room_corridor_spawner;
 use distant_exit::DistantExit;
 use simple_map::SimpleMapBuilder;
 use bsp_dungeon::BspDungeonBuilder;
@@ -52,12 +53,14 @@ use room_sorter::{RoomSorter, RoomSort};
 use room_draw::RoomDrawer;
 use rooms_corridors_nearest::NearestCorridors;
 use rooms_corridors_lines::StraightLineCorridors;
+use room_corridor_spawner::CorridorSpawner;
 
 pub struct BuilderMap {
     pub spawn_list : Vec<(usize, String)>,
     pub map : Map,
     pub starting_position : Option<Position>,
     pub rooms: Option<Vec<Rect>>,
+    pub corridors: Option<Vec<Vec<usize>>>,
     pub history : Vec<Map>
 }
 
@@ -89,6 +92,7 @@ impl BuilderChain {
                 map: Map::new(new_depth),
                 starting_position: None,
                 rooms: None,
+                corridors: None,
                 history : Vec::new()
             }
         }
@@ -272,6 +276,7 @@ pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> 
     builder.with(RoomSorter::new(RoomSort::LEFTMOST));
     builder.with(StraightLineCorridors::new());
     builder.with(RoomBasedSpawner::new());
+    builder.with(CorridorSpawner::new());
     builder.with(RoomBasedStairs::new());
     builder.with(RoomBasedStartingPosition::new());
     builder
