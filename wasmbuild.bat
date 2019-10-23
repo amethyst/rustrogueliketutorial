@@ -36,6 +36,7 @@ CALL :Stage chapter-34-vaults
 CALL :Stage chapter-35-vaults2
 CALL :Stage chapter-36-layers
 CALL :Stage chapter-37-layers2
+CALL :Stage chapter-38-rooms
 
 REM Publish or perish
 cd book\book\wasm
