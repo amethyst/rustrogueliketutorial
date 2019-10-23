@@ -5,7 +5,8 @@ use specs::prelude::*;
 use super::{CombatStats, Player, Renderable, Name, Position, Viewshed, Monster, BlocksTile, Rect, Item, 
     Consumable, Ranged, ProvidesHealing, map::MAPWIDTH, InflictsDamage, AreaOfEffect, Confusion, SerializeMe,
     random_table::RandomTable, EquipmentSlot, Equippable, MeleePowerBonus, DefenseBonus, HungerClock,
-    HungerState, ProvidesFood, MagicMapper, Hidden, EntryTrigger, SingleActivation, Map, TileType };
+    HungerState, ProvidesFood, MagicMapper, Hidden, EntryTrigger, SingleActivation, Map, TileType,
+    Door, BlocksVisibility };
 use crate::specs::saveload::{MarkedBuilder, SimpleMarker};
 use std::collections::HashMap;
 
@@ -338,6 +339,9 @@ fn door(ecs: &mut World, x: i32, y: i32) {
             render_order: 2
         })
         .with(Name{ name : "Door".to_string() })
+        .with(BlocksTile{})
+        .with(BlocksVisibility{})
+        .with(Door{open: false})
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }

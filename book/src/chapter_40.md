@@ -232,6 +232,135 @@ Notice that we added it *before* we add vaults; that's deliberate - the vault ge
 
 Doors have a few properties: when closed, they block movement and visibility. They can be opened (optionally requiring unlocking, but we're not going there yet), at which point you can see through them just fine.
 
+Let's start by "blocking out" (suggesting!) some new components. In `spawner.rs`:
+
+```rust
+fn door(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position{ x, y })
+        .with(Renderable{
+            glyph: rltk::to_cp437('+'),
+            fg: RGB::named(rltk::CHOCOLATE),
+            bg: RGB::named(rltk::BLACK),
+            render_order: 2
+        })
+        .with(Name{ name : "Door".to_string() })
+        .with(BlocksTile{})
+        .with(BlocksVisibility{})
+        .with(Door{open: false})
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+```
+
+There are two new component types here!
+
+* `BlocksVisibility` will do what it says - prevent you (and monsters) from seeing through it. It's nice to have this as a component rather than a special-case, because now you can make *anything* block visibility. A really big treasure chest, a giant or even a moving wall - it makes sense to be able to prevent seeing through them.
+* `Door` - which denotes that it is a door, and will need its own handling.
+
+Open up `components.rs` and we'll make these new components:
+
+```rust
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct BlocksVisibility {}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct Door { 
+    pub open: bool 
+}
+```
+
+*As with all components, don't forget to register them both in `main` and in `saveload_system.rs`*.
+
+### Extending The Visibility System to Handle Entities Blocking Your View
+
+Since field of view is handled by RLTK, which relies upon a `Map` trait - we need to extend our map class to handle the concept. Add a new field:
+
+```rust
+#[derive(Default, Serialize, Deserialize, Clone)]
+pub struct Map {
+    pub tiles : Vec<TileType>,
+    pub width : i32,
+    pub height : i32,
+    pub revealed_tiles : Vec<bool>,
+    pub visible_tiles : Vec<bool>,
+    pub blocked : Vec<bool>,
+    pub depth : i32,
+    pub bloodstains : HashSet<usize>,
+    pub view_blocked : HashSet<usize>,
+
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    pub tile_content : Vec<Vec<Entity>>
+}
+```
+
+And update the constructor so it can't be forgotten:
+
+```rust
+pub fn new(new_depth : i32) -> Map {
+    Map{
+        tiles : vec![TileType::Wall; MAPCOUNT],
+        width : MAPWIDTH as i32,
+        height: MAPHEIGHT as i32,
+        revealed_tiles : vec![false; MAPCOUNT],
+        visible_tiles : vec![false; MAPCOUNT],
+        blocked : vec![false; MAPCOUNT],
+        tile_content : vec![Vec::new(); MAPCOUNT],
+        depth: new_depth,
+        bloodstains: HashSet::new(),
+        view_blocked : HashSet::new()
+    }
+}
+```
+
+Now we'll update the `is_opaque` function (used by field-of-view) to include a check against it:
+
+```rust
+fn is_opaque(&self, idx:i32) -> bool {
+    let idx_u = idx as usize;
+    self.tiles[idx_u] == TileType::Wall || self.view_blocked.contains(&idx_u)
+}
+```
+
+We'll also have to visit `visibility_system.rs` to populate this data. We'll need to extend the system's data to retrieve a little more:
+
+```rust
+type SystemData = ( WriteExpect<'a, Map>,
+                        Entities<'a>,
+                        WriteStorage<'a, Viewshed>, 
+                        ReadStorage<'a, Position>,
+                        ReadStorage<'a, Player>,
+                        WriteStorage<'a, Hidden>,
+                        WriteExpect<'a, rltk::RandomNumberGenerator>,
+                        WriteExpect<'a, GameLog>,
+                        ReadStorage<'a, Name>,
+                        ReadStorage<'a, BlocksVisibility>);
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (mut map, entities, mut viewshed, pos, player, 
+            mut hidden, mut rng, mut log, names, blocks_visibility) = data;
+        ...
+```
+
+Right after that, we'll loop through all entities that block visibility and set their index in the `view_blocked` `HashSet`:
+
+```rust
+map.view_blocked.clear();
+for (block_pos, block) in (&pos, &blocks_visibility).join() {
+    let idx = map.xy_idx(block_pos.x, block_pos.y);
+    map.view_blocked.insert(idx);
+}
+```
+
+If you `cargo run` the project now, you'll see that doors now block line-of-sight:
+
+![Screenshot](./c40-s3.jpg).
+
+### Handling Doors
+
+Moving against a closed door should open it, and then you can pass freely through.
+
 ...
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-40-doors)**

@@ -92,6 +92,14 @@ pub struct ProvidesHealing {
     pub heal_amount : i32
 }
 
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct BlocksVisibility {}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct Door { 
+    pub open: bool 
+}
+
 // See wrapper below for serialization
 #[derive(Component, Debug)]
 pub struct InBackpack {
