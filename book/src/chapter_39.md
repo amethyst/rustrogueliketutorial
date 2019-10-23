@@ -519,6 +519,54 @@ Once you are playing, you can now find entities inside your corridors:
 
 ![Screenshot](./c39-s3.jpg).
 
+## Restoring Randomness
+
+Once again, it's the end of a sub-section - so we'll make `random_builder` random once more, but utilizing our new stuff!
+
+Start by uncommenting the code in `random_builder`, and removing the test harness:
+
+```rust
+pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> BuilderChain {
+    let mut builder = BuilderChain::new(new_depth);
+    let type_roll = rng.roll_dice(1, 2);
+    match type_roll {
+        1 => random_room_builder(rng, &mut builder),
+        _ => random_shape_builder(rng, &mut builder)
+    }
+
+    if rng.roll_dice(1, 3)==1 {
+        builder.with(WaveformCollapseBuilder::new());
+    }
+
+    if rng.roll_dice(1, 20)==1 {
+        builder.with(PrefabBuilder::sectional(prefab_builder::prefab_sections::UNDERGROUND_FORT));
+    }
+
+    builder.with(PrefabBuilder::vaults());
+
+    builder
+}
+```
+
+Since everything we've worked on here has been *room* based, we'll also modify `random_room_builder` to include it. We'll expand the corridor related section:
+
+```rust
+let corridor_roll = rng.roll_dice(1, 4);
+match corridor_roll {
+    1 => builder.with(DoglegCorridors::new()),
+    2 => builder.with(NearestCorridors::new()),
+    3 => builder.with(StraightLineCorridors::new()),
+    _ => builder.with(BspCorridors::new())
+}
+
+let cspawn_roll = rng.roll_dice(1, 2);
+if cspawn_roll == 1 {
+    builder.with(CorridorSpawner::new());
+}
+```
+
+So we've added an equal chance of straight-line corridors and nearest-neighbor corridors, and 50% of the time it will spawn entities in hallways.
+
 ...
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-39-halls)**
