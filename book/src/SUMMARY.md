@@ -41,7 +41,7 @@
     - [Layering/Builder Chaining](./chapter_36.md)
     - [Fun With Layers](./chapter_37.md)
     - [Room Builders](./chapter_38.md)
-    - (chapter 39 - corridors)
+    - [Better Corridors](./chapter_39.md)
     - (chapter 40 - doors)
     - (chapter 41 - decouple camera and map)
     
