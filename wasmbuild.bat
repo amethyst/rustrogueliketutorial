@@ -38,6 +38,7 @@ CALL :Stage chapter-36-layers
 CALL :Stage chapter-37-layers2
 CALL :Stage chapter-38-rooms
 CALL :Stage chapter-39-halls
+CALL :Stage chapter-40-doors
 
 REM Publish or perish
 cd book\book\wasm

@@ -42,6 +42,6 @@
     - [Fun With Layers](./chapter_37.md)
     - [Room Builders](./chapter_38.md)
     - [Better Corridors](./chapter_39.md)
-    - (chapter 40 - doors)
+    - [Doors](./chapter_40.md)
     - (chapter 41 - decouple camera and map)
     
