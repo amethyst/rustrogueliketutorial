@@ -44,4 +44,4 @@
     - [Better Corridors](./chapter_39.md)
     - [Doors](./chapter_40.md)
     - [Decouple map size from screen size](./chapter_41.md)
-    
+    - [Section 3 Conclusion](./chapter_42.md)

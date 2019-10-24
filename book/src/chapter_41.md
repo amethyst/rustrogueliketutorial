@@ -594,7 +594,63 @@ Voila - you are roaming a huge map! A definite downside of a huge map, and rolli
 
 If you keep the huge map, open `main.rs` and set `const SHOW_MAPGEN_VISUALIZER : bool = false;` to `true` - congratulations, you just crashed the game! That's because we never adjusted the `draw_map` function that we are using to verify map creation to handle maps of any size other than the original. Oops. This does bring up a problem: on an ASCII terminal we can't simply render the whole map and scale it down to fit. So we'll settle for rendering a portion of the map.
 
+We'll add a new function to `camera.rs`:
 
+```rust
+pub fn render_debug_map(map : &Map, ctx : &mut Rltk) {
+    let player_pos = Point::new(map.width / 2, map.height / 2);
+    let (x_chars, y_chars) = ctx.get_char_size();
+
+    let center_x = (x_chars / 2) as i32;
+    let center_y = (y_chars / 2) as i32;
+
+    let min_x = player_pos.x - center_x;
+    let max_x = min_x + x_chars as i32;
+    let min_y = player_pos.y - center_y;
+    let max_y = min_y + y_chars as i32;
+
+    let map_width = map.width-1;
+    let map_height = map.height-1;
+
+    let mut y = 0;
+    for ty in min_y .. max_y {
+        let mut x = 0;
+        for tx in min_x .. max_x {
+            if tx > 0 && tx < map_width && ty > 0 && ty < map_height {
+                let idx = map.xy_idx(tx, ty);
+                if map.revealed_tiles[idx] {
+                    let (glyph, fg, bg) = get_tile_glyph(idx, &*map);
+                    ctx.set(x, y, fg, bg, glyph);
+                }
+            } else if SHOW_BOUNDARIES {
+                ctx.set(x, y, RGB::named(rltk::GRAY), RGB::named(rltk::BLACK), rltk::to_cp437('·'));                
+            }
+            x += 1;
+        }
+        y += 1;
+    }
+}
+```
+
+This is a lot like our regular map drawing, but we lock the camera to the middle of the map - and don't render entities.
+
+In `main.rs`, replace the call to `draw_map` with:
+
+```rust
+camera::render_debug_map(&self.mapgen_history[self.mapgen_index], ctx);
+```
+
+Now you can go into `map.rs` and remove `draw_map`, `wall_glyph` and `is_revealed_and_wall` completely.
+
+## Wrap-Up
+
+We'll set the map size back to something reasonable in `main.rs`:
+
+```rust
+let mut builder = map_builders::random_builder(new_depth, &mut rng, 80, 50);
+```
+
+And - we're done! In this chapter, we've made it possible to have any size of map you like. We've reverted to a "normal" size at the end - but we'll find this feature *very* useful in the future. We can scale maps up or down - and the system won't mind at all.
 
 ...
 
