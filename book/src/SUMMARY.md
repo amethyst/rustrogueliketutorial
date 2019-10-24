@@ -43,5 +43,5 @@
     - [Room Builders](./chapter_38.md)
     - [Better Corridors](./chapter_39.md)
     - [Doors](./chapter_40.md)
-    - (chapter 41 - decouple camera and map)
+    - [Decouple map size from screen size](./chapter_41.md)
     

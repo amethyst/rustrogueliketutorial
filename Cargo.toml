@@ -55,7 +55,8 @@ members = [
     "chapter-37-layers2",
     "chapter-38-rooms",
     "chapter-39-halls",
-    "chapter-40-doors"
+    "chapter-40-doors",
+    "chapter-41-camera"
     ]
 
 [profile.dev]
