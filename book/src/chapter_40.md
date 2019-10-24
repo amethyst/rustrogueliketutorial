@@ -384,7 +384,7 @@ for (entity, _player, pos, viewshed) in (&entities, &players, &mut positions, &m
             blocks_movement.remove(*potential_target);
             let glyph = renderables.get_mut(*potential_target).unwrap();
             glyph.glyph = rltk::to_cp437('/');
-            entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
+            viewshed.dirty = true;
         }
     }
     ...
@@ -399,7 +399,7 @@ Let's walk through it:
     2. Remove the `BlocksVisibility` entry - you can see through it, now (and so can monsters!).
     3. Remove the `BlocksTile` entry - you can move through it, now (and so can everyone else!)
     4. Update the glyph to show an open doorway.
-    5. We mark the entity as having moved (even though it didn't), forcing visibility updates.
+    5. We mark the viewshed as dirty, to now reveal what you can see through the door.
 
 If you `cargo run` the project now, you get the desired functionality:
 

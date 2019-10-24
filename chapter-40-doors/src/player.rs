@@ -37,7 +37,7 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
                 blocks_movement.remove(*potential_target);
                 let glyph = renderables.get_mut(*potential_target).unwrap();
                 glyph.glyph = rltk::to_cp437('/');
-                entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
+                viewshed.dirty = true;
             }
         }
 
