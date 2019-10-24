@@ -392,6 +392,210 @@ for vis in viewshed.visible_tiles.iter() {
 
 This will be merged back into the tutorial soon - this addendum is to let you know we fixed it.
 
+## Variable map sizes
+
+Now that our map isn't directly linked to our screen, we can have maps of any size we want! A word of caution: if you go with a *huge* map, it will take your player a *really long time* to explore it all - and it becomes more and more challenging to ensure that all of the map is interesting enough to want to visit it.
+
+### An easy start
+
+Let's start with the simplest possible case: changing the size of the map globally. Go to `map.rs`, and find the constants `MAPWIDTH`, `MAPHEIGHT` and `MAPCOUNT`. Lets change them to a square map:
+
+```rust
+pub const MAPWIDTH : usize = 64;
+pub const MAPHEIGHT : usize = 64;
+pub const MAPCOUNT : usize = MAPHEIGHT * MAPWIDTH;
+```
+
+If you `cargo run` the project, it should work - we've been pretty good about using either `map.width`/`map.height` or these constants throughout the program. The algorithms run, and try to make a map for your use. Here's our player wandering a 64x64 map - note how the sides of the map are displayed as out-of-bounds:
+
+![Screenshot](./c41-s4.jpg).
+
+### Harder: removing the constants
+
+Now *delete* the three constants from `map.rs`, and watch your IDE paint the world red. Before we start fixing things, we'll add a bit more red:
+
+```rust
+/// Generates an empty map, consisting entirely of solid walls
+pub fn new(new_depth : i32, width: i32, height: i32) -> Map {
+    Map{
+        tiles : vec![TileType::Wall; MAPCOUNT],
+        width,
+        height,
+        revealed_tiles : vec![false; MAPCOUNT],
+        visible_tiles : vec![false; MAPCOUNT],
+        blocked : vec![false; MAPCOUNT],
+        tile_content : vec![Vec::new(); MAPCOUNT],
+        depth: new_depth,
+        bloodstains: HashSet::new(),
+        view_blocked : HashSet::new()
+    }
+}
+```
+
+Now creating a map requires that you specify a size as well as depth. We can make a start on fixing some errors by changing the constructor once more to *use* the specified size in creating the various vectors:
+
+```rust
+pub fn new(new_depth : i32, width: i32, height: i32) -> Map {
+    let map_tile_count = (width*height) as usize;
+    Map{
+        tiles : vec![TileType::Wall; map_tile_count],
+        width,
+        height,
+        revealed_tiles : vec![false; map_tile_count],
+        visible_tiles : vec![false; map_tile_count],
+        blocked : vec![false; map_tile_count],
+        tile_content : vec![Vec::new(); map_tile_count],
+        depth: new_depth,
+        bloodstains: HashSet::new(),
+        view_blocked : HashSet::new()
+    }
+}
+```
+
+`map.rs` also has an error in `draw_map`. Fortunately, it's an easy fix:
+
+```rust
+...
+// Move the coordinates
+x += 1;
+if x > (map.width * map.height) as i32-1 {
+    x = 0;
+    y += 1;
+}
+...
+```
+
+`spawner.rs` is an equally easy fix. Remove `map::MAPWIDTH` from the list of `use` imports at the beginning, and find the `spawn_entity` function. We can obtain the map width from the ECS directly:
+
+```rust
+pub fn spawn_entity(ecs: &mut World, spawn : &(&usize, &String)) {
+    let map = ecs.fetch::<Map>();
+    let width = map.width as usize;
+    let x = (*spawn.0 % width) as i32;
+    let y = (*spawn.0 / width) as i32;
+    std::mem::drop(map);
+    ...
+```
+
+The issue in `saveload_system.rs` is also easy to fix. Around line 102, you can replace `MAPCOUNT` with `(worldmap.width * worldmap.height) as usize`:
+
+```rust
+...
+let mut deleteme : Option<Entity> = None;
+{
+    let entities = ecs.entities();
+    let helper = ecs.read_storage::<SerializationHelper>();
+    let player = ecs.read_storage::<Player>();
+    let position = ecs.read_storage::<Position>();
+    for (e,h) in (&entities, &helper).join() {
+        let mut worldmap = ecs.write_resource::<super::map::Map>();
+        *worldmap = h.map.clone();
+        worldmap.tile_content = vec![Vec::new(); (worldmap.height * worldmap.width) as usize];
+        deleteme = Some(e);
+    }
+    ...
+```
+
+`main.rs` also needs some help. In `tick`, the `MagicMapReveal` code is a simple fix:
+
+```rust
+RunState::MagicMapReveal{row} => {
+    let mut map = self.ecs.fetch_mut::<Map>();
+    for x in 0..map.width {
+        let idx = map.xy_idx(x as i32,row);
+        map.revealed_tiles[idx] = true;
+    }
+    if row == map.height-1 {
+        newrunstate = RunState::MonsterTurn;
+    } else {
+        newrunstate = RunState::MagicMapReveal{ row: row+1 };
+    }
+}
+```
+
+Down around line 451, we're also making a map with `map::new(1)`. We want to introduce a map size here, so we go with `map::new(1, 64, 64)` (the size doesn't really matter since we'll be replacing it with a map from a builder anyway).
+
+Open up `player.rs` and you'll find that we've committed a real programming sin. We've hard-coded `79` and `49` as map boundaries for player movement! Let's fix that:
+
+```rust
+if !map.blocked[destination_idx] {
+pos.x = min(map.width-1 , max(0, pos.x + delta_x));
+pos.y = min(map.height-1, max(0, pos.y + delta_y));
+```
+
+Finally, expanding our `map_builders` folder reveals a few errors. We're going to introduce a couple more before we fix them! In `map_builders/mod.rs` we'll store the requested map size:
+
+```rust
+pub struct BuilderMap {
+    pub spawn_list : Vec<(usize, String)>,
+    pub map : Map,
+    pub starting_position : Option<Position>,
+    pub rooms: Option<Vec<Rect>>,
+    pub corridors: Option<Vec<Vec<usize>>>,
+    pub history : Vec<Map>,
+    pub width: i32,
+    pub height: i32
+}
+```
+
+We'll then update the constructor to use it:
+
+```rust
+impl BuilderChain {
+    pub fn new(new_depth : i32, width: i32, height: i32) -> BuilderChain {
+        BuilderChain{
+            starter: None,
+            builders: Vec::new(),
+            build_data : BuilderMap {
+                spawn_list: Vec::new(),
+                map: Map::new(new_depth, width, height),
+                starting_position: None,
+                rooms: None,
+                corridors: None,
+                history : Vec::new(),
+                width,
+                height
+            }
+        }
+    }
+```
+
+We also need to adjust the signature for `random_builder` to accept a map size:
+
+```rust
+pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator, width: i32, height: i32) -> BuilderChain {
+    let mut builder = BuilderChain::new(new_depth, width, height);
+...
+```
+
+We'll also visit `map_builders/waveform_collapse/mod.rs` and make some fixes. Basically, all our references to `Map::new` need to include the new size.
+
+Finally, go back to `main.rs` and around line 370 you'll find our call to `random_builder`. We need to add a width and height to it; for now, we'll use 64x64:
+
+```rust
+let mut builder = map_builders::random_builder(new_depth, &mut rng, 64, 64);
+```
+
+And that's it! If you `cargo run` the project now, you can roam a 64x64 map:
+
+![Screenshot](./c41-s5.jpg).
+
+If you change that line to different sizes, you can roam a *huge* map:
+
+```rust
+let mut builder = map_builders::random_builder(new_depth, &mut rng, 128, 128);
+```
+
+Voila - you are roaming a huge map! A definite downside of a huge map, and rolling a largely open area is that sometimes it can be *really* difficult to survive:
+
+![Screenshot](./c41-s6.jpg).
+
+## Revisiting draw_map for progressive map rendering.
+
+If you keep the huge map, open `main.rs` and set `const SHOW_MAPGEN_VISUALIZER : bool = false;` to `true` - congratulations, you just crashed the game! That's because we never adjusted the `draw_map` function that we are using to verify map creation to handle maps of any size other than the original. Oops. This does bring up a problem: on an ASCII terminal we can't simply render the whole map and scale it down to fit. So we'll settle for rendering a portion of the map.
+
+
+
 ...
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-41-camera)**

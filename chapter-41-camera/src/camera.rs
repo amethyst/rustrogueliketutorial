@@ -66,6 +66,40 @@ pub fn render_camera(ecs: &World, ctx : &mut Rltk) {
     }
 }
 
+pub fn render_debug_map(map : &Map, ctx : &mut Rltk) {
+    let player_pos = Point::new(map.width / 2, map.height / 2);
+    let (x_chars, y_chars) = ctx.get_char_size();
+
+    let center_x = (x_chars / 2) as i32;
+    let center_y = (y_chars / 2) as i32;
+
+    let min_x = player_pos.x - center_x;
+    let max_x = min_x + x_chars as i32;
+    let min_y = player_pos.y - center_y;
+    let max_y = min_y + y_chars as i32;
+
+    let map_width = map.width-1;
+    let map_height = map.height-1;
+
+    let mut y = 0;
+    for ty in min_y .. max_y {
+        let mut x = 0;
+        for tx in min_x .. max_x {
+            if tx > 0 && tx < map_width && ty > 0 && ty < map_height {
+                let idx = map.xy_idx(tx, ty);
+                if map.revealed_tiles[idx] {
+                    let (glyph, fg, bg) = get_tile_glyph(idx, &*map);
+                    ctx.set(x, y, fg, bg, glyph);
+                }
+            } else if SHOW_BOUNDARIES {
+                ctx.set(x, y, RGB::named(rltk::GRAY), RGB::named(rltk::BLACK), rltk::to_cp437('·'));                
+            }
+            x += 1;
+        }
+        y += 1;
+    }
+}
+
 fn get_tile_glyph(idx: usize, map : &Map) -> (u8, RGB, RGB) {
     let glyph;
     let mut fg;

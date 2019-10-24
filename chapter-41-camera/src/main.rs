@@ -40,7 +40,7 @@ pub mod camera;
 
 rltk::add_wasm_support!();
 
-const SHOW_MAPGEN_VISUALIZER : bool = false;
+const SHOW_MAPGEN_VISUALIZER : bool = true;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { AwaitingInput, 
@@ -124,7 +124,7 @@ impl GameState for State {
                     newrunstate = self.mapgen_next_state.unwrap();
                 } else {
                     ctx.cls();                
-                    draw_map(&self.mapgen_history[self.mapgen_index], ctx);
+                    camera::render_debug_map(&self.mapgen_history[self.mapgen_index], ctx);
 
                     self.mapgen_timer += ctx.frame_time_ms;
                     if self.mapgen_timer > 200.0 {
@@ -254,11 +254,11 @@ impl GameState for State {
             }
             RunState::MagicMapReveal{row} => {
                 let mut map = self.ecs.fetch_mut::<Map>();
-                for x in 0..MAPWIDTH {
+                for x in 0..map.width {
                     let idx = map.xy_idx(x as i32,row);
                     map.revealed_tiles[idx] = true;
                 }
-                if row as usize == MAPHEIGHT-1 {
+                if row == map.height-1 {
                     newrunstate = RunState::MonsterTurn;
                 } else {
                     newrunstate = RunState::MagicMapReveal{ row: row+1 };
@@ -367,7 +367,7 @@ impl State {
         self.mapgen_timer = 0.0;
         self.mapgen_history.clear();
         let mut rng = self.ecs.write_resource::<rltk::RandomNumberGenerator>();
-        let mut builder = map_builders::random_builder(new_depth, &mut rng);
+        let mut builder = map_builders::random_builder(new_depth, &mut rng, 128, 128);
         builder.build_map(&mut rng);
         self.mapgen_history = builder.build_data.history.clone();
         let player_start;
@@ -453,7 +453,7 @@ fn main() {
 
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
-    gs.ecs.insert(Map::new(1));
+    gs.ecs.insert(Map::new(1, 64, 64));
     gs.ecs.insert(Point::new(0, 0));
     gs.ecs.insert(rltk::RandomNumberGenerator::new());
     let player_entity = spawner::player(&mut gs.ecs, 0, 0);
