@@ -25,6 +25,8 @@ use specs::prelude::*;
 use super::{Map,TileType,Position,Renderable,Hidden};
 use rltk::{Point, Rltk, Console, RGB};
 
+const SHOW_BOUNDARIES : bool = true;
+
 pub fn render_camera(ecs: &World, ctx : &mut Rltk) {
     let map = ecs.fetch::<Map>();
     let player_pos = ecs.fetch::<Point>();
@@ -34,21 +36,22 @@ pub fn render_camera(ecs: &World, ctx : &mut Rltk) {
     let center_y = (y_chars / 2) as i32;
 
     let min_x = player_pos.x - center_x;
-    let max_x = player_pos.x + x_chars as i32;
+    let max_x = min_x + x_chars as i32;
     let min_y = player_pos.y - center_y;
-    let max_y = player_pos.y + y_chars as i32;
+    let max_y = min_.y + y_chars as i32;
     ...
 ```
 
 I've broken this down into steps to make it clear what's going on:
 
-1. We start by retrieving the map from the ECS World.
-2. We then retrieve the player's position from the ECS World.
-3. We ask RLTK for the current console dimensions, in character space (so with an 8x8 font, `80x50`).
-4. We calculate the center of the console.
-5. We set `min_x` to the left-most tile, *relative to the player*. So the player's `x` position, minus the center of the console. This will center the `x` axis on the player.
-6. We set `max_x` to the be `min_x` plus the console width - again, ensuring that the player is centered.
-7. We do the same for `min_y` and `max_y`.
+1. We create a constant, `SHOW_BOUNDARIES`. If true, we'll render a marker for out-of-bounds tiles so we know where the edges of the map are. Most of the time, this will be `false` (no need for the player to get that information), but it's very handy for debugging.
+2. We start by retrieving the map from the ECS World.
+3. We then retrieve the player's position from the ECS World.
+4. We ask RLTK for the current console dimensions, in character space (so with an 8x8 font, `80x50`).
+5. We calculate the center of the console.
+6. We set `min_x` to the left-most tile, *relative to the player*. So the player's `x` position, minus the center of the console. This will center the `x` axis on the player.
+7. We set `max_x` to the be `min_x` plus the console width - again, ensuring that the player is centered.
+8. We do the same for `min_y` and `max_y`.
 
 So we've established where the camera is in *world space* - that is, coordinates on the map itself. We've also established that with our *camera view*, that should be the center of the rendered area.
 
@@ -68,7 +71,9 @@ for ty in min_y .. max_y {
                 let (glyph, fg, bg) = get_tile_glyph(idx, &*map);
                 ctx.set(x, y, fg, bg, glyph);
             }
-        }            
+        } else if SHOW_BOUNDARIES {
+            ctx.set(x, y, RGB::named(rltk::GRAY), RGB::named(rltk::BLACK), rltk::to_cp437('·'));                
+        }
         x += 1;
     }
     y += 1;
@@ -84,7 +89,8 @@ This is similar to our old `draw_map` code, but a little more complicated. Lets 
         1. We do a *clipping* check. We check that `tx` and `ty` are actually inside the *map* boundaries. It's quite likely that the player will visit the edge of the map, and you don't want to crash because they can see tiles that aren't in the map area!
         2. We calculate the `idx` (index) of the `tx/ty` position, telling us where on the map this screen location is.
         3. If it is revealed, we call the mysterious `get_tile_glyph` function for this index (more on that in a moment), and set the results on the screen.
-        4. Regardless of clipping, we add 1 to `x` - we're moving to the next column.
+        4. If the tile is off the map and `SHOW_BOUNDARIES` is `true` - we draw a dot.
+        5. Regardless of clipping, we add 1 to `x` - we're moving to the next column.
     3. We add one to `y`, since we're now moving down the screen.
 3. We've rendered a map!
 
@@ -225,8 +231,166 @@ If you `cargo run` the project now, you'll see that we can still play - and the 
 
 ### Oops - we didn't move the tooltips or targeting!
 
-If you play for a bit, you'll probably notice that tool-tips aren't working (they are still bound to the map coordinates), and using a targeted effect highlights completely the wrong part of the screen for your aiming. We should fix that!
+If you play for a bit, you'll probably notice that tool-tips aren't working (they are still bound to the map coordinates). We should fix that! First of all, it's becoming obvious that the screen boundaries are something we'll need in more than just the drawing code, so lets break it into a separate function in `camera.rs`:
 
+```rust
+pub fn get_screen_bounds(ecs: &World, ctx : &mut Rltk) -> (i32, i32, i32, i32) {
+    let player_pos = ecs.fetch::<Point>();
+    let (x_chars, y_chars) = ctx.get_char_size();
+
+    let center_x = (x_chars / 2) as i32;
+    let center_y = (y_chars / 2) as i32;
+
+    let min_x = player_pos.x - center_x;
+    let max_x = min_x + x_chars as i32;
+    let min_y = player_pos.y - center_y;
+    let max_y = min_y + y_chars as i32;
+
+    (min_x, max_x, min_y, max_y)
+}
+
+pub fn render_camera(ecs: &World, ctx : &mut Rltk) {
+    let map = ecs.fetch::<Map>();
+    let (min_x, max_x, min_y, max_y) = get_screen_bounds(ecs, ctx);
+```
+
+It's the *same* code from `render_camera` - just moved into a function. We've also extended `render_camera` to use the function, rather than repeating ourselves. Now we can go into `gui.rs` and edit `draw_tooltips` to use the camera position quite easily:
+
+```rust
+fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
+    let (min_x, _max_x, min_y, _max_y) = camera::get_screen_bounds(ecs, ctx);
+    let map = ecs.fetch::<Map>();
+    let names = ecs.read_storage::<Name>();
+    let positions = ecs.read_storage::<Position>();
+    let hidden = ecs.read_storage::<Hidden>();
+
+    let mouse_pos = ctx.mouse_pos();
+    let mut mouse_map_pos = mouse_pos;
+    mouse_map_pos.0 += min_x;
+    mouse_map_pos.1 += min_y;
+    if mouse_map_pos.0 >= map.width-1 || mouse_map_pos.1 >= map.height-1 || mouse_map_pos.0 < 1 || mouse_map_pos.1 < 1 
+    { 
+        return; 
+    }
+    let mut tooltip : Vec<String> = Vec::new();
+    for (name, position, _hidden) in (&names, &positions, !&hidden).join() {
+        if position.x == mouse_map_pos.0 && position.y == mouse_map_pos.1 {
+            tooltip.push(name.name.to_string());
+        }
+    }
+    ...
+```
+
+So our changes are:
+
+1. At the beginning, we retrieve the screen boundaries with `camera::get_screen_bounds`. We aren't going to use the `max` variables, so we put an underscore before them to let Rust know that we're intentionally ignoring them.
+2. After getting the `mouse_pos`, we make a new `mouse_map_pos` variable. It is equal to `mouse_pos`, but we *add* the `min_x` and `min_y` values - offsetting it to match the visible coordinates.
+3. We extended our clipping to check all directions, so tooltips don't crash the game when you look at an area outside of the actual map because the viewport is at an extreme end of the map.
+4. Our comparison for `position` now compares with `mouse_map_pos` rather than `mouse_pos`.
+5. That's it - the rest can be unchanged.
+
+If you `cargo run` now, tooltips will work:
+
+![Screenshot](./c41-s2.jpg).
+
+## Fixing Targeting
+
+If you play for a bit, you'll also notice if you try and use a *fireball* or similar effect - the targeting system is completely out of whack. It's still referencing the screen/map positions from when they were directly linked. So you see the *available* tiles, but they are in completely the wrong place! We should fix that, too.
+
+In `gui.rs`, we'll edit the function `ranged_target`:
+
+```rust
+pub fn ranged_target(gs : &mut State, ctx : &mut Rltk, range : i32) -> (ItemMenuResult, Option<Point>) {
+    let (min_x, max_x, min_y, max_y) = camera::get_screen_bounds(&gs.ecs, ctx);
+    let player_entity = gs.ecs.fetch::<Entity>();
+    let player_pos = gs.ecs.fetch::<Point>();
+    let viewsheds = gs.ecs.read_storage::<Viewshed>();
+
+    ctx.print_color(5, 0, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Select Target:");
+
+    // Highlight available target cells
+    let mut available_cells = Vec::new();
+    let visible = viewsheds.get(*player_entity);
+    if let Some(visible) = visible {
+        // We have a viewshed
+        for idx in visible.visible_tiles.iter() {
+            let distance = rltk::DistanceAlg::Pythagoras.distance2d(*player_pos, *idx);
+            if distance <= range as f32 {
+                let screen_x = idx.x - min_x;
+                let screen_y = idx.y - min_y;
+                if screen_x > min_x && screen_x < max_x && screen_y > min_y && screen_y < max_y {
+                    ctx.set_bg(screen_x, screen_y, RGB::named(rltk::BLUE));
+                    available_cells.push(idx);
+                }
+            }
+        }
+    } else {
+        return (ItemMenuResult::Cancel, None);
+    }
+
+    // Draw mouse cursor
+    let mouse_pos = ctx.mouse_pos();
+    let mut mouse_map_pos = mouse_pos;
+    mouse_map_pos.0 += min_x;
+    mouse_map_pos.1 += min_y;
+    let mut valid_target = false;
+    for idx in available_cells.iter() { if idx.x == mouse_map_pos.0 && idx.y == mouse_map_pos.1 { valid_target = true; } }
+    if valid_target {
+        ctx.set_bg(mouse_pos.0, mouse_pos.1, RGB::named(rltk::CYAN));
+        if ctx.left_click {
+            return (ItemMenuResult::Selected, Some(Point::new(mouse_map_pos.0, mouse_map_pos.1)));
+        }
+    } else {
+        ctx.set_bg(mouse_pos.0, mouse_pos.1, RGB::named(rltk::RED));
+        if ctx.left_click {
+            return (ItemMenuResult::Cancel, None);
+        }
+    }
+
+    (ItemMenuResult::NoResponse, None)
+}
+```
+
+This is fundamentally what we had before, with some changes:
+
+1. We obtain the boundaries at the beginning, once again with `camera::get_screen_bounds`.
+2. In our visible target tiles section, we're calculating `screen_x` and `screen_y` by taking the map index and *adding* our `min_x` and `min_y` values. We then check to see if it is on the screen, before drawing the targeting highlight at those locations.
+3. We use the same `mouse_map_pos` calculation after calculating `mouse_pos`.
+4. We then reference the `mouse_map_pos` when checking if a target is under the mouse, or selected.
+
+If you `cargo run` now, targeting will work:
+
+![Screenshot](./c41-s3.jpg).
+
+## Addendum 1: Fixing a bug in the visibility calculator
+
+You may encounter a crash when boundaries haven't properly been applied to the edge of the map. In `visibility_system.rs`, the following fix takes care of it:
+
+```rust
+for vis in viewshed.visible_tiles.iter() {
+        if vis.x > 0 && vis.x < map.width-1 && vis.y > 0 && vis.y < map.height-1 {
+            let idx = map.xy_idx(vis.x, vis.y);
+            map.revealed_tiles[idx] = true;
+            map.visible_tiles[idx] = true;
+
+            // Chance to reveal hidden things
+            for e in map.tile_content[idx].iter() {
+                let maybe_hidden = hidden.get(*e);
+                if let Some(_maybe_hidden) = maybe_hidden {
+                    if rng.roll_dice(1,24)==1 {
+                        let name = names.get(*e);
+                        if let Some(name) = name {
+                            log.entries.insert(0, format!("You spotted a {}.", &name.name));
+                        }
+                        hidden.remove(*e);
+                    }
+                }
+            }
+        }
+    }
+```
+
+This will be merged back into the tutorial soon - this addendum is to let you know we fixed it.
 
 ...
 

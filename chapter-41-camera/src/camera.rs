@@ -2,8 +2,7 @@ use specs::prelude::*;
 use super::{Map,TileType,Position,Renderable,Hidden};
 use rltk::{Point, Rltk, Console, RGB};
 
-pub fn render_camera(ecs: &World, ctx : &mut Rltk) {
-    let map = ecs.fetch::<Map>();
+pub fn get_screen_bounds(ecs: &World, ctx : &mut Rltk) -> (i32, i32, i32, i32) {
     let player_pos = ecs.fetch::<Point>();
     let (x_chars, y_chars) = ctx.get_char_size();
 
@@ -11,9 +10,18 @@ pub fn render_camera(ecs: &World, ctx : &mut Rltk) {
     let center_y = (y_chars / 2) as i32;
 
     let min_x = player_pos.x - center_x;
-    let max_x = player_pos.x + x_chars as i32;
+    let max_x = min_x + x_chars as i32;
     let min_y = player_pos.y - center_y;
-    let max_y = player_pos.y + y_chars as i32;
+    let max_y = min_y + y_chars as i32;
+
+    (min_x, max_x, min_y, max_y)
+}
+
+const SHOW_BOUNDARIES : bool = true;
+
+pub fn render_camera(ecs: &World, ctx : &mut Rltk) {
+    let map = ecs.fetch::<Map>();
+    let (min_x, max_x, min_y, max_y) = get_screen_bounds(ecs, ctx);
 
     // Render the Map
 
@@ -30,7 +38,9 @@ pub fn render_camera(ecs: &World, ctx : &mut Rltk) {
                     let (glyph, fg, bg) = get_tile_glyph(idx, &*map);
                     ctx.set(x, y, fg, bg, glyph);
                 }
-            }            
+            } else if SHOW_BOUNDARIES {
+                ctx.set(x, y, RGB::named(rltk::GRAY), RGB::named(rltk::BLACK), rltk::to_cp437('·'));                
+            }
             x += 1;
         }
         y += 1;
