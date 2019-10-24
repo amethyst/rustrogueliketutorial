@@ -159,7 +159,7 @@ dependencies = [
 name = "chapter-01-hellorust"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "wasm-bindgen 0.2.51 (registry+https://github.com/rust-lang/crates.io-index)",
  "web-sys 0.3.28 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -168,7 +168,7 @@ dependencies = [
 name = "chapter-02-helloecs"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs-derive 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "wasm-bindgen 0.2.51 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -179,7 +179,7 @@ dependencies = [
 name = "chapter-03-walkmap"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs-derive 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "wasm-bindgen 0.2.51 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -190,7 +190,7 @@ dependencies = [
 name = "chapter-04-newmap"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs-derive 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "wasm-bindgen 0.2.51 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -201,7 +201,7 @@ dependencies = [
 name = "chapter-05-fov"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs-derive 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "wasm-bindgen 0.2.51 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -212,7 +212,7 @@ dependencies = [
 name = "chapter-06-monsters"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs-derive 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "wasm-bindgen 0.2.51 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -223,7 +223,7 @@ dependencies = [
 name = "chapter-07-damage"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs-derive 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "wasm-bindgen 0.2.51 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -234,7 +234,7 @@ dependencies = [
 name = "chapter-08-ui"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs-derive 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "wasm-bindgen 0.2.51 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -245,7 +245,7 @@ dependencies = [
 name = "chapter-09-items"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs-derive 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "wasm-bindgen 0.2.51 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -256,7 +256,7 @@ dependencies = [
 name = "chapter-10-ranged"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs-derive 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "wasm-bindgen 0.2.51 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -267,7 +267,7 @@ dependencies = [
 name = "chapter-11-loadsave"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -280,7 +280,7 @@ dependencies = [
 name = "chapter-12-delvingdeeper"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -293,7 +293,7 @@ dependencies = [
 name = "chapter-13-difficulty"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -306,7 +306,7 @@ dependencies = [
 name = "chapter-14-gear"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -319,7 +319,7 @@ dependencies = [
 name = "chapter-16-nicewalls"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -332,7 +332,7 @@ dependencies = [
 name = "chapter-17-blood"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -345,7 +345,7 @@ dependencies = [
 name = "chapter-18-particles"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -358,7 +358,7 @@ dependencies = [
 name = "chapter-19-food"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -371,7 +371,7 @@ dependencies = [
 name = "chapter-20-magicmapping"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -384,7 +384,7 @@ dependencies = [
 name = "chapter-21-rexmenu"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -397,7 +397,7 @@ dependencies = [
 name = "chapter-22-simpletraps"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -410,7 +410,7 @@ dependencies = [
 name = "chapter-23-generic-map"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -423,7 +423,7 @@ dependencies = [
 name = "chapter-24-map-testing"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -436,7 +436,7 @@ dependencies = [
 name = "chapter-25-bsproom-dungeons"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -449,7 +449,7 @@ dependencies = [
 name = "chapter-26-bsp-interiors"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -462,7 +462,7 @@ dependencies = [
 name = "chapter-27-cellular-automota"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -475,7 +475,7 @@ dependencies = [
 name = "chapter-28-drunkards-walk"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -488,7 +488,7 @@ dependencies = [
 name = "chapter-29-mazes"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -501,7 +501,7 @@ dependencies = [
 name = "chapter-30-dla"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -514,7 +514,7 @@ dependencies = [
 name = "chapter-31-symmetry"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -527,7 +527,7 @@ dependencies = [
 name = "chapter-32-voronoi"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -540,7 +540,7 @@ dependencies = [
 name = "chapter-33-wfc"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -553,7 +553,7 @@ dependencies = [
 name = "chapter-34-vaults"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -566,7 +566,7 @@ dependencies = [
 name = "chapter-35-vaults2"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -579,7 +579,7 @@ dependencies = [
 name = "chapter-36-layers"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -592,7 +592,7 @@ dependencies = [
 name = "chapter-37-layers2"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -605,7 +605,7 @@ dependencies = [
 name = "chapter-38-rooms"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -618,7 +618,7 @@ dependencies = [
 name = "chapter-39-halls"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -631,7 +631,7 @@ dependencies = [
 name = "chapter-40-doors"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -644,7 +644,7 @@ dependencies = [
 name = "chapter-41-camera"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -775,6 +775,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "deflate"
+version = "0.7.20"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "adler32 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "byteorder 1.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -910,6 +919,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "gl_generator"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "khronos_api 3.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "xml-rs 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "gleam"
 version = "0.6.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1032,6 +1051,15 @@ dependencies = [
  "num-iter 0.1.39 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-rational 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-traits 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "png 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "inflate"
+version = "0.4.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "adler32 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1386,6 +1414,17 @@ version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "png"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "bitflags 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "crc32fast 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "deflate 0.7.20 (registry+https://github.com/rust-lang/crates.io-index)",
+ "inflate 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "ppv-lite86"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1618,14 +1657,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "rltk"
-version = "0.4.1"
-source = "git+https://github.com/thebracket/rltk_rs#b5ba29c1fd3f3f9982eaab423e33e0ce34deb0d3"
+version = "0.5.1"
+source = "git+https://github.com/thebracket/rltk_rs#30ef14b80154e276bf0213598e2acf8bf63c90cd"
 dependencies = [
  "bresenham 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "cgmath 0.17.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "flate2 1.0.12 (registry+https://github.com/rust-lang/crates.io-index)",
- "gl_generator 0.13.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gl_generator 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "glow 0.3.0-alpha2 (registry+https://github.com/rust-lang/crates.io-index)",
  "glutin 0.22.0-alpha3 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.22.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1644,7 +1683,7 @@ dependencies = [
 name = "rust_roguelike_tutorial"
 version = "0.1.0"
 dependencies = [
- "rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)",
+ "rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)",
  "specs 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs-derive 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "wasm-bindgen 0.2.51 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2221,6 +2260,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum crossbeam-epoch 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)" = "fedcd6772e37f3da2a9af9bf12ebe046c0dfe657992377b4df982a2b54cd37a9"
 "checksum crossbeam-queue 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7c979cd6cfe72335896575c6b5688da489e420d36a27a0b9eb0c73db574b4a4b"
 "checksum crossbeam-utils 0.6.6 (registry+https://github.com/rust-lang/crates.io-index)" = "04973fa96e96579258a5091af6003abde64af786b860f18622b82e026cca60e6"
+"checksum deflate 0.7.20 (registry+https://github.com/rust-lang/crates.io-index)" = "707b6a7b384888a70c8d2e8650b3e60170dfc6a67bb4aa67b6dfca57af4bedb4"
 "checksum derivative 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)" = "942ca430eef7a3806595a6737bc388bf51adb888d3fc0dd1b50f1c170167ee3a"
 "checksum dispatch 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "04e93ca78226c51902d7aa8c12c988338aadd9e85ed9c6be8aaac39192ff3605"
 "checksum dlib 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "77e51249a9d823a4cb79e3eca6dcd756153e8ed0157b6c04775d04bf1b13b76a"
@@ -2238,6 +2278,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum getrandom 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)" = "473a1265acc8ff1e808cd0a1af8cee3c2ee5200916058a2ca113c29f2d903571"
 "checksum gl_generator 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "39a23d5e872a275135d66895d954269cf5e8661d234eb1c2480f4ce0d586acbd"
 "checksum gl_generator 0.13.1 (registry+https://github.com/rust-lang/crates.io-index)" = "ca98bbde17256e02d17336a6bdb5a50f7d0ccacee502e191d3e3d0ec2f96f84a"
+"checksum gl_generator 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1a95dfc23a2b4a9a2f5ab41d194f8bfda3cabec42af4e39f08c339eb2a0c124d"
 "checksum gleam 0.6.19 (registry+https://github.com/rust-lang/crates.io-index)" = "cae10d7c99d0e77b4766e850a60898a17c1abaf01075531f1066f03dc7dc5fc5"
 "checksum glow 0.3.0-alpha2 (registry+https://github.com/rust-lang/crates.io-index)" = "aa0abf6d25f07665456dc7be39b8295d98dedd7edf1c29ac67f7c3daa01f3654"
 "checksum glutin 0.22.0-alpha3 (registry+https://github.com/rust-lang/crates.io-index)" = "fcdd3592b515014281a21a42addd91f41eaff0c5f54295ee28dac8ea6bbbceba"
@@ -2250,6 +2291,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum heck 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "20564e78d53d2bb135c343b3f47714a56af2061f1c928fdb541dc7b9fdd94205"
 "checksum hibitset 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "47e7292fd9f7fe89fa35c98048f2d0a69b79ed243604234d18f6f8a1aa6f408d"
 "checksum image 0.22.3 (registry+https://github.com/rust-lang/crates.io-index)" = "7b4be8aaefbe7545dc42ae925afb55a0098f226a3fe5ef721872806f44f57826"
+"checksum inflate 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)" = "1cdb29978cc5797bd8dcc8e5bf7de604891df2a8dc576973d71a281e916db2ff"
 "checksum iovec 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "dbe6e417e7d0975db6512b90796e8ce223145ac4e33c377e4a42882a0e88bb08"
 "checksum itoa 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)" = "501266b7edd0174f8530248f87f99c88fbe60ca4ef3dd486835b8d8d53136f7f"
 "checksum jpeg-decoder 0.1.16 (registry+https://github.com/rust-lang/crates.io-index)" = "c1aae18ffeeae409c6622c3b6a7ee49792a7e5a062eea1b135fbb74e301792ba"
@@ -2292,6 +2334,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum parking_lot_core 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "b876b1b9e7ac6e1a74a6da34d25c42e17e8862aa409cbbbdcfc8d86c6f3bc62b"
 "checksum percent-encoding 2.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d4fd5641d01c8f18a23da7b6fe29298ff4b55afcccdf78973b24cf3175fee32e"
 "checksum pkg-config 0.3.16 (registry+https://github.com/rust-lang/crates.io-index)" = "72d5370d90f49f70bd033c3d75e87fc529fbfff9d6f7cccef07d6170079d91ea"
+"checksum png 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)" = "8422b27bb2c013dd97b9aef69e161ce262236f49aaf46a0489011c8ff0264602"
 "checksum ppv-lite86 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)" = "e3cbf9f658cdb5000fcf6f362b8ea2ba154b9f146a61c7a20d647034c6b6561b"
 "checksum proc-macro-hack 0.5.10 (registry+https://github.com/rust-lang/crates.io-index)" = "114cdf1f426eb7f550f01af5f53a33c0946156f6814aec939b3bd77e844f9a9d"
 "checksum proc-macro2 0.4.30 (registry+https://github.com/rust-lang/crates.io-index)" = "cf3d2011ab5c909338f7887f4fc896d35932e29146c12c8d01da6b22a80ba759"
@@ -2318,7 +2361,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum rayon-core 1.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "98dcf634205083b17d0861252431eb2acbfb698ab7478a2d20de07954f47ec7b"
 "checksum rdrand 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "678054eb77286b51581ba43620cc911abf02758c91f93f479767aed0f90458b2"
 "checksum redox_syscall 0.1.56 (registry+https://github.com/rust-lang/crates.io-index)" = "2439c63f3f6139d1b57529d16bc3b8bb855230c8efcc5d3a896c8bea7c3b1e84"
-"checksum rltk 0.4.1 (git+https://github.com/thebracket/rltk_rs)" = "<none>"
+"checksum rltk 0.5.1 (git+https://github.com/thebracket/rltk_rs)" = "<none>"
 "checksum rustc-demangle 0.1.16 (registry+https://github.com/rust-lang/crates.io-index)" = "4c691c0e608126e00913e33f0ccf3727d5fc84573623b8d65b2df340b5201783"
 "checksum rustc_version 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "138e3e0acb6c9fb258b19b67cb8abd63c00679d2851805ea151465464fe9030a"
 "checksum rusttype 0.7.9 (registry+https://github.com/rust-lang/crates.io-index)" = "310942406a39981bed7e12b09182a221a29e0990f3e7e0c971f131922ed135d5"

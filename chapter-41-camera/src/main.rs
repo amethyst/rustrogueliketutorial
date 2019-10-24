@@ -36,6 +36,7 @@ pub mod hunger_system;
 pub mod rex_assets;
 pub mod trigger_system;
 pub mod map_builders;
+pub mod camera;
 
 rltk::add_wasm_support!();
 
@@ -112,18 +113,7 @@ impl GameState for State {
             RunState::MainMenu{..} => {}
             RunState::GameOver{..} => {}
             _ => {
-                draw_map(&self.ecs.fetch::<Map>(), ctx);
-                let positions = self.ecs.read_storage::<Position>();
-                let renderables = self.ecs.read_storage::<Renderable>();
-                let hidden = self.ecs.read_storage::<Hidden>();
-                let map = self.ecs.fetch::<Map>();
-
-                let mut data = (&positions, &renderables, !&hidden).join().collect::<Vec<_>>();
-                data.sort_by(|&a, &b| b.1.render_order.cmp(&a.1.render_order) );
-                for (pos, render, _hidden) in data.iter() {
-                    let idx = map.xy_idx(pos.x, pos.y);
-                    if map.visible_tiles[idx] { ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph) }
-                }
+                camera::render_camera(&self.ecs, ctx);
                 gui::draw_ui(&self.ecs, ctx);                
             }
         }

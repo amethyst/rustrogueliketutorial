@@ -74,7 +74,11 @@ impl Map {
 impl BaseMap for Map {
     fn is_opaque(&self, idx:i32) -> bool {
         let idx_u = idx as usize;
-        self.tiles[idx_u] == TileType::Wall || self.view_blocked.contains(&idx_u)
+        if idx_u > 0 && idx_u < self.tiles.len() {
+            self.tiles[idx_u] == TileType::Wall || self.view_blocked.contains(&idx_u)
+        } else {
+            true
+        }
     }
 
     fn get_available_exits(&self, idx:i32) -> Vec<(i32, f32)> {
