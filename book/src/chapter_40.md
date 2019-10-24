@@ -405,6 +405,69 @@ If you `cargo run` the project now, you get the desired functionality:
 
 ![Screenshot](./c40-s4.gif).
 
+## Too many doors!
+
+On the non-corridor maps, there is a slight problem when play-testing the door placement: there are doors *everywhere*. Lets reduce the frequency of door placement. We'll just add a little randomness:
+
+```rust
+fn doors(&mut self, rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+    if let Some(halls_original) = &build_data.corridors {
+        let halls = halls_original.clone(); // To avoid nested borrowing
+        for hall in halls.iter() {
+            if hall.len() > 2 { // We aren't interested in tiny corridors
+                if self.door_possible(build_data, hall[0]) {
+                    build_data.spawn_list.push((hall[0], "Door".to_string()));
+                }
+            }
+        }
+    } else {        
+        // There are no corridors - scan for possible places
+        let tiles = build_data.map.tiles.clone();
+        for (i, tile) in tiles.iter().enumerate() {
+            if *tile == TileType::Floor && self.door_possible(build_data, i) && rng.roll_dice(1,3)==1 {
+                build_data.spawn_list.push((i, "Door".to_string()));
+            }
+        }
+    }
+}
+```
+
+This gives a 1 in 3 chance of any *possible* door placement yielding a door. From playing the game, this feels about right. It may not work for you - so you can change it! You may even want to make it a parameter.
+
+## Doors on top of other entities
+
+Sometimes, a door spawns on top of another entity. It's rare, but it *can* happen. Lets prevent that issue from occurring. We can fix this with a quick scan of the spawn list in `door_possible`:
+
+```rust
+fn door_possible(&self, build_data : &mut BuilderMap, idx : usize) -> bool {
+    let mut blocked = false;
+    for spawn in build_data.spawn_list.iter() {
+        if spawn.0 == idx { blocked = true; }
+    }
+    if blocked { return false; }
+    ...
+```
+
+If speed becomes a concern, this would be easy to speed up (make a quick `HashSet` of occupied tiles, and query that instead of the whole list) - but we haven't really had any performance issues, and map building runs outside of the main loop (so it's once per level, not every frame) - so chances are that you don't need it.
+
+## Addendum: Fixing WFC
+
+In our `random_builder`, we've made a mistake! Waveform Collapse changes the nature of maps, and should adjust spawn, entry and exit points. Here's the *correct* code:
+
+```rust
+if rng.roll_dice(1, 3)==1 {
+        builder.with(WaveformCollapseBuilder::new());
+
+        // Now set the start to a random starting area
+        let (start_x, start_y) = random_start_position(rng);
+        builder.with(AreaStartingPosition::new(start_x, start_y));
+
+        // Setup an exit and spawn mobs
+        builder.with(VoronoiSpawning::new());
+        builder.with(DistantExit::new());
+    }
+```
+
 ## Wrap-Up
 
 That's it for doors! There's definitely room for improvement in the future - but the feature is working.
