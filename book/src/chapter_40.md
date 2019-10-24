@@ -470,7 +470,7 @@ if rng.roll_dice(1, 3)==1 {
 
 ## Wrap-Up
 
-That's it for doors! There's definitely room for improvement in the future - but the feature is working.
+That's it for doors! There's definitely room for improvement in the future - but the feature is working. You can approach a door, and it blocks both movement and line-of-sight (so the occupants of the room won't bother you). Open it, and you can see through - and the occupants can see you back. Now it's open, you can travel through it. That's pretty close to the definition of a door!
 
 ...
 
