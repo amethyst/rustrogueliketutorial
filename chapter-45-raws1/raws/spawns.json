@@ -76,6 +76,75 @@
                 "magic_mapping" : ""
             }
         }
+    },
+
+    {
+        "name" : "Rations",
+        "renderable": {
+            "glyph" : "%",
+            "fg" : "#00FF00",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "consumable" : {
+            "effects" : { 
+                "food" : ""
+            }
+        }
+    },
+
+    {
+        "name" : "Dagger",
+        "renderable": {
+            "glyph" : "/",
+            "fg" : "#FFAAAA",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "weapon" : {
+            "range" : "melee",
+            "power_bonus" : 2
+        }
+    },
+
+    {
+        "name" : "Longsword",
+        "renderable": {
+            "glyph" : "/",
+            "fg" : "#FFAAFF",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "weapon" : {
+            "range" : "melee",
+            "power_bonus" : 4
+        }
+    },
+
+    {
+        "name" : "Shield",
+        "renderable": {
+            "glyph" : "[",
+            "fg" : "#00AAFF",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "shield" : {
+            "defense_bonus" : 1
+        }
+    },
+
+    {
+        "name" : "Tower Shield",
+        "renderable": {
+            "glyph" : "[",
+            "fg" : "#00FFFF",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "shield" : {
+            "defense_bonus" : 3
+        }
     }
 ]
 }

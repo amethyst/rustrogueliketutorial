@@ -414,7 +414,7 @@ You'll also want to add a `raws::*` to the list of items imported from `super`.
 
 If you `cargo run` now, the game runs as before - including health potions and magic missile scrolls.
 
-## Adding the rest of the items
+## Adding the rest of the consumables
 
 We'll go ahead and get the rest of the consumables into `spawns.json`:
 
@@ -467,6 +467,21 @@ We'll go ahead and get the rest of the consumables into `spawns.json`:
                 "magic_mapping" : ""
             }
         }
+    },
+
+    {
+        "name" : "Rations",
+        "renderable": {
+            "glyph" : "%",
+            "fg" : "#00FF00",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "consumable" : {
+            "effects" : { 
+                "food" : ""
+            }
+        }
     }
 ]
 }
@@ -488,6 +503,7 @@ if let Some(consumable) = &item_template.consumable {
             "area_of_effect" => { eb = eb.with(AreaOfEffect{ radius: effect.1.parse::<i32>().unwrap() }) }
             "confusion" => { eb = eb.with(Confusion{ turns: effect.1.parse::<i32>().unwrap() }) }
             "magic_mapping" => { eb = eb.with(MagicMapper{}) }
+            "food" => { eb = eb.with(ProvidesFood{}) }
             _ => {
                 println!("Warning: consumable effect {} not implemented.", effect_name);
             }
@@ -497,6 +513,108 @@ if let Some(consumable) = &item_template.consumable {
 ```
 
 You can now delete the fireball, magic mapping and confusion scrolls from `spawner.rs`! Run the game, and you have access to these items. Hopefully, this is starting to illustrate the power of linking a data file to your component creation.
+
+## Adding the remaining items
+
+We'll make a few more JSON entries in `spawns.json` to cover the various other items we have remaining:
+
+```json
+{
+    "name" : "Dagger",
+    "renderable": {
+        "glyph" : "/",
+        "fg" : "#FFAAAA",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "weapon" : {
+        "range" : "melee",
+        "power_bonus" : 2
+    }
+},
+
+{
+    "name" : "Longsword",
+    "renderable": {
+        "glyph" : "/",
+        "fg" : "#FFAAFF",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "weapon" : {
+        "range" : "melee",
+        "power_bonus" : 4
+    }
+},
+
+{
+    "name" : "Shield",
+    "renderable": {
+        "glyph" : "[",
+        "fg" : "#00AAFF",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "shield" : {
+        "defense_bonus" : 1
+    }
+},
+
+{
+    "name" : "Tower Shield",
+    "renderable": {
+        "glyph" : "[",
+        "fg" : "#00FFFF",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "shield" : {
+        "defense_bonus" : 3
+    }
+}
+```
+
+There are two new fields here! `shield` and `weapon`. We need to expand our `item_structs.rs` to handle them:
+
+```rust
+#[derive(Deserialize, Debug)]
+pub struct Item {
+    pub name : String,
+    pub renderable : Option<Renderable>,
+    pub consumable : Option<Consumable>,
+    pub weapon : Option<Weapon>,
+    pub shield : Option<Shield>
+}
+
+...
+
+#[derive(Deserialize, Debug)]
+pub struct Weapon {
+    pub range: String,
+    pub power_bonus: i32
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Shield {
+    pub defense_bonus: i32
+}
+```
+
+We'll also have to teach our `spawn_named_item` function (in `rawmaster.rs`) to use this data:
+
+```rust
+if let Some(weapon) = &item_template.weapon {
+    eb = eb.with(Equippable{ slot: EquipmentSlot::Melee });
+    eb = eb.with(MeleePowerBonus{ power : weapon.power_bonus });
+}
+
+if let Some(shield) = &item_template.shield {
+    eb = eb.with(Equippable{ slot: EquipmentSlot::Shield });
+    eb = eb.with(DefenseBonus{ defense: shield.defense_bonus });
+}
+```
+
+You can now delete these items from `spawner.rs` as well, and they still spawn in game - as before.
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-45-raws1)**
 
