@@ -9,14 +9,16 @@ pub enum SpawnType {
 
 pub struct RawMaster {
     raws : Raws,
-    item_index : HashMap<String, usize>
+    item_index : HashMap<String, usize>,
+    mob_index : HashMap<String, usize>
 }
 
 impl RawMaster {
     pub fn empty() -> RawMaster {
         RawMaster {
-            raws : Raws{ items: Vec::new() },
-            item_index : HashMap::new()
+            raws : Raws{ items: Vec::new(), mobs: Vec::new() },
+            item_index : HashMap::new(),
+            mob_index : HashMap::new()
         }
     }
 
@@ -25,6 +27,9 @@ impl RawMaster {
         self.item_index = HashMap::new();
         for (i,item) in self.raws.items.iter().enumerate() {
             self.item_index.insert(item.name.clone(), i);
+        }
+        for (i,mob) in self.raws.mobs.iter().enumerate() {
+            self.mob_index.insert(mob.name.clone(), i);
         }
     }    
 }

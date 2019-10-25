@@ -616,6 +616,131 @@ if let Some(shield) = &item_template.shield {
 
 You can now delete these items from `spawner.rs` as well, and they still spawn in game - as before.
 
+## Now for the monsters!
+
+We'll add a new array to `spawns.json` to handle monsters. We're calling it "mobs" - this is slang from many games for "movable object", but it has come to mean things that move around and fight you in common parlance:
+
+```json
+"mobs" : [
+    {
+        "name" : "Orc",
+        "renderable": {
+            "glyph" : "o",
+            "fg" : "#FF0000",
+            "bg" : "#000000",
+            "order" : 1
+        },
+        "blocks_tile" : true,
+        "stats" : {
+            "max_hp" : 16,
+            "hp" : 16,
+            "defense" : 1,
+            "power" : 4
+        }
+    },
+
+    {
+        "name" : "Goblin",
+        "renderable": {
+            "glyph" : "g",
+            "fg" : "#FF0000",
+            "bg" : "#000000",
+            "order" : 1
+        },
+        "blocks_tile" : true,
+        "stats" : {
+            "max_hp" : 8,
+            "hp" : 8,
+            "defense" : 1,
+            "power" : 3
+        }
+    }
+]
+```
+
+You'll notice that we're fixing a minor issue from before: orcs and goblins are no longer identical in stats! Otherwise, this should make sense: the stats we set in `spawner.rs` are instead set in the JSON file. We need to create a new file, `raws/mob_structs.rs`:
+
+```rust
+use serde::{Deserialize};
+use super::{Renderable};
+
+#[derive(Deserialize, Debug)]
+pub struct Mob {
+    pub name : String,
+    pub renderable : Option<Renderable>,
+    pub blocks_tile : bool,
+    pub stats : MobStats
+}
+
+#[derive(Deserialize, Debug)]
+pub struct MobStats {
+    pub max_hp : i32,
+    pub hp : i32,
+    pub power : i32,
+    pub defense : i32
+}
+```
+
+We'll also modify `Raws` (currently in `item_structs.rs`). We'll move it to `mod.rs`, since it is shared with other modules and edit it:
+
+```rust
+#[derive(Deserialize, Debug)]
+pub struct Raws {
+    pub items : Vec<Item>,
+    pub mobs : Vec<Mob>
+}
+```
+
+We also need to modify `rawmaster.rs` to add an empty `mobs` list to the constructor:
+
+```rust
+impl RawMaster {
+    pub fn empty() -> RawMaster {
+        RawMaster {
+            raws : Raws{ items: Vec::new(), mobs: Vec::new() },
+            item_index : HashMap::new()
+        }
+    }
+    ...
+```
+
+We'll also modify `RawMaster` to index our mobs:
+
+```rust
+pub struct RawMaster {
+    raws : Raws,
+    item_index : HashMap<String, usize>,
+    mob_index : HashMap<String, usize>
+}
+
+impl RawMaster {
+    pub fn empty() -> RawMaster {
+        RawMaster {
+            raws : Raws{ items: Vec::new(), mobs: Vec::new() },
+            item_index : HashMap::new(),
+            mob_index : HashMap::new()
+        }
+    }
+
+    pub fn load(&mut self, raws : Raws) {
+        self.raws = raws;
+        self.item_index = HashMap::new();
+        for (i,item) in self.raws.items.iter().enumerate() {
+            self.item_index.insert(item.name.clone(), i);
+        }
+        for (i,mob) in self.raws.mobs.iter().enumerate() {
+            self.mob_index.insert(mob.name.clone(), i);
+        }
+    }    
+}
+```
+
+Now we need a new function, `spawn_named_mob`:
+
+```rust
+
+```
+
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-45-raws1)**
 
 

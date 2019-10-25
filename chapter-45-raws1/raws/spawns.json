@@ -146,5 +146,41 @@
             "defense_bonus" : 3
         }
     }
+],
+
+"mobs" : [
+    {
+        "name" : "Orc",
+        "renderable": {
+            "glyph" : "o",
+            "fg" : "#FF0000",
+            "bg" : "#000000",
+            "order" : 1
+        },
+        "blocks_tile" : true,
+        "stats" : {
+            "max_hp" : 16,
+            "hp" : 16,
+            "defense" : 1,
+            "power" : 4
+        }
+    },
+
+    {
+        "name" : "Goblin",
+        "renderable": {
+            "glyph" : "g",
+            "fg" : "#FF0000",
+            "bg" : "#000000",
+            "order" : 1
+        },
+        "blocks_tile" : true,
+        "stats" : {
+            "max_hp" : 8,
+            "hp" : 8,
+            "defense" : 1,
+            "power" : 3
+        }
+    }
 ]
 }
