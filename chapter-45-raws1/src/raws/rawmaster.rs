@@ -64,6 +64,9 @@ pub fn spawn_named_item(raws: &RawMaster, new_entity : EntityBuilder, key : &str
                     }
                     "ranged" => { eb = eb.with(Ranged{ range: effect.1.parse::<i32>().unwrap() }) },
                     "damage" => { eb = eb.with(InflictsDamage{ damage : effect.1.parse::<i32>().unwrap() }) }
+                    "area_of_effect" => { eb = eb.with(AreaOfEffect{ radius: effect.1.parse::<i32>().unwrap() }) }
+                    "confusion" => { eb = eb.with(Confusion{ turns: effect.1.parse::<i32>().unwrap() }) }
+                    "magic_mapping" => { eb = eb.with(MagicMapper{}) }
                     _ => {
                         println!("Warning: consumable effect {} not implemented.", effect_name);
                     }

@@ -27,6 +27,55 @@
                 "damage" : "20"
             }
         }
+    },
+
+    {
+        "name" : "Fireball Scroll",
+        "renderable": {
+            "glyph" : ")",
+            "fg" : "#FFA500",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "consumable" : {
+            "effects" : { 
+                "ranged" : "6",
+                "damage" : "20",
+                "area_of_effect" : "3"
+            }
+        }
+    },
+
+    {
+        "name" : "Confusion Scroll",
+        "renderable": {
+            "glyph" : ")",
+            "fg" : "#FFAAAA",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "consumable" : {
+            "effects" : { 
+                "ranged" : "6",
+                "damage" : "20",
+                "confusion" : "4"
+            }
+        }
+    },
+
+    {
+        "name" : "Magic Mapping Scroll",
+        "renderable": {
+            "glyph" : ")",
+            "fg" : "#AAAAFF",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "consumable" : {
+            "effects" : { 
+                "magic_mapping" : ""
+            }
+        }
     }
 ]
 }

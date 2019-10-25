@@ -86,13 +86,15 @@ In this directory, create a new file: `spawns.json`. We'll temporarily put all o
 
 ```json
 {
+{
 "items" : [
     {
-        "name" : "Healing Potion",
+        "name" : "Health Potion",
         "renderable": {
             "glyph" : "!",
             "fg" : "#FF00FF",
-            "bg" : "#000000"
+            "bg" : "#000000",
+            "order" : 2
         },
         "consumable" : {
             "effects" : { "provides_healing" : "8" }
@@ -104,7 +106,8 @@ In this directory, create a new file: `spawns.json`. We'll temporarily put all o
         "renderable": {
             "glyph" : ")",
             "fg" : "#00FFFF",
-            "bg" : "#000000"
+            "bg" : "#000000",
+            "order" : 2
         },
         "consumable" : {
             "effects" : { 
@@ -229,9 +232,271 @@ That's *super* ugly and horribly formatted, but you can see that it contains the
 
 ## Storing and indexing our raw item data
 
-Having this (largely text) data is great, but it doesn't really help us until it can directly relate to spawning entities. We're also discarding the data as soon as we've loaded it! We want to create a structure to hold all of our raw data, and provide useful services such as spawning an object entirely from the data in the `raws`. We'll make a new file, `raws/rawmaster.rs`:
+Having this (largely text) data is great, but it doesn't really help us until it can directly relate to spawning entities. We're also discarding the data as soon as we've loaded it! 
 
-Add lazy static to cargo...
+We want to create a structure to hold all of our raw data, and provide useful services such as spawning an object entirely from the data in the `raws`. We'll make a new file, `raws/rawmaster.rs`:
+
+```rust
+use std::collections::HashMap;
+use specs::prelude::*;
+use crate::components::*;
+use super::{Raws};
+
+pub struct RawMaster {
+    raws : Raws,
+    item_index : HashMap<String, usize>
+}
+
+impl RawMaster {
+    pub fn empty() -> RawMaster {
+        RawMaster {
+            raws : Raws{ items: Vec::new() },
+            item_index : HashMap::new()
+        }
+    }
+
+    pub fn load(&mut self, raws : Raws) {
+        self.raws = raws;
+        self.item_index = HashMap::new();
+        for (i,item) in self.raws.items.iter().enumerate() {
+            self.item_index.insert(item.name.clone(), i);
+        }
+    }    
+}
+```
+
+That's very straightforward, and well within what we've learned of Rust so far: we make a structure called `RawMaster`, it gets a private copy of the `Raws` data and a `HashMap` storing item names and their index inside `Raws.items`. The `empty` constructor does just that: it makes a completely empty version of the `RawMaster` structure. `load` takes the de-serialized `Raws` structure, stores it, and indexes the items by name and location in the `items` array.
+
+## Accessing Raw Data From Anywhere
+
+This is one of those times that it would be nice if Rust didn't make global variables difficult to use; we want exactly one copy of the `RawMaster` data, and we'd like to be able to *read* it from anywhere. You *can* accomplish that with a bunch of `unsafe` code, but we'll be good "Rustaceans" and use a popular method: the `lazy_static`. This functionality isn't part of the language itself, so we need to add a crate to `cargo.toml`. Add the following line to your `[dependencies]` in the file:
+
+```toml
+lazy_static = "1.4.0"
+```
+
+Now we do a bit of a dance to make the global safely available from everywhere. At the end of `main.rs`'s import section, add:
+
+```rust
+#[macro_use]
+extern crate lazy_static;
+```
+
+This is similar to what we've done for other macros: it tells Rust that we'd like to import the macros from the crate `lazy_static`. In `mod.rs`, declare the following:
+
+```rust
+mod rawmaster;
+pub use rawmaster::*;
+use std::sync::Mutex;
+```
+
+Also:
+
+```rust
+lazy_static! {
+    pub static ref RAWS : Mutex<RawMaster> = Mutex::new(RawMaster::empty());
+}
+```
+
+The `lazy_static!` macro does a bunch of hard work for us to make this safe. The interesting part is that we still have to use a `Mutex`. Mutexes are a construct that ensure that no more than one thread at a time can write to a structure. You access a Mutex by calling `lock` - it is now yours until the lock goes out of scope. So in our `load_raws` function, we need to populate it:
+
+```rust
+// Retrieve the raw data as an array of u8 (8-bit unsigned chars)
+    let raw_data = rltk::embedding::EMBED
+        .lock()
+        .unwrap()
+        .get_resource("../../raws/spawns.json".to_string())
+        .unwrap();
+    let raw_string = std::str::from_utf8(&raw_data).expect("Unable to convert to a valid UTF-8 string.");
+    let decoder : Raws = serde_json::from_str(&raw_string).expect("Unable to parse JSON");
+
+    RAWS.lock().unwrap().load(decoder);
+```
+
+You'll notice that RLTK's `embedding` system is quietly using a `lazy_static` itself - that's what the `lock` and `unwrap` code is for: it manages the Mutex. So for our `RAWS` global, we `lock` it (retrieving a scoped lock), `unwrap` that lock (to allow us to access the contents), and call the `load` function we wrote earlier. Quite a mouthful, but now we can safely share the `RAWS` data without having to worry about threading problems. Once loaded, we'll probably never write to it again - and Mutex locks for reading are pretty much instantaneous when you don't have lots of threads running.
+
+## Spawning items from the RAWS
+
+In `rawmaster.rs`, we'll make a new function:
+
+```rust
+pub fn spawn_named_item(raws: &RawMaster, new_entity : EntityBuilder, key : &str, pos : SpawnType) -> Option<Entity> {
+    if raws.item_index.contains_key(key) {
+        let item_template = &raws.raws.items[raws.item_index[key]];
+
+        let mut eb = new_entity;
+
+        // Spawn in the specified location
+        match pos {
+            SpawnType::AtPosition{x,y} => {
+                eb = eb.with(Position{ x, y });
+            }
+        }
+
+        // Renderable
+        if let Some(renderable) = &item_template.renderable {
+            eb = eb.with(crate::components::Renderable{  
+                glyph: rltk::to_cp437(renderable.glyph.chars().next().unwrap()),
+                fg : rltk::RGB::from_hex(&renderable.fg).expect("Invalid RGB"),
+                bg : rltk::RGB::from_hex(&renderable.bg).expect("Invalid RGB"),
+                render_order : renderable.order
+            });
+        }
+
+        eb = eb.with(crate::components::Item{});
+
+        if let Some(consumable) = &item_template.consumable {
+            eb = eb.with(crate::components::Consumable{});
+            for effect in consumable.effects.iter() {
+                let effect_name = effect.0.as_str();
+                match effect_name {
+                    "provides_healing" => { 
+                        eb = eb.with(ProvidesHealing{ heal_amount: effect.1.parse::<i32>().unwrap() }) 
+                    }
+                    "ranged" => { eb = eb.with(Ranged{ range: effect.1.parse::<i32>().unwrap() }) },
+                    "damage" => { eb = eb.with(InflictsDamage{ damage : effect.1.parse::<i32>().unwrap() }) }
+                    _ => {
+                        println!("Warning: consumable effect {} not implemented.", effect_name);
+                    }
+                }
+            }
+        }
+
+        return Some(eb.build());
+    }
+    None
+}
+```
+
+It's a long function, but it's actually very straightforward - and uses patterns we've encountered plenty of times before. It does the following:
+
+1. It looks to see if the `key` we've passed exists in the `item_index`. If it doesn't, it returns `None` - it didn't do anything.
+2. If the `key` does exist, then it adds a `Name` component to the entity - with the name from the raw file.
+3. If `Renderable` exists in the item definition, it creates a component of type `Renderable`.
+4. If `Consumable` exists in the item definition, it makes a new consumable. It iterates through all of the keys/values inside the `effect` dictionary, adding effect components as needed.
+
+Now you can open `spawner.rs` and modify `spawn_entity`:
+
+```rust
+pub fn spawn_entity(ecs: &mut World, spawn : &(&usize, &String)) {
+    let map = ecs.fetch::<Map>();
+    let width = map.width as usize;
+    let x = (*spawn.0 % width) as i32;
+    let y = (*spawn.0 / width) as i32;
+    std::mem::drop(map);
+
+    let item_result = spawn_named_item(&RAWS.lock().unwrap(), ecs.create_entity(), &spawn.1, SpawnType::AtPosition{ x, y});
+    if item_result.is_some() {
+        return;
+    }
+
+    match spawn.1.as_ref() {
+        "Goblin" => goblin(ecs, x, y),
+        "Orc" => orc(ecs, x, y),
+        "Fireball Scroll" => fireball_scroll(ecs, x, y),
+        "Confusion Scroll" => confusion_scroll(ecs, x, y),
+        "Dagger" => dagger(ecs, x, y),
+        "Shield" => shield(ecs, x, y),
+        "Longsword" => longsword(ecs, x, y),
+        "Tower Shield" => tower_shield(ecs, x, y),
+        "Rations" => rations(ecs, x, y),
+        "Magic Mapping Scroll" => magic_mapping_scroll(ecs, x, y),
+        "Bear Trap" => bear_trap(ecs, x, y),
+        "Door" => door(ecs, x, y),
+        _ => {}
+    }
+}
+```
+
+Note that we've deleted the items we've added into `spawns.json`. We can also delete the associated functions. `spawner.rs` will be really small when we're done! So the magic here is that it calls `spawn_named_item`, using a rather ugly `&RAWS.lock().unwrap()` to obtain safe access to our `RAWS` global variable. If it matched a key, it will return `Some(Entity)` - otherwise, we get `None`. So we check if `item_result.is_some()` and return if we succeeded in spawning something from the data. Otherwise, we use the new code.
+
+You'll also want to add a `raws::*` to the list of items imported from `super`.
+
+If you `cargo run` now, the game runs as before - including health potions and magic missile scrolls.
+
+## Adding the rest of the items
+
+We'll go ahead and get the rest of the consumables into `spawns.json`:
+
+```json
+...
+    {
+        "name" : "Fireball Scroll",
+        "renderable": {
+            "glyph" : ")",
+            "fg" : "#FFA500",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "consumable" : {
+            "effects" : { 
+                "ranged" : "6",
+                "damage" : "20",
+                "area_of_effect" : "3"
+            }
+        }
+    },
+
+    {
+        "name" : "Confusion Scroll",
+        "renderable": {
+            "glyph" : ")",
+            "fg" : "#FFAAAA",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "consumable" : {
+            "effects" : { 
+                "ranged" : "6",
+                "damage" : "20",
+                "confusion" : "4"
+            }
+        }
+    },
+
+    {
+        "name" : "Magic Mapping Scroll",
+        "renderable": {
+            "glyph" : ")",
+            "fg" : "#AAAAFF",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "consumable" : {
+            "effects" : { 
+                "magic_mapping" : ""
+            }
+        }
+    }
+]
+}
+```
+
+We'll put their effects into `rawmaster.rs`'s `spawn_named_item` function:
+
+```rust
+if let Some(consumable) = &item_template.consumable {
+    eb = eb.with(crate::components::Consumable{});
+    for effect in consumable.effects.iter() {
+        let effect_name = effect.0.as_str();
+        match effect_name {
+            "provides_healing" => { 
+                eb = eb.with(ProvidesHealing{ heal_amount: effect.1.parse::<i32>().unwrap() }) 
+            }
+            "ranged" => { eb = eb.with(Ranged{ range: effect.1.parse::<i32>().unwrap() }) },
+            "damage" => { eb = eb.with(InflictsDamage{ damage : effect.1.parse::<i32>().unwrap() }) }
+            "area_of_effect" => { eb = eb.with(AreaOfEffect{ radius: effect.1.parse::<i32>().unwrap() }) }
+            "confusion" => { eb = eb.with(Confusion{ turns: effect.1.parse::<i32>().unwrap() }) }
+            "magic_mapping" => { eb = eb.with(MagicMapper{}) }
+            _ => {
+                println!("Warning: consumable effect {} not implemented.", effect_name);
+            }
+        }
+    }
+}
+```
+
+You can now delete the fireball, magic mapping and confusion scrolls from `spawner.rs`! Run the game, and you have access to these items. Hopefully, this is starting to illustrate the power of linking a data file to your component creation.
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-45-raws1)**
 
