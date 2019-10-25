@@ -46,4 +46,5 @@
     - [Section 3 Conclusion](./chapter_42.md)
 - [Section 4 - Making A Game](./chapter_43.md)
     - [Design Document](./chapter_44.md)
+    - [Raw Files, Data-Driven Design](./chapter_45.md)
 - [Contributors](./contributors.md)
