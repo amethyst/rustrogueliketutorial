@@ -1,0 +1,32 @@
+{
+"items" : [
+    {
+        "name" : "Health Potion",
+        "renderable": {
+            "glyph" : "!",
+            "fg" : "#FF00FF",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "consumable" : {
+            "effects" : { "provides_healing" : "8" }
+        }
+    },
+
+    {
+        "name" : "Magic Missile Scroll",
+        "renderable": {
+            "glyph" : ")",
+            "fg" : "#00FFFF",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "consumable" : {
+            "effects" : { 
+                "ranged" : "6",
+                "damage" : "20"
+            }
+        }
+    }
+]
+}

@@ -26,7 +26,7 @@ That gets rid of one advantage of data-driven design: you still have to recompil
 
 ## Deciding upon a format for our Raw files
 
-In some projects, I've used the scripting language `Lua` for this sort of thing. It's a great language, and having executable configuration is surprisingly useful (the configuration can include functions and helpers to build itself). That's overkill for this project. Since Rust uses [Tom's Obvious, Minimal Language - TOML](https://github.com/toml-lang/toml) natively, we'll also use it to define our various game elements.
+In some projects, I've used the scripting language `Lua` for this sort of thing. It's a great language, and having executable configuration is surprisingly useful (the configuration can include functions and helpers to build itself). That's overkill for this project. We already support JSON in our saving/loading of the game, so we'll use it for `Raws` also.
 
 Taking a look at `spawner.rs` in the current game should give us some clues as to what to put into these files. Thanks to our use of components, there's already a lot of shared functionality we can build upon. For example, the definition for a *health potion* looks like this:
 
@@ -49,38 +49,23 @@ fn health_potion(ecs: &mut World, x: i32, y: i32) {
 }
 ```
 
-In TOML, we might go for a representation like this (just an example):
+In JSON, we might go for a representation like this (just an example):
 
-```toml
-[health potion]
-name = "Potion of Healing"
-glyph = "¡"
-foreground = "#FF00FF"
-background = "#000000"
-render_order = 2
-type = "item-consumable"
-consume_effects = [  
-    { effect = "self-healing", amount: 8 }
-]
+```json
+{
+    "name" : "Healing Potion",
+    "renderable": {
+        "glyph" : "!",
+        "fg" : "#FF00FF",
+        "bg" : "#000000"
+    },
+    "consumable" : {
+        "effects" : { "provides_healing" : "8" }
+    }
+}
 ```
 
-## Supporting TOML in your program
-
-Despite using TOML as part of the build process, Rust doesn't actually natively support it! It relies upon a `crate` - just like the other crates you've been using in your package to date. Open up your `cargo.toml` file, and we'll add `TOML` support:
-
-```toml
-[dependencies]
-rltk = { git = "https://github.com/thebracket/rltk_rs", features = ["serialization"] }
-specs = { version = "0.15.0", features = ["serde"] }
-specs-derive = "0.4.0"
-serde= { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-toml = "0.5.3"
-```
-
-Since the `toml` crate already includes support for Serde (our serialization system), that's all you need to be able to use it.
-
-## Making some raw files
+## Making a raw files
 
 Your package should be laid out like this:
 
@@ -97,11 +82,156 @@ At the root level, we'll make a new directory/folder called `raws`. So your tree
 \ -   raws
 ```
 
-In this directory, create a new file: `spawns.toml`. We'll temporarily put all of our definitions into one file; this will change later, but we want to get support for our data-driven ambitions bootstrapped. In this file, we'll put definitions for some of the entities we currently support in `spawner.rs`:
+In this directory, create a new file: `spawns.json`. We'll temporarily put all of our definitions into one file; this will change later, but we want to get support for our data-driven ambitions bootstrapped. In this file, we'll put definitions for some of the entities we currently support in `spawner.rs`. We'll start with just a couple of items:
 
-```toml
+```json
+{
+"items" : [
+    {
+        "name" : "Healing Potion",
+        "renderable": {
+            "glyph" : "!",
+            "fg" : "#FF00FF",
+            "bg" : "#000000"
+        },
+        "consumable" : {
+            "effects" : { "provides_healing" : "8" }
+        }
+    },
+
+    {
+        "name" : "Magic Missile Scroll",
+        "renderable": {
+            "glyph" : ")",
+            "fg" : "#00FFFF",
+            "bg" : "#000000"
+        },
+        "consumable" : {
+            "effects" : { 
+                "ranged" : "6",
+                "damage" : "20"
+            }
+        }
+    }
+]
+}
+```
+
+If you aren't familiar with the JSON format, it's basically a JavaScript dump of data: 
+* We wrap the file in `{` and `}` to denote the *object* we are loading. This will be our `Raws` object, eventually.
+* Then we have an *array* called `Items` - which will hold our items.
+* Each `Item` has a `name` - this maps directly to the `Name` component.
+* Items may have a `renderable` structure, listing glyph, foreground and background colors.
+* These items are `consumable`, and we list their effects in a "key/value map" - basically a `HashMap` like we've used before, a `Dictionary` in other languages.
+
+We'll be adding a lot more to the spawns list eventually, but lets start by making these work.
+
+## Embedding the Raw Files
+
+In your project `src` directory, make a new directory: `src/raws`. We can reasonably expect this module to become quite large, so we'll support breaking it into smaller pieces from the beginning. To comply with Rust's requirements for building modules, make a new file called `mod.rs` in the new folder:
+
+```rust
+rltk::embedded_resource!(RAW_FILE, "../../raws/spawns.json");
+
+pub fn load_raws() {
+    rltk::link_resource!(RAW_FILE, "../../raws/spawns.json");
+}
+```
+
+And at the top of `main.rs` add it to the list of modules we use:
+
+```rust
+pub mod raws;
+```
+
+In our initialization, add a call to `load_raws` after component initialization and before you start adding to `World`:
+
+```rust
+...
+gs.ecs.register::<Door>();
+gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
+
+raws::load_raws();
+
+gs.ecs.insert(Map::new(1, 64, 64));
+...
+```
+
+The `spawns.json` file will now be embedded into your executable, courtesy of RLTK's embedding system.
+
+## Parsing the raw files
+
+This is the hard part: we need a way to *read* the JSON file we've created, and to turn it into a format we can use within Rust. Going back to `mod.rs`, we can expand the function to load our embedded data as a string:
+
+```rust
+// Retrieve the raw data as an array of u8 (8-bit unsigned chars)
+let raw_data = rltk::embedding::EMBED
+    .lock()
+    .unwrap()
+    .get_resource("../../raws/spawns.json".to_string())
+    .unwrap();
+let raw_string = std::str::from_utf8(&raw_data).expect("Unable to convert to a valid UTF-8 string.");
+```
+
+This will panic (crash) if it isn't able to find the resource, or if it is unable to parse it as a regular string (Rust likes UTF-8 Unicode encoding, so we'll go with it. It lets us include extended glyphs, which we can parse via RLTK's `to_cp437` function - so it works out nicely!).
+
+Now we need to actually *parse* the JSON into something usable. Just like our `saveload.rs` system, we can do this with Serde. For now, we'll just dump the results to the console so we can see that it *did* something:
+
+```rust
+let decoder : Raws = serde_json::from_str(&raw_string).expect("Unable to parse JSON");
+println!("{:?}", decoder);
+```
+
+(See the cryptic `{:?}`? That's a way to print *debug* information about a structure). This will fail to compile, because we haven't actually implemented `Raws` - the type it is looking for. 
+
+For clarity, we'll put the classes that actually handle the data in their own file, `raws/item_structs.rs`. Here's the file:
+
+```rust
+use serde::{Deserialize};
+use std::collections::HashMap;
+
+#[derive(Deserialize, Debug)]
+pub struct Raws {
+    pub items : Vec<Item>
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Item {
+    pub name : String,
+    pub renderable : Option<Renderable>,
+    pub consumable : Option<Consumable>
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Renderable {
+    pub glyph: String,
+    pub fg : String,
+    pub bg : String,
+    pub order: i32
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Consumable {
+    pub effects : HashMap<String, String>
+}
+```
+
+At the top of the file, make sure to include `use serde::{Deserialize};` and `use std::collections::HashMap;` to include the types we need. Also notice that we have included `Debug` in the derived types list. This allows Rust to print a debug copy of the struct, so we can see what the code did. Notice also that a lot of things are an `Option`. This way, the parsing will work if an item *doesn't* have that entry. It will make reading them a little more complicated later on, but we can live with that!
+
+If you `cargo run` the project now, ignore the game window - watch the console. You'll see the following:
 
 ```
+Raws { items: [Item { name: "Healing Potion", renderable: Some(Renderable { glyph: "!", fg: "#FF00FF", bg: "#000000" }), consumable: Some(Consumable { effects: {"provides_healing": "8"} }) }, Item { name: "Magic Missile Scroll", renderable: Some(Renderable { glyph: ")", fg: "#00FFFF", bg: "#000000" 
+}), consumable: Some(Consumable { effects: {"damage": "20", "ranged": "6"} }) }] }
+```
+
+That's *super* ugly and horribly formatted, but you can see that it contains the data we entered!
+
+## Storing and indexing our raw item data
+
+Having this (largely text) data is great, but it doesn't really help us until it can directly relate to spawning entities. We're also discarding the data as soon as we've loaded it! We want to create a structure to hold all of our raw data, and provide useful services such as spawning an object entirely from the data in the `raws`. We'll make a new file, `raws/rawmaster.rs`:
+
+Add lazy static to cargo...
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-45-raws1)**
 
