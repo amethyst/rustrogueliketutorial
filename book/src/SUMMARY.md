@@ -1,7 +1,6 @@
 # Summary
 
 [Introduction](./chapter_0.md)
-- [Contributors](./contributors.md)
 - [Section 1 - Hello Rust](./chapter_1.md)
     - [Entities and Components](./chapter_2.md)
     - [Walking A Map](./chapter_3.md)
@@ -45,3 +44,6 @@
     - [Doors](./chapter_40.md)
     - [Decouple map size from screen size](./chapter_41.md)
     - [Section 3 Conclusion](./chapter_42.md)
+- [Section 4 - Making A Game](./chapter_43.md)
+    - [Design Document](./chapter_44.md)
+- [Contributors](./contributors.md)
