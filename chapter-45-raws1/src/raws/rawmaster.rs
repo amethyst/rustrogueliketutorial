@@ -136,7 +136,7 @@ pub fn spawn_named_mob(raws: &RawMaster, new_entity : EntityBuilder, key : &str,
             power : mob_template.stats.power,
             defense : mob_template.stats.defense
         });
-        eb = eb.with(Viewshed{ range: mob_template.vision_range, dirty: true });
+        eb = eb.with(Viewshed{ visible_tiles : Vec::new(), range: mob_template.vision_range, dirty: true });
 
         return Some(eb.build());
     }
