@@ -40,6 +40,8 @@ CALL :Stage chapter-38-rooms
 CALL :Stage chapter-39-halls
 CALL :Stage chapter-40-doors
 CALL :Stage chapter-41-camera
+CALL :Stage chapter-45-raws1
+CALL :Stage chapter-46-raws2
 
 REM Publish or perish
 cd book\book\wasm
