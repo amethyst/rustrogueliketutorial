@@ -184,5 +184,37 @@
         },
         "vision_range" : 8
     }
+],
+
+"props" : [
+    {
+        "name" : "Bear Trap",
+        "renderable": {
+            "glyph" : "^",
+            "fg" : "#FF0000",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "hidden" : true,
+        "entry_trigger" : {
+            "effects" : {
+                "damage" : "6",
+                "single_activation" : "1"
+            }
+        }
+    },
+    {
+        "name" : "Door",
+        "renderable": {
+            "glyph" : "+",
+            "fg" : "#805A46",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "hidden" : false,
+        "blocks_tile" : true,
+        "blocks_visibility" : true,
+        "door_open" : true
+    }
 ]
 }

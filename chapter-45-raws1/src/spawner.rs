@@ -2,10 +2,8 @@ extern crate rltk;
 use rltk::{ RGB, RandomNumberGenerator };
 extern crate specs;
 use specs::prelude::*;
-use super::{CombatStats, Player, Renderable, Name, Position, Viewshed, Monster, BlocksTile, Rect,  
-    InflictsDamage, SerializeMe, random_table::RandomTable, HungerClock,
-    HungerState, Hidden, EntryTrigger, SingleActivation, Map, TileType,
-    Door, BlocksVisibility, raws::* };
+use super::{CombatStats, Player, Renderable, Name, Position, Viewshed, Rect,  
+    SerializeMe, random_table::RandomTable, HungerClock, HungerState, Map, TileType, raws::* };
 use crate::specs::saveload::{MarkedBuilder, SimpleMarker};
 use std::collections::HashMap;
 
@@ -104,44 +102,5 @@ pub fn spawn_entity(ecs: &mut World, spawn : &(&usize, &String)) {
         return;
     }
 
-    match spawn.1.as_ref() {
-        "Bear Trap" => bear_trap(ecs, x, y),
-        "Door" => door(ecs, x, y),
-        _ => {}
-    }
-}
-
-fn bear_trap(ecs: &mut World, x: i32, y: i32) {
-    ecs.create_entity()
-        .with(Position{ x, y })
-        .with(Renderable{
-            glyph: rltk::to_cp437('^'),
-            fg: RGB::named(rltk::RED),
-            bg: RGB::named(rltk::BLACK),
-            render_order: 2
-        })
-        .with(Name{ name : "Bear Trap".to_string() })
-        .with(Hidden{})
-        .with(EntryTrigger{})
-        .with(InflictsDamage{ damage: 6 })
-        .with(SingleActivation{})
-        .marked::<SimpleMarker<SerializeMe>>()
-        .build();
-}
-
-fn door(ecs: &mut World, x: i32, y: i32) {
-    ecs.create_entity()
-        .with(Position{ x, y })
-        .with(Renderable{
-            glyph: rltk::to_cp437('+'),
-            fg: RGB::named(rltk::CHOCOLATE),
-            bg: RGB::named(rltk::BLACK),
-            render_order: 2
-        })
-        .with(Name{ name : "Door".to_string() })
-        .with(BlocksTile{})
-        .with(BlocksVisibility{})
-        .with(Door{open: false})
-        .marked::<SimpleMarker<SerializeMe>>()
-        .build();
+    println!("WARNING: We don't know how to spawn [{}]!", spawn.1);
 }
