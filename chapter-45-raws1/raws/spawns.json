@@ -163,7 +163,8 @@
             "hp" : 16,
             "defense" : 1,
             "power" : 4
-        }
+        },
+        "vision_range" : 8
     },
 
     {
@@ -180,7 +181,8 @@
             "hp" : 8,
             "defense" : 1,
             "power" : 3
-        }
+        },
+        "vision_range" : 8
     }
 ]
 }

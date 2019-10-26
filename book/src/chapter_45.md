@@ -343,6 +343,8 @@ pub fn spawn_named_item(raws: &RawMaster, new_entity : EntityBuilder, key : &str
             });
         }
 
+        eb = eb.with(Name{ name : item_template.name.clone() });
+
         eb = eb.with(crate::components::Item{});
 
         if let Some(consumable) = &item_template.consumable {
@@ -636,7 +638,8 @@ We'll add a new array to `spawns.json` to handle monsters. We're calling it "mob
             "hp" : 16,
             "defense" : 1,
             "power" : 4
-        }
+        },
+        "vision_range" : 8
     },
 
     {
@@ -653,7 +656,8 @@ We'll add a new array to `spawns.json` to handle monsters. We're calling it "mob
             "hp" : 8,
             "defense" : 1,
             "power" : 3
-        }
+        },
+        "vision_range" : 8
     }
 ]
 ```
@@ -669,7 +673,8 @@ pub struct Mob {
     pub name : String,
     pub renderable : Option<Renderable>,
     pub blocks_tile : bool,
-    pub stats : MobStats
+    pub stats : MobStats,
+    pub vision_range : i32
 }
 
 #[derive(Deserialize, Debug)]
@@ -735,10 +740,121 @@ impl RawMaster {
 }
 ```
 
-Now we need a new function, `spawn_named_mob`:
+We're going to want to build a `spawn_named_mob` function, but first lets create some helpers so we're sharing functionality with `spawn_named_item` - avoid repeating ourselves. The first is pretty straightforward:
 
 ```rust
+fn spawn_position(pos : SpawnType, new_entity : EntityBuilder) -> EntityBuilder {
+    let mut eb = new_entity;
 
+    // Spawn in the specified location
+    match pos {
+        SpawnType::AtPosition{x,y} => {
+            eb = eb.with(Position{ x, y });
+        }
+    }
+
+    eb
+}
+```
+
+When we add more `SpawnType` entries, this function will necessarily expand to include them - so it's *great* that it's a function. We can replace the same code in `spawn_named_item` with a single call to this function:
+
+```rust
+// Spawn in the specified location
+eb = spawn_position(pos, eb);
+```
+
+Let's also break out handling of `Renderable` data. This was more difficult; I had a *terrible* time getting Rust's lifetime checker to work with a system that actually added it to the `EntityBuilder`. I finally settled on a function that returns the component for the caller to add:
+
+```rust
+fn get_renderable_component(renderable : &super::item_structs::Renderable) -> crate::components::Renderable {
+    crate::components::Renderable{  
+        glyph: rltk::to_cp437(renderable.glyph.chars().next().unwrap()),
+        fg : rltk::RGB::from_hex(&renderable.fg).expect("Invalid RGB"),
+        bg : rltk::RGB::from_hex(&renderable.bg).expect("Invalid RGB"),
+        render_order : renderable.order
+    }
+}
+```
+
+That still cleans up the call in `spawn_named_item`:
+
+```rust
+// Renderable
+if let Some(renderable) = &item_template.renderable {
+    eb = eb.with(get_renderable_component(renderable));
+}
+```
+
+Alright - so with that in hand, we can go ahead and make `spawn_named_mob`:
+
+```rust
+pub fn spawn_named_mob(raws: &RawMaster, new_entity : EntityBuilder, key : &str, pos : SpawnType) -> Option<Entity> {
+    if raws.mob_index.contains_key(key) {
+        let mob_template = &raws.raws.mobs[raws.mob_index[key]];
+
+        let mut eb = new_entity;
+
+        // Spawn in the specified location
+        eb = spawn_position(pos, eb);
+
+        // Renderable
+        if let Some(renderable) = &mob_template.renderable {
+            eb = eb.with(get_renderable_component(renderable));
+        }
+
+        eb = eb.with(Name{ name : mob_template.name.clone() });
+
+        eb = eb.with(Monster{});
+        if mob_template.blocks_tile {
+            eb = eb.with(BlocksTile{});
+        }
+        eb = eb.with(CombatStats{
+            max_hp : mob_template.stats.max_hp,
+            hp : mob_template.stats.hp,
+            power : mob_template.stats.power,
+            defense : mob_template.stats.defense
+        });
+        eb = eb.with(Viewshed{ range: mob_template.vision_range, dirty: true });
+
+        return Some(eb.build());
+    }
+    None
+}
+```
+
+There's really nothing we haven't already covered in this function: we simply apply a renderable, position, name using the same code as before - and then check `blocks_tile` to see if we should add a `BlocksTile` component, and copy the stats into a `CombatStats` component. We also setup a `Viewshed` component with `vision_range` range.
+
+Before we update `spawner.rs` again, lets introduce a master spawning method - `spawn_named_entity`. The reasoning behind this is that the spawn system doesn't actually know (or care) if an entity is an item, mob, or anything else. Rather than push a lot of `if` checks into it, we'll provide a single interface:
+
+```rust
+pub fn spawn_named_entity(raws: &RawMaster, new_entity : EntityBuilder, key : &str, pos : SpawnType) -> Option<Entity> {
+    if raws.item_index.contains_key(key) {
+        return spawn_named_item(raws, new_entity, key, pos);
+    } else if raws.mob_index.contains_key(key) {
+        return spawn_named_mob(raws, new_entity, key, pos);
+    }
+
+    None
+}
+```
+
+So over in `spawner.rs` we can use the generic spawner now:
+
+```rust
+let spawn_result = spawn_named_entity(&RAWS.lock().unwrap(), ecs.create_entity(), &spawn.1, SpawnType::AtPosition{ x, y});
+if spawn_result.is_some() {
+    return;
+}
+```
+
+We can also go ahead and delete the references to Orcs, Goblins and Monsters! We're nearly there - you can get your data-driven monsters now.
+
+## Doors and Traps
+
+There are two remaining hard-coded entities. These have been left separate because they aren't really the same as the other types: they are what I call "props" - level features. You can't pick them up, but they are an integral part of the level. So in `spawns.json`, we'll go ahead and define some props:
+
+```json
 ```
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-45-raws1)**

@@ -6,7 +6,8 @@ pub struct Mob {
     pub name : String,
     pub renderable : Option<Renderable>,
     pub blocks_tile : bool,
-    pub stats : MobStats
+    pub stats : MobStats,
+    pub vision_range : i32
 }
 
 #[derive(Deserialize, Debug)]

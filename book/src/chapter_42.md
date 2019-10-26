@@ -1,4 +1,4 @@
-# Decoupling map size from terminal size
+# Section 3 - Wrap Up
 
 ---
 
