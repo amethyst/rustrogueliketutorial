@@ -130,7 +130,7 @@ impl GameState for State {
                     camera::render_debug_map(&self.mapgen_history[self.mapgen_index], ctx);
 
                     self.mapgen_timer += ctx.frame_time_ms;
-                    if self.mapgen_timer > 200.0 {
+                    if self.mapgen_timer > 1000.0 {
                         self.mapgen_timer = 0.0;
                         self.mapgen_index += 1;
                         if self.mapgen_index == self.mapgen_history.len() {
@@ -370,7 +370,7 @@ impl State {
         self.mapgen_timer = 0.0;
         self.mapgen_history.clear();
         let mut rng = self.ecs.write_resource::<rltk::RandomNumberGenerator>();
-        let mut builder = map_builders::random_builder(new_depth, &mut rng, 80, 50);
+        let mut builder = map_builders::level_builder(new_depth, &mut rng, 80, 50);
         builder.build_map(&mut rng);
         self.mapgen_history = builder.build_data.history.clone();
         let player_start;

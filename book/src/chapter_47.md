@@ -218,6 +218,55 @@ fn get_tile_glyph(idx: usize, map : &Map) -> (u8, RGB, RGB) {
 }
 ```
 
+## Starting to build our town
+
+We want to stop making maps randomly, and instead start being a bit predictable in what we make. So when you start depth 1, you *always* get a town. In `map_builders/mod.rs`, we'll make a new function. For now, it'll just fall back to being random:
+
+```rust
+pub fn level_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator, width: i32, height: i32) -> BuilderChain {
+    random_builder(new_depth, rng, width, height)
+}
+```
+
+Pop over to `main.rs` and change the builder function call to use our new function:
+
+```rust
+fn generate_world_map(&mut self, new_depth : i32) {
+    self.mapgen_index = 0;
+    self.mapgen_timer = 0.0;
+    self.mapgen_history.clear();
+    let mut rng = self.ecs.write_resource::<rltk::RandomNumberGenerator>();
+    let mut builder = map_builders::level_builder(new_depth, &mut rng, 80, 50);
+    ...
+```
+
+Now, we'll start fleshing out our `level_builder`; we want depth 1 to generate a town map - otherwise, we'll stick with random for now. We *also* want it to be obvious via a `match` statement how we're routing each level's procedural generation:
+
+```rust
+pub fn level_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator, width: i32, height: i32) -> BuilderChain {
+    println!("Depth: {}", new_depth);
+    match new_depth {
+        1 => town_builder(new_depth, rng, width, height),
+        _ => random_builder(new_depth, rng, width, height)
+    }
+}
+```
+
+At the top of the `mod.rs` file, add:
+
+```rust
+mod town;
+use town::town_builder;
+```
+
+And in a new file, `map_builders/town.rs` we'll begin our function:
+
+```rust
+use super::BuilderChain;
+
+pub fn level_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator, width: i32, height: i32) -> BuilderChain {
+}
+```
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-47-town1)**
 

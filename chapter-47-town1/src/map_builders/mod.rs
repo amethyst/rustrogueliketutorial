@@ -28,6 +28,7 @@ mod rooms_corridors_nearest;
 mod rooms_corridors_lines;
 mod room_corridor_spawner;
 mod door_placement;
+mod town;
 use distant_exit::DistantExit;
 use simple_map::SimpleMapBuilder;
 use bsp_dungeon::BspDungeonBuilder;
@@ -56,6 +57,7 @@ use rooms_corridors_nearest::NearestCorridors;
 use rooms_corridors_lines::StraightLineCorridors;
 use room_corridor_spawner::CorridorSpawner;
 use door_placement::DoorPlacement;
+use town::town_builder;
 
 pub struct BuilderMap {
     pub spawn_list : Vec<(usize, String)>,
@@ -292,3 +294,10 @@ pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator, wid
     builder
 }
 
+pub fn level_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator, width: i32, height: i32) -> BuilderChain {
+    println!("Depth: {}", new_depth);
+    match new_depth {
+        1 => town_builder(new_depth, rng, width, height),
+        _ => random_builder(new_depth, rng, width, height)
+    }
+}
