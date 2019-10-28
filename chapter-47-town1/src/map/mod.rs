@@ -4,11 +4,8 @@ extern crate specs;
 use specs::prelude::*;
 use serde::{Serialize, Deserialize};
 use std::collections::HashSet;
-
-#[derive(PartialEq, Eq, Hash, Copy, Clone, Serialize, Deserialize)]
-pub enum TileType {
-    Wall, Floor, DownStairs
-}
+mod tiletype;
+pub use tiletype::{TileType, tile_walkable, tile_opaque, tile_cost};
 
 #[derive(Default, Serialize, Deserialize, Clone)]
 pub struct Map {
@@ -40,7 +37,7 @@ impl Map {
 
     pub fn populate_blocked(&mut self) {        
         for (i,tile) in self.tiles.iter_mut().enumerate() {
-            self.blocked[i] = *tile == TileType::Wall;
+            self.blocked[i] = !tile_walkable(*tile);
         }
     }
 
@@ -72,7 +69,7 @@ impl BaseMap for Map {
     fn is_opaque(&self, idx:i32) -> bool {
         let idx_u = idx as usize;
         if idx_u > 0 && idx_u < self.tiles.len() {
-            self.tiles[idx_u] == TileType::Wall || self.view_blocked.contains(&idx_u)
+            tile_opaque(self.tiles[idx_u]) || self.view_blocked.contains(&idx_u)
         } else {
             true
         }
@@ -82,18 +79,19 @@ impl BaseMap for Map {
         let mut exits : Vec<(i32, f32)> = Vec::new();
         let x = idx % self.width;
         let y = idx / self.width;
+        let tt = self.tiles[idx as usize];
 
         // Cardinal directions
-        if self.is_exit_valid(x-1, y) { exits.push((idx-1, 1.0)) };
-        if self.is_exit_valid(x+1, y) { exits.push((idx+1, 1.0)) };
-        if self.is_exit_valid(x, y-1) { exits.push((idx-self.width, 1.0)) };
-        if self.is_exit_valid(x, y+1) { exits.push((idx+self.width, 1.0)) };
+        if self.is_exit_valid(x-1, y) { exits.push((idx-1, tile_cost(tt))) };
+        if self.is_exit_valid(x+1, y) { exits.push((idx+1, tile_cost(tt))) };
+        if self.is_exit_valid(x, y-1) { exits.push((idx-self.width, tile_cost(tt))) };
+        if self.is_exit_valid(x, y+1) { exits.push((idx+self.width, tile_cost(tt))) };
 
         // Diagonals
-        if self.is_exit_valid(x-1, y-1) { exits.push(((idx-self.width)-1, 1.45)); }
-        if self.is_exit_valid(x+1, y-1) { exits.push(((idx-self.width)+1, 1.45)); }
-        if self.is_exit_valid(x-1, y+1) { exits.push(((idx+self.width)-1, 1.45)); }
-        if self.is_exit_valid(x+1, y+1) { exits.push(((idx+self.width)+1, 1.45)); }
+        if self.is_exit_valid(x-1, y-1) { exits.push(((idx-self.width)-1, tile_cost(tt) * 1.45)); }
+        if self.is_exit_valid(x+1, y-1) { exits.push(((idx-self.width)+1, tile_cost(tt) * 1.45)); }
+        if self.is_exit_valid(x-1, y+1) { exits.push(((idx+self.width)-1, tile_cost(tt) * 1.45)); }
+        if self.is_exit_valid(x+1, y+1) { exits.push(((idx+self.width)+1, tile_cost(tt) * 1.45)); }
 
         exits
     }

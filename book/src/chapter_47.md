@@ -52,8 +52,171 @@ So - we want a procedurally generated town, but we want to keep it functional - 
 
 ## Making some new tile types
 
-From the above, it sounds like we are going to need some new tiles. The ones that spring to mind for a town are roads, grass, water (both deep and shallow), bridge, wooden floors, and building walls.
+From the above, it sounds like we are going to need some new tiles. The ones that spring to mind for a town are roads, grass, water (both deep and shallow), bridge, wooden floors, and building walls. One thing we can count on: we're going to add *lots* of new tile types as we progress, so we better take the time to make it a seamless experience up-front!
 
+The `map.rs` could get quite complicated if we're not careful, so lets make it into its own module with a directory. We'll start by making a directory, `map/`. Then we'll move `map.rs` into it, and rename it `mod.rs`. Now, we'll take `TileType` out of `mod.rs` and put it into a new file - `tiletype.rs`:
+
+```rust
+use serde::{Serialize, Deserialize};
+
+#[derive(PartialEq, Eq, Hash, Copy, Clone, Serialize, Deserialize)]
+pub enum TileType {
+    Wall, Floor, DownStairs
+}
+```
+
+And in `mod.rs` we'll accept the module and share the public types it exposes:
+
+```rust
+mod tiletype;
+pub use tiletype::TileType;
+```
+
+This hasn't gained us much yet... but now we can start supporting the various tile types. As we add functionality, you'll hopefully see why using a separate file makes it easier to find the relevant code:
+
+```rust
+#[derive(PartialEq, Eq, Hash, Copy, Clone, Serialize, Deserialize)]
+pub enum TileType {
+    Wall, 
+    Floor, 
+    DownStairs,
+    Road,
+    Grass,
+    ShallowWater,
+    DeepWater,
+    WoodFloor,
+    Bridge
+}
+```
+
+This is only part of the picture, because now we need to handle a bunch of grunt-work: can you enter tiles of that type, do they block visibility, do they have a different cost for path-finding, and so on. We've also done a lot of "spawn if its a floor" code in our map builders; maybe that wasn't such a good idea if you can have multiple floor types? Anyway, the current `map.rs` provides some of what we need in order to satisfy the `BaseMap` trait for RLTK.
+
+We'll make a few functions to help satisfy this requirement, while keeping our tile functionality in one place:
+
+```rust
+pub fn tile_walkable(tt : TileType) -> bool {
+    match tt {
+        TileType::Floor | TileType::DownStairs | TileType::Road | TileType::Grass |
+        TileType::ShallowWater | TileType::WoodFloor | TileType::Bridge 
+            => true,
+        _ => false        
+    }
+}
+
+pub fn tile_opaque(tt : TileType) -> bool {
+    match tt {
+        TileType::Wall => true,
+        _ => false
+    }
+}
+```
+
+Now we'll go back into `mod.rs`, and import these - and make them public to anyone who wants them:
+
+```rust
+mod tiletype;
+pub use tiletype::{TileType, tile_walkable, tile_opaque};
+```
+
+We also need to update some of our functions to use this functionality. We determine a lot of path-finding with the `blocked` system, so we need to update `populate_blocked` to handle the various types using the functions we just made:
+
+```rust
+pub fn populate_blocked(&mut self) {        
+    for (i,tile) in self.tiles.iter_mut().enumerate() {
+        self.blocked[i] = !tile_walkable(*tile);
+    }
+}
+```
+
+We also need to update our visibility determination code:
+
+```rust
+impl BaseMap for Map {
+    fn is_opaque(&self, idx:i32) -> bool {
+        let idx_u = idx as usize;
+        if idx_u > 0 && idx_u < self.tiles.len() {
+            tile_opaque(self.tiles[idx_u]) || self.view_blocked.contains(&idx_u)
+        } else {
+            true
+        }
+    }
+    ...
+```
+
+Lastly, lets look at `get_available_exits`. This uses the blocked system to determine if an exit is *possible*, but so far we've hard-coded all of our costs. When there is just a floor and a wall to choose from, it is a pretty easy choice after all! Once we start offering choices, we might want to encourage certain behaviors. It would certainly look more realistic if people preferred to travel on the road than the grass, and *definitely* more realistic if they avoid standing in shallow water unless they need to. So we'll build a *cost* function (in `tiletype.rs`):
+
+```rust
+pub fn tile_cost(tt : TileType) -> f32 {
+    match tt {
+        TileType::Road => 0.8,
+        TileType::Grass => 1.1,
+        TileType::ShallowWater => 1.2,
+        _ => 1.0
+    }
+}
+```
+
+Then we update our `get_available_exits` to use it:
+
+```rust
+fn get_available_exits(&self, idx:i32) -> Vec<(i32, f32)> {
+    let mut exits : Vec<(i32, f32)> = Vec::new();
+    let x = idx % self.width;
+    let y = idx / self.width;
+    let tt = self.tiles[idx as usize];
+
+    // Cardinal directions
+    if self.is_exit_valid(x-1, y) { exits.push((idx-1, tile_cost(tt))) };
+    if self.is_exit_valid(x+1, y) { exits.push((idx+1, tile_cost(tt))) };
+    if self.is_exit_valid(x, y-1) { exits.push((idx-self.width, tile_cost(tt))) };
+    if self.is_exit_valid(x, y+1) { exits.push((idx+self.width, tile_cost(tt))) };
+
+    // Diagonals
+    if self.is_exit_valid(x-1, y-1) { exits.push(((idx-self.width)-1, tile_cost(tt) * 1.45)); }
+    if self.is_exit_valid(x+1, y-1) { exits.push(((idx-self.width)+1, tile_cost(tt) * 1.45)); }
+    if self.is_exit_valid(x-1, y+1) { exits.push(((idx+self.width)-1, tile_cost(tt) * 1.45)); }
+    if self.is_exit_valid(x+1, y+1) { exits.push(((idx+self.width)+1, tile_cost(tt) * 1.45)); }
+
+    exits
+}
+```
+We've replaced all the costs of `1.0` with a call to our `tile_cost` function, and multiplied diagonals by 1.45 to encourage more natural looking movement.
+
+## Fixing our camera
+
+We also need to be able to render these tile types, so we open up `camera.rs` and add them to the `match` statement in `get_tile_glyph`:
+
+```rust
+fn get_tile_glyph(idx: usize, map : &Map) -> (u8, RGB, RGB) {
+    let glyph;
+    let mut fg;
+    let mut bg = RGB::from_f32(0., 0., 0.);
+
+    match map.tiles[idx] {
+        TileType::Floor => { glyph = rltk::to_cp437('.'); fg = RGB::from_f32(0.0, 0.5, 0.5); }
+        TileType::WoodFloor => { glyph = rltk::to_cp437('.'); fg = RGB::named(rltk::CHOCOLATE); }
+        TileType::Wall => {
+            let x = idx as i32 % map.width;
+            let y = idx as i32 / map.width;
+            glyph = wall_glyph(&*map, x, y);
+            fg = RGB::from_f32(0., 1.0, 0.);
+        }
+        TileType::DownStairs => { glyph = rltk::to_cp437('>'); fg = RGB::from_f32(0., 1.0, 1.0); }
+        TileType::Bridge => { glyph = rltk::to_cp437('.'); fg = RGB::named(rltk::CHOCOLATE); }
+        TileType::Road => { glyph = rltk::to_cp437('~'); fg = RGB::named(rltk::GRAY); }
+        TileType::Grass => { glyph = rltk::to_cp437('"'); fg = RGB::named(rltk::GREEN); }
+        TileType::ShallowWater => { glyph = rltk::to_cp437('≈'); fg = RGB::named(rltk::CYAN); }
+        TileType::DeepWater => { glyph = rltk::to_cp437('≈'); fg = RGB::named(rltk::NAVY_BLUE); }
+    }
+    if map.bloodstains.contains(&idx) { bg = RGB::from_f32(0.75, 0., 0.); }
+    if !map.visible_tiles[idx] { 
+        fg = fg.to_greyscale();
+        bg = RGB::from_f32(0., 0., 0.); // Don't show stains out of visual range
+    }
+
+    (glyph, fg, bg)
+}
+```
 
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-47-town1)**
