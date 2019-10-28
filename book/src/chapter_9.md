@@ -117,7 +117,15 @@ That's definitely tidier! `cargo run` will give you exactly what we had at the e
 
 # Spawn All The Things
 
-We're going to extend the function to spawn multiple monsters per room, with 0 being an option. In `spawner.rs`, we create a new function - `spawn_room`:
+We're going to extend the function to spawn multiple monsters per room, with 0 being an option. First we change the Map constants which we introduced in the previous chapter to be public in order to use them in `spawner.rs`:
+
+```rust
+pub const MAPWIDTH : usize = 80;
+pub const MAPHEIGHT : usize = 50;
+pub const MAPCOUNT : usize = MAPHEIGHT * MAPWIDTH;
+```
+
+In `spawner.rs`, we create a new function - `spawn_room`:
 
 ```rust
 /// Fills a room with stuff!
@@ -392,6 +400,9 @@ RunState::ShowInventory => {
 
 That naturally leads to implementing `show_inventory`! In `gui.rs`, we add:
 ```rust
+#[derive(PartialEq, Copy, Clone)]
+pub enum ItemMenuResult { Cancel, NoResponse, Selected }
+
 pub fn show_inventory(gs : &mut State, ctx : &mut Rltk) -> ItemMenuResult {
     let player_entity = gs.ecs.fetch::<Entity>();
     let names = gs.ecs.read_storage::<Name>();
@@ -512,7 +523,7 @@ pub struct WantsToDrinkPotion {
 }
 ```
 
-Add the following to `inventory.rs`:
+Add the following to `inventory_system.rs`:
 
 ```rust
 pub struct PotionUseSystem {}
@@ -561,6 +572,14 @@ Like other systems we've looked at, this iterates all of the `WantsToDrinkPotion
 Testing this with `cargo run` gives a surprise: the potion isn't deleted after use! This is because the ECS simply marks entities as `dead` - it doesn't delete them in systems (so as to not mess up iterators and threading). So after every call to `dispatch`, we need to add a call to `maintain`. In `main.ecs`:
 
 ```rust
+RunState::PreRun => {
+    self.run_systems();
+    self.ecs.maintain();
+    newrunstate = RunState::AwaitingInput;
+}
+```
+...  
+```rust
 RunState::PlayerTurn => {
     self.run_systems();
     self.ecs.maintain();
@@ -571,6 +590,23 @@ RunState::MonsterTurn => {
     self.ecs.maintain();
     newrunstate = RunState::AwaitingInput;
 }
+```
+
+Finally we have to change the `RunState::ShowInventory` handling if an item was selected, we create a `WantsToDrinkPotion` intent:
+```rust
+RunState::ShowInventory => {
+                let result = gui::show_inventory(self, ctx);
+                match result.0 {
+                    gui::ItemMenuResult::Cancel => newrunstate = RunState::AwaitingInput,
+                    gui::ItemMenuResult::NoResponse => {}
+                    gui::ItemMenuResult::Selected => {
+                        let item_entity = result.1.unwrap();
+                        let mut intent = self.ecs.write_storage::<WantsToDrinkPotion>();
+                        intent.insert(*self.ecs.fetch::<Entity>(), WantsToDrinkPotion{ potion: item_entity }).expect("Unable to insert intent");
+                        newrunstate = RunState::PlayerTurn;
+                    }
+                }
+            }
 ```
 
 NOW if you `cargo run` the project, you can pickup and drink health potions:
