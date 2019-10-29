@@ -265,8 +265,401 @@ And in a new file, `map_builders/town.rs` we'll begin our function:
 use super::BuilderChain;
 
 pub fn level_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator, width: i32, height: i32) -> BuilderChain {
+    let mut chain = BuilderChain::new(new_depth, width, height);
+    chain.start_with(TownBuilder::new());
+    let (start_x, start_y) = super::random_start_position(rng);
+    chain.with(AreaStartingPosition::new(start_x, start_y));
+    chain.with(DistantExit::new());
+    chain
 }
 ```
+
+The `AreaStartingPosition` and `DistantExit` are temporary to get us valid start/end points. The meat is the call to `TownBuilder`. We haven't written that yet, so we'll work through step-by-step until we have a town we like!
+
+Here's an empty skeleton to start with:
+
+```rust
+pub struct TownBuilder {}
+
+impl InitialMapBuilder for TownBuilder {
+    #[allow(dead_code)]
+    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap) {
+        self.build_rooms(rng, build_data);
+    }
+}
+
+impl TownBuilder {
+    pub fn new() -> Box<TownBuilder> {
+        Box::new(TownBuilder{})
+    }
+
+    pub fn build_rooms(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap) {
+    }
+}
+```
+
+## Let's make a fishing town
+
+Let's start by adding grass, water and piers to the region. We'll write the skeleton first:
+
+```rust
+pub fn build_rooms(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap) {
+        self.grass_layer(build_data);
+        self.water_and_piers(rng, build_data);
+
+        // Make visible for screenshot
+        for t in build_data.map.visible_tiles.iter_mut() {
+            *t = true;
+        }
+        build_data.take_snapshot();
+    }
+```
+
+The function `grass_layer` is *really* simple: we replace everything with grass:
+
+```rust
+fn grass_layer(&mut self, build_data : &mut BuilderMap) {
+    // We'll start with a nice layer of grass
+    for t in build_data.map.tiles.iter_mut() {
+        *t = TileType::Grass;
+    }
+    build_data.take_snapshot();
+}
+```
+
+Adding water is more interesting. We don't want it to be the same each time, but we want to keep the same basic structure. Here's the code:
+
+```rust
+fn water_and_piers(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap) {
+    let mut n = (rng.roll_dice(1, 65535) as f32) / 65535f32;
+    let mut water_width : Vec<i32> = Vec::new();
+    for y in 0..build_data.height {
+        let n_water = (f32::sin(n) * 10.0) as i32 + 14 + rng.roll_dice(1, 6);
+        water_width.push(n_water);
+        n += 0.1;
+        for x in 0..n_water {
+            let idx = build_data.map.xy_idx(x, y);
+            build_data.map.tiles[idx] = TileType::DeepWater;
+        }
+        for x in n_water .. n_water+3 {
+            let idx = build_data.map.xy_idx(x, y);
+            build_data.map.tiles[idx] = TileType::ShallowWater;
+        }
+    }
+    build_data.take_snapshot();
+
+    // Add piers
+    for _i in 0..rng.roll_dice(1, 4)+6 {
+        let y = rng.roll_dice(1, build_data.height)-1;
+        for x in 2 + rng.roll_dice(1, 6) .. water_width[y as usize] + 4 {
+            let idx = build_data.map.xy_idx(x, y);
+            build_data.map.tiles[idx] = TileType::WoodFloor;
+        }
+    }
+    build_data.take_snapshot();
+}
+```
+
+There's quite a bit going on here, so we'll step through:
+
+1. We make `n` equal to a random floating point number between `0.0` and `1.0` by rolling a 65,535 sided dice (wouldn't it be nice if one of those existed?) and dividing by the maximum number.
+2. We make a new vector called `water_width`. We'll store the number of water tiles on each row in here as we generate them.
+3. For each `y` row down the map:
+    1. We make `n_water`. This is the number of water tiles present. We start by taking the `sin` (Sine) of `n` (we randomized it to give a random gradient). Sin waves are great, they give a nice predictable curve and you can read anywhere along them to determine where the curve is. Since `sin` gives a number from -1 to 1, we multiply by 10 to give -10 to +10. We then add 14, guaranteeing between 4 and 24 tiles of water. To make it look jagged, we add a little bit of randomness also.
+    2. We `push` this into the `water_width` vector, storing it for later.
+    3. We add `0.1` to `n`, progressing along the sine wave.
+    4. Then we iterate from 0 to `n_water` (as `x`) and write `DeepWater` tiles to the position of each water tile.
+    5. We go from `n_water` to `n_water+3` to add some shallow water at the edge.
+4. We take a snapshot so you can watch the map progression.
+5. We iterate from 0 to 1d4+6 to generate between 10 and 14 piers.
+    1. We pick `y` at random.
+    2. We look up the water placement for that `y` value, and draw wooden floors starting at 2+1d6 to `water_width[y]+4` - giving a pier that extends out into the water for some way, and ends squarely on land.
+
+If you `cargo run`, you'll see a map like this now:
+
+![Screenshot](./c47-s1.jpg)
+
+## Adding town walls, gravel and a road
+
+Now that we have some terrain, we should add some initial outline to the town. Extend the `build` function with another function call:
+
+```rust
+let (mut available_building_tiles, wall_gap_y) = self.town_walls(rng, build_data);
+```
+
+The function looks like this:
+
+```rust
+fn town_walls(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap) 
+    -> (HashSet<usize>, i32) 
+{
+    let mut available_building_tiles : HashSet<usize> = HashSet::new();
+    let wall_gap_y = rng.roll_dice(1, build_data.height - 8) + 5;
+    for y in 1 .. build_data.height-2 {
+        if !(y > wall_gap_y-4 && y < wall_gap_y+4)  {
+            let idx = build_data.map.xy_idx(30, y);
+            build_data.map.tiles[idx] = TileType::Wall;
+            build_data.map.tiles[idx-1] = TileType::Floor;
+            let idx_right = build_data.map.xy_idx(build_data.width - 2, y);
+            build_data.map.tiles[idx_right] = TileType::Wall;
+            for x in 31 .. build_data.width-2 {
+                let gravel_idx = build_data.map.xy_idx(x, y);
+                build_data.map.tiles[gravel_idx] = TileType::Gravel;
+                if y > 2 && y < build_data.height-1 {
+                    available_building_tiles.insert(gravel_idx);
+                }
+            }
+        } else {
+            for x in 30 .. build_data.width {
+                let road_idx = build_data.map.xy_idx(x, y);
+                build_data.map.tiles[road_idx] = TileType::Road;
+            }
+        }
+    }
+    build_data.take_snapshot();
+
+    for x in 30 .. build_data.width-1 {
+        let idx_top = build_data.map.xy_idx(x, 1);
+        build_data.map.tiles[idx_top] = TileType::Wall;
+        let idx_bot = build_data.map.xy_idx(x, build_data.height-2);
+        build_data.map.tiles[idx_bot] = TileType::Wall;
+    }
+    build_data.take_snapshot();
+
+    (available_building_tiles, wall_gap_y)
+}
+```
+Again, let's step through how this works:
+
+1. We make a new `HashSet` called `available_building_tiles`. We'll be returning this so that other functions can use it later.
+2. We set `wall_gap_y` to be a random `y` location on the map, between 6 and `map.height - 8`. We'll use this for the location of the road that runs through the town, and gates in the city walls.
+3. We iterate the `y` axis on the map, skipping the very top and bottom-most tiles.
+    1. If `y` is outside of the "wall gap" (8 tiles centered on `wall_gap_y`):
+        1. We draw a wall tile at location `30,y` and a road at `29,y`. This gives a wall after the shore, and a clear gap in front of it (clearly they have lawn management employees!)
+        2. We also draw a wall at the far east of the map.
+        3. We fill the intervening area with gravel.
+        4. For tiles that gained gravel, we add them to the `available_building_tiles` set.
+    2. If it is *in* the gap, we draw a road.
+4. Lastly we fill rows `1` and `height-2` with walls between 30 and `width-2`.
+
+If you `cargo run` now, you have the outline of a town:
+
+![Screenshot](./c47-s2.jpg)
+
+## Adding some buildings
+
+A town without buildings is both rather pointless and rather unusual! So let's add some. We'll add another call to the builder function, this time passing the `available_building_tiles` structure we created:
+
+```rust
+let mut buildings = self.buildings(rng, build_data, &mut available_building_tiles);
+```
+
+The meat of the buildings code looks like this:
+
+```rust
+fn buildings(&mut self, 
+    rng: &mut rltk::RandomNumberGenerator, 
+    build_data : &mut BuilderMap, 
+    available_building_tiles : &mut HashSet<usize>) 
+-> Vec<(i32, i32, i32, i32)> 
+{
+    let mut buildings : Vec<(i32, i32, i32, i32)> = Vec::new();
+    let mut n_buildings = 0;        
+    while n_buildings < 12 {
+        let bx = rng.roll_dice(1, build_data.map.width - 32) + 30;
+        let by = rng.roll_dice(1, build_data.map.height)-2;
+        let bw = rng.roll_dice(1, 8)+4;
+        let bh = rng.roll_dice(1, 8)+4;
+        let mut possible = true;
+        for y in by .. by+bh {
+            for x in bx .. bx+bw {
+                if x < 0 || x > build_data.width-1 || y < 0 || y > build_data.height-1 {
+                    possible = false;
+                } else {
+                    let idx = build_data.map.xy_idx(x, y);
+                    if !available_building_tiles.contains(&idx) { possible = false; }
+                }
+            }
+        }
+        if possible {
+            n_buildings += 1;
+            buildings.push((bx, by, bw, bh));
+            for y in by .. by+bh {
+                for x in bx .. bx+bw {
+                    let idx = build_data.map.xy_idx(x, y);
+                    build_data.map.tiles[idx] = TileType::WoodFloor;
+                    available_building_tiles.remove(&idx);
+                    available_building_tiles.remove(&(idx+1));
+                    available_building_tiles.remove(&(idx+build_data.width as usize));
+                    available_building_tiles.remove(&(idx-1));
+                    available_building_tiles.remove(&(idx-build_data.width as usize));
+                }
+            }
+            build_data.take_snapshot();
+        }
+    }
+
+    // Outline buildings
+    let mut mapclone = build_data.map.clone();
+    for y in 2..build_data.height-2 {
+        for x in 32..build_data.width-2 {
+            let idx = build_data.map.xy_idx(x, y);
+            if build_data.map.tiles[idx] == TileType::WoodFloor {
+                let mut neighbors = 0;
+                if build_data.map.tiles[idx - 1] != TileType::WoodFloor { neighbors +=1; }
+                if build_data.map.tiles[idx + 1] != TileType::WoodFloor { neighbors +=1; }
+                if build_data.map.tiles[idx-build_data.width as usize] != TileType::WoodFloor { neighbors +=1; }
+                if build_data.map.tiles[idx+build_data.width as usize] != TileType::WoodFloor { neighbors +=1; }
+                if neighbors > 0 {
+                    mapclone.tiles[idx] = TileType::Wall;
+                }
+            }
+        }
+    }
+    build_data.map = mapclone;
+    build_data.take_snapshot();
+    buildings
+}
+```
+
+Once again, lets walk through this algorithm:
+
+1. We make a vector of tuples, each containing 4 integers. These are the building's `x` and `y` coordinates, along with its size in each dimension.
+2. We make a variable `n_buildings` to store how many we've placed, and loop until we have 12. For each building:
+    1. We pick a random `x` and `y` position, and a random `width` and `height` for the building.
+    2. We set `possible` to `true` - and then loop over every tile in the candidate building location. If it isn't in the `available_building_tiles` set, we set `possible to false`.
+    3. If `possible` is still true, we again loop over every tile - setting to be a `WoodenFloor`. We then remove that tile, and all four surrounding tiles from the `available_building_tiles` list - ensuring a gap between buildings. We also increment `n_buildings`, and add the building to a list of completed buildings.
+3. Now we have 12 buildings, we take a copy of the map.
+4. We loop over every tile on in the "town" part of the map.
+    1. For each tile, we count the number of neighboring tiles that *aren't* a `WoodenFloor` (in all four directions).
+    2. If the neighboring tile count is greater than zero, then we can place a wall here (because it must be the edge of a building). We write to our *copy* of the map - so as not to influence the check on subsequent tiles (otherwise, you'll have buildings replaced with walls).
+5. We put the copy back into our map.
+6. We return out list of placed buildings.
+
+If you `cargo run` now, you'll see that we have buildings!
+
+![Screenshot](./c47-s3.jpg)
+
+## Adding some doors
+
+The buildings are great, but there are *no doors*. So you can't ever enter or exit them. We should fix that. Extend the builder function with another call:
+
+```rust
+let doors = self.add_doors(rng, build_data, &mut buildings, wall_gap_y);
+```
+
+The `add_doors` function looks like this:
+
+```rust
+fn add_doors(&mut self, 
+    rng: &mut rltk::RandomNumberGenerator, 
+    build_data : &mut BuilderMap, 
+    buildings: &mut Vec<(i32, i32, i32, i32)>, 
+    wall_gap_y : i32) 
+    -> Vec<usize>
+{
+    let mut doors = Vec::new();
+    for building in buildings.iter() {
+        let door_x = building.0 + 1 + rng.roll_dice(1, building.2 - 3);
+        let cy = building.1 + (building.3 / 2);
+        let idx = if cy > wall_gap_y {
+            // Door on the north wall
+            build_data.map.xy_idx(door_x, building.1)
+        } else {
+            build_data.map.xy_idx(door_x, building.1 + building.3 - 1)
+        };
+        build_data.map.tiles[idx] = TileType::Floor;
+        build_data.spawn_list.push((idx, "Door".to_string()));
+        doors.push(idx);
+    }
+    build_data.take_snapshot();
+    doors
+}
+```
+
+This function is quite simple, but we'll step through it:
+
+1. We make a new vector of door locations; we'll need it later.
+2. For each building in our buildings list:
+    1. Set `door_x` to a random point along the building's horizontal side, not including the corners.
+    2. Calculate `cy` to be the center of the building.
+    3. If `cy > wall_gap_y` (remember that one? Where the road is!), we place the door's `y` coordinate on the North side - so `building.1`. Otherwise, we place it on the south side - `building.1 + building.3 - 1` (`y` location plus height, minus one).
+    4. We set the door tile to be a `Floor`.
+    5. We add a `Door` to the spawn list.
+    6. We add the door to the doors vector.
+3. We return the doors vector.
+
+If you `cargo run` now, you'll see doors appear for each building:
+
+![Screenshot](./c47-s4.jpg)
+
+## Paths to doors
+
+It would be nice to decorate the gravel with some paths to the various doors in the town. It makes sense - even wear and tear from walking to/from the buildings will erode a path. So we add another call to the builder function:
+
+```rust
+self.add_paths(build_data, &doors);
+```
+
+The `add_paths` function is a little long, but quite simple:
+
+```rust
+fn add_paths(&mut self,         
+    build_data : &mut BuilderMap,
+    doors : &[usize])
+{
+    let mut roads = Vec::new();
+    for y in 0..build_data.height {
+        for x in 0..build_data.width {
+            let idx = build_data.map.xy_idx(x, y);
+            if build_data.map.tiles[idx] == TileType::Road {
+                roads.push(idx);
+            }
+        }
+    }
+
+    build_data.map.populate_blocked();
+    for door_idx in doors.iter() {
+        let mut nearest_roads : Vec<(usize, f32)> = Vec::new();
+        let door_pt = rltk::Point::new( *door_idx as i32 % build_data.map.width as i32, *door_idx as i32 / build_data.map.width as i32 );
+        for r in roads.iter() {
+            nearest_roads.push((
+                *r,
+                rltk::DistanceAlg::PythagorasSquared.distance2d(
+                    door_pt,
+                    rltk::Point::new( *r as i32 % build_data.map.width, *r as i32 / build_data.map.width )
+                )
+            ));
+        }
+        nearest_roads.sort_by(|a,b| a.1.partial_cmp(&b.1).unwrap());
+
+        let destination = nearest_roads[0].0;
+        let path = rltk::a_star_search(*door_idx as i32, destination as i32, &mut build_data.map);
+        if path.success {
+            for step in path.steps.iter() {
+                let idx = *step as usize;
+                build_data.map.tiles[idx] = TileType::Road;
+                roads.push(idx);
+            }
+        }
+        build_data.take_snapshot();
+    }
+}
+```
+
+Let's walk through this:
+
+1. We start by making a `roads` vector, storing the map indices of every road tile on the map. We gather this by quickly scanning the map and adding matching tiles to our list.
+2. Then we iterate through all the doors we've placed:
+    1. We make another vector (`nearest_roads`) containing an index and a float.
+    2. We add each road, with its index and the calculated distance to the door.
+    3. We sort the `nearest_roads` vector by the distances, ensuring that element `0` will be the closest road position. Not that we're doing this for each door: if the nearest road is one we've added to another door, it will choose that one.
+    4. We call RLTK's *a star* pathing to find a route from the door to the nearest road.
+    5. We iterate the path, writing a road tile at each location on the route. We also add it to the `roads` vector, so it will influence future paths.
+
+If you `cargo run` now, you'll see a pretty decent start for a town:
+
+![Screenshot](./c47-s5.jpg)
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-47-town1)**
 

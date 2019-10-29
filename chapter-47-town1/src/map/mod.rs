@@ -76,7 +76,7 @@ impl BaseMap for Map {
     }
 
     fn get_available_exits(&self, idx:i32) -> Vec<(i32, f32)> {
-        const DIAGONAL_COST : f32 = 0.0;
+        const DIAGONAL_COST : f32 = 1.5;
         let mut exits : Vec<(i32, f32)> = Vec::new();
         let x = idx % self.width;
         let y = idx / self.width;
