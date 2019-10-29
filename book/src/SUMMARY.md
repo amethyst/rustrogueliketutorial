@@ -49,4 +49,5 @@
     - [Raw Files, Data-Driven Design](./chapter_45.md)
     - [Data-Driven Spawn Tables](./chapter_46.md)
     - [Making the town](./chapter_47.md)
+    - [Populating the town](./chapter_48.md)
 - [Contributors](./contributors.md)

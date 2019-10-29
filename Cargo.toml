@@ -59,7 +59,8 @@ members = [
     "chapter-41-camera",
     "chapter-45-raws1",
     "chapter-46-raws2",
-    "chapter-47-town1"
+    "chapter-47-town1",
+    "chapter-48-town2"
     ]
 
 [profile.dev]
