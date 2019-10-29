@@ -76,6 +76,7 @@ impl BaseMap for Map {
     }
 
     fn get_available_exits(&self, idx:i32) -> Vec<(i32, f32)> {
+        const DIAGONAL_COST : f32 = 0.0;
         let mut exits : Vec<(i32, f32)> = Vec::new();
         let x = idx % self.width;
         let y = idx / self.width;
@@ -88,10 +89,10 @@ impl BaseMap for Map {
         if self.is_exit_valid(x, y+1) { exits.push((idx+self.width, tile_cost(tt))) };
 
         // Diagonals
-        if self.is_exit_valid(x-1, y-1) { exits.push(((idx-self.width)-1, tile_cost(tt) * 1.45)); }
-        if self.is_exit_valid(x+1, y-1) { exits.push(((idx-self.width)+1, tile_cost(tt) * 1.45)); }
-        if self.is_exit_valid(x-1, y+1) { exits.push(((idx+self.width)-1, tile_cost(tt) * 1.45)); }
-        if self.is_exit_valid(x+1, y+1) { exits.push(((idx+self.width)+1, tile_cost(tt) * 1.45)); }
+        if self.is_exit_valid(x-1, y-1) { exits.push(((idx-self.width)-1, tile_cost(tt) * DIAGONAL_COST)); }
+        if self.is_exit_valid(x+1, y-1) { exits.push(((idx-self.width)+1, tile_cost(tt) * DIAGONAL_COST)); }
+        if self.is_exit_valid(x-1, y+1) { exits.push(((idx+self.width)-1, tile_cost(tt) * DIAGONAL_COST)); }
+        if self.is_exit_valid(x+1, y+1) { exits.push(((idx+self.width)+1, tile_cost(tt) * DIAGONAL_COST)); }
 
         exits
     }
