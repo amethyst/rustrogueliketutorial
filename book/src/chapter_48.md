@@ -319,6 +319,157 @@ If you `cargo run` now, you'll see some inert props littering the pub:
 
 That's not amazing, but it already *feels* more alive!
 
+## Making the temple
+
+The temple will be similar to the pub in terms of spawning code. So similar, in fact, that we're going to break out the part of the `build_pub` function that spawns entities and make a generic function out of it. Here's the new function:
+
+```rust
+fn random_building_spawn(
+    &mut self, 
+    building: &(i32, i32, i32, i32), 
+    build_data : &mut BuilderMap, 
+    rng: &mut rltk::RandomNumberGenerator,
+    to_place : &mut Vec<&str>,
+    player_idx : usize)
+{
+    for y in building.1 .. building.1 + building.3 {
+        for x in building.0 .. building.0 + building.2 {
+            let idx = build_data.map.xy_idx(x, y);
+            if build_data.map.tiles[idx] == TileType::WoodFloor && idx != player_idx && rng.roll_dice(1, 3)==1 && !to_place.is_empty() {
+                let entity_tag = to_place[0];
+                to_place.remove(0);
+                build_data.spawn_list.push((idx, entity_tag.to_string()));
+            }
+        }
+    }
+}
+```
+
+We'll replace our call to that code in `build_pub` with:
+
+```rust
+// Place other items
+let mut to_place : Vec<&str> = vec!["Barkeep", "Shady Salesman", "Patron", "Patron", "Keg",
+    "Table", "Chair", "Table", "Chair"];
+self.random_building_spawn(building, build_data, rng, &mut to_place, player_idx);
+```
+
+With that in place, let's think about what you might find in a temple:
+
+* Priests
+* Parishioners
+* Chairs
+* Candles
+
+Now we'll extend our factory to include temples:
+
+```rust
+match build_type {
+    BuildingTag::Pub => self.build_pub(&building, build_data, rng),
+    BuildingTag::Temple => self.build_temple(&building, build_data, rng),
+    _ => {}
+}
+```
+
+And our `build_temple` function can be very simple:
+
+```rust
+fn build_temple(&mut self, 
+    building: &(i32, i32, i32, i32), 
+    build_data : &mut BuilderMap, 
+    rng: &mut rltk::RandomNumberGenerator) 
+{
+    // Place items
+    let mut to_place : Vec<&str> = vec!["Priest", "Parishioner", "Parishioner", "Chair", "Chair", "Candle", "Candle"];
+    self.random_building_spawn(building, build_data, rng, &mut to_place, 0);
+}
+```
+
+So, with that in place - we still have to add Priests, Parishioners, and Candles to the `spawns.json` list. The Priest and Parishioner go in the `mobs` section, and are basically the same as the Barkeep:
+
+```json
+{
+    "name" : "Priest",
+    "renderable": {
+        "glyph" : "☺",
+        "fg" : "#EE82EE",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "stats" : {
+        "max_hp" : 16,
+        "hp" : 16,
+        "defense" : 1,
+        "power" : 4
+    },
+    "vision_range" : 4,
+    "ai" : "bystander"
+},
+
+{
+    "name" : "Parishioner",
+    "renderable": {
+        "glyph" : "☺",
+        "fg" : "#AAAAAA",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "stats" : {
+        "max_hp" : 16,
+        "hp" : 16,
+        "defense" : 1,
+        "power" : 4
+    },
+    "vision_range" : 4,
+    "ai" : "bystander"
+},
+```
+
+Likewise, for now at least - candles are just another prop:
+
+```json
+{
+    "name" : "Candle",
+    "renderable": {
+        "glyph" : "Ä",
+        "fg" : "#FFA500",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "hidden" : false
+}
+```
+
+If you `cargo run` now, you can run around and find a temple:
+
+![Screenshot](./c48-s3.jpg)
+
+## Build other buildings
+
+We've done most of the hard work now, so we are just filling in the blanks. Lets expand our `match` in our builder to include the various types other than the Abandoned House:
+
+```rust
+let build_type = &building_index[i].2;
+match build_type {
+    BuildingTag::Pub => self.build_pub(&building, build_data, rng),
+    BuildingTag::Temple => self.build_temple(&building, build_data, rng),
+    BuildingTag::Blacksmith => self.build_smith(&building, build_data, rng),
+    BuildingTag::Clothier => self.build_clothier(&building, build_data, rng),
+    BuildingTag::Alchemist => self.build_alchemist(&building, build_data, rng),
+    BuildingTag::PlayerHouse => self.build_my_house(&building, build_data, rng),
+    BuildingTag::Hovel => self.build_hovel(&building, build_data, rng),
+    _ => {}
+}
+```
+
+We're lumping these in together because they are basically the same function! Here's the body of each of them:
+
+```rust
+
+```
+
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-48-town2)**
 
 
