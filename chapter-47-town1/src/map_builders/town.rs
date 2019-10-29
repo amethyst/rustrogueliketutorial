@@ -1,12 +1,9 @@
-use super::{BuilderChain, BuilderMap, InitialMapBuilder, TileType, AreaStartingPosition, DistantExit};
+use super::{BuilderChain, BuilderMap, InitialMapBuilder, TileType, Position};
 use std::collections::HashSet;
 
-pub fn town_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator, width: i32, height: i32) -> BuilderChain {
+pub fn town_builder(new_depth: i32, _rng: &mut rltk::RandomNumberGenerator, width: i32, height: i32) -> BuilderChain {
     let mut chain = BuilderChain::new(new_depth, width, height);
     chain.start_with(TownBuilder::new());
-    let (start_x, start_y) = super::random_start_position(rng);
-    chain.with(AreaStartingPosition::new(start_x, start_y));
-    chain.with(DistantExit::new());
     chain
 }
 
@@ -31,6 +28,25 @@ impl TownBuilder {
         let mut buildings = self.buildings(rng, build_data, &mut available_building_tiles);
         let doors = self.add_doors(rng, build_data, &mut buildings, wall_gap_y);
         self.add_paths(build_data, &doors);
+
+        let exit_idx = build_data.map.xy_idx(build_data.width-5, wall_gap_y);
+        build_data.map.tiles[exit_idx] = TileType::DownStairs;
+
+        let mut building_size : Vec<(usize, i32)> = Vec::new();
+        for (i,building) in buildings.iter().enumerate() {
+            building_size.push((
+                i,
+                building.2 * building.3
+            ));
+        }
+        building_size.sort_by(|a,b| b.1.cmp(&a.1));
+
+        // Start in the pub
+        let the_pub = &buildings[building_size[0].0];
+        build_data.starting_position = Some(Position{
+            x : the_pub.0 + (the_pub.2 / 2),
+            y : the_pub.1 + (the_pub.3 / 2)
+        });
 
         // Make visible for screenshot
         for t in build_data.map.visible_tiles.iter_mut() {

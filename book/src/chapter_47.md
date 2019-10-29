@@ -661,6 +661,61 @@ If you `cargo run` now, you'll see a pretty decent start for a town:
 
 ![Screenshot](./c47-s5.jpg)
 
+## Start position and exit
+
+We don't really want completely random start positions, nor an exit that is deliberately far away on this map. So we'll edit our `TownBuilder` constructor to remove the additional meta-builders that provide this:
+
+```rust
+pub fn town_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator, width: i32, height: i32) -> BuilderChain {
+    let mut chain = BuilderChain::new(new_depth, width, height);
+    chain.start_with(TownBuilder::new());
+    chain
+}
+```
+
+Now we have to modify our `build` function to provide these instead. Placing the exit is easy - we want it to be to the East, on the road:
+
+```rust
+let exit_idx = build_data.map.xy_idx(build_data.width-5, wall_gap_y);
+build_data.map.tiles[exit_idx] = TileType::DownStairs;
+```
+
+Placing the entrance is more difficult. We want the player to start their journey in the pub - but we haven't decided which building *is* the pub! We'll make the pub the largest building on the map. After all, it's the most important for the game! The following code will sort the buildings by size (in a `building_size` vector, with the first tuple element being the building's index and the second being it's "square tileage"):
+
+```rust
+let mut building_size : Vec<(usize, i32)> = Vec::new();
+for (i,building) in buildings.iter().enumerate() {
+    building_size.push((
+        i,
+        building.2 * building.3
+    ));
+}
+building_size.sort_by(|a,b| b.1.cmp(&a.1));
+```
+
+Not that we sorted in *descending* order (by doing `b.cmp(&a)` rather than the other way around) - so the largest building is building `0`.
+
+Now we can set the player's starting location:
+
+```rust
+// Start in the pub
+let the_pub = &buildings[building_size[0].0];
+build_data.starting_position = Some(Position{
+    x : the_pub.0 + (the_pub.2 / 2),
+    y : the_pub.1 + (the_pub.3 / 2)
+});
+```
+
+If you `cargo run` now, you'll start in the pub - and be able to navigate an empty town to the exit:
+
+![Screenshot](./c47-s6.gif)
+
+## Wrap-Up
+
+This chapter has walked through how to use what we know about map generation to make a *targeted* procedural generation project - a fishing town. There's a river to the west, a road, town walls, buildings, and paths. It doesn't look bad at all for a starting point!
+
+It is completely devoid of NPCs, props and anything to do. We'll rectify that in the next chapter.
+
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-47-town1)**
 
 
