@@ -270,9 +270,54 @@ He won't react to you or *do* anything, but he's there. We'll add some behavior 
 },
 ```
 
-If you `cargo run` now, the bar comes to life (a bit):
+If you `cargo run` now, the bar comes to life a bit more:
 
 ![Screenshot](./c48-s2.jpg)
+
+## Adding props
+
+A pub with people and nothing for them to drink, sit on or eat at is a pretty shabby pub. I suppose we *could* argue that it's a real dive and the budget won't stretch to that, but that argument wears thin when you start adding other buildings. So we'll add some props to `spawns.json`:
+
+```json
+{
+    "name" : "Keg",
+    "renderable": {
+        "glyph" : "φ",
+        "fg" : "#AAAAAA",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "hidden" : false
+},
+
+{
+    "name" : "Table",
+    "renderable": {
+        "glyph" : "╦",
+        "fg" : "#AAAAAA",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "hidden" : false
+},
+
+{
+    "name" : "Chair",
+    "renderable": {
+        "glyph" : "└",
+        "fg" : "#AAAAAA",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "hidden" : false
+}
+```
+
+If you `cargo run` now, you'll see some inert props littering the pub:
+
+![Screenshot](./c48-s3.jpg)
+
+That's not amazing, but it already *feels* more alive!
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-48-town2)**
 

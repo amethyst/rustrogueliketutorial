@@ -313,6 +313,7 @@
             }
         }
     },
+
     {
         "name" : "Door",
         "renderable": {
@@ -325,6 +326,39 @@
         "blocks_tile" : true,
         "blocks_visibility" : true,
         "door_open" : true
+    },
+
+    {
+        "name" : "Keg",
+        "renderable": {
+            "glyph" : "φ",
+            "fg" : "#AAAAAA",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "hidden" : false
+    },
+
+    {
+        "name" : "Table",
+        "renderable": {
+            "glyph" : "╦",
+            "fg" : "#AAAAAA",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "hidden" : false
+    },
+
+    {
+        "name" : "Chair",
+        "renderable": {
+            "glyph" : "└",
+            "fg" : "#AAAAAA",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "hidden" : false
     }
 ]
 }
