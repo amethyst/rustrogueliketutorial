@@ -158,6 +158,128 @@ If you `cargo run` the project now, you can watch NPCs bumbling around randomly.
 
 ![Screenshot](./c49-s1.gif)
 
+## Quipping NPCs
+
+To further brings things to life, lets allow NPCs to "quip" when they spot you. In `spawns.json`, lets add some quips to the `Patron` (bar patron):
+
+```json
+{
+    "name" : "Patron",
+    "renderable": {
+        "glyph" : "☺",
+        "fg" : "#AAAAAA",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "stats" : {
+        "max_hp" : 16,
+        "hp" : 16,
+        "defense" : 1,
+        "power" : 4
+    },
+    "vision_range" : 4,
+    "ai" : "bystander",
+    "quips" : [ "Quiet down, it's too early!", "Oh my, I drank too much.", "Still saving the world, eh?" ]
+},
+```
+
+We need to modify `raws/mob_structs.rs` to handle loading this data:
+
+```rust
+#[derive(Deserialize, Debug)]
+pub struct Mob {
+    pub name : String,
+    pub renderable : Option<Renderable>,
+    pub blocks_tile : bool,
+    pub stats : MobStats,
+    pub vision_range : i32,
+    pub ai : String,
+    pub quips : Option<Vec<String>>
+}
+```
+
+We also need to create a component to hold available quips. In `components.rs`:
+
+```rust
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct Quips {
+    pub available : Vec<String>
+}
+```
+
+*Don't forget to register it in `main.rs` and `saveload_system.rs`!*
+
+We need to update `rawmaster.rs`'s function `spawn_named_mob` to be able to add this component:
+
+```rust
+if let Some(quips) = &mob_template.quips {
+    eb = eb.with(Quips{
+        available: quips.clone()
+    });
+}
+```
+
+Lastly, we'll add the ability to enter these quips into the game log when they spot you. In `bystander_ai_system.rs`. First, extend the available set of data for the system as follows:
+
+```rust
+...
+WriteExpect<'a, rltk::RandomNumberGenerator>,
+                        ReadExpect<'a, Point>,
+                        WriteExpect<'a, GameLog>,
+                        WriteStorage<'a, Quips>,
+                        ReadStorage<'a, Name>);
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (mut map, runstate, entities, mut viewshed, bystander, mut position,
+            mut entity_moved, mut rng, player_pos, mut gamelog, mut quips, names) = data;
+...
+```
+
+You may remember this: it gets read-only access the the `Point` resource we store containing the player's location, write access to the `GameLog`, and access to the component stores for `Quips` and `Name`. Now, we add the quipping to the function body:
+
+```rust
+...
+for (entity, mut viewshed,_bystander,mut pos) in (&entities, &mut viewshed, &bystander, &mut position).join() {
+    // Possibly quip
+    let quip = quips.get_mut(entity);
+    if let Some(quip) = quip {
+        if !quip.available.is_empty() && viewshed.visible_tiles.contains(&player_pos) && rng.roll_dice(1,6)==1 {
+            let name = names.get(entity);
+            let quip_index = if quip.available.len() == 1 { 0 } else { (rng.roll_dice(1, quip.available.len() as i32)-1) as usize };
+            gamelog.entries.insert(0,
+                format!("{} says \"{}\"", name.unwrap().name, quip.available[quip_index])
+            );
+            quip.available.remove(quip_index);
+        }                
+    }
+
+    // Try to move randomly
+...
+```
+
+We can step through what it's doing:
+
+1. It asks for a component from the `quips` store. This will be an `Option` - either `None` (nothing to say) or `Some` - containing the quips.
+2. If there *are* some quips...
+3. If the list of available quips isn't empty, the viewshed contains the player's tile, and 1d6 roll comes up 1...
+4. We look up the entity's name,
+5. Randomly pick an entry in the `available` list from `quip`.
+6. Log a string as `Name` says `Quip`.
+7. Remove the quip from that entity's available quip list - they won't keep repeating themselves.
+
+If you run the game now, you'll find that patrons are willing to comment on life in general:
+
+![Screenshot](./c49-s2.gif)
+
+We'll find that this can be used in other parts of the game, such as having guards shouting alerts, or goblins saying appropriately "Goblinesque" things. For brevity, we won't list every quip in the game here. [Check out the source](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-49-town3/raws/spawns.json) to see what we've added.
+
+This sort of "fluff" goes a long way towards making a world feel alive, even if it doesn't really add to gameplay in a meaningful fashion. Since the town is the first area the player sees, it's good to have fluff.
+
+## Outdoor NPCs
+
+All of the NPCs in the town so far have been conveniently located inside buildings.
+
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-49-town3)**
 
 

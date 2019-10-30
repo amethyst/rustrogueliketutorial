@@ -235,7 +235,8 @@
             "power" : 4
         },
         "vision_range" : 4,
-        "ai" : "bystander"
+        "ai" : "bystander",
+        "quips" : [ "Quiet down, it's too early!", "Oh my, I drank too much.", "Still saving the world, eh?" ]
     },
 
     {
@@ -273,7 +274,8 @@
             "power" : 4
         },
         "vision_range" : 4,
-        "ai" : "bystander"
+        "ai" : "bystander",
+        "quips" : [ "Great to see a new face here!", "I hear there's going to be a good sermon on tea", "Want some cake?" ]
     },
 
     {
@@ -349,7 +351,8 @@
             "power" : 4
         },
         "vision_range" : 4,
-        "ai" : "bystander"
+        "ai" : "bystander",
+        "quips" : [ "Hello, dear", "Off saving the world again?", "Be careful in the dungeon!", "Your father would be so proud, were he here." ]
     },
 
     {
@@ -368,7 +371,8 @@
             "power" : 4
         },
         "vision_range" : 4,
-        "ai" : "bystander"
+        "ai" : "bystander",
+        "quips" : [ "Why are you in my house?" ]
     },
 
     {

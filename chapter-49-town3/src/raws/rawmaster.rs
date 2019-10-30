@@ -158,6 +158,12 @@ pub fn spawn_named_mob(raws: &RawMaster, new_entity : EntityBuilder, key : &str,
             _ => {}
         }
 
+        if let Some(quips) = &mob_template.quips {
+            eb = eb.with(Quips{
+                available: quips.clone()
+            });
+        }
+
         if mob_template.blocks_tile {
             eb = eb.with(BlocksTile{});
         }
