@@ -2,13 +2,20 @@ extern crate rltk;
 use rltk::{ RGB, RandomNumberGenerator };
 extern crate specs;
 use specs::prelude::*;
-use super::{CombatStats, Player, Renderable, Name, Position, Viewshed, Rect,  
-    SerializeMe, random_table::RandomTable, HungerClock, HungerState, Map, TileType, raws::* };
+use super::{Pools, Pool, Player, Renderable, Name, Position, Viewshed, Rect,  
+    SerializeMe, random_table::RandomTable, HungerClock, HungerState, Map, TileType, raws::*,
+    Attribute, Attributes, Skills, Skill };
 use crate::specs::saveload::{MarkedBuilder, SimpleMarker};
 use std::collections::HashMap;
+use crate::{attr_bonus, player_hp_at_level, mana_at_level};
 
 /// Spawns the player and returns his/her entity object.
 pub fn player(ecs : &mut World, player_x : i32, player_y : i32) -> Entity {
+    let mut skills = Skills{ skills: HashMap::new() };
+    skills.skills.insert(Skill::Melee, 1);
+    skills.skills.insert(Skill::Defense, 1);
+    skills.skills.insert(Skill::Magic, 1);
+
     ecs
         .create_entity()
         .with(Position { x: player_x, y: player_y })
@@ -21,8 +28,26 @@ pub fn player(ecs : &mut World, player_x : i32, player_y : i32) -> Entity {
         .with(Player{})
         .with(Viewshed{ visible_tiles : Vec::new(), range: 8, dirty: true })
         .with(Name{name: "Player".to_string() })
-        .with(CombatStats{ max_hp: 30, hp: 30, defense: 2, power: 5 })
         .with(HungerClock{ state: HungerState::WellFed, duration: 20 })
+        .with(Attributes{
+            might: Attribute{ base: 11, modifiers: 0, bonus: attr_bonus(11) },
+            fitness: Attribute{ base: 11, modifiers: 0, bonus: attr_bonus(11) },
+            quickness: Attribute{ base: 11, modifiers: 0, bonus: attr_bonus(11) },
+            intelligence: Attribute{ base: 11, modifiers: 0, bonus: attr_bonus(11) },
+        })
+        .with(skills)
+        .with(Pools{
+            hit_points : Pool{ 
+                current: player_hp_at_level(11, 1), 
+                max: player_hp_at_level(11, 1) 
+            },
+            mana: Pool{
+                current: mana_at_level(11, 1),
+                max: mana_at_level(11, 1)
+            },
+            xp: 0,
+            level: 1
+        })
         .marked::<SimpleMarker<SerializeMe>>()
         .build()
 }

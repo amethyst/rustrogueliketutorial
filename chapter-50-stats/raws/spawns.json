@@ -190,14 +190,14 @@
             "order" : 1
         },
         "blocks_tile" : true,
-        "stats" : {
-            "max_hp" : 16,
-            "hp" : 16,
-            "defense" : 1,
-            "power" : 4
-        },
         "vision_range" : 4,
-        "ai" : "vendor"
+        "ai" : "vendor",
+        "attributes" : {
+            "intelligence" : 13
+        },
+        "skills" : {
+            "Melee" : 2
+        }
     },
 
     {
@@ -209,14 +209,9 @@
             "order" : 1
         },
         "blocks_tile" : true,
-        "stats" : {
-            "max_hp" : 16,
-            "hp" : 16,
-            "defense" : 1,
-            "power" : 4
-        },
         "vision_range" : 4,
-        "ai" : "vendor"
+        "ai" : "vendor",
+        "attributes" : {}
     },
 
     {
@@ -228,15 +223,10 @@
             "order" : 1
         },
         "blocks_tile" : true,
-        "stats" : {
-            "max_hp" : 16,
-            "hp" : 16,
-            "defense" : 1,
-            "power" : 4
-        },
         "vision_range" : 4,
         "ai" : "bystander",
-        "quips" : [ "Quiet down, it's too early!", "Oh my, I drank too much.", "Still saving the world, eh?" ]
+        "quips" : [ "Quiet down, it's too early!", "Oh my, I drank too much.", "Still saving the world, eh?" ],
+        "attributes" : {}
     },
 
     {
@@ -248,14 +238,9 @@
             "order" : 1
         },
         "blocks_tile" : true,
-        "stats" : {
-            "max_hp" : 16,
-            "hp" : 16,
-            "defense" : 1,
-            "power" : 4
-        },
         "vision_range" : 4,
-        "ai" : "bystander"
+        "ai" : "bystander",
+        "attributes" : {}
     },
 
     {
@@ -267,15 +252,10 @@
             "order" : 1
         },
         "blocks_tile" : true,
-        "stats" : {
-            "max_hp" : 16,
-            "hp" : 16,
-            "defense" : 1,
-            "power" : 4
-        },
         "vision_range" : 4,
         "ai" : "bystander",
-        "quips" : [ "Great to see a new face here!", "I hear there's going to be a good sermon on tea", "Want some cake?" ]
+        "quips" : [ "Great to see a new face here!", "I hear there's going to be a good sermon on tea", "Want some cake?" ],
+        "attributes" : {}
     },
 
     {
@@ -287,14 +267,9 @@
             "order" : 1
         },
         "blocks_tile" : true,
-        "stats" : {
-            "max_hp" : 16,
-            "hp" : 16,
-            "defense" : 1,
-            "power" : 4
-        },
         "vision_range" : 4,
-        "ai" : "vendor"
+        "ai" : "vendor",
+        "attributes" : {}
     },
 
     {
@@ -306,14 +281,9 @@
             "order" : 1
         },
         "blocks_tile" : true,
-        "stats" : {
-            "max_hp" : 16,
-            "hp" : 16,
-            "defense" : 1,
-            "power" : 4
-        },
         "vision_range" : 4,
-        "ai" : "vendor"
+        "ai" : "vendor",
+        "attributes" : {}
     },
 
     {
@@ -325,14 +295,9 @@
             "order" : 1
         },
         "blocks_tile" : true,
-        "stats" : {
-            "max_hp" : 16,
-            "hp" : 16,
-            "defense" : 1,
-            "power" : 4
-        },
         "vision_range" : 4,
-        "ai" : "vendor"
+        "ai" : "vendor",
+        "attributes" : {}
     },
 
     {
@@ -344,15 +309,10 @@
             "order" : 1
         },
         "blocks_tile" : true,
-        "stats" : {
-            "max_hp" : 16,
-            "hp" : 16,
-            "defense" : 1,
-            "power" : 4
-        },
         "vision_range" : 4,
         "ai" : "bystander",
-        "quips" : [ "Hello, dear", "Off saving the world again?", "Be careful in the dungeon!", "Your father would be so proud, were he here." ]
+        "quips" : [ "Hello, dear", "Off saving the world again?", "Be careful in the dungeon!", "Your father would be so proud, were he here." ],
+        "attributes" : {}
     },
 
     {
@@ -364,15 +324,10 @@
             "order" : 1
         },
         "blocks_tile" : true,
-        "stats" : {
-            "max_hp" : 16,
-            "hp" : 16,
-            "defense" : 1,
-            "power" : 4
-        },
         "vision_range" : 4,
         "ai" : "bystander",
-        "quips" : [ "Why are you in my house?" ]
+        "quips" : [ "Why are you in my house?" ],
+        "attributes" : {}
     },
 
     {
@@ -384,15 +339,10 @@
             "order" : 1
         },
         "blocks_tile" : true,
-        "stats" : {
-            "max_hp" : 16,
-            "hp" : 16,
-            "defense" : 1,
-            "power" : 4
-        },
         "vision_range" : 4,
         "ai" : "bystander",
-        "quips" : [ "Lovely day, eh?", "Nice weather", "Hello" ]
+        "quips" : [ "Lovely day, eh?", "Nice weather", "Hello" ],
+        "attributes" : {}
     },
 
     {
@@ -404,15 +354,10 @@
             "order" : 1
         },
         "blocks_tile" : true,
-        "stats" : {
-            "max_hp" : 16,
-            "hp" : 16,
-            "defense" : 1,
-            "power" : 4
-        },
         "vision_range" : 4,
         "ai" : "bystander",
-        "quips" : [ "They're biting today!", "I caught something, but it wasn't a fish!", "Looks like rain" ]
+        "quips" : [ "They're biting today!", "I caught something, but it wasn't a fish!", "Looks like rain" ],
+        "attributes" : {}
     },
 
     {
@@ -424,15 +369,10 @@
             "order" : 1
         },
         "blocks_tile" : true,
-        "stats" : {
-            "max_hp" : 16,
-            "hp" : 16,
-            "defense" : 1,
-            "power" : 4
-        },
         "vision_range" : 4,
         "ai" : "bystander",
-        "quips" : [ "Arrr", "Grog!", "Booze!" ]
+        "quips" : [ "Arrr", "Grog!", "Booze!" ],
+        "attributes" : {}
     },
 
     {
@@ -444,15 +384,10 @@
             "order" : 1
         },
         "blocks_tile" : true,
-        "stats" : {
-            "max_hp" : 16,
-            "hp" : 16,
-            "defense" : 1,
-            "power" : 4
-        },
         "vision_range" : 4,
         "ai" : "bystander",
-        "quips" : [ "Hic", "Need... more... booze!", "Spare a copper?" ]
+        "quips" : [ "Hic", "Need... more... booze!", "Spare a copper?" ],
+        "attributes" : {}
     },
 
     {
@@ -464,14 +399,9 @@
             "order" : 1
         },
         "blocks_tile" : true,
-        "stats" : {
-            "max_hp" : 2,
-            "hp" : 2,
-            "defense" : 1,
-            "power" : 3
-        },
         "vision_range" : 8,
-        "ai" : "melee"
+        "ai" : "melee",
+        "attributes" : {}
     },
 
     {
@@ -483,14 +413,9 @@
             "order" : 1
         },
         "blocks_tile" : true,
-        "stats" : {
-            "max_hp" : 16,
-            "hp" : 16,
-            "defense" : 1,
-            "power" : 4
-        },
         "vision_range" : 8,
-        "ai" : "melee"
+        "ai" : "melee",
+        "attributes" : {}
     },
 
     {
@@ -502,14 +427,9 @@
             "order" : 1
         },
         "blocks_tile" : true,
-        "stats" : {
-            "max_hp" : 8,
-            "hp" : 8,
-            "defense" : 1,
-            "power" : 3
-        },
         "vision_range" : 8,
-        "ai" : "melee"
+        "ai" : "melee",
+        "attributes" : {}
     },
 
     {
@@ -521,14 +441,9 @@
             "order" : 1
         },
         "blocks_tile" : true,
-        "stats" : {
-            "max_hp" : 4,
-            "hp" : 4,
-            "defense" : 0,
-            "power" : 2
-        },
         "vision_range" : 4,
-        "ai" : "melee"
+        "ai" : "melee",
+        "attributes" : {}
     }
 ],
 
