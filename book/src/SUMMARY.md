@@ -51,7 +51,7 @@
     - [Making the town](./chapter_47.md)
     - [Populating the town](./chapter_48.md)
     - [Living bystanders](./chapter_49.md)
-    - Game Stats
+    - [Game Stats](./chapter_50.md)
     - User Interface
     - Item Stats and Vendors
     - Moving the town exit

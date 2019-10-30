@@ -45,6 +45,7 @@ CALL :Stage chapter-46-raws2
 CALL :Stage chapter-47-town1
 CALL :Stage chapter-48-town2
 CALL :Stage chapter-49-town3
+CALL :Stage chapter-50-stats
 
 REM Publish or perish
 cd book\book\wasm
