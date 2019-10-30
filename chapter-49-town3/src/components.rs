@@ -38,6 +38,9 @@ pub struct Monster {}
 pub struct Bystander {}
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct Vendor {}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Name {
     pub name : String
 }

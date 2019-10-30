@@ -197,7 +197,7 @@
             "power" : 4
         },
         "vision_range" : 4,
-        "ai" : "bystander"
+        "ai" : "vendor"
     },
 
     {
@@ -216,7 +216,7 @@
             "power" : 4
         },
         "vision_range" : 4,
-        "ai" : "bystander"
+        "ai" : "vendor"
     },
 
     {
@@ -292,7 +292,7 @@
             "power" : 4
         },
         "vision_range" : 4,
-        "ai" : "bystander"
+        "ai" : "vendor"
     },
 
     {
@@ -311,7 +311,7 @@
             "power" : 4
         },
         "vision_range" : 4,
-        "ai" : "bystander"
+        "ai" : "vendor"
     },
 
     {
@@ -330,7 +330,7 @@
             "power" : 4
         },
         "vision_range" : 4,
-        "ai" : "bystander"
+        "ai" : "vendor"
     },
 
     {
