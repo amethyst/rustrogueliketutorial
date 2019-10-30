@@ -467,8 +467,408 @@ match build_type {
 We're lumping these in together because they are basically the same function! Here's the body of each of them:
 
 ```rust
+fn build_smith(&mut self, 
+    building: &(i32, i32, i32, i32), 
+    build_data : &mut BuilderMap, 
+    rng: &mut rltk::RandomNumberGenerator) 
+{
+    // Place items
+    let mut to_place : Vec<&str> = vec!["Blacksmith", "Anvil", "Water Trough", "Weapon Rack", "Armor Stand"];
+    self.random_building_spawn(building, build_data, rng, &mut to_place, 0);
+}
 
+fn build_clothier(&mut self, 
+    building: &(i32, i32, i32, i32), 
+    build_data : &mut BuilderMap, 
+    rng: &mut rltk::RandomNumberGenerator) 
+{
+    // Place items
+    let mut to_place : Vec<&str> = vec!["Clothier", "Cabinet", "Table", "Loom", "Hide Rack"];
+    self.random_building_spawn(building, build_data, rng, &mut to_place, 0);
+}
+
+fn build_alchemist(&mut self, 
+    building: &(i32, i32, i32, i32), 
+    build_data : &mut BuilderMap, 
+    rng: &mut rltk::RandomNumberGenerator) 
+{
+    // Place items
+    let mut to_place : Vec<&str> = vec!["Alchemist", "Chemistry Set", "Dead Thing", "Chair", "Table"];
+    self.random_building_spawn(building, build_data, rng, &mut to_place, 0);
+}
+
+fn build_my_house(&mut self, 
+    building: &(i32, i32, i32, i32), 
+    build_data : &mut BuilderMap, 
+    rng: &mut rltk::RandomNumberGenerator) 
+{
+    // Place items
+    let mut to_place : Vec<&str> = vec!["Mom", "Bed", "Cabinet", "Chair", "Table"];
+    self.random_building_spawn(building, build_data, rng, &mut to_place, 0);
+}
+
+fn build_hovel(&mut self, 
+    building: &(i32, i32, i32, i32), 
+    build_data : &mut BuilderMap, 
+    rng: &mut rltk::RandomNumberGenerator) 
+{
+    // Place items
+    let mut to_place : Vec<&str> = vec!["Peasant", "Bed", "Chair", "Table"];
+    self.random_building_spawn(building, build_data, rng, &mut to_place, 0);
+}
 ```
+
+As you can see - these are basically passing spawn lists to the building spawner, rather than doing anything too fancy. We've created quite a lot of new entities here! I tried to come up with things you might find in each location:
+
+* The *smith* has of course got a Blacksmith. He likes to be around Anvils, Water Troughs, Weapon Racks, and Armor Stands.
+* The *clothier* has a Clothier, and a Cabinet, a Table, a Loom and a Hide Rack.
+* The *alchemist* has an Alchemist, a Chemistry Set, a Dead Thing (why not, right?), a Chair and a Table.
+* *My House* features Mom (the characters mother!), a bed, a cabinet, a chair and a table.
+* *Hovels* feature a Peasant, a bed, a chair and a table.
+
+So we'll need to support these in `spawns.json`:
+
+```json
+{
+    "name" : "Blacksmith",
+    "renderable": {
+        "glyph" : "☺",
+        "fg" : "#EE82EE",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "stats" : {
+        "max_hp" : 16,
+        "hp" : 16,
+        "defense" : 1,
+        "power" : 4
+    },
+    "vision_range" : 4,
+    "ai" : "bystander"
+},
+
+{
+    "name" : "Clothier",
+    "renderable": {
+        "glyph" : "☺",
+        "fg" : "#EE82EE",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "stats" : {
+        "max_hp" : 16,
+        "hp" : 16,
+        "defense" : 1,
+        "power" : 4
+    },
+    "vision_range" : 4,
+    "ai" : "bystander"
+},
+
+{
+    "name" : "Alchemist",
+    "renderable": {
+        "glyph" : "☺",
+        "fg" : "#EE82EE",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "stats" : {
+        "max_hp" : 16,
+        "hp" : 16,
+        "defense" : 1,
+        "power" : 4
+    },
+    "vision_range" : 4,
+    "ai" : "bystander"
+},
+
+{
+    "name" : "Mom",
+    "renderable": {
+        "glyph" : "☺",
+        "fg" : "#FFAAAA",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "stats" : {
+        "max_hp" : 16,
+        "hp" : 16,
+        "defense" : 1,
+        "power" : 4
+    },
+    "vision_range" : 4,
+    "ai" : "bystander"
+},
+
+{
+    "name" : "Peasant",
+    "renderable": {
+        "glyph" : "☺",
+        "fg" : "#999999",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "stats" : {
+        "max_hp" : 16,
+        "hp" : 16,
+        "defense" : 1,
+        "power" : 4
+    },
+    "vision_range" : 4,
+    "ai" : "bystander"
+},
+```
+
+And in the props section:
+
+```json
+{
+    "name" : "Anvil",
+    "renderable": {
+        "glyph" : "╔",
+        "fg" : "#AAAAAA",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "hidden" : false
+},
+
+{
+    "name" : "Water Trough",
+    "renderable": {
+        "glyph" : "•",
+        "fg" : "#5555FF",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "hidden" : false
+},
+
+{
+    "name" : "Weapon Rack",
+    "renderable": {
+        "glyph" : "π",
+        "fg" : "#FFD700",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "hidden" : false
+},
+
+{
+    "name" : "Armor Stand",
+    "renderable": {
+        "glyph" : "⌠",
+        "fg" : "#FFFFFF",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "hidden" : false
+},
+
+{
+    "name" : "Chemistry Set",
+    "renderable": {
+        "glyph" : "δ",
+        "fg" : "#00FFFF",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "hidden" : false
+},
+
+{
+    "name" : "Dead Thing",
+    "renderable": {
+        "glyph" : "☻",
+        "fg" : "#AA0000",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "hidden" : false
+},
+
+{
+    "name" : "Cabinet",
+    "renderable": {
+        "glyph" : "∩",
+        "fg" : "#805A46",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "hidden" : false
+},
+
+{
+    "name" : "Bed",
+    "renderable": {
+        "glyph" : "8",
+        "fg" : "#805A46",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "hidden" : false
+},
+
+{
+    "name" : "Loom",
+    "renderable": {
+        "glyph" : "≡",
+        "fg" : "#805A46",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "hidden" : false
+},
+
+{
+    "name" : "Hide Rack",
+    "renderable": {
+        "glyph" : "π",
+        "fg" : "#805A46",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "hidden" : false
+}
+```
+
+
+If you `cargo run` now, you can run around and find largely populated rooms:
+
+![Screenshot](./c48-s5.jpg)
+
+Hopefully, you also spot the bug: the player beat his/her Mom (and the alchemist)! We don't really want to encourage that type of behavior! So in the next segment, we'll work on some neutral AI and player movement behavior with NPCs.
+
+## Neutral AI/Movement
+
+There are two issues present with our current "bystander" handling: bystanders just stand there like lumps (blocking your movement, even!), and there is no way to get around them without slaughtering them. I'd like to think our hero won't start his/her adventure by murdering their Mom - so lets rectify the situation!
+
+### Trading Places
+
+Currently, when you "bump" into a tile containing anything with combat stats - you launch an attack. This is provided in `player.rs`, the `try_move_player` function:
+
+```rust
+let target = combat_stats.get(*potential_target);
+if let Some(_target) = target {
+    wants_to_melee.insert(entity, WantsToMelee{ target: *potential_target }).expect("Add target failed");
+    return;
+}
+```
+
+We need to extend this to not only attack, but swap places with the NPC when we bump into them. This way, they *can't* block your movement - but you also can't murder your mother! So first, we need to gain access to the `Bystanders` component store, and make a vector in which we will store our intent to move NPCs (we can't just access them in-loop; the borrow checker will throw a fit, unfortunately):
+
+```rust
+let bystanders = ecs.read_storage::<Bystander>();
+
+let mut swap_entities : Vec<(Entity, i32, i32)> = Vec::new();
+```
+
+So in `swap_entities`, we're storing the entity to move and their x/y destination coordinates. Now we adjust our main loop to check to see if a target is a bystander, add them to the swap list and move anyway if they are. We also make attacking conditional upon them *not* being a bystander:
+
+```rust
+let bystander = bystanders.get(*potential_target);
+if bystander.is_some() {
+    // Note that we want to move the bystander
+    swap_entities.push((*potential_target, pos.x, pos.y));
+
+    // Move the player
+    pos.x = min(map.width-1 , max(0, pos.x + delta_x));
+    pos.y = min(map.height-1, max(0, pos.y + delta_y));
+    entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
+
+    viewshed.dirty = true;
+    let mut ppos = ecs.write_resource::<Point>();
+    ppos.x = pos.x;
+    ppos.y = pos.y;
+} else {
+    let target = combat_stats.get(*potential_target);
+    if let Some(_target) = target {
+        wants_to_melee.insert(entity, WantsToMelee{ target: *potential_target }).expect("Add target failed");
+        return;
+    }
+}
+```
+
+Finally, at the very end of the function we iterate through `swap_entities` and apply the movement:
+
+```rust
+for m in swap_entities.iter() {
+    let their_pos = positions.get_mut(m.0);
+    if let Some(their_pos) = their_pos {
+        their_pos.x = m.1;
+        their_pos.y = m.2;
+    }
+}
+```
+
+If you `cargo run` now, you can no longer murder all of the NPCs; bumping into them swaps your positions:
+
+![Screenshot](./c48-s6.gif)
+
+## The Abandoned House
+
+Lastly (for this chapter), we need to populate the abandoned house. We decided that it was going to contain a massive rodent problem, since rodents of unusual size are a significant problem for low-level adventurers! We'll add another match line to our building factory matcher:
+
+```rust
+BuildingTag::Abandoned => self.build_abandoned_house(&building, build_data, rng),
+```
+
+And here's the function to about half-fill the house with rodents:
+
+```rust
+fn build_abandoned_house(&mut self, 
+    building: &(i32, i32, i32, i32), 
+    build_data : &mut BuilderMap, 
+    rng: &mut rltk::RandomNumberGenerator) 
+{
+    for y in building.1 .. building.1 + building.3 {
+        for x in building.0 .. building.0 + building.2 {
+            let idx = build_data.map.xy_idx(x, y);
+            if build_data.map.tiles[idx] == TileType::WoodFloor && idx != 0 && rng.roll_dice(1, 2)==1 {
+                build_data.spawn_list.push((idx, "Rat".to_string()));
+            }
+        }
+    }
+}
+```
+
+Lastly, we need to add `Rat` to the mob list in `spawns.json`:
+
+```json
+{
+    "name" : "Rat",
+    "renderable": {
+        "glyph" : "r",
+        "fg" : "#FF0000",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "stats" : {
+        "max_hp" : 2,
+        "hp" : 2,
+        "defense" : 1,
+        "power" : 3
+    },
+    "vision_range" : 8,
+    "ai" : "melee"
+},
+```
+
+If you `cargo run` now, and hunt around for the abandoned house - you'll find it full of hostile rats:
+
+![Screenshot](./c48-s7.gif)
+
+## Wrap-Up
+
+In this chapter, we've added a bunch of props and bystanders to the town - as well as a house full of angry rats. That makes it feel a lot more alive. It's by no means done yet, but it's already starting to feel like the opening scene of a fantasy game. In the next chapter, we're going to make some AI adjustments to make it feel more alive - and add some bystanders who aren't conveniently hanging around inside buildings.
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-48-town2)**
 

@@ -294,6 +294,7 @@ impl TownBuilder {
                 BuildingTag::Alchemist => self.build_alchemist(&building, build_data, rng),
                 BuildingTag::PlayerHouse => self.build_my_house(&building, build_data, rng),
                 BuildingTag::Hovel => self.build_hovel(&building, build_data, rng),
+                BuildingTag::Abandoned => self.build_abandoned_house(&building, build_data, rng),
                 _ => {}
             }
         }
@@ -348,13 +349,68 @@ impl TownBuilder {
         self.random_building_spawn(building, build_data, rng, &mut to_place, 0);
     }
 
+    fn build_smith(&mut self, 
+        building: &(i32, i32, i32, i32), 
+        build_data : &mut BuilderMap, 
+        rng: &mut rltk::RandomNumberGenerator) 
+    {
+        // Place items
+        let mut to_place : Vec<&str> = vec!["Blacksmith", "Anvil", "Water Trough", "Weapon Rack", "Armor Stand"];
+        self.random_building_spawn(building, build_data, rng, &mut to_place, 0);
+    }
+
+    fn build_clothier(&mut self, 
+        building: &(i32, i32, i32, i32), 
+        build_data : &mut BuilderMap, 
+        rng: &mut rltk::RandomNumberGenerator) 
+    {
+        // Place items
+        let mut to_place : Vec<&str> = vec!["Clothier", "Cabinet", "Table", "Loom", "Hide Rack"];
+        self.random_building_spawn(building, build_data, rng, &mut to_place, 0);
+    }
+
     fn build_alchemist(&mut self, 
         building: &(i32, i32, i32, i32), 
         build_data : &mut BuilderMap, 
         rng: &mut rltk::RandomNumberGenerator) 
     {
         // Place items
-        let mut to_place : Vec<&str> = vec!["Alchemist", "Bottle", "Dead Thing", "Chair", "Table"];
+        let mut to_place : Vec<&str> = vec!["Alchemist", "Chemistry Set", "Dead Thing", "Chair", "Table"];
         self.random_building_spawn(building, build_data, rng, &mut to_place, 0);
+    }
+
+    fn build_my_house(&mut self, 
+        building: &(i32, i32, i32, i32), 
+        build_data : &mut BuilderMap, 
+        rng: &mut rltk::RandomNumberGenerator) 
+    {
+        // Place items
+        let mut to_place : Vec<&str> = vec!["Mom", "Bed", "Cabinet", "Chair", "Table"];
+        self.random_building_spawn(building, build_data, rng, &mut to_place, 0);
+    }
+
+    fn build_hovel(&mut self, 
+        building: &(i32, i32, i32, i32), 
+        build_data : &mut BuilderMap, 
+        rng: &mut rltk::RandomNumberGenerator) 
+    {
+        // Place items
+        let mut to_place : Vec<&str> = vec!["Peasant", "Bed", "Chair", "Table"];
+        self.random_building_spawn(building, build_data, rng, &mut to_place, 0);
+    }
+
+    fn build_abandoned_house(&mut self, 
+        building: &(i32, i32, i32, i32), 
+        build_data : &mut BuilderMap, 
+        rng: &mut rltk::RandomNumberGenerator) 
+    {
+        for y in building.1 .. building.1 + building.3 {
+            for x in building.0 .. building.0 + building.2 {
+                let idx = build_data.map.xy_idx(x, y);
+                if build_data.map.tiles[idx] == TileType::WoodFloor && idx != 0 && rng.roll_dice(1, 2)==1 {
+                    build_data.spawn_list.push((idx, "Rat".to_string()));
+                }
+            }
+        }
     }
 }
