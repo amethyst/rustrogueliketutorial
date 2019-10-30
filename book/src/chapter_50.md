@@ -547,6 +547,34 @@ let mut gamelog = self.ecs.fetch_mut::<gamelog::GameLog>();
 gamelog.entries.insert(0, "You descend to the next level.".to_string());
 ```
 
+`gui.rs` is an easy fix. Replace the import for `CombatStats` with `Pools`; here's the relevant section:
+
+```rust
+...
+use super::{Pools, Player, gamelog::GameLog, Map, Name, Position, State, InBackpack, 
+    Viewshed, RunState, Equipped, HungerClock, HungerState, rex_assets::RexAssets,
+    Hidden, camera };
+
+pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
+    ctx.draw_box(0, 43, 79, 6, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK));
+
+    let combat_stats = ecs.read_storage::<Pools>();
+    let players = ecs.read_storage::<Player>();
+    let hunger = ecs.read_storage::<HungerClock>();
+    for (_player, stats, hc) in (&players, &combat_stats, &hunger).join() {
+        let health = format!(" HP: {} / {} ", stats.hp, stats.max_hp);
+        ctx.print_color(12, 43, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), &health);
+
+        ctx.draw_bar_horizontal(28, 43, 51, stats.hit_points.current, stats.hit_points.max, RGB::named(rltk::RED), RGB::named(rltk::BLACK));
+...
+```
+
+Finally, in `damage_system.rs` replace all references to `CombatStats` with `Pools`, and all references to `stats.hp` with `stats.hit_points.current`.
+
+## Updating the core game systems for combat and inventory
+
+You still have some errors, but they now relate to core game systems that relied upon the old system. We want to make that more like a D20 (D&D) game, so they should be replaced anyway.
+
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-50-stats)**
 
