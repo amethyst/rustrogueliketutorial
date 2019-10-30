@@ -710,6 +710,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "chapter-49-town3"
+version = "0.1.0"
+
+[[package]]
 name = "cloudabi"
 version = "0.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"

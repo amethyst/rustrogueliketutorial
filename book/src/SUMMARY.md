@@ -50,4 +50,9 @@
     - [Data-Driven Spawn Tables](./chapter_46.md)
     - [Making the town](./chapter_47.md)
     - [Populating the town](./chapter_48.md)
+    - [Living bystanders](./chapter_49.md)
+    - Game Stats
+    - Item Stats and Vendors
+    - Moving the town exit
+    - Themes
 - [Contributors](./contributors.md)
