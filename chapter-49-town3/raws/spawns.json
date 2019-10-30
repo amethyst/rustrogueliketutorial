@@ -376,6 +376,86 @@
     },
 
     {
+        "name" : "Dock Worker",
+        "renderable": {
+            "glyph" : "☺",
+            "fg" : "#999999",
+            "bg" : "#000000",
+            "order" : 1
+        },
+        "blocks_tile" : true,
+        "stats" : {
+            "max_hp" : 16,
+            "hp" : 16,
+            "defense" : 1,
+            "power" : 4
+        },
+        "vision_range" : 4,
+        "ai" : "bystander",
+        "quips" : [ "Lovely day, eh?", "Nice weather", "Hello" ]
+    },
+
+    {
+        "name" : "Fisher",
+        "renderable": {
+            "glyph" : "☺",
+            "fg" : "#999999",
+            "bg" : "#000000",
+            "order" : 1
+        },
+        "blocks_tile" : true,
+        "stats" : {
+            "max_hp" : 16,
+            "hp" : 16,
+            "defense" : 1,
+            "power" : 4
+        },
+        "vision_range" : 4,
+        "ai" : "bystander",
+        "quips" : [ "They're biting today!", "I caught something, but it wasn't a fish!", "Looks like rain" ]
+    },
+
+    {
+        "name" : "Wannabe Pirate",
+        "renderable": {
+            "glyph" : "☺",
+            "fg" : "#aa9999",
+            "bg" : "#000000",
+            "order" : 1
+        },
+        "blocks_tile" : true,
+        "stats" : {
+            "max_hp" : 16,
+            "hp" : 16,
+            "defense" : 1,
+            "power" : 4
+        },
+        "vision_range" : 4,
+        "ai" : "bystander",
+        "quips" : [ "Arrr", "Grog!", "Booze!" ]
+    },
+
+    {
+        "name" : "Drunk",
+        "renderable": {
+            "glyph" : "☺",
+            "fg" : "#aa9999",
+            "bg" : "#000000",
+            "order" : 1
+        },
+        "blocks_tile" : true,
+        "stats" : {
+            "max_hp" : 16,
+            "hp" : 16,
+            "defense" : 1,
+            "power" : 4
+        },
+        "vision_range" : 4,
+        "ai" : "bystander",
+        "quips" : [ "Hic", "Need... more... booze!", "Spare a copper?" ]
+    },
+
+    {
         "name" : "Rat",
         "renderable": {
             "glyph" : "r",

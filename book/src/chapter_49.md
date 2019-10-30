@@ -94,15 +94,17 @@ impl<'a> System<'a> for BystanderAI {
                 _ => {}
             }
 
-            let dest_idx = map.xy_idx(x, y);
-            if !map.blocked[dest_idx] {
-                let idx = map.xy_idx(pos.x, pos.y);
-                map.blocked[idx] = false;
-                pos.x = x;
-                pos.y = y;
-                entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
-                map.blocked[dest_idx] = true;
-                viewshed.dirty = true;
+            if x > 0 && x < map.width-1 && y > 0 && y < map.height-1 {
+                let dest_idx = map.xy_idx(x, y);
+                if !map.blocked[dest_idx] {
+                    let idx = map.xy_idx(pos.x, pos.y);
+                    map.blocked[idx] = false;
+                    pos.x = x;
+                    pos.y = y;
+                    entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
+                    map.blocked[dest_idx] = true;
+                    viewshed.dirty = true;
+                }
             }
         }
     }
@@ -278,7 +280,148 @@ This sort of "fluff" goes a long way towards making a world feel alive, even if 
 
 ## Outdoor NPCs
 
-All of the NPCs in the town so far have been conveniently located inside buildings.
+All of the NPCs in the town so far have been conveniently located inside buildings. It isn't very realistic, even in terrible weather (which we don't have!); so we should look at spawning a few outdoor NPCs.
+
+Open up `map_builders/town.rs` and we'll make two new functions; here's the calls to them in the main `build` function:
+
+```rust
+self.spawn_dockers(build_data, rng);
+self.spawn_townsfolk(build_data, rng, &mut available_building_tiles);
+```
+
+The `spawn_dockers` function looks for bridge tiles, and places various people on them:
+
+```rust
+fn spawn_dockers(&mut self, build_data : &mut BuilderMap, rng: &mut rltk::RandomNumberGenerator) {
+    for (idx, tt) in build_data.map.tiles.iter().enumerate() {
+        if *tt == TileType::Bridge && rng.roll_dice(1, 6)==1 {
+            let roll = rng.roll_dice(1, 3);
+            match roll {
+                1 => build_data.spawn_list.push((idx, "Dock Worker".to_string())),
+                2 => build_data.spawn_list.push((idx, "Wannabe Pirate".to_string())),
+                _ => build_data.spawn_list.push((idx, "Fisher".to_string())),
+            }
+        }
+    }
+}
+```
+This is simple enough: for each tile on the map, retrieve its index and type. If its a bridge, and a 1d6 comes up a `1` - spawn someone. We randomly pick between Dock Workers, Wannabe Pirates and Fisherfolk.
+
+`spawn_townsfolk` is pretty simple, too:
+
+```rust
+fn spawn_townsfolk(&mut self, 
+    build_data : &mut BuilderMap, 
+    rng: &mut rltk::RandomNumberGenerator, 
+    available_building_tiles : &mut HashSet<usize>) 
+{
+    for idx in available_building_tiles.iter() {
+        if rng.roll_dice(1, 10)==1 {
+            let roll = rng.roll_dice(1, 4);
+            match roll {
+                1 => build_data.spawn_list.push((*idx, "Peasant".to_string())),
+                2 => build_data.spawn_list.push((*idx, "Drunk".to_string())),
+                3 => build_data.spawn_list.push((*idx, "Dock Worker".to_string())),
+                _ => build_data.spawn_list.push((*idx, "Fisher".to_string())),
+            }
+        }
+    }
+}
+```
+
+This iterates all the *remaining* `availble_building_tiles`; these are tiles we *know* won't be inside of a building, because we removed them when we placed buildings! So each spot is guaranteed to be outdoors, and in town. For each tile, we roll 1d10 - and if its a 1, we spawn one of a Peasant, a Drunk, a Dock Worker or a Fisher.
+
+Lastly, we add these folk to our `spawns.json` file:
+
+```json
+{
+    "name" : "Dock Worker",
+    "renderable": {
+        "glyph" : "☺",
+        "fg" : "#999999",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "stats" : {
+        "max_hp" : 16,
+        "hp" : 16,
+        "defense" : 1,
+        "power" : 4
+    },
+    "vision_range" : 4,
+    "ai" : "bystander",
+    "quips" : [ "Lovely day, eh?", "Nice weather", "Hello" ]
+},
+
+{
+    "name" : "Fisher",
+    "renderable": {
+        "glyph" : "☺",
+        "fg" : "#999999",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "stats" : {
+        "max_hp" : 16,
+        "hp" : 16,
+        "defense" : 1,
+        "power" : 4
+    },
+    "vision_range" : 4,
+    "ai" : "bystander",
+    "quips" : [ "They're biting today!", "I caught something, but it wasn't a fish!", "Looks like rain" ]
+},
+
+{
+    "name" : "Wannabe Pirate",
+    "renderable": {
+        "glyph" : "☺",
+        "fg" : "#aa9999",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "stats" : {
+        "max_hp" : 16,
+        "hp" : 16,
+        "defense" : 1,
+        "power" : 4
+    },
+    "vision_range" : 4,
+    "ai" : "bystander",
+    "quips" : [ "Arrr", "Grog!", "Booze!" ]
+},
+
+{
+    "name" : "Drunk",
+    "renderable": {
+        "glyph" : "☺",
+        "fg" : "#aa9999",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "stats" : {
+        "max_hp" : 16,
+        "hp" : 16,
+        "defense" : 1,
+        "power" : 4
+    },
+    "vision_range" : 4,
+    "ai" : "bystander",
+    "quips" : [ "Hic", "Need... more... booze!", "Spare a copper?" ]
+},
+```
+
+If you `cargo run` now, you'll see a town teeming with life:
+
+![Screenshot](./c49-s3.gif)
+
+## Wrap-Up
+
+This chapter has really brought our town to life. There's always room for improvement, but it's good enough for a starting map! The next chapter will change gear, and start adding *stats* to the game.
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-49-town3)**
 

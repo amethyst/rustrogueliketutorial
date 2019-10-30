@@ -51,15 +51,17 @@ impl<'a> System<'a> for BystanderAI {
                 _ => {}
             }
 
-            let dest_idx = map.xy_idx(x, y);
-            if !map.blocked[dest_idx] {
-                let idx = map.xy_idx(pos.x, pos.y);
-                map.blocked[idx] = false;
-                pos.x = x;
-                pos.y = y;
-                entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
-                map.blocked[dest_idx] = true;
-                viewshed.dirty = true;
+            if x > 0 && x < map.width-1 && y > 0 && y < map.height-1 {
+                let dest_idx = map.xy_idx(x, y);
+                if !map.blocked[dest_idx] {
+                    let idx = map.xy_idx(pos.x, pos.y);
+                    map.blocked[idx] = false;
+                    pos.x = x;
+                    pos.y = y;
+                    entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
+                    map.blocked[dest_idx] = true;
+                    viewshed.dirty = true;
+                }
             }
         }
     }
