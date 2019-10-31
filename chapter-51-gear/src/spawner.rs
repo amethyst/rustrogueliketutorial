@@ -4,7 +4,7 @@ extern crate specs;
 use specs::prelude::*;
 use super::{Pools, Pool, Player, Renderable, Name, Position, Viewshed, Rect,  
     SerializeMe, random_table::RandomTable, HungerClock, HungerState, Map, TileType, raws::*,
-    Attribute, Attributes, Skills, Skill };
+    Attribute, Attributes, Skills, Skill, EquipmentSlot };
 use crate::specs::saveload::{MarkedBuilder, SimpleMarker};
 use std::collections::HashMap;
 use crate::{attr_bonus, player_hp_at_level, mana_at_level};
@@ -16,7 +16,7 @@ pub fn player(ecs : &mut World, player_x : i32, player_y : i32) -> Entity {
     skills.skills.insert(Skill::Defense, 1);
     skills.skills.insert(Skill::Magic, 1);
 
-    ecs
+    let player = ecs
         .create_entity()
         .with(Position { x: player_x, y: player_y })
         .with(Renderable {
@@ -49,7 +49,29 @@ pub fn player(ecs : &mut World, player_x : i32, player_y : i32) -> Entity {
             level: 1
         })
         .marked::<SimpleMarker<SerializeMe>>()
-        .build()
+        .build();
+
+    // Starting equipment
+    spawn_named_entity(&RAWS.lock().unwrap(), ecs.create_entity(), "Rusty Longsword", 
+        SpawnType::Equipped{by : player, slot: EquipmentSlot::Melee}
+    );
+    spawn_named_entity(&RAWS.lock().unwrap(), ecs.create_entity(), "Dried Sausage", 
+        SpawnType::Carried{by : player}
+    );
+    spawn_named_entity(&RAWS.lock().unwrap(), ecs.create_entity(), "Beer", 
+        SpawnType::Carried{by : player}
+    );
+    spawn_named_entity(&RAWS.lock().unwrap(), ecs.create_entity(), "Stained Tunic", 
+        SpawnType::Equipped{by : player, slot: EquipmentSlot::Torso}
+    );
+    spawn_named_entity(&RAWS.lock().unwrap(), ecs.create_entity(), "Torn Trousers", 
+        SpawnType::Equipped{by : player, slot: EquipmentSlot::Legs}
+    );
+    spawn_named_entity(&RAWS.lock().unwrap(), ecs.create_entity(), "Old Boots", 
+        SpawnType::Equipped{by : player, slot: EquipmentSlot::Feet}
+    );
+
+    player
 }
 
 const MAX_MONSTERS : i32 = 4;

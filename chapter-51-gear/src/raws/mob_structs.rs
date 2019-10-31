@@ -14,7 +14,8 @@ pub struct Mob {
     pub skills : Option<HashMap<String, i32>>,
     pub level : Option<i32>,
     pub hp : Option<i32>,
-    pub mana : Option<i32>
+    pub mana : Option<i32>,
+    pub equipped : Option<Vec<String>>
 }
 
 #[derive(Deserialize, Debug)]

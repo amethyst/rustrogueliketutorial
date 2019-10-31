@@ -4,9 +4,34 @@ use crate::components::*;
 use super::{Raws};
 use crate::random_table::{RandomTable};
 use crate::{attr_bonus, npc_hp, mana_at_level};
+use regex::Regex;
+
+pub fn parse_dice_string(dice : &str) -> (i32, i32, i32) {
+    lazy_static! {
+        static ref DICE_RE : Regex = Regex::new(r"(\d+)d(\d+)([\+\-]\d+)?").unwrap();
+    }
+    let mut n_dice = 1;
+    let mut die_type = 4;
+    let mut die_bonus = 0;
+    for cap in DICE_RE.captures_iter(dice) {
+        if let Some(group) = cap.get(1) {
+            n_dice = group.as_str().parse::<i32>().expect("Not a digit");
+        }
+        if let Some(group) = cap.get(2) {
+            die_type = group.as_str().parse::<i32>().expect("Not a digit");
+        }
+        if let Some(group) = cap.get(3) {
+            die_bonus = group.as_str().parse::<i32>().expect("Not a digit");
+        }
+
+    }
+    (n_dice, die_type, die_bonus)
+}
 
 pub enum SpawnType {
-    AtPosition { x: i32, y: i32 }
+    AtPosition { x: i32, y: i32 },
+    Equipped { by: Entity, slot : EquipmentSlot },
+    Carried { by: Entity }
 }
 
 pub struct RawMaster {
@@ -68,6 +93,12 @@ fn spawn_position(pos : SpawnType, new_entity : EntityBuilder) -> EntityBuilder 
         SpawnType::AtPosition{x,y} => {
             eb = eb.with(Position{ x, y });
         }
+        SpawnType::Carried{by} => {
+            eb = eb.with(InBackpack{ owner: by })
+        }
+        SpawnType::Equipped{by, slot} => {
+            eb = eb.with(Equipped{ owner: by, slot })
+        }
     }
 
     eb
@@ -123,12 +154,33 @@ pub fn spawn_named_item(raws: &RawMaster, new_entity : EntityBuilder, key : &str
 
         if let Some(weapon) = &item_template.weapon {
             eb = eb.with(Equippable{ slot: EquipmentSlot::Melee });
-            eb = eb.with(MeleePowerBonus{ power : weapon.power_bonus });
+            let (n_dice, die_type, bonus) = parse_dice_string(&weapon.base_damage);
+            let mut wpn = MeleeWeapon{
+                attribute : WeaponAttribute::Might,
+                damage_n_dice : n_dice,
+                damage_die_type : die_type,
+                damage_bonus : bonus,
+                hit_bonus : weapon.hit_bonus
+            };
+            match weapon.attribute.as_str() {
+                "Quickness" => wpn.attribute = WeaponAttribute::Quickness,
+                _ => wpn.attribute = WeaponAttribute::Might
+            }
+            eb = eb.with(wpn);
         }
 
-        if let Some(shield) = &item_template.shield {
-            eb = eb.with(Equippable{ slot: EquipmentSlot::Shield });
-            eb = eb.with(DefenseBonus{ defense: shield.defense_bonus });
+        if let Some(wearable) = &item_template.wearable {
+            let slot = match wearable.slot.as_str() {
+                "Shield" => EquipmentSlot::Shield, 
+                "Head" => EquipmentSlot::Head,
+                "Torso" => EquipmentSlot::Torso, 
+                "Legs" => EquipmentSlot::Legs, 
+                "Feet" => EquipmentSlot::Feet, 
+                "Hands" => EquipmentSlot::Hands,
+                _ => EquipmentSlot::Melee
+            };
+            eb = eb.with(Equippable{ slot });
+            eb = eb.with(Wearable{ slot, armor_class: wearable.armor_class });
         }
 
         return Some(eb.build());
@@ -223,7 +275,7 @@ pub fn spawn_named_mob(raws: &RawMaster, new_entity : EntityBuilder, key : &str,
 
         eb = eb.with(Viewshed{ visible_tiles : Vec::new(), range: mob_template.vision_range, dirty: true });
 
-        return Some(eb.build());
+        Some(eb.build())
     }
     None
 }

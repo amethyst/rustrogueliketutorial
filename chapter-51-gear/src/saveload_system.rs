@@ -43,7 +43,7 @@ pub fn save_game(ecs : &mut World) {
         serialize_individually!(ecs, serializer, data, Position, Renderable, Player, Viewshed, Monster, 
             Name, BlocksTile, SufferDamage, WantsToMelee, Item, Consumable, Ranged, InflictsDamage, 
             AreaOfEffect, Confusion, ProvidesHealing, InBackpack, WantsToPickupItem, WantsToUseItem,
-            WantsToDropItem, SerializationHelper, Equippable, Equipped, MeleePowerBonus, DefenseBonus,
+            WantsToDropItem, SerializationHelper, Equippable, Equipped, MeleeWeapon, Wearable,
             WantsToRemoveItem, ParticleLifetime, HungerClock, ProvidesFood, MagicMapper, Hidden,
             EntryTrigger, EntityMoved, SingleActivation, BlocksVisibility, Door, Bystander, Vendor,
             Quips, Attributes, Skills, Pools
@@ -94,7 +94,7 @@ pub fn load_game(ecs: &mut World) {
         deserialize_individually!(ecs, de, d, Position, Renderable, Player, Viewshed, Monster, 
             Name, BlocksTile, SufferDamage, WantsToMelee, Item, Consumable, Ranged, InflictsDamage, 
             AreaOfEffect, Confusion, ProvidesHealing, InBackpack, WantsToPickupItem, WantsToUseItem,
-            WantsToDropItem, SerializationHelper, Equippable, Equipped, MeleePowerBonus, DefenseBonus,
+            WantsToDropItem, SerializationHelper, Equippable, Equipped, MeleeWeapon, Wearable,
             WantsToRemoveItem, ParticleLifetime, HungerClock, ProvidesFood, MagicMapper, Hidden,
             EntryTrigger, EntityMoved, SingleActivation, BlocksVisibility, Door, Bystander, Vendor,
             Quips, Attributes, Skills, Pools
