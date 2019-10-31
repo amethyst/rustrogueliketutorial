@@ -339,7 +339,6 @@ impl State {
         self.generate_world_map(current_depth + 1);
 
         // Notify the player and give them some health
-        let player_entity = self.ecs.fetch::<Entity>();
         let mut gamelog = self.ecs.fetch_mut::<gamelog::GameLog>();
         gamelog.entries.insert(0, "You descend to the next level.".to_string());
     }

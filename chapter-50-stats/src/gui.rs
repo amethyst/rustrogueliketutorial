@@ -13,7 +13,7 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     let players = ecs.read_storage::<Player>();
     let hunger = ecs.read_storage::<HungerClock>();
     for (_player, stats, hc) in (&players, &combat_stats, &hunger).join() {
-        let health = format!(" HP: {} / {} ", stats.hp, stats.max_hp);
+        let health = format!(" HP: {} / {} ", stats.hit_points.current, stats.hit_points.max);
         ctx.print_color(12, 43, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), &health);
 
         ctx.draw_bar_horizontal(28, 43, 51, stats.hit_points.current, stats.hit_points.max, RGB::named(rltk::RED), RGB::named(rltk::BLACK));
