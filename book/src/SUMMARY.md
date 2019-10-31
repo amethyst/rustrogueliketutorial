@@ -52,8 +52,9 @@
     - [Populating the town](./chapter_48.md)
     - [Living bystanders](./chapter_49.md)
     - [Game Stats](./chapter_50.md)
-    - Equipment revamp
+    - [Equipment](./chapter_51.md)
     - User Interface
+    - XP
     - Item Stats and Vendors
     - Moving the town exit
     - Themes
