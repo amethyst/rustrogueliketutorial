@@ -2,7 +2,7 @@ extern crate specs;
 use specs::prelude::*;
 use super::{Attributes, Skills, WantsToMelee, Name, SufferDamage, gamelog::GameLog,
     particle_system::ParticleBuilder, Position, HungerClock, HungerState, Pools, skill_bonus, 
-    Skill, Equipped, MeleeWeapon, EquipmentSlot, WeaponAttribute, Wearable};
+    Skill, Equipped, MeleeWeapon, EquipmentSlot, WeaponAttribute, Wearable, NaturalAttackDefense};
 
 pub struct MeleeCombatSystem {}
 
@@ -22,13 +22,14 @@ impl<'a> System<'a> for MeleeCombatSystem {
                         WriteExpect<'a, rltk::RandomNumberGenerator>,
                         ReadStorage<'a, Equipped>,
                         ReadStorage<'a, MeleeWeapon>,
-                        ReadStorage<'a, Wearable>
+                        ReadStorage<'a, Wearable>,
+                        ReadStorage<'a, NaturalAttackDefense>
                       );
 
     fn run(&mut self, data : Self::SystemData) {
         let (entities, mut log, mut wants_melee, names, attributes, skills, mut inflict_damage, 
             mut particle_builder, positions, hunger_clock, pools, mut rng,
-            equipped_items, meleeweapons, wearables) = data;
+            equipped_items, meleeweapons, wearables, natural) = data;
 
         for (entity, wants_melee, name, attacker_attributes, attacker_skills, attacker_pools) in (&entities, &wants_melee, &names, &attributes, &skills, &pools).join() {
             // Are the attacker and defender alive? Only attack if they are
@@ -45,6 +46,16 @@ impl<'a> System<'a> for MeleeCombatSystem {
                     damage_die_type : 4,
                     damage_bonus : 0                    
                 };
+
+                if let Some(nat) = natural.get(entity) {
+                    if !nat.attacks.is_empty() {
+                        let attack_index = if nat.attacks.len()==1 { 0 } else { rng.roll_dice(1, nat.attacks.len() as i32) as usize };
+                        weapon_info.hit_bonus = nat.attacks[attack_index].hit_bonus;
+                        weapon_info.damage_n_dice = nat.attacks[attack_index].damage_n_dice;
+                        weapon_info.damage_die_type = nat.attacks[attack_index].damage_die_type;
+                        weapon_info.damage_bonus = nat.attacks[attack_index].damage_bonus;
+                    }
+                }
 
                 for (wielded,melee) in (&equipped_items, &meleeweapons).join() {
                     if wielded.owner == entity && wielded.slot == EquipmentSlot::Melee {
@@ -73,7 +84,10 @@ impl<'a> System<'a> for MeleeCombatSystem {
                         armor_item_bonus_f += armor.armor_class;
                     }
                 }
-                let base_armor_class = 10;
+                let base_armor_class = match natural.get(wants_melee.target) {
+                    None => 10,
+                    Some(nat) => nat.armor_class.unwrap_or(10)
+                };
                 let armor_quickness_bonus = target_attributes.quickness.bonus;
                 let armor_skill_bonus = skill_bonus(Skill::Defense, &*target_skills);
                 let armor_item_bonus = armor_item_bonus_f as i32;
