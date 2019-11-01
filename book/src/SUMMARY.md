@@ -53,7 +53,7 @@
     - [Living bystanders](./chapter_49.md)
     - [Game Stats](./chapter_50.md)
     - [Equipment](./chapter_51.md)
-    - User Interface
+    - [User Interface](./chapter_52.md)
     - XP
     - Item Stats and Vendors
     - Moving the town exit
