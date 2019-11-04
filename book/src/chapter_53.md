@@ -469,7 +469,68 @@ In a real game, you'll find yourself tweaking this stuff a *lot* until you get t
 
 ## Adding in some harmless beasties
 
-Not *everything* in a typical forest is trying to kill you (unless you live in Australia, I'm told). 
+Not *everything* in a typical forest is trying to kill you (unless you live in Australia, I'm told). Let's start by making a deer and giving it `bystander` AI so it won't hurt anyone:
+
+```json
+{
+    "name" : "Deer",
+    "renderable": {
+        "glyph" : "d",
+        "fg" : "#FFFF00",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "vision_range" : 8,
+    "ai" : "bystander",
+    "attributes" : {
+        "Might" : 3,
+        "Fitness" : 3
+    },
+    "skills" : {
+        "Melee" : -1,
+        "Defense" : -1
+    },
+    "natural" : {
+        "armor_class" : 11,
+        "attacks" : [
+            { "name" : "bite", "hit_bonus" : 0, "damage" : "1d4" }
+        ]   
+    }
+},
+```
+
+And adding it to the spawn table:
+
+```json
+{ "name" : "Deer", "weight" : 14, "min_depth" : 2, "max_depth" : 3 }
+```
+
+If you `cargo run` now, you'll encounter a plethora of life in the forest - and deer will roam randomly, not doing much.
+
+![Screenshot](./c53-s6.jpg)
+
+## But Venison is Tasty!
+
+The problem with making deer use the `bystander` system is that they roam stupidly, and neither you - nor the wolves - can eat them. On a larger level, you can't eat the wolves either (not that they would taste good). Nor can you sell their pelts, or otherwise profit from their slaughter!
+
+It seems like there are really *three* issues here:
+
+* When we kill things, they should (sometimes) drop loot for us to use.
+* Deer need their own AI.
+* Wolves need to want to eat deer, which probably requires that they have their own AI too.
+
+### Loot Dropping
+
+### Scared deer
+
+### Hungry Wolves
+
+## Some Brigands - and they drop stuff!
+
+## A big nasty (by 1st level standards) guy at the end
+
+## Wrap-Up
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-53-woods)**
 
