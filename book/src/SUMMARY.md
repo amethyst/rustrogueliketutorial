@@ -56,5 +56,6 @@
     - [User Interface](./chapter_52.md)
     - [Into the Woods!](./chapter_53.md)
     - XP
+    - Going back and forth
     - Item Stats and Vendors
 - [Contributors](./contributors.md)

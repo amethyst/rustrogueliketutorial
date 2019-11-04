@@ -29,6 +29,8 @@ mod rooms_corridors_lines;
 mod room_corridor_spawner;
 mod door_placement;
 mod town;
+mod forest;
+use forest::forest_builder;
 use distant_exit::DistantExit;
 use simple_map::SimpleMapBuilder;
 use bsp_dungeon::BspDungeonBuilder;
@@ -298,6 +300,7 @@ pub fn level_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator, widt
     println!("Depth: {}", new_depth);
     match new_depth {
         1 => town_builder(new_depth, rng, width, height),
+        2 => forest_builder(new_depth, rng, width, height),
         _ => random_builder(new_depth, rng, width, height)
     }
 }
