@@ -522,6 +522,49 @@ It seems like there are really *three* issues here:
 
 ### Loot Dropping
 
+A good start would be that when we kill an entity, it has a chance to drop whatever it is carrying. Open up `damage_system.rs`, and we'll add a stage to `delete_the_dead` (after we determine who is dead, and before we delete them):
+
+```rust
+// Drop everything held by dead people
+{
+    let mut to_drop : Vec<(Entity, Position)> = Vec::new();
+    let entities = ecs.entities();
+    let mut equipped = ecs.write_storage::<Equipped>();
+    let mut carried = ecs.write_storage::<InBackpack>();
+    let mut positions = ecs.write_storage::<Position>();
+    for victim in dead.iter() {        
+        for (entity, equipped) in (&entities, &equipped).join() {
+            if equipped.owner == *victim {
+                // Drop their stuff
+                let pos = positions.get(*victim);
+                if let Some(pos) = pos {
+                    to_drop.push((entity, pos.clone()));
+                }
+            }
+        }
+        for (entity, backpack) in (&entities, &carried).join() {
+            if backpack.owner == *victim {
+                // Drop their stuff
+                let pos = positions.get(*victim);
+                if let Some(pos) = pos {
+                    to_drop.push((entity, pos.clone()));
+                }
+            }
+        }
+    }
+
+    for drop in to_drop.iter() {
+        equipped.remove(drop.0);
+        carried.remove(drop.0);
+        positions.insert(drop.0, drop.1.clone()).expect("Unable to insert position");
+    }
+}
+```
+
+So this code searches the `Equipped` and `InBackpack` component stores for the entity who died, and lists the entity's position and the item in a vector. It then iterates the vector, removing any `InBackpack` and `Equipped` tags from the item - and adding a position on the ground. The net result of this is that when someone dies - their stuff drops to the floor. That's a good start, although well-equipped entities may be leaving a *lot* of stuff lying around. We'll worry about that later.
+
+So with this code, you *could* spawn everything you want an entity to drop as something they carry around. It would be a little odd, conceptually (I guess deer *do* carry around meat...) - but it'd work. However, we may not want *every* deer to drop the same thing. Enter: Loot tables!
+
 ### Scared deer
 
 ### Hungry Wolves
