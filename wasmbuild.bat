@@ -48,6 +48,7 @@ CALL :Stage chapter-49-town3
 CALL :Stage chapter-50-stats
 CALL :Stage chapter-51-gear
 CALL :Stage chapter-52-ui
+CALL :Stage chapter-53-woods
 
 REM Publish or perish
 cd book\book\wasm

@@ -54,8 +54,7 @@
     - [Game Stats](./chapter_50.md)
     - [Equipment](./chapter_51.md)
     - [User Interface](./chapter_52.md)
+    - [Into the Woods!](./chapter_53.md)
     - XP
     - Item Stats and Vendors
-    - Moving the town exit
-    - Themes
 - [Contributors](./contributors.md)
