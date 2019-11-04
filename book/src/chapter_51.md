@@ -1,4 +1,4 @@
-# Game Stats
+# Equipment
 
 ---
 

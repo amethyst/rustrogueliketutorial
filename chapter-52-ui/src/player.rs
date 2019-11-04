@@ -159,7 +159,55 @@ fn skip_turn(ecs: &mut World) -> RunState {
     RunState::PlayerTurn
 }
 
+fn use_consumable_hotkey(gs: &mut State, key: i32) -> bool {
+    use super::{Consumable, InBackpack, WantsToUseItem};
+
+    let consumables = gs.ecs.read_storage::<Consumable>();
+    let backpack = gs.ecs.read_storage::<InBackpack>();
+    let player_entity = gs.ecs.fetch::<Entity>();
+    let entities = gs.ecs.entities();
+    let mut carried_consumables = Vec::new();
+    for (entity, carried_by, _consumable) in (&entities, &backpack, &consumables).join() {
+        if carried_by.owner == *player_entity {
+            carried_consumables.push(entity);
+        }
+    }
+
+    if (key as usize) < carried_consumables.len() {
+        let mut intent = gs.ecs.write_storage::<WantsToUseItem>();
+        intent.insert(
+            *player_entity, 
+            WantsToUseItem{ item: carried_consumables[key as usize], target: None }
+        ).expect("Unable to insert intent");
+        return true;
+    }
+    false
+}
+
 pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
+    // Hotkeys
+    if ctx.shift && ctx.key.is_some() {
+        let key : Option<i32> =
+            match ctx.key.unwrap() {
+                VirtualKeyCode::Key1 => Some(1),
+                VirtualKeyCode::Key2 => Some(2),
+                VirtualKeyCode::Key3 => Some(3),
+                VirtualKeyCode::Key4 => Some(4),
+                VirtualKeyCode::Key5 => Some(5),
+                VirtualKeyCode::Key6 => Some(6),
+                VirtualKeyCode::Key7 => Some(7),
+                VirtualKeyCode::Key8 => Some(8),
+                VirtualKeyCode::Key9 => Some(9),
+                _ => None
+            };
+        if let Some(key) = key {
+            if use_consumable_hotkey(gs, key-1) {
+                println!("Returning PlayerTurn");
+                return RunState::PlayerTurn;
+            }
+        }
+    }
+
     // Player movement
     match ctx.key {
         None => { return RunState::AwaitingInput } // Nothing happened

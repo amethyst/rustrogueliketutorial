@@ -2,7 +2,7 @@ extern crate rltk;
 use rltk::{ RGB, Rltk, Console, Point, VirtualKeyCode };
 extern crate specs;
 use specs::prelude::*;
-use super::{Pools, Player, gamelog::GameLog, Map, Name, Position, State, InBackpack, 
+use super::{Pools, gamelog::GameLog, Map, Name, Position, State, InBackpack, 
     Viewshed, RunState, Equipped, HungerClock, HungerState, rex_assets::RexAssets,
     Hidden, camera, Attributes, Attribute, Consumable };
 
@@ -68,7 +68,7 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     let name_length = map.name.len() + 2;
     let x_pos = (22 - (name_length / 2)) as i32;
     ctx.set(x_pos, 0, box_gray, black, to_cp437('┤'));
-    ctx.set(x_pos + name_length as i32, 0, box_gray, black, to_cp437('├'));
+    ctx.set(x_pos + name_length as i32 - 1, 0, box_gray, black, to_cp437('├'));
     ctx.print_color(x_pos+1, 0, white, black, &map.name);
     std::mem::drop(map);
 

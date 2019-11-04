@@ -385,7 +385,295 @@ mouse_map_pos.0 += min_x - 1;
 mouse_map_pos.1 += min_y - 1;
 ```
 
-That gets our *old* tooltip system working - but the prototype shows a spiffy new display! So we need to create a way to make these pretty tooltips, and arrange them.
+## Shiny, new tool-tips!
+
+That gets our *old* tooltip system working - but the prototype shows a spiffy new display! So we need to create a way to make these pretty tooltips, and arrange them. Since tooltips can be thought of as a self-contained entity, we'll make an object to define them:
+
+```rust
+struct Tooltip {
+    lines : Vec<String>
+}
+
+impl Tooltip {
+    fn new() -> Tooltip {
+        Tooltip { lines : Vec::new() }
+    }
+
+    fn add<S:ToString>(&mut self, line : S) {
+        self.lines.push(line.to_string());
+    }
+
+    fn width(&self) -> i32 {
+        let mut max = 0;
+        for s in self.lines.iter() {
+            if s.len() > max {
+                max = s.len();
+            }
+        }
+        max as i32 + 2i32
+    }
+
+    fn height(&self) -> i32 { self.lines.len() as i32 + 2i32 }
+
+    fn render(&self, ctx : &mut Rltk, x : i32, y : i32) {
+        let box_gray : RGB = RGB::from_hex("#999999").expect("Oops");
+        let light_gray : RGB = RGB::from_hex("#DDDDDD").expect("Oops");
+        let white = RGB::named(rltk::WHITE);
+        let black = RGB::named(rltk::BLACK);
+        ctx.draw_box(x, y, self.width()-1, self.height()-1, white, box_gray);
+        for (i,s) in self.lines.iter().enumerate() {
+            let col = if i == 0 { white } else { light_gray };
+            ctx.print_color(x+1, y+i as i32+1, col, black, &s);
+        }
+    }
+}
+```
+
+The idea here is to think about what constitutes a tool-tip:
+
+* The most important part of at tool-tip is the text: so we have a vector (of type `String`) to represent each line.
+* We need a way to make a new tool-tip, so we define a constructor - the `new` function. This creates an empty tool-tip.
+* We need a way to add lines, so we define an `add` function.
+* We'll need to know how *wide* the tip is, so we can figure out where to put it on the screen. So we have a `width` function. It goes through each line of the tooltip, finding the longest width (we aren't supporting wrapping, yet), and uses that - with `2` added to it, to take into account the border.
+* We also need to know the tooltip's *height* - so the `height` function is the *number of lines* plus `2` to account for the border.
+* We need to be able to *render* the tool-tip to the console. We start by using RLTK's `draw_box` feature to draw a box and fill it in (no need for hollow box here!), and then add each line in turn.
+
+So now we actually need to *use* some tool-tips. We'll largely replace the `draw_tooltips` function. We'll start by obtaining access to the various parts of the ECS we need:
+
+```rust
+fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
+    use rltk::to_cp437;
+
+    let (min_x, _max_x, min_y, _max_y) = camera::get_screen_bounds(ecs, ctx);
+    let map = ecs.fetch::<Map>();
+    let names = ecs.read_storage::<Name>();
+    let positions = ecs.read_storage::<Position>();
+    let hidden = ecs.read_storage::<Hidden>();
+    let attributes = ecs.read_storage::<Attributes>();
+    let pools = ecs.read_storage::<Pools>();
+    let entities = ecs.entities();
+    ...
+```
+
+This isn't anything we haven't done before, so no need for much explanation. You are just asking the ECS for `read_storage` to component stores, and using `fetch` to obtain the map. Next, we query the mouse position in the console, and translate it to a position on the map:
+
+```rust
+...
+let mouse_pos = ctx.mouse_pos();
+let mut mouse_map_pos = mouse_pos;
+mouse_map_pos.0 += min_x - 1;
+mouse_map_pos.1 += min_y - 1;
+if mouse_map_pos.0 >= map.width-1 || mouse_map_pos.1 >= map.height-1 || mouse_map_pos.0 < 1 || mouse_map_pos.1 < 1 
+{ 
+    return; 
+}
+...
+```
+
+Notice how we're calling `return` if the mouse cursor is outside of the map. We're also adding `min_x` and `min_y` to find the on-screen position in map space, and subtracting one to account for the map's border. `mouse_map_pos` now contains the mouse cursor location *on the map*. Next, we look to see what's here and if it needs a tool-tip:
+
+```rust
+...
+let mut tip_boxes : Vec<Tooltip> = Vec::new();
+for (entity, name, position, _hidden) in (&entities, &names, &positions, !&hidden).join() {
+    if position.x == mouse_map_pos.0 && position.y == mouse_map_pos.1 {
+...
+```
+
+So we're making a new vector, `tip_boxes`. This will contain any tooltips we decide that we need. Then we use Specs' `join` function to search for entities that have ALL of a name, a position and *do not have* a `hidden` component (that's what the exclamation mark does). The left-hand side list is the *variables* that will hold the components for each matching entity; the right-hand side are the entity stores we are searching. Then we check to see if the entity's `Position` component has the same location as the `mouse_map_pos` structure we created.
+
+Now that we've decided that the entity is on the tile we are examining, we start building the tooltip contents:
+
+```rust
+let mut tip = Tooltip::new();
+tip.add(name.name.to_string());
+```
+
+This creates a new tooltip object, and adds the entity's name as the first line.
+
+```rust
+// Comment on attributes
+let attr = attributes.get(entity);
+if let Some(attr) = attr {
+    let mut s = "".to_string();
+    if attr.might.bonus < 0 { s += "Weak. " };
+    if attr.might.bonus > 0 { s += "Strong. " };
+    if attr.quickness.bonus < 0 { s += "Clumsy. " };
+    if attr.quickness.bonus > 0 { s += "Agile. " };
+    if attr.fitness.bonus < 0 { s += "Unheathy. " };
+    if attr.fitness.bonus > 0 { s += "Healthy." };
+    if attr.intelligence.bonus < 0 { s += "Unintelligent. "};
+    if attr.intelligence.bonus > 0 { s += "Smart. "};
+    if s.is_empty() {
+        s = "Quite Average".to_string();
+    }
+    tip.add(s);
+}
+```
+
+Now we look to see if the entity has attributes. If it does, we look at the bonus for each attribute and add a descriptive word for it; so a low strength is "weak" - a high strength is "strong" (and so on, for each attribute). If there are no modifiers, we use "Quite Average" - and add the description line.
+
+```rust
+// Comment on pools
+let stat = pools.get(entity);
+if let Some(stat) = stat {
+    tip.add(format!("Level: {}", stat.level));
+}
+```
+
+We also check to see if the entity has a `Pools` component, and if they do - we add their level to the tooltip. Finally, we add the tooltip to the `tip_boxes` vector and close out of the loop:
+
+```rust
+        tip_boxes.push(tip);
+    }
+}
+```
+
+If there are no tooltips, then we may as well exit the function now:
+
+```rust
+if tip_boxes.is_empty() { return; }
+```
+
+So if we've made it this far, there *are* tooltips! We'll use code similar to what we had before to determine whether to place the tip to the left or right of the target (whichever side has more room):
+
+```rust
+let box_gray : RGB = RGB::from_hex("#999999").expect("Oops");
+let white = RGB::named(rltk::WHITE);
+
+let arrow;
+let arrow_x;
+let arrow_y = mouse_pos.1;
+if mouse_pos.0 < 40 {
+    // Render to the left
+    arrow = to_cp437('→');
+    arrow_x = mouse_pos.0 - 1;
+} else {
+    // Render to the right
+    arrow = to_cp437('←');
+    arrow_x = mouse_pos.0 + 1;
+}
+ctx.set(arrow_x, arrow_y, white, box_gray, arrow);
+```
+
+See how we're setting `arrow_x` and `arrow_y`? If the mouse is in the left half of the screen, we place it one tile to the left of the target. If its in the right half of the screen, we place the tip to the right. We also note which character to draw. Next, we'll calculate the *total height* of all the tooltips:
+
+```rust
+let mut total_height = 0;
+for tt in tip_boxes.iter() {
+    total_height += tt.height();
+}
+```
+
+This is just the sum of the `height()` function of all the tips. Now we shunt all the boxes upwards to center the stack:
+
+```rust
+let mut y = mouse_pos.1 - (total_height / 2);
+while y + (total_height/2) > 50 {
+    y -= 1;
+}
+```
+
+Finally, we actually draw the boxes:
+
+```rust
+for tt in tip_boxes.iter() {
+    let x = if mouse_pos.0 < 40 {
+        mouse_pos.0 - (1 + tt.width())
+    } else {
+        mouse_pos.0 + (1 + tt.width())
+    };
+    tt.render(ctx, x, y);
+    y += tt.height();
+}
+```
+
+If you `cargo run` now and mouse over a character, you'll see something like this:
+
+![Screenshot](./c52-s9.jpg)
+
+That's looking a lot like our prototype!
+
+## Enabling consumable hotkeys
+
+Since we added a spiffy new way to use consumables from the UI, we should make them *do something*! We handle all our player input in `player.rs`, so lets go there - and look at the appropriately named `player_input` function. We'll add a section at the beginning to see if `shift` is held down (that's what the up arrow generally indicates), and call a new function if `shift` and a number key are down:
+
+```rust
+pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
+    // Hotkeys
+    if ctx.shift && ctx.key.is_some() {
+        let key : Option<i32> =
+            match ctx.key.unwrap() {
+                VirtualKeyCode::Key1 => Some(1),
+                VirtualKeyCode::Key2 => Some(2),
+                VirtualKeyCode::Key3 => Some(3),
+                VirtualKeyCode::Key4 => Some(4),
+                VirtualKeyCode::Key5 => Some(5),
+                VirtualKeyCode::Key6 => Some(6),
+                VirtualKeyCode::Key7 => Some(7),
+                VirtualKeyCode::Key8 => Some(8),
+                VirtualKeyCode::Key9 => Some(9),
+                _ => None
+            };
+        if let Some(key) = key {
+            if use_consumable_hotkey(gs, key-1) {
+                println!("Returning PlayerTurn");
+                return RunState::PlayerTurn;
+            }
+        }
+    }
+    ...
+```
+
+This should be pretty easy to understand: if *shift* is pressed and a key is down (so `ctx.key.is_some()` returns true), then we `match` on the number keycodes and set `key` to the matching number (or leave it as `None` if some other key is called). After that, if there is `Some` key pressed, we call `use_consumable_hotkey`; if it returns true, we return the new run-state `RunState::PlayerTurn` to indicate that we did something. Otherwise, we let input run as normal. That leaves writing the new function, `use_consumable_hotkey`:
+
+```rust
+fn use_consumable_hotkey(gs: &mut State, key: i32) -> bool {
+    use super::{Consumable, InBackpack, WantsToUseItem};
+
+    let consumables = gs.ecs.read_storage::<Consumable>();
+    let backpack = gs.ecs.read_storage::<InBackpack>();
+    let player_entity = gs.ecs.fetch::<Entity>();
+    let entities = gs.ecs.entities();
+    let mut carried_consumables = Vec::new();
+    for (entity, carried_by, _consumable) in (&entities, &backpack, &consumables).join() {
+        if carried_by.owner == *player_entity {
+            carried_consumables.push(entity);
+        }
+    }
+
+    if (key as usize) < carried_consumables.len() {
+        let mut intent = gs.ecs.write_storage::<WantsToUseItem>();
+        intent.insert(
+            *player_entity, 
+            WantsToUseItem{ item: carried_consumables[key as usize], target: None }
+        ).expect("Unable to insert intent");
+        return true;
+    }
+    false
+}
+```
+
+Let's step through this:
+
+1. We add a few `use` statements to reference components. You could also put these at the top of the file if you wish, but since we're just using them in the function we'll do it here.
+2. We obtain access to a few things from the ECS; we've done this often enough you should have this down by now!
+3. We iterate carried consumables, *exactly* like we did for rendering the GUI - but without the name. We store these in a `carried_consumables` vector, storing the *entity* of the item.
+4. We check that the requested keypress falls inside the range of the vector; if it doesn't, we ignore the key-press and return false.
+5. If it does, then we insert a `WantsToUseItem` component, just like we did for the inventory handler a while back. It *belongs* to the `player_entity` - the *player* is *using the item*. The `item` to use is the `Entity` from the `carried_consumables` list.
+6. We return true, making the game go to the `PlayerTurn` run-state.
+
+The rest will happen automatically: we've already written handlers for `WantsToUseItem`, this just provides another way to indicate what the player wants to do.
+
+So now we have a nice, easy way for the player to quickly use items!
+
+## Wrap Up
+
+In this chapter, we've built a pretty nice GUI. It's not as slick as it could be, yet - we'll be adding to it in the coming chapter, but it provides a good base to work from. This chapter has illustrated a good process for building a GUI: draw a prototype, and then gradually implement it.
+
+Here's the iterative progress:
+
+![Screenshot](./c52-s10.gif)
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-52-ui)**
 
