@@ -56,7 +56,7 @@
     - [User Interface](./chapter_52.md)
     - [Into the Woods!](./chapter_53.md)
     - XP
-    - Going back and forth
+    - Backtracking
     - Item Stats and Vendors
     - AI Cleanup
     - Into the caverns
