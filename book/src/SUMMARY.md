@@ -55,7 +55,7 @@
     - [Equipment](./chapter_51.md)
     - [User Interface](./chapter_52.md)
     - [Into the Woods!](./chapter_53.md)
-    - XP
+    - [XP](./chapter_54.md)
     - Backtracking
     - Item Stats and Vendors
     - AI Cleanup
