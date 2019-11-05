@@ -563,11 +563,275 @@ A good start would be that when we kill an entity, it has a chance to drop whate
 
 So this code searches the `Equipped` and `InBackpack` component stores for the entity who died, and lists the entity's position and the item in a vector. It then iterates the vector, removing any `InBackpack` and `Equipped` tags from the item - and adding a position on the ground. The net result of this is that when someone dies - their stuff drops to the floor. That's a good start, although well-equipped entities may be leaving a *lot* of stuff lying around. We'll worry about that later.
 
-So with this code, you *could* spawn everything you want an entity to drop as something they carry around. It would be a little odd, conceptually (I guess deer *do* carry around meat...) - but it'd work. However, we may not want *every* deer to drop the same thing. Enter: Loot tables!
+So with this code, you *could* spawn everything you want an entity to drop as something they carry around. It would be a little odd, conceptually (I guess deer *do* carry around meat...) - but it'd work. However, we may not want *every* deer to drop the same thing. Enter: *Loot tables*!
 
-### Scared deer
+### Loot Tables
 
-### Hungry Wolves
+It's nice to have a bit of control over what items drop where. There's a split in games between "wolves drop anything" (even armor!) and a more realistic "wolves drop pelts and meat". Loot tables let you make this determination yourself.
+
+We'll start by opening up `spawns.json` and building a prototype for what we'd like our loot table structure to look like. We'll try to make it similar to the *spawn table* - so we can make use of the same `RandomTable` infrastructure. Here's what I came up with:
+
+```json
+"loot_tables" : [
+    { "name" : "Animal",
+      "drops" : [
+          { "name" : "Hide", "weight" : 10 },
+          { "name" : "Meat", "weight" : 10 }
+      ]
+    }
+],
+```
+
+This is a little more complex than the spawn table, because we want to have *multiple* loot tables. So breaking this down:
+
+* We have an outer container, `loot_tables` - which holds a number of tables.
+* Tables have a `name` (to identify it) and a set of `drops` - items that can "drop" when the loot table is activated.
+* Each entry in `drops` consists of a `name` (matching an item in the items list) and a `weight` - just like the weight for random spawns.
+
+So really, it's multiple - named - tables inside a single array. Now we have to *read* it; we'll open up the `raws` directory and make a new file: `raws/loot_structs.rs`. This is designed to match the content of the loot tables structure:
+
+```rust
+use serde::{Deserialize};
+
+#[derive(Deserialize, Debug)]
+pub struct LootTable {
+    pub name : String,
+    pub drops : Vec<LootDrop>
+}
+
+#[derive(Deserialize, Debug)]
+pub struct LootDrop {
+    pub name : String,
+    pub weight : i32
+}
+```
+
+This is pretty much the same as the JSON version, just in Rust. Once again, we're describing the structure we're attempting to read, and letting `Serde` - the serialization library - handle converting between the two. Then we open up `raws/mod.rs` and add:
+
+```rust
+mod loot_structs;
+use loot_structs::*;
+```
+
+At the top, and extend the `Raws` structure to include the loot table:
+
+```rust
+#[derive(Deserialize, Debug)]
+pub struct Raws {
+    pub items : Vec<Item>,
+    pub mobs : Vec<Mob>,
+    pub props : Vec<Prop>,
+    pub spawn_table : Vec<SpawnTableEntry>,
+    pub loot_tables : Vec<LootTable>
+}
+```
+
+We need to add it to the constructor in `rawmaster.rs`, too:
+
+```rust
+impl RawMaster {
+    pub fn empty() -> RawMaster {
+        RawMaster {
+            raws : Raws{ 
+                items: Vec::new(), 
+                mobs: Vec::new(), 
+                props: Vec::new(), 
+                spawn_table: Vec::new(),
+                loot_tables: Vec::new()
+            },
+            item_index : HashMap::new(),
+            mob_index : HashMap::new(),
+            prop_index : HashMap::new(),
+        }
+    }
+    ...
+```
+
+That's enough to *read* the loot tables - but we actually need to *use* them! We'll start by adding another index to `RawMaster` (in `raws/rawmaster.rs`):
+
+```rust
+pub struct RawMaster {
+    raws : Raws,
+    item_index : HashMap<String, usize>,
+    mob_index : HashMap<String, usize>,
+    prop_index : HashMap<String, usize>,
+    loot_index : HashMap<String, usize>
+}
+```
+
+We also have to add `loot_index : HashMap::new()` to the `RawMaster::new` function, and add a reader to the `load` function:
+
+```rust
+for (i,loot) in self.raws.loot_tables.iter().enumerate() {
+    self.loot_index.insert(loot.name.clone(), i);
+}
+```
+
+Next, we need to give mobs the *option* of having a loot table entry. So we open up `mob_structs.rs` and add it to the `Mob` struct:
+
+```rust
+#[derive(Deserialize, Debug)]
+pub struct Mob {
+    pub name : String,
+    pub renderable : Option<Renderable>,
+    pub blocks_tile : bool,
+    pub vision_range : i32,
+    pub ai : String,
+    pub quips : Option<Vec<String>>,
+    pub attributes : MobAttributes,
+    pub skills : Option<HashMap<String, i32>>,
+    pub level : Option<i32>,
+    pub hp : Option<i32>,
+    pub mana : Option<i32>,
+    pub equipped : Option<Vec<String>>,
+    pub natural : Option<MobNatural>,
+    pub loot_table : Option<String>
+}
+```
+
+We'll also need to add a new component, so in `components.rs` (and registered in `saveload_system.rs` and `main.rs`):
+
+```rust
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct LootTable {
+    pub table : String
+}
+```
+
+Then we'll go back to `rawmaster.rs` and look at the `spawn_named_mob` function. We need to add the ability to attach a `LootTable` component if the mob supports one:
+
+```rust
+if let Some(loot) = &mob_template.loot_table {
+    eb = eb.with(LootTable{table: loot.clone()});
+}
+```
+
+We've referred to two new items, so we need to add those into the `items` section of `spawns.json`:
+
+```json
+{
+    "name" : "Meat",
+    "renderable": {
+        "glyph" : "%",
+        "fg" : "#00FF00",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "consumable" : {
+        "effects" : { 
+            "food" : ""
+        }
+    }
+},
+
+{
+    "name" : "Hide",
+    "renderable": {
+        "glyph" : "ß",
+        "fg" : "#A52A2A",
+        "bg" : "#000000",
+        "order" : 2
+    }
+},
+```
+
+You'll notice that hide is completely useless at this point; we'll worry about that in a later chapter. Now, let's modify the `mangy wolf` and `deer` to have a loot table. It's as easy as adding a single line:
+
+```json
+"loot_table" : "Animal"
+```
+
+Now that's all in place - we actually need to spawn some loot when a creature dies! We need a way to roll for loot, so in `rawmaster.rs` we introduce a new function:
+
+```rust
+pub fn get_item_drop(raws: &RawMaster, rng : &mut rltk::RandomNumberGenerator, table: &str) -> Option<String> {
+    if raws.loot_index.contains_key(table) {
+        let mut rt = RandomTable::new();
+        let available_options = &raws.raws.loot_tables[raws.loot_index[table]];
+        for item in available_options.drops.iter() {
+            rt = rt.add(item.name.clone(), item.weight);
+        }
+        return Some(rt.roll(rng));
+    }
+
+    None
+}
+```
+
+This is pretty simple: we look to see if a table of the specified name exists, and return `None` if it doesn't. If it *does* exist, we make a table of names and weights from the raw file information - and roll to determine a randomly weighted result, which we then return. Now, we'll attach it to `delete_the_dead` in `damage_system.rs`:
+
+```rust
+// Drop everything held by dead people
+let mut to_spawn : Vec<(String, Position)> = Vec::new();
+{ // To avoid keeping hold of borrowed entries, use a scope
+    let mut to_drop : Vec<(Entity, Position)> = Vec::new();
+    let entities = ecs.entities();
+    let mut equipped = ecs.write_storage::<Equipped>();
+    let mut carried = ecs.write_storage::<InBackpack>();
+    let mut positions = ecs.write_storage::<Position>();
+    let loot_tables = ecs.read_storage::<LootTable>();
+    let mut rng = ecs.write_resource::<rltk::RandomNumberGenerator>();
+    for victim in dead.iter() {        
+        let pos = positions.get(*victim);
+        for (entity, equipped) in (&entities, &equipped).join() {
+            if equipped.owner == *victim {
+                // Drop their stuff
+                if let Some(pos) = pos {
+                    to_drop.push((entity, pos.clone()));
+                }
+            }
+        }
+        for (entity, backpack) in (&entities, &carried).join() {
+            if backpack.owner == *victim {
+                // Drop their stuff
+                if let Some(pos) = pos {
+                    to_drop.push((entity, pos.clone()));
+                }
+            }
+        }
+
+        if let Some(table) = loot_tables.get(*victim) {
+            let drop_finder = crate::raws::get_item_drop(
+                &crate::raws::RAWS.lock().unwrap(),
+                &mut rng,
+                &table.table
+            );
+            if let Some(tag) = drop_finder {
+                if let Some(pos) = pos {
+                    to_spawn.push((tag, pos.clone()));
+                }                    
+            }
+        }
+    }
+
+    for drop in to_drop.iter() {
+        equipped.remove(drop.0);
+        carried.remove(drop.0);
+        positions.insert(drop.0, drop.1.clone()).expect("Unable to insert position");
+    }        
+}
+
+{
+    for drop in to_spawn.iter() {
+        crate::raws::spawn_named_item(
+            &crate::raws::RAWS.lock().unwrap(), 
+            ecs, 
+            &drop.0, 
+            crate::raws::SpawnType::AtPosition{x : drop.1.x, y: drop.1.y}
+        );
+    }
+}
+```
+
+This is a bit messy. We start by creating a `to_spawn` vector, containing positions and names. Then, after we've finished moving items out of the backpack and equipped, we look to see if there is a loot table. If there is, *and* there is a position - we add both to the `to_spawn` list. Once we're done, we iterate the `to_spawn` list and call `spawn_named_item` for each result we found. The reason this is spread out like this is the borrow checker: we keep hold of `entities` while we're looking at dropping items, but `spawn_named_item` expects to temporarily (while it runs) own the world! So we have to wait until we're done before handing ownership over.
+
+If you `cargo run` now, you can slay wolves and deer - and they drop meat and hide. That's a good improvement - you can actively hunt animals to ensure you have something to eat!
+
+![Screenshot](./c53-s7.gif)
+
+### Scared Deer and Hungry Wolves
+
+
 
 ## Some Brigands - and they drop stuff!
 

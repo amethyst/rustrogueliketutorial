@@ -20,6 +20,15 @@
     { "name" : "Deer", "weight" : 14, "min_depth" : 2, "max_depth" : 3 }
 ],
 
+"loot_tables" : [
+    { "name" : "Animal",
+      "drops" : [
+          { "name" : "Hide", "weight" : 10 },
+          { "name" : "Meat", "weight" : 10 }
+      ]
+    }
+],
+
 "items" : [
     {
         "name" : "Health Potion",
@@ -111,6 +120,31 @@
             "effects" : { 
                 "food" : ""
             }
+        }
+    },
+
+    {
+        "name" : "Meat",
+        "renderable": {
+            "glyph" : "%",
+            "fg" : "#00FF00",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "consumable" : {
+            "effects" : { 
+                "food" : ""
+            }
+        }
+    },
+
+    {
+        "name" : "Hide",
+        "renderable": {
+            "glyph" : "ß",
+            "fg" : "#A52A2A",
+            "bg" : "#000000",
+            "order" : 2
         }
     },
 
@@ -610,7 +644,8 @@
             "attacks" : [
                 { "name" : "bite", "hit_bonus" : 0, "damage" : "1d6" }
             ]   
-        }
+        },
+        "loot_table" : "Animal"
     },
 
     {
@@ -637,7 +672,8 @@
             "attacks" : [
                 { "name" : "bite", "hit_bonus" : 0, "damage" : "1d4" }
             ]   
-        }
+        },
+        "loot_table" : "Animal"
     },
 
     {
@@ -664,7 +700,8 @@
             "attacks" : [
                 { "name" : "bite", "hit_bonus" : 0, "damage" : "1d4" }
             ]   
-        }
+        },
+        "loot_table" : "Animal"
     },
 
     {
