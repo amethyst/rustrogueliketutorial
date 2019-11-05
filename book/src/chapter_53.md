@@ -829,15 +829,243 @@ If you `cargo run` now, you can slay wolves and deer - and they drop meat and hi
 
 ![Screenshot](./c53-s7.gif)
 
-### Scared Deer and Hungry Wolves
-
-
-
 ## Some Brigands - and they drop stuff!
 
-## A big nasty (by 1st level standards) guy at the end
+Let's add a few brigands, and give them some minimal equipment. This gives the player an opportunity to loot some better equipment before they get to the next level, as well as more variety in the forest. Here's the NPC definition:
+
+```json
+{
+    "name" : "Bandit",
+    "renderable": {
+        "glyph" : "☻",
+        "fg" : "#FF0000",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "vision_range" : 4,
+    "ai" : "melee",
+    "quips" : [ "Stand and deliver!", "Alright, hand it over" ],
+    "attributes" : {},
+    "equipped" : [ "Shortsword", "Shield", "Leather Armor", "Leather Boots" ]
+},
+```
+
+Add them to the spawn table like this:
+
+```json
+{ "name" : "Bandit", "weight" : 9, "min_depth" : 2, "max_depth" : 3 }
+```
+
+We'll also have to define Short-sword, Leather Armor and Leather Boots since they are new! This should be old news by now:
+
+```json
+{
+    "name" : "Shortsword",
+    "renderable": {
+        "glyph" : "/",
+        "fg" : "#FFAAFF",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "weapon" : {
+        "range" : "melee",
+        "attribute" : "Might",
+        "base_damage" : "1d6",
+        "hit_bonus" : 0
+    }
+},
+
+{
+    "name" : "Leather Armor",
+    "renderable": {
+        "glyph" : "[",
+        "fg" : "#00FF00",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "wearable" : {
+        "slot" : "Torso",
+        "armor_class" : 1.0
+    }
+},
+
+{
+    "name" : "Leather Boots",
+    "renderable": {
+        "glyph" : "[",
+        "fg" : "#00FF00",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "wearable" : {
+        "slot" : "Feet",
+        "armor_class" : 0.2
+    }
+}
+```
+
+If you `cargo run` now, you can hopefully find a bandit - and killing them will drop their loot!
+
+![Screenshot](./c53-s8.gif)
+
+### Scared Deer and Hungry Wolves
+
+We're doing pretty well in this chapter! We've got a whole new level to play, new monsters, new items, loot tables and NPCs dropping what they own when they die. There's still one thing that bugs me: you can't kill deer, and neither can the wolves. It's *really* unrealistic to expect a wolf to hang out with Bambi and not ruin the movie by eating him, and it's surprising that a deer wouldn't run away from both the player and the wolves.
+
+Open up `components.rs` and we'll introduce two new components: `Carnivore` and `Herbivore` (and we won't forget to register them in `main.rs` and `saveload_system.rs`):
+
+```rust
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct Carnivore {}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct Herbivore {}
+```
+
+We'll also modify `spawn_named_mob` in `raws/rawmaster.rs` to let us spawn carnivores and herbivores as AI classes:
+
+```rust
+match mob_template.ai.as_ref() {
+    "melee" => eb = eb.with(Monster{}),
+    "bystander" => eb = eb.with(Bystander{}),
+    "vendor" => eb = eb.with(Vendor{}),
+    "carnivore" => eb = eb.with(Carnivore{}),
+    "herbivore" => eb = eb.with(Herbivore{}),
+    _ => {}
+}
+```
+
+Now we'll make a new *system* to handle their AI, putting it into the file: `animal_ai_system.rs`:
+
+```rust
+extern crate specs;
+use specs::prelude::*;
+use super::{Viewshed, Herbivore, Carnivore, Item, Map, Position, WantsToMelee, RunState, 
+    Confusion, particle_system::ParticleBuilder, EntityMoved};
+extern crate rltk;
+use rltk::{Point};
+
+pub struct AnimalAI {}
+
+impl<'a> System<'a> for AnimalAI {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( WriteExpect<'a, Map>,
+                        ReadExpect<'a, Entity>,
+                        ReadExpect<'a, RunState>,
+                        Entities<'a>,
+                        WriteStorage<'a, Viewshed>, 
+                        ReadStorage<'a, Herbivore>,
+                        ReadStorage<'a, Carnivore>,
+                        ReadStorage<'a, Item>,
+                        WriteStorage<'a, WantsToMelee>,
+                        WriteStorage<'a, EntityMoved>,
+                        WriteStorage<'a, Position> );
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (mut map, player_entity, runstate, entities, mut viewshed, 
+            herbivore, carnivore, item, mut wants_to_melee, mut entity_moved, mut position) = data;
+
+        if *runstate != RunState::MonsterTurn { return; }
+
+        // Herbivores run away a lot
+        for (entity, mut viewshed, _herbivore, mut pos) in (&entities, &mut viewshed, &herbivore, &mut position).join() {
+            let mut run_away_from : Vec<i32> = Vec::new();
+            for other_tile in viewshed.visible_tiles.iter() {
+                let view_idx = map.xy_idx(other_tile.x, other_tile.y);
+                for other_entity in map.tile_content[view_idx].iter() {
+                    // They don't run away from items
+                    if item.get(*other_entity).is_none() {
+                        run_away_from.push(view_idx as i32);
+                    }
+                }
+            }
+
+            if !run_away_from.is_empty() {
+                let my_idx = map.xy_idx(pos.x, pos.y);
+                map.populate_blocked();
+                let flee_map = rltk::DijkstraMap::new(map.width, map.height, &run_away_from, &*map, 100.0);
+                let flee_target = rltk::DijkstraMap::find_highest_exit(&flee_map, my_idx as i32, &*map);
+                if let Some(flee_target) = flee_target {
+                    if !map.blocked[flee_target as usize] {
+                        map.blocked[my_idx] = false;
+                        map.blocked[flee_target as usize] = true;
+                        viewshed.dirty = true;
+                        pos.x = flee_target % map.width;
+                        pos.y = flee_target / map.width;
+                        entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
+                    }
+                }
+            }
+        }
+
+        // Carnivores just want to eat everything
+        for (entity, mut viewshed, _carnivore, mut pos) in (&entities, &mut viewshed, &carnivore, &mut position).join() {
+            let mut run_towards : Vec<i32> = Vec::new();
+            let mut attacked = false;
+            for other_tile in viewshed.visible_tiles.iter() {
+                let view_idx = map.xy_idx(other_tile.x, other_tile.y);
+                for other_entity in map.tile_content[view_idx].iter() {
+                    if herbivore.get(*other_entity).is_some() || *other_entity == *player_entity {
+                        let distance = rltk::DistanceAlg::Pythagoras.distance2d(
+                            Point::new(pos.x, pos.y),
+                            *other_tile
+                        );
+                        if distance < 1.5 {
+                            wants_to_melee.insert(entity, WantsToMelee{ target: *other_entity }).expect("Unable to insert attack");
+                            attacked = true;
+                        } else {
+                            run_towards.push(view_idx as i32);
+                        }
+                    }
+                }
+            }
+
+            if !run_towards.is_empty() && !attacked {
+                let my_idx = map.xy_idx(pos.x, pos.y);
+                map.populate_blocked();
+                let chase_map = rltk::DijkstraMap::new(map.width, map.height, &run_towards, &*map, 100.0);
+                let chase_target = rltk::DijkstraMap::find_lowest_exit(&chase_map, my_idx as i32, &*map);
+                if let Some(chase_target) = chase_target {
+                    if !map.blocked[chase_target as usize] {
+                        map.blocked[my_idx] = false;
+                        map.blocked[chase_target as usize] = true;
+                        viewshed.dirty = true;
+                        pos.x = chase_target % map.width;
+                        pos.y = chase_target / map.width;
+                        entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+(We also need to add this to `run_systems` in `main.rs`). We've made a few systems already, so we'll gloss over some of it. The important part are the loops that cover herbivores and carnivores. They are basically the same - but with some logic flipped. Let's walk through herbivores:
+
+1. We loop over entities that have a `Herbivore` component, as well as positions, and viewsheds.
+2. We go through the herbivore's viewshed, looking at each tile they can see.
+3. We iterate over the `tile_content` of the visible tile, and if it isn't an item (we don't need deer to run away from rations!) we add it to a `flee_from` list.
+4. We use `flee_from` to build a Dijkstra Map, and pick the *highest* possible exit: meaning they want to get as far away from other entities as possible!
+5. If it isn't blocked, we move them.
+
+This has the nice effect that deer will spot you, and try to stay far away. They will do the same for everyone else on the map. If you can catch them, you can kill them and eat them - but they try their very best to escape.
+
+The Carnivore loop is very similar:
+
+1. We loop over entities that have a `Carnivore` component, as well as positions and viewsheds.
+2. We go through the carnivore's viewshed, looking at what they can see.
+3. We iterate over `tile_content` to see what's there; if it is a herbivore or the player, they add it to a `run_towards` list. They ALSO check distance: if they are adjacent, they initiate melee.
+4. We use `run_towards` to build a Dijkstra map, and use `find_lowest_exit` to move *towards* the closest target.
+
+This makes for a lively map: deer are running away, and wolves are trying to eat them. If a wolf is chasing you, you may be able to distract it with a deer and escape!
 
 ## Wrap-Up
+
+This has been a large chapter, but we've added a whole level to the game! It has a map, a theme, loot tables, droppable items, new NPCs/monsters, two new AI categories, and demonstrates how Dijkstra Maps can make for realistic - but simple - AI. Whew!
+
+In the next chapter, we'll change gear and look at adding some player progression.
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-53-woods)**
 

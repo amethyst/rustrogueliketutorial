@@ -17,7 +17,8 @@
     { "name" : "Kobold", "weight" : 15, "min_depth" : 3, "max_depth" : 5 },
     { "name" : "Rat", "weight" : 15, "min_depth" : 2, "max_depth" : 3 },
     { "name" : "Mangy Wolf", "weight" : 13, "min_depth" : 2, "max_depth" : 3 },
-    { "name" : "Deer", "weight" : 14, "min_depth" : 2, "max_depth" : 3 }
+    { "name" : "Deer", "weight" : 14, "min_depth" : 2, "max_depth" : 3 },
+    { "name" : "Bandit", "weight" : 9, "min_depth" : 2, "max_depth" : 3 }
 ],
 
 "loot_tables" : [
@@ -209,6 +210,22 @@
     },
 
     {
+        "name" : "Shortsword",
+        "renderable": {
+            "glyph" : "/",
+            "fg" : "#FFAAFF",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "weapon" : {
+            "range" : "melee",
+            "attribute" : "Might",
+            "base_damage" : "1d6",
+            "hit_bonus" : 0
+        }
+    },
+
+    {
         "name" : "Longsword",
         "renderable": {
             "glyph" : "/",
@@ -363,8 +380,36 @@
             "order" : 2
         },
         "wearable" : {
-            "slot" : "Legs",
+            "slot" : "Feet",
             "armor_class" : 0.1
+        }
+    },
+
+    {
+        "name" : "Leather Armor",
+        "renderable": {
+            "glyph" : "[",
+            "fg" : "#00FF00",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "wearable" : {
+            "slot" : "Torso",
+            "armor_class" : 1.0
+        }
+    },
+
+    {
+        "name" : "Leather Boots",
+        "renderable": {
+            "glyph" : "[",
+            "fg" : "#00FF00",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "wearable" : {
+            "slot" : "Feet",
+            "armor_class" : 0.2
         }
     }
 ],
@@ -373,7 +418,7 @@
     {
         "name" : "Barkeep",
         "renderable": {
-            "glyph" : "☺",
+            "glyph" : "☻",
             "fg" : "#EE82EE",
             "bg" : "#000000",
             "order" : 1
@@ -408,7 +453,7 @@
     {
         "name" : "Patron",
         "renderable": {
-            "glyph" : "☺",
+            "glyph" : "☻",
             "fg" : "#AAAAAA",
             "bg" : "#000000",
             "order" : 1
@@ -424,7 +469,7 @@
     {
         "name" : "Priest",
         "renderable": {
-            "glyph" : "☺",
+            "glyph" : "☻",
             "fg" : "#EE82EE",
             "bg" : "#000000",
             "order" : 1
@@ -439,7 +484,7 @@
     {
         "name" : "Parishioner",
         "renderable": {
-            "glyph" : "☺",
+            "glyph" : "☻",
             "fg" : "#AAAAAA",
             "bg" : "#000000",
             "order" : 1
@@ -455,7 +500,7 @@
     {
         "name" : "Blacksmith",
         "renderable": {
-            "glyph" : "☺",
+            "glyph" : "☻",
             "fg" : "#EE82EE",
             "bg" : "#000000",
             "order" : 1
@@ -470,7 +515,7 @@
     {
         "name" : "Clothier",
         "renderable": {
-            "glyph" : "☺",
+            "glyph" : "☻",
             "fg" : "#EE82EE",
             "bg" : "#000000",
             "order" : 1
@@ -485,7 +530,7 @@
     {
         "name" : "Alchemist",
         "renderable": {
-            "glyph" : "☺",
+            "glyph" : "☻",
             "fg" : "#EE82EE",
             "bg" : "#000000",
             "order" : 1
@@ -500,7 +545,7 @@
     {
         "name" : "Mom",
         "renderable": {
-            "glyph" : "☺",
+            "glyph" : "☻",
             "fg" : "#FFAAAA",
             "bg" : "#000000",
             "order" : 1
@@ -516,7 +561,7 @@
     {
         "name" : "Peasant",
         "renderable": {
-            "glyph" : "☺",
+            "glyph" : "☻",
             "fg" : "#999999",
             "bg" : "#000000",
             "order" : 1
@@ -532,7 +577,7 @@
     {
         "name" : "Dock Worker",
         "renderable": {
-            "glyph" : "☺",
+            "glyph" : "☻",
             "fg" : "#999999",
             "bg" : "#000000",
             "order" : 1
@@ -548,7 +593,7 @@
     {
         "name" : "Fisher",
         "renderable": {
-            "glyph" : "☺",
+            "glyph" : "☻",
             "fg" : "#999999",
             "bg" : "#000000",
             "order" : 1
@@ -564,7 +609,7 @@
     {
         "name" : "Wannabe Pirate",
         "renderable": {
-            "glyph" : "☺",
+            "glyph" : "☻",
             "fg" : "#aa9999",
             "bg" : "#000000",
             "order" : 1
@@ -580,7 +625,7 @@
     {
         "name" : "Drunk",
         "renderable": {
-            "glyph" : "☺",
+            "glyph" : "☻",
             "fg" : "#aa9999",
             "bg" : "#000000",
             "order" : 1
@@ -630,7 +675,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 8,
-        "ai" : "melee",
+        "ai" : "carnivore",
         "attributes" : {
             "Might" : 3,
             "Fitness" : 3
@@ -658,7 +703,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 8,
-        "ai" : "melee",
+        "ai" : "carnivore",
         "attributes" : {
             "Might" : 3,
             "Fitness" : 3
@@ -686,7 +731,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 8,
-        "ai" : "bystander",
+        "ai" : "herbivore",
         "attributes" : {
             "Might" : 3,
             "Fitness" : 3
@@ -702,6 +747,22 @@
             ]   
         },
         "loot_table" : "Animal"
+    },
+
+    {
+        "name" : "Bandit",
+        "renderable": {
+            "glyph" : "☻",
+            "fg" : "#FF0000",
+            "bg" : "#000000",
+            "order" : 1
+        },
+        "blocks_tile" : true,
+        "vision_range" : 4,
+        "ai" : "melee",
+        "quips" : [ "Stand and deliver!", "Alright, hand it over" ],
+        "attributes" : {},
+        "equipped" : [ "Dagger", "Shield", "Leather Armor", "Leather Boots" ]
     },
 
     {

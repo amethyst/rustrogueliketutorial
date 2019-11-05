@@ -41,6 +41,7 @@ pub mod raws;
 pub mod bystander_ai_system;
 mod gamesystem;
 pub use gamesystem::*;
+pub mod animal_ai_system;
 #[macro_use]
 extern crate lazy_static;
 
@@ -81,6 +82,8 @@ impl State {
         vis.run_now(&self.ecs);
         let mut mob = MonsterAI{};
         mob.run_now(&self.ecs);
+        let mut animal = animal_ai_system::AnimalAI{};
+        animal.run_now(&self.ecs);
         let mut bystander = bystander_ai_system::BystanderAI{};
         bystander.run_now(&self.ecs);
         let mut triggers = trigger_system::TriggerSystem{};
@@ -459,6 +462,8 @@ fn main() {
     gs.ecs.register::<Pools>();
     gs.ecs.register::<NaturalAttackDefense>();
     gs.ecs.register::<LootTable>();
+    gs.ecs.register::<Carnivore>();
+    gs.ecs.register::<Herbivore>();
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
     raws::load_raws();

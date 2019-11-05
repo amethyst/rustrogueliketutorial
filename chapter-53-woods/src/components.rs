@@ -103,6 +103,12 @@ pub struct LootTable {
 }
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct Carnivore {}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct Herbivore {}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Item {}
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]

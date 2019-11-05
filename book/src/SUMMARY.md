@@ -58,4 +58,6 @@
     - XP
     - Going back and forth
     - Item Stats and Vendors
+    - AI Cleanup
+    - Into the caverns
 - [Contributors](./contributors.md)
