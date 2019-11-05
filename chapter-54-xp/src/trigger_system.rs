@@ -47,7 +47,7 @@ impl<'a> System<'a> for TriggerSystem {
                             let damage = inflicts_damage.get(*entity_id);
                             if let Some(damage) = damage {
                                 particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::ORANGE), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('‼'), 200.0);
-                                inflict_damage.insert(entity, SufferDamage{ amount: damage.damage }).expect("Unable to do damage");
+                                inflict_damage.insert(entity, SufferDamage{ amount: damage.damage, from_player: false }).expect("Unable to do damage");
                             }
 
                             // If it is single activation, it needs to be removed

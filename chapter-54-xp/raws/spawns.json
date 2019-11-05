@@ -322,7 +322,7 @@
             "order" : 2
         },
         "wearable" : {
-            "slot" : "Legs",
+            "slot" : "Feet",
             "armor_class" : 0.1
         }
     },

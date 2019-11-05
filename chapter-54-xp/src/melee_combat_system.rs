@@ -23,13 +23,14 @@ impl<'a> System<'a> for MeleeCombatSystem {
                         ReadStorage<'a, Equipped>,
                         ReadStorage<'a, MeleeWeapon>,
                         ReadStorage<'a, Wearable>,
-                        ReadStorage<'a, NaturalAttackDefense>
+                        ReadStorage<'a, NaturalAttackDefense>,
+                        ReadExpect<'a, Entity>
                       );
 
     fn run(&mut self, data : Self::SystemData) {
         let (entities, mut log, mut wants_melee, names, attributes, skills, mut inflict_damage, 
             mut particle_builder, positions, hunger_clock, pools, mut rng,
-            equipped_items, meleeweapons, wearables, natural) = data;
+            equipped_items, meleeweapons, wearables, natural, player_entity) = data;
 
         for (entity, wants_melee, name, attacker_attributes, attacker_skills, attacker_pools) in (&entities, &wants_melee, &names, &attributes, &skills, &pools).join() {
             // Are the attacker and defender alive? Only attack if they are
@@ -103,7 +104,12 @@ impl<'a> System<'a> for MeleeCombatSystem {
 
                     let damage = i32::max(0, base_damage + attr_damage_bonus + skill_hit_bonus + 
                         skill_damage_bonus + weapon_damage_bonus);
-                    inflict_damage.insert(wants_melee.target, SufferDamage{ amount: damage }).expect("Unable to insert damage component");
+                    inflict_damage.insert(wants_melee.target, 
+                        SufferDamage{ 
+                            amount: damage,
+                            from_player: entity == *player_entity
+                        }
+                    ).expect("Unable to insert damage component");
                     log.entries.insert(0, format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));
                     if let Some(pos) = positions.get(wants_melee.target) {
                         particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::ORANGE), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('‼'), 200.0);

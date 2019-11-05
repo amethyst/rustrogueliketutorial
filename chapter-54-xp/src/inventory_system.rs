@@ -190,7 +190,11 @@ impl<'a> System<'a> for ItemUseSystem {
                 Some(damage) => {
                     used_item = false;
                     for mob in targets.iter() {
-                        suffer_damage.insert(*mob, SufferDamage{ amount : damage.damage }).expect("Unable to insert");
+                        suffer_damage.insert(*mob, 
+                            SufferDamage{ 
+                                amount : damage.damage,
+                                from_player : true
+                            }).expect("Unable to insert");
                         if entity == *player_entity {
                             let mob_name = names.get(*mob).unwrap();
                             let item_name = names.get(useitem.item).unwrap();
