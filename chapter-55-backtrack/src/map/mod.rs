@@ -9,7 +9,7 @@ pub use tiletype::{TileType, tile_walkable, tile_opaque, tile_cost};
 mod themes;
 pub use themes::*;
 mod dungeon;
-pub use dungeon::{MasterDungeonMap, level_transition};
+pub use dungeon::{MasterDungeonMap, level_transition, freeze_level_entities, thaw_level_entities};
 
 #[derive(Default, Serialize, Deserialize, Clone)]
 pub struct Map {

@@ -260,12 +260,12 @@ impl GameState for State {
                 newrunstate = RunState::MainMenu{ menu_selection : gui::MainMenuSelection::LoadGame };
             }
             RunState::NextLevel => {
-                self.goto_next_level();
+                self.goto_level(1);
                 self.mapgen_next_state = Some(RunState::PreRun);
                 newrunstate = RunState::MapGeneration;
             }
             RunState::PreviousLevel => {
-                self.goto_previous_level();
+                self.goto_level(-1);
                 self.mapgen_next_state = Some(RunState::PreRun);
                 newrunstate = RunState::MapGeneration;
             }
@@ -332,44 +332,16 @@ impl State {
         to_delete
     }
 
-    fn goto_next_level(&mut self) {
-        // Delete entities that aren't the player or his/her equipment
-        let to_delete = self.entities_to_remove_on_level_change();
-        for target in to_delete {
-            self.ecs.delete_entity(target).expect("Unable to delete entity");
-        }
+    fn goto_level(&mut self, offset: i32) {
+        freeze_level_entities(&mut self.ecs);
 
         // Build a new map and place the player
-        let current_depth;
-        {
-            let worldmap_resource = self.ecs.fetch::<Map>();
-            current_depth = worldmap_resource.depth;
-        }
-        self.generate_world_map(current_depth + 1);
+        let current_depth = self.ecs.fetch::<Map>().depth;
+        self.generate_world_map(current_depth + offset, offset);
 
-        // Notify the player and give them some health
+        // Notify the player
         let mut gamelog = self.ecs.fetch_mut::<gamelog::GameLog>();
-        gamelog.entries.insert(0, "You descend to the next level.".to_string());
-    }
-
-    fn goto_previous_level(&mut self) {
-        // Delete entities that aren't the player or his/her equipment
-        let to_delete = self.entities_to_remove_on_level_change();
-        for target in to_delete {
-            self.ecs.delete_entity(target).expect("Unable to delete entity");
-        }
-
-        // Build a new map and place the player
-        let current_depth;
-        {
-            let worldmap_resource = self.ecs.fetch::<Map>();
-            current_depth = worldmap_resource.depth;
-        }
-        self.generate_world_map(current_depth - 1);
-
-        // Notify the player and give them some health
-        let mut gamelog = self.ecs.fetch_mut::<gamelog::GameLog>();
-        gamelog.entries.insert(0, "You ascend to the previous level.".to_string());
+        gamelog.entries.insert(0, "You change level.".to_string());
     }
 
     fn game_over_cleanup(&mut self) {
@@ -390,16 +362,18 @@ impl State {
         }
 
         // Build a new map and place the player
-        self.generate_world_map(1);                                          
+        self.generate_world_map(1, 0);                                          
     }
 
-    fn generate_world_map(&mut self, new_depth : i32) {
+    fn generate_world_map(&mut self, new_depth : i32, offset: i32) {
         self.mapgen_index = 0;
         self.mapgen_timer = 0.0;
         self.mapgen_history.clear();
-        let map_building_info = map::level_transition(&mut self.ecs, new_depth);
+        let map_building_info = map::level_transition(&mut self.ecs, new_depth, offset);
         if let Some(history) = map_building_info {
             self.mapgen_history = history;
+        } else {
+            map::thaw_level_entities(&mut self.ecs);
         }
     }
 }
@@ -461,6 +435,7 @@ fn main() {
     gs.ecs.register::<LootTable>();
     gs.ecs.register::<Carnivore>();
     gs.ecs.register::<Herbivore>();
+    gs.ecs.register::<OtherLevelPosition>();
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
     raws::load_raws();
@@ -476,7 +451,7 @@ fn main() {
     gs.ecs.insert(particle_system::ParticleBuilder::new());
     gs.ecs.insert(rex_assets::RexAssets::new());
 
-    gs.generate_world_map(1);
+    gs.generate_world_map(1, 0);
 
     rltk::main_loop(context, gs);
 }

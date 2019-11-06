@@ -15,6 +15,13 @@ pub struct Position {
 }
 
 #[derive(Component, Serialize, Deserialize, Clone)]
+pub struct OtherLevelPosition {
+    pub x: i32,
+    pub y: i32,
+    pub depth: i32
+}
+
+#[derive(Component, Serialize, Deserialize, Clone)]
 pub struct Renderable {
     pub glyph: u8,
     pub fg: RGB,

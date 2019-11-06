@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 use super::{Map, TileType};
-use crate::components::{Position, Viewshed};
+use crate::components::{Position, Viewshed, OtherLevelPosition};
 use crate::map_builders::level_builder;
 use specs::prelude::*;
 use rltk::Point;
@@ -77,16 +77,17 @@ fn transition_to_new_map(ecs : &mut World, new_depth: i32) -> Vec<Map> {
     mapgen_history
 }
 
-fn transition_to_existing_map(ecs: &mut World, new_depth: i32) {
+fn transition_to_existing_map(ecs: &mut World, new_depth: i32, offset: i32) {
     let dungeon_master = ecs.read_resource::<MasterDungeonMap>();
     let map = dungeon_master.get_map(new_depth).unwrap();
     let mut worldmap_resource = ecs.write_resource::<Map>();
-    let player_entity = ecs.fetch::<Entity>();
+    let player_entity = ecs.fetch::<Entity>();    
 
     // Find the down stairs and place the player
     let w = map.width;
+    let stair_type = if offset < 0 { TileType::DownStairs } else { TileType::UpStairs };
     for (idx, tt) in map.tiles.iter().enumerate() {
-        if *tt == TileType::DownStairs {
+        if *tt == stair_type {
             let mut player_position = ecs.write_resource::<Point>();
             *player_position = Point::new(idx as i32 % w, idx as i32 / w);
             let mut position_components = ecs.write_storage::<Position>();
@@ -108,14 +109,60 @@ fn transition_to_existing_map(ecs: &mut World, new_depth: i32) {
     }
 }
 
-pub fn level_transition(ecs : &mut World, new_depth: i32) -> Option<Vec<Map>> {
+pub fn freeze_level_entities(ecs: &mut World) {
+    // Obtain ECS access
+    let entities = ecs.entities();
+    let mut positions = ecs.write_storage::<Position>();
+    let mut other_level_positions = ecs.write_storage::<OtherLevelPosition>();
+    let player_entity = ecs.fetch::<Entity>();
+    let map_depth = ecs.fetch::<Map>().depth;
+
+    // Find positions and make OtherLevelPosition
+    let mut pos_to_delete : Vec<Entity> = Vec::new();
+    for (entity, pos) in (&entities, &positions).join() {
+        if entity != *player_entity {
+            other_level_positions.insert(entity, OtherLevelPosition{ x: pos.x, y: pos.y, depth: map_depth }).expect("Insert fail");
+            pos_to_delete.push(entity);
+        }
+    }
+
+    // Remove positions
+    for p in pos_to_delete.iter() {
+        positions.remove(*p);
+    }
+}
+
+pub fn thaw_level_entities(ecs: &mut World) {
+    // Obtain ECS access
+    let entities = ecs.entities();
+    let mut positions = ecs.write_storage::<Position>();
+    let mut other_level_positions = ecs.write_storage::<OtherLevelPosition>();
+    let player_entity = ecs.fetch::<Entity>();
+    let map_depth = ecs.fetch::<Map>().depth;
+
+    // Find OtherLevelPosition
+    let mut pos_to_delete : Vec<Entity> = Vec::new();
+    for (entity, pos) in (&entities, &other_level_positions).join() {
+        if entity != *player_entity && pos.depth == map_depth {
+            positions.insert(entity, Position{ x: pos.x, y: pos.y }).expect("Insert fail");
+            pos_to_delete.push(entity);
+        }
+    }
+
+    // Remove positions
+    for p in pos_to_delete.iter() {
+        other_level_positions.remove(*p);
+    }
+}
+
+pub fn level_transition(ecs : &mut World, new_depth: i32, offset: i32) -> Option<Vec<Map>> {
     // Obtain the master dungeon map
     let dungeon_master = ecs.read_resource::<MasterDungeonMap>();
 
     // Do we already have a map?
     if dungeon_master.get_map(new_depth).is_some() {
         std::mem::drop(dungeon_master);
-        transition_to_existing_map(ecs, new_depth);
+        transition_to_existing_map(ecs, new_depth, offset);
         None
     } else {
         std::mem::drop(dungeon_master);
