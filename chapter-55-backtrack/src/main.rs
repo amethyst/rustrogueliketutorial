@@ -60,6 +60,7 @@ pub enum RunState { AwaitingInput,
     MainMenu { menu_selection : gui::MainMenuSelection },
     SaveGame,
     NextLevel,
+    PreviousLevel,
     ShowRemoveItem,
     GameOver,
     MagicMapReveal { row : i32 },
@@ -263,6 +264,11 @@ impl GameState for State {
                 self.mapgen_next_state = Some(RunState::PreRun);
                 newrunstate = RunState::MapGeneration;
             }
+            RunState::PreviousLevel => {
+                self.goto_previous_level();
+                self.mapgen_next_state = Some(RunState::PreRun);
+                newrunstate = RunState::MapGeneration;
+            }
             RunState::MagicMapReveal{row} => {
                 let mut map = self.ecs.fetch_mut::<Map>();
                 for x in 0..map.width {
@@ -346,6 +352,26 @@ impl State {
         gamelog.entries.insert(0, "You descend to the next level.".to_string());
     }
 
+    fn goto_previous_level(&mut self) {
+        // Delete entities that aren't the player or his/her equipment
+        let to_delete = self.entities_to_remove_on_level_change();
+        for target in to_delete {
+            self.ecs.delete_entity(target).expect("Unable to delete entity");
+        }
+
+        // Build a new map and place the player
+        let current_depth;
+        {
+            let worldmap_resource = self.ecs.fetch::<Map>();
+            current_depth = worldmap_resource.depth;
+        }
+        self.generate_world_map(current_depth - 1);
+
+        // Notify the player and give them some health
+        let mut gamelog = self.ecs.fetch_mut::<gamelog::GameLog>();
+        gamelog.entries.insert(0, "You ascend to the previous level.".to_string());
+    }
+
     fn game_over_cleanup(&mut self) {
         // Delete everything
         let mut to_delete = Vec::new();
@@ -371,39 +397,10 @@ impl State {
         self.mapgen_index = 0;
         self.mapgen_timer = 0.0;
         self.mapgen_history.clear();
-        let mut rng = self.ecs.write_resource::<rltk::RandomNumberGenerator>();
-        let mut builder = map_builders::level_builder(new_depth, &mut rng, 80, 50);
-        builder.build_map(&mut rng);
-        self.mapgen_history = builder.build_data.history.clone();
-        let player_start;
-        {
-            let mut worldmap_resource = self.ecs.write_resource::<Map>();
-            *worldmap_resource = builder.build_data.map.clone();
-            player_start = builder.build_data.starting_position.as_mut().unwrap().clone();
+        let map_building_info = map::level_transition(&mut self.ecs, new_depth);
+        if let Some(history) = map_building_info {
+            self.mapgen_history = history;
         }
-
-        // Spawn bad guys
-        std::mem::drop(rng);
-        builder.spawn_entities(&mut self.ecs);
-
-        // Place the player and update resources
-        let (player_x, player_y) = (player_start.x, player_start.y);
-        let mut player_position = self.ecs.write_resource::<Point>();
-        *player_position = Point::new(player_x, player_y);
-        let mut position_components = self.ecs.write_storage::<Position>();
-        let player_entity = self.ecs.fetch::<Entity>();
-        let player_pos_comp = position_components.get_mut(*player_entity);
-        if let Some(player_pos_comp) = player_pos_comp {
-            player_pos_comp.x = player_x;
-            player_pos_comp.y = player_y;
-        }
-
-        // Mark the player's visibility as dirty
-        let mut viewshed_components = self.ecs.write_storage::<Viewshed>();
-        let vs = viewshed_components.get_mut(*player_entity);
-        if let Some(vs) = vs {
-            vs.dirty = true;
-        } 
     }
 }
 
@@ -468,6 +465,7 @@ fn main() {
 
     raws::load_raws();
 
+    gs.ecs.insert(map::MasterDungeonMap::new());
     gs.ecs.insert(Map::new(1, 64, 64, "New Map"));
     gs.ecs.insert(Point::new(0, 0));
     gs.ecs.insert(rltk::RandomNumberGenerator::new());

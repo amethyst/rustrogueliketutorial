@@ -8,6 +8,8 @@ mod tiletype;
 pub use tiletype::{TileType, tile_walkable, tile_opaque, tile_cost};
 mod themes;
 pub use themes::*;
+mod dungeon;
+pub use dungeon::{MasterDungeonMap, level_transition};
 
 #[derive(Default, Serialize, Deserialize, Clone)]
 pub struct Map {
