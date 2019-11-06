@@ -282,6 +282,10 @@ pub struct SerializeMe;
 pub struct SerializationHelper {
     pub map : super::map::Map
 }
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct DMSerializationHelper {
+    pub map : super::map::MasterDungeonMap
+}
 
 // WantsToMelee wrapper
 #[derive(Serialize, Deserialize, Clone)]
