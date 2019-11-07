@@ -30,7 +30,9 @@ mod room_corridor_spawner;
 mod door_placement;
 mod town;
 mod forest;
+mod limestone_cavern;
 use forest::forest_builder;
+use limestone_cavern::limestone_cavern_builder;
 use distant_exit::DistantExit;
 use simple_map::SimpleMapBuilder;
 use bsp_dungeon::BspDungeonBuilder;
@@ -301,6 +303,7 @@ pub fn level_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator, widt
     match new_depth {
         1 => town_builder(new_depth, rng, width, height),
         2 => forest_builder(new_depth, rng, width, height),
+        3 => limestone_cavern_builder(new_depth, rng, width, height),
         _ => random_builder(new_depth, rng, width, height)
     }
 }

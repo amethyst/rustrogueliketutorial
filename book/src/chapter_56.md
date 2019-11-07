@@ -91,11 +91,327 @@ And there you go! If you `cargo run` now, you can press `\` (backslash), and `T`
 
 ## Carving out the caverns
 
+We're going to do another custom design on the limestone caverns, so open up `map_builders/mod.rs` and find `level_builder` (it should be at the end of the file):
+
+```rust
+pub fn level_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator, width: i32, height: i32) -> BuilderChain {
+    println!("Depth: {}", new_depth);
+    match new_depth {
+        1 => town_builder(new_depth, rng, width, height),
+        2 => forest_builder(new_depth, rng, width, height),
+        3 => limestone_cavern_builder(new_depth, rng, width, height),
+        _ => random_builder(new_depth, rng, width, height)
+    }
+}
+```
+
+Also add this to the top:
+
+```rust
+mod limestone_cavern;
+use limestone_cavern::limestone_cavern_builder;
+```
+
+We've added `limestone_cavern_builder` - so lets go ahead and create it! Make a new file, `map_builders/limestone_cavern.rs` and add the following:
+
+```rust
+use super::{BuilderChain, DrunkardsWalkBuilder, XStart, YStart, AreaStartingPosition, 
+    CullUnreachable, VoronoiSpawning, MetaMapBuilder, BuilderMap, TileType, DistantExit};
+use rltk::RandomNumberGenerator;
+use crate::map;
+
+pub fn limestone_cavern_builder(new_depth: i32, _rng: &mut rltk::RandomNumberGenerator, width: i32, height: i32) -> BuilderChain {
+    let mut chain = BuilderChain::new(new_depth, width, height, "Limestone Caverns");
+    chain.start_with(DrunkardsWalkBuilder::winding_passages());
+    chain.with(AreaStartingPosition::new(XStart::CENTER, YStart::CENTER));
+    chain.with(CullUnreachable::new());
+    chain.with(AreaStartingPosition::new(XStart::LEFT, YStart::CENTER));
+    chain.with(VoronoiSpawning::new());
+    chain.with(DistantExit::new());
+    chain
+}
+```
+
+This is quite simple: we're building the map with a Drunkard's Walk, in "winding passages" mode. Then we set the start to the center, and cull unreachable areas. Next, we place the entrance on the left center, spawn with the Voronoi algorithm, and place the exit at a distant location.
+
+This gets you a playable map! The monster choices aren't so good, but it works. This is a good example of the flexible map building system we've been using.
+
 ## Theming the caverns
 
-## Just add water
+The cavern layout is a good start, but it doesn't *look* like a limestone cavern yet. Open up `map/themes.rs` and we'll rectify that! We'll start by modifying `get_tile_glyph` to know about this level:
+
+```rust
+pub fn tile_glyph(idx: usize, map : &Map) -> (u8, RGB, RGB) {
+let (glyph, mut fg, mut bg) = match map.depth {
+    3 => get_limestone_cavern_glyph(idx, map),
+    2 => get_forest_glyph(idx, map),
+    _ => get_tile_glyph_default(idx, map)
+};
+```
+
+Now we need to write `get_limestone_cavern_glyph`. We want it to look like a limestone cavern. Here's what I came up with (maybe the more artistically inclined can help!):
+
+```rust
+fn get_limestone_cavern_glyph(idx:usize, map: &Map) -> (u8, RGB, RGB) {
+    let glyph;
+    let fg;
+    let bg = RGB::from_f32(0., 0., 0.);
+
+    match map.tiles[idx] {
+        TileType::Wall => { glyph = rltk::to_cp437('▒'); fg = RGB::from_f32(0.7, 0.7, 0.7); }
+        TileType::Bridge => { glyph = rltk::to_cp437('.'); fg = RGB::named(rltk::CHOCOLATE); }
+        TileType::Road => { glyph = rltk::to_cp437('≡'); fg = RGB::named(rltk::YELLOW); }
+        TileType::Grass => { glyph = rltk::to_cp437('"'); fg = RGB::named(rltk::GREEN); }
+        TileType::ShallowWater => { glyph = rltk::to_cp437('░'); fg = RGB::named(rltk::CYAN); }
+        TileType::DeepWater => { glyph = rltk::to_cp437('▓'); fg = RGB::named(rltk::BLUE); }
+        TileType::Gravel => { glyph = rltk::to_cp437(';'); fg = RGB::from_f32(0.5, 0.5, 0.5); }
+        TileType::DownStairs => { glyph = rltk::to_cp437('>'); fg = RGB::from_f32(0., 1.0, 1.0); }
+        TileType::UpStairs => { glyph = rltk::to_cp437('<'); fg = RGB::from_f32(0., 1.0, 1.0); }
+        _ => { glyph = rltk::to_cp437('░'); fg = RGB::from_f32(0.4, 0.4, 0.4); }
+    }
+
+    (glyph, fg, bg)
+}
+```
+
+Not a bad start! The environment looks quite cave like (and not hewn stone), and the colors are a nice neutral lighter grey but not blindingly bright. It makes the other entities stand out nicely:
+
+![Screenshot](./c56-s2.jpg)
+
+## Just add water and gravel
+
+We can further improve the map by adding some water (it's unusual for a cave network like this to not have some), and turn some of the floor tiles into gravel - to show boulders on the map. We could also add in some stalactites and stalagmites (giant rock pillars that form from dripping water slowly depositing calcium over the centuries) for flavor. So we'll first add a new layer to the builder (as the last step):
+
+```rust
+chain.with(CaveDecorator::new());
+```
+
+Then we need to write it:
+
+```rust
+pub struct CaveDecorator {}
+
+impl MetaMapBuilder for CaveDecorator {
+    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap)  {
+        self.build(rng, build_data);
+    }
+}
+
+impl CaveDecorator {
+    #[allow(dead_code)]
+    pub fn new() -> Box<CaveDecorator> {
+        Box::new(CaveDecorator{})
+    }
+
+    fn build(&mut self, rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+        let old_map = build_data.map.clone();
+        for (idx,tt) in build_data.map.tiles.iter_mut().enumerate() {
+            // Gravel Spawning
+            if *tt == TileType::Floor && rng.roll_dice(1, 6)==1 {
+                *tt = TileType::Gravel;
+            } else if *tt == TileType::Floor && rng.roll_dice(1, 10)==1 {
+                // Spawn passable pools
+                *tt = TileType::ShallowWater;
+            } else if *tt == TileType::Wall {
+                // Spawn deep pools and stalactites
+                let mut neighbors = 0;
+                let x = idx as i32 % old_map.width;
+                let y = idx as i32 / old_map.width;
+                if x > 0 && old_map.tiles[idx-1] == TileType::Wall { neighbors += 1; }
+                if x < old_map.width - 2 && old_map.tiles[idx+1] == TileType::Wall { neighbors += 1; }
+                if y > 0 && old_map.tiles[idx-old_map.width as usize] == TileType::Wall { neighbors += 1; }
+                if y < old_map.height - 2 && old_map.tiles[idx+old_map.width as usize] == TileType::Wall { neighbors += 1; }
+                if neighbors == 2 {
+                    *tt = TileType::DeepWater;
+                } else if neighbors == 1 {
+                    let roll = rng.roll_dice(1, 4);
+                    match roll {
+                        1 => *tt = TileType::Stalactite,
+                        2 => *tt = TileType::Stalagmite,
+                        _ => {}
+                    }
+                }
+            }
+        }
+        build_data.take_snapshot();
+    }
+}
+```
+
+This works as follows:
+
+1. We iterate through all the tile types and map indices of the map. It's a mutable iterator - we want to be able to change the tiles.
+2. If a tile is a `Floor`, we have a 1 in 6 chance of turning it into gravel.
+3. If we didn't do that, we have a 1 in 10 chance of turning it into a shallow pool (still passable).
+4. If its a wall, we count how many other walls surround it.
+5. If there's 2 neighbors, we replace the tile with `DeepWater` - nice dark water, not passable by the player.
+6. If there is 1 neighbor, we roll a 4 sided dice. On a 1, we turn it into a stalactite; on a 2, we turn it into a stalagmite. Otherwise, we don't do anything.
+
+This does require that we open `map/tiletype.rs` and introduce the new tile types:
+
+```rust
+#[derive(PartialEq, Eq, Hash, Copy, Clone, Serialize, Deserialize)]
+pub enum TileType {
+    Wall, 
+    Stalactite,
+    Stalagmite,
+    Floor, 
+    DownStairs,
+    Road,
+    Grass,
+    ShallowWater,
+    DeepWater,
+    WoodFloor,
+    Bridge,
+    Gravel,
+    UpStairs
+}
+```
+
+We make the new tile types block visibility:
+
+```rust
+pub fn tile_opaque(tt : TileType) -> bool {
+    match tt {
+        TileType::Wall | TileType::Stalactite | TileType::Stalagmite => true,
+        _ => false
+    }
+}
+```
+
+And we add them to both the new limestone theme and the default theme in `map/themes.rs`:
+
+```rust
+TileType::Stalactite => { glyph = rltk::to_cp437('╨'); fg = RGB::from_f32(0.5, 0.5, 0.5); }
+TileType::Stalagmite => { glyph = rltk::to_cp437('╥'); fg = RGB::from_f32(0.5, 0.5, 0.5); }
+```
+
+This gives a pretty pleasing looking, quite natural (and damp) cave:
+
+![Screenshot](./c56-s3.jpg)
 
 ## Populating the caverns
+
+The caverns are pretty playable as-is, but they don't really match what we've described in terms of NPCs. There are a few forest monsters and deer in the cave, which doesn't make a lot of sense! Let's start by opening `spawns.rs` and changing the depths on which some creatures appear to avoid this:
+
+```json
+"spawn_table" : [
+    { "name" : "Goblin", "weight" : 10, "min_depth" : 3, "max_depth" : 100 },
+    { "name" : "Orc", "weight" : 1, "min_depth" : 3, "max_depth" : 100, "add_map_depth_to_weight" : true },
+    { "name" : "Health Potion", "weight" : 7, "min_depth" : 0, "max_depth" : 100 },
+    { "name" : "Fireball Scroll", "weight" : 2, "min_depth" : 0, "max_depth" : 100, "add_map_depth_to_weight" : true },
+    { "name" : "Confusion Scroll", "weight" : 2, "min_depth" : 0, "max_depth" : 100, "add_map_depth_to_weight" : true },
+    { "name" : "Magic Missile Scroll", "weight" : 4, "min_depth" : 0, "max_depth" : 100 },
+    { "name" : "Dagger", "weight" : 3, "min_depth" : 0, "max_depth" : 100 },
+    { "name" : "Shield", "weight" : 3, "min_depth" : 0, "max_depth" : 100 },
+    { "name" : "Longsword", "weight" : 1, "min_depth" : 3, "max_depth" : 100 },
+    { "name" : "Tower Shield", "weight" : 1, "min_depth" : 3, "max_depth" : 100 },
+    { "name" : "Rations", "weight" : 10, "min_depth" : 0, "max_depth" : 100 },
+    { "name" : "Magic Mapping Scroll", "weight" : 2, "min_depth" : 0, "max_depth" : 100 },
+    { "name" : "Bear Trap", "weight" : 5, "min_depth" : 0, "max_depth" : 100 },
+    { "name" : "Battleaxe", "weight" : 1, "min_depth" : 2, "max_depth" : 100 },
+    { "name" : "Kobold", "weight" : 15, "min_depth" : 3, "max_depth" : 5 },
+    { "name" : "Rat", "weight" : 15, "min_depth" : 2, "max_depth" : 2 },
+    { "name" : "Mangy Wolf", "weight" : 13, "min_depth" : 2, "max_depth" : 2 },
+    { "name" : "Deer", "weight" : 14, "min_depth" : 2, "max_depth" : 2 },
+    { "name" : "Bandit", "weight" : 9, "min_depth" : 2, "max_depth" : 3 }
+],
+```
+
+We've left bandits in the cave, because they may seek shelter there - but no more wolves, deer or rodents of unusual size (we're probably sick of them by now, anyway!). What else would you find in a cave? The [d20 system encounter tables](https://www.d20pfsrd.com/bestiary/indexes-and-tables/encounter-tables/#TOC-Dungeon-Avg.-CR-2-) suggest a few: 
+```
+Dire rats, fire beetles, human skeletons, giant centipedes, spider swarms, human zombies, chokers, skeletal champions, goblins, ghouls, giant spiders, cockatrice, gelatinous cube, rust monster, shadow, wight, stirges, darkmantles, troglodytes, bugbears, vargoilles,
+gray oozes, mimcs and ogres (oh my)
+``` 
+
+That's quite the list! Thinking about *this* layer of the dungeon, a few of these make sense: Spiders will definitely like a nice dark area. "Stirges" are basically evil bats, so we should add bats. We have goblins and kobolds as well as the occasional orc. We already decided that we're sick of rats for now! I'm a big fan of gelatinous cubes, so I'd love to put them in, too! Many of the others are best left for a later level due to difficulty.
+
+So let's add them to the spawn table:
+
+```json
+{ "name" : "Bat", "weight" : 15, "min_depth" : 3, "max_depth" : 3 },
+{ "name" : "Large Spider", "weight" : 3, "min_depth" : 3, "max_depth" : 3 },
+{ "name" : "Gelatinous Cube", "weight" : 3, "min_depth" : 3, "max_depth" : 3 }
+```
+
+We're making bats really common, large spiders and gelatinous cubes really rare. Lets go ahead and add them into the `mobs` section of `spawns.json`:
+
+```json
+{
+    "name" : "Bat",
+    "renderable": {
+        "glyph" : "b",
+        "fg" : "#995555",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "vision_range" : 6,
+    "ai" : "herbivore",
+    "attributes" : {
+        "Might" : 3,
+        "Fitness" : 3
+    },
+    "skills" : {
+        "Melee" : -1,
+        "Defense" : -1
+    },
+    "natural" : {
+        "armor_class" : 11,
+        "attacks" : [
+            { "name" : "bite", "hit_bonus" : 0, "damage" : "1d4" }
+        ]   
+    }
+},
+
+{
+    "name" : "Large Spider",
+    "level" : 2,
+    "attributes" : {},
+    "renderable": {
+        "glyph" : "s",
+        "fg" : "#FF0000",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "vision_range" : 6,
+    "ai" : "carnivore",
+    "natural" : {
+        "armor_class" : 12,
+        "attacks" : [
+            { "name" : "bite", "hit_bonus" : 1, "damage" : "1d12" }
+        ]   
+    }
+},
+
+{
+    "name" : "Gelatinous Cube",
+    "level" : 2,
+    "attributes" : {},
+    "renderable": {
+        "glyph" : "▄",
+        "fg" : "#FF0000",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "vision_range" : 4,
+    "ai" : "carnivore",
+    "natural" : {
+        "armor_class" : 12,
+        "attacks" : [
+            { "name" : "engulf", "hit_bonus" : 0, "damage" : "1d8" }
+        ]   
+    }
+}
+```
+
+So bats are harmless herbivores who largely run away from you. Spiders and cubes will hunt others down and eat them. We've also made them level 2 - so they are worth more experience, and will be harder to kill. It's likely that the player is ready for this challenge. So we can `cargo run` and give it a go!
+
+![Screenshot](./c56-s4.jpg)
+
+Not too bad! It's playable, the right monsters appear, and overall not a bad experience at all.
 
 ...
 

@@ -32,10 +32,12 @@ impl<'a> System<'a> for AnimalAI {
             let mut run_away_from : Vec<i32> = Vec::new();
             for other_tile in viewshed.visible_tiles.iter() {
                 let view_idx = map.xy_idx(other_tile.x, other_tile.y);
-                for other_entity in map.tile_content[view_idx].iter() {
-                    // They don't run away from items
-                    if item.get(*other_entity).is_none() {
-                        run_away_from.push(view_idx as i32);
+                if view_idx > 1 && view_idx < map.tiles.len() {
+                    for other_entity in map.tile_content[view_idx].iter() {
+                        // They don't run away from items
+                        if item.get(*other_entity).is_none() {
+                            run_away_from.push(view_idx as i32);
+                        }
                     }
                 }
             }
@@ -64,17 +66,19 @@ impl<'a> System<'a> for AnimalAI {
             let mut attacked = false;
             for other_tile in viewshed.visible_tiles.iter() {
                 let view_idx = map.xy_idx(other_tile.x, other_tile.y);
-                for other_entity in map.tile_content[view_idx].iter() {
-                    if herbivore.get(*other_entity).is_some() || *other_entity == *player_entity {
-                        let distance = rltk::DistanceAlg::Pythagoras.distance2d(
-                            Point::new(pos.x, pos.y),
-                            *other_tile
-                        );
-                        if distance < 1.5 {
-                            wants_to_melee.insert(entity, WantsToMelee{ target: *other_entity }).expect("Unable to insert attack");
-                            attacked = true;
-                        } else {
-                            run_towards.push(view_idx as i32);
+                if view_idx > 1 && view_idx < map.tiles.len() {
+                    for other_entity in map.tile_content[view_idx].iter() {
+                        if herbivore.get(*other_entity).is_some() || *other_entity == *player_entity {
+                            let distance = rltk::DistanceAlg::Pythagoras.distance2d(
+                                Point::new(pos.x, pos.y),
+                                *other_tile
+                            );
+                            if distance < 1.5 {
+                                wants_to_melee.insert(entity, WantsToMelee{ target: *other_entity }).expect("Unable to insert attack");
+                                attacked = true;
+                            } else {
+                                run_towards.push(view_idx as i32);
+                            }
                         }
                     }
                 }
