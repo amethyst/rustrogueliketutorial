@@ -472,7 +472,139 @@ You can `cargo run` now, and hop back and forth between levels to your heart's c
 
 ## Saving/Loading the game
 
-Now we need to include the dungeon master map in our save game; otherwise, reloading will keep the current map and generate a whole bunch of new ones - with invalid entity placement!
+Now we need to include the dungeon master map in our save game; otherwise, reloading will keep the current map and generate a whole bunch of new ones - with invalid entity placement! We'll need to extend our serialization system to save the entire dungeon map, rather than just the current one.
+
+We'll start in `components.rs`; you may remember that we had to make a special `SerializationHelper` to help us save the map as part of the game. It looks like this:
+
+```rust
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct SerializationHelper {
+    pub map : super::map::Map
+}
+```
+
+We'll need a *second* one, to store the `MasterDungeonMap`. It looks like this:
+
+```rust
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct DMSerializationHelper {
+    pub map : super::map::MasterDungeonMap
+}
+```
+
+In `main.rs`, we have to register it like other components:
+
+```rust
+gs.ecs.register::<DMSerializationHelper>();
+```
+
+And in `saveload.rs` we need to include it in the big lists of component types. Also in `saveload.rs`, we need to do the same trick to add it to the ECS World, save it, and then remove it that we used before:
+
+```rust
+pub fn save_game(ecs : &mut World) {
+    // Create helper
+    let mapcopy = ecs.get_mut::<super::map::Map>().unwrap().clone();
+    let dungeon_master = ecs.get_mut::<super::map::MasterDungeonMap>().unwrap().clone();
+    let savehelper = ecs
+        .create_entity()
+        .with(SerializationHelper{ map : mapcopy })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+    let savehelper2 = ecs
+        .create_entity()
+        .with(DMSerializationHelper{ map : dungeon_master })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+
+    // Actually serialize
+    {
+        let data = ( ecs.entities(), ecs.read_storage::<SimpleMarker<SerializeMe>>() );
+
+        let writer = File::create("./savegame.json").unwrap();
+        let mut serializer = serde_json::Serializer::new(writer);
+        serialize_individually!(ecs, serializer, data, Position, Renderable, Player, Viewshed, Monster, 
+            Name, BlocksTile, SufferDamage, WantsToMelee, Item, Consumable, Ranged, InflictsDamage, 
+            AreaOfEffect, Confusion, ProvidesHealing, InBackpack, WantsToPickupItem, WantsToUseItem,
+            WantsToDropItem, SerializationHelper, Equippable, Equipped, MeleeWeapon, Wearable,
+            WantsToRemoveItem, ParticleLifetime, HungerClock, ProvidesFood, MagicMapper, Hidden,
+            EntryTrigger, EntityMoved, SingleActivation, BlocksVisibility, Door, Bystander, Vendor,
+            Quips, Attributes, Skills, Pools, NaturalAttackDefense, LootTable, Carnivore, Herbivore,
+            OtherLevelPosition, DMSerializationHelper
+        );
+    }
+
+    // Clean up
+    ecs.delete_entity(savehelper).expect("Crash on cleanup");
+    ecs.delete_entity(savehelper2).expect("Crash on cleanup");
+}
+```
+
+Notice that we're making a *second* temporary entity - `savehelper2`. This ensures that the data is saved alongside all the other data. We remove it in the very last line. We also need to tweak our loader:
+
+```rust
+pub fn load_game(ecs: &mut World) {
+    {
+        // Delete everything
+        let mut to_delete = Vec::new();
+        for e in ecs.entities().join() {
+            to_delete.push(e);
+        }
+        for del in to_delete.iter() {
+            ecs.delete_entity(*del).expect("Deletion failed");
+        }
+    }
+
+    let data = fs::read_to_string("./savegame.json").unwrap();
+    let mut de = serde_json::Deserializer::from_str(&data);
+
+    {
+        let mut d = (&mut ecs.entities(), &mut ecs.write_storage::<SimpleMarker<SerializeMe>>(), &mut SimpleMarkerAllocator::<SerializeMe>::new());
+
+        deserialize_individually!(ecs, de, d, Position, Renderable, Player, Viewshed, Monster, 
+            Name, BlocksTile, SufferDamage, WantsToMelee, Item, Consumable, Ranged, InflictsDamage, 
+            AreaOfEffect, Confusion, ProvidesHealing, InBackpack, WantsToPickupItem, WantsToUseItem,
+            WantsToDropItem, SerializationHelper, Equippable, Equipped, MeleeWeapon, Wearable,
+            WantsToRemoveItem, ParticleLifetime, HungerClock, ProvidesFood, MagicMapper, Hidden,
+            EntryTrigger, EntityMoved, SingleActivation, BlocksVisibility, Door, Bystander, Vendor,
+            Quips, Attributes, Skills, Pools, NaturalAttackDefense, LootTable, Carnivore, Herbivore,
+            OtherLevelPosition, DMSerializationHelper
+        );
+    }
+
+    let mut deleteme : Option<Entity> = None;
+    let mut deleteme2 : Option<Entity> = None;
+    {
+        let entities = ecs.entities();
+        let helper = ecs.read_storage::<SerializationHelper>();
+        let helper2 = ecs.read_storage::<DMSerializationHelper>();
+        let player = ecs.read_storage::<Player>();
+        let position = ecs.read_storage::<Position>();
+        for (e,h) in (&entities, &helper).join() {
+            let mut worldmap = ecs.write_resource::<super::map::Map>();
+            *worldmap = h.map.clone();
+            worldmap.tile_content = vec![Vec::new(); (worldmap.height * worldmap.width) as usize];
+            deleteme = Some(e);
+        }
+        for (e,h) in (&entities, &helper2).join() {
+            let mut dungeonmaster = ecs.write_resource::<super::map::MasterDungeonMap>();
+            *dungeonmaster = h.map.clone();
+            deleteme2 = Some(e);
+        }
+        for (e,_p,pos) in (&entities, &player, &position).join() {
+            let mut ppos = ecs.write_resource::<rltk::Point>();
+            *ppos = rltk::Point::new(pos.x, pos.y);
+            let mut player_resource = ecs.write_resource::<Entity>();
+            *player_resource = e;
+        }
+    }
+    ecs.delete_entity(deleteme.unwrap()).expect("Unable to delete helper");
+    ecs.delete_entity(deleteme2.unwrap()).expect("Unable to delete helper");
+}
+```
+
+So in this one, we added iterating through for the `MasterDungeonMap` helper, and adding it to the `World` as a resource - and then deleting the entity. It's just the same as we did for the `Map` - but for the `MasterDungeonMap`.
+
+If you `cargo run` now, you can transition levels, save the game, and then transition again. Serialization works!
 
 ## More seamless transition
 
