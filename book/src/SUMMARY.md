@@ -61,4 +61,6 @@
     - AI Cleanup
     - Item Stats and Vendors
     - Town Portals
+    - Movement cleanup
+    - Random Seeds
 - [Contributors](./contributors.md)

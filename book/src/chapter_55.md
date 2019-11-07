@@ -608,9 +608,173 @@ If you `cargo run` now, you can transition levels, save the game, and then trans
 
 ## More seamless transition
 
-## Stair dancing
+It's not very ergonomic to require that the player type keys that are only ever used once (for up/down stairs) when they encounter a stair-case. Not only that, but it's sometimes difficult with international keyboards to catch the right key-code! It would definitely be smoother if walking into a stair-case takes you to the stair's destination. At the same time, we could fix something that's been bugging me for a while: trying and failing to move costs a turn while you mindlessly plough into the wall!
+
+Since `player.rs` is where we handle input, lets open it up. We're going to change `try_move_player` to return a `RunState`:
+
+```rust
+pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) -> RunState {
+    let mut positions = ecs.write_storage::<Position>();
+    let players = ecs.read_storage::<Player>();
+    let mut viewsheds = ecs.write_storage::<Viewshed>();
+    let entities = ecs.entities();
+    let combat_stats = ecs.read_storage::<Attributes>();
+    let map = ecs.fetch::<Map>();
+    let mut wants_to_melee = ecs.write_storage::<WantsToMelee>();
+    let mut entity_moved = ecs.write_storage::<EntityMoved>();
+    let mut doors = ecs.write_storage::<Door>();
+    let mut blocks_visibility = ecs.write_storage::<BlocksVisibility>();
+    let mut blocks_movement = ecs.write_storage::<BlocksTile>();
+    let mut renderables = ecs.write_storage::<Renderable>();
+    let bystanders = ecs.read_storage::<Bystander>();
+    let vendors = ecs.read_storage::<Vendor>();
+    let mut result = RunState::AwaitingInput;
+
+    let mut swap_entities : Vec<(Entity, i32, i32)> = Vec::new();
+
+    for (entity, _player, pos, viewshed) in (&entities, &players, &mut positions, &mut viewsheds).join() {
+        let destination_idx = map.xy_idx(pos.x + delta_x, pos.y + delta_y);
+
+        for potential_target in map.tile_content[destination_idx].iter() {
+            let bystander = bystanders.get(*potential_target);
+            let vendor = vendors.get(*potential_target);
+            if bystander.is_some() || vendor.is_some() {
+                // Note that we want to move the bystander
+                swap_entities.push((*potential_target, pos.x, pos.y));
+
+                // Move the player
+                pos.x = min(map.width-1 , max(0, pos.x + delta_x));
+                pos.y = min(map.height-1, max(0, pos.y + delta_y));
+                entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
+
+                viewshed.dirty = true;
+                let mut ppos = ecs.write_resource::<Point>();
+                ppos.x = pos.x;
+                ppos.y = pos.y;
+                result = RunState::PlayerTurn;
+            } else {
+                let target = combat_stats.get(*potential_target);
+                if let Some(_target) = target {
+                    wants_to_melee.insert(entity, WantsToMelee{ target: *potential_target }).expect("Add target failed");
+                    return RunState::PlayerTurn;
+                }
+            }
+            let door = doors.get_mut(*potential_target);
+            if let Some(door) = door {
+                door.open = true;
+                blocks_visibility.remove(*potential_target);
+                blocks_movement.remove(*potential_target);
+                let glyph = renderables.get_mut(*potential_target).unwrap();
+                glyph.glyph = rltk::to_cp437('/');
+                viewshed.dirty = true;
+            }
+        }
+
+        if !map.blocked[destination_idx] {
+            pos.x = min(map.width-1 , max(0, pos.x + delta_x));
+            pos.y = min(map.height-1, max(0, pos.y + delta_y));
+            entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
+
+            viewshed.dirty = true;
+            let mut ppos = ecs.write_resource::<Point>();
+            ppos.x = pos.x;
+            ppos.y = pos.y;
+            result = RunState::PlayerTurn;
+        }
+    }
+
+    for m in swap_entities.iter() {
+        let their_pos = positions.get_mut(m.0);
+        if let Some(their_pos) = their_pos {
+            their_pos.x = m.1;
+            their_pos.y = m.2;
+        }
+    }
+
+    result
+}
+```
+
+This is essentially the same function as before, but we ensure that we return a `RunState` from it. If the player did in fact move, we return `RunState::PlayerTurn`. If the move wasn't valid, we return `RunState::AwaitingInput` - to indicate that we're still waiting for valid instructions.
+
+In the player keyboard handler, we need to replace every call to `try_move_player...` with `return try_move_player...`:
+
+```rust
+...
+    match ctx.key {
+        None => { return RunState::AwaitingInput } // Nothing happened
+        Some(key) => match key {
+            VirtualKeyCode::Left |
+            VirtualKeyCode::Numpad4 |
+            VirtualKeyCode::H => return try_move_player(-1, 0, &mut gs.ecs),
+
+            VirtualKeyCode::Right |
+            VirtualKeyCode::Numpad6 |
+            VirtualKeyCode::L => return try_move_player(1, 0, &mut gs.ecs),
+
+            VirtualKeyCode::Up |
+            VirtualKeyCode::Numpad8 |
+            VirtualKeyCode::K => return try_move_player(0, -1, &mut gs.ecs),
+
+            VirtualKeyCode::Down |
+            VirtualKeyCode::Numpad2 |
+            VirtualKeyCode::J => return try_move_player(0, 1, &mut gs.ecs),
+
+            // Diagonals
+            VirtualKeyCode::Numpad9 |
+            VirtualKeyCode::U => return try_move_player(1, -1, &mut gs.ecs),
+
+            VirtualKeyCode::Numpad7 |
+            VirtualKeyCode::Y => return try_move_player(-1, -1, &mut gs.ecs),
+
+            VirtualKeyCode::Numpad3 |
+            VirtualKeyCode::N => return try_move_player(1, 1, &mut gs.ecs),
+
+            VirtualKeyCode::Numpad1 |
+            VirtualKeyCode::B => return try_move_player(-1, 1, &mut gs.ecs),
+
+            // Skip Turn
+            VirtualKeyCode::Numpad5 |
+            VirtualKeyCode::Space => return skip_turn(&mut gs.ecs),
+            ...
+```
+
+If you were to `cargo run` now, you'd notice that you no longer waste turns walking into walls.
+
+Now that we've done that, we're in a good place to modify `try_move_player` to be able to return level transition instructions if the player has entered a staircase. Let's add a staircase check after movement, and return stair transitions if they apply:
+
+```rust
+if !map.blocked[destination_idx] {
+    pos.x = min(map.width-1 , max(0, pos.x + delta_x));
+    pos.y = min(map.height-1, max(0, pos.y + delta_y));
+    entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
+
+    viewshed.dirty = true;
+    let mut ppos = ecs.write_resource::<Point>();
+    ppos.x = pos.x;
+    ppos.y = pos.y;
+    result = RunState::PlayerTurn;
+    match map.tiles[destination_idx] {
+        TileType::DownStairs => result = RunState::NextLevel,
+        TileType::UpStairs => result = RunState::PreviousLevel,
+        _ => {}
+    } 
+}
+```
+
+Now you can change levels simply by running onto the exit.
+
+![Screenshot](./c55-s1.gif)
+
+## A Word on Stair dancing
+
+One thing a lot of roguelikes run into is "stair dancing". You see a scary monster, and you retreat up the staircase. Heal up, pop down and hit the monster a bit. Pop back up, and heal up. Since the monster is "frozen" on a later level, it won't chase you up the stairs (except in games that handle this, such as Dungeon Crawl Stone Soup!). This is probably undesirable for the overall game, but we're not going to fix it yet. A future chapter is planned that will make NPC AI a lot smarter in general (and introduce more tactical options), so we'll save this problem for later.
 
 ## Wrap Up
+
+That was another large chapter, but we've achieved something really useful: levels are persistent, and you can traverse the world enjoying the knowledge that the sword you left in the woods will still be there when you return. This goes a long way towards making a more believable, expansive game (and it starts to feel more "open world", even if it isn't!). We'll be adding in town portals in a future chapter, when the town becomes a more useful place to visit.
+
+Next - to ensure that you aren't bored! - we'll be adding in the next level, the limestone caverns.
 
 ...
 
