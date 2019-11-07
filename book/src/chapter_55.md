@@ -39,7 +39,9 @@ impl MasterDungeonMap {
 
     pub fn get_map(&self, depth : i32) -> Option<Map> {
         if self.maps.contains_key(&depth) {
-            Some(self.maps[&depth].clone())
+            let mut result = self.maps[&depth].clone();
+            result.tile_content = vec![Vec::new(); (result.width * result.height) as usize];
+            Some(result)
         } else {
             None
         }
@@ -47,7 +49,7 @@ impl MasterDungeonMap {
 }
 ```
 
-This is pretty easy to follow: the structure itself has a single, private (no `pub`) field - `maps`. It's a `HashMap` - a dictionary - of `Map` structures, indexed by the map depth. We provide a constructor for easy creation of the class (`new`), and functions to `store_map` (save a map) and `get_map` (retrieve one as an `Option`, with `None` indicating that we don't have one). We also added the `Serde` decorations to make the structure serializable - so you can save the game.
+This is pretty easy to follow: the structure itself has a single, private (no `pub`) field - `maps`. It's a `HashMap` - a dictionary - of `Map` structures, indexed by the map depth. We provide a constructor for easy creation of the class (`new`), and functions to `store_map` (save a map) and `get_map` (retrieve one as an `Option`, with `None` indicating that we don't have one). We also added the `Serde` decorations to make the structure serializable - so you can save the game. We also remake the `tile_content` field, because we don't serialize it.
 
 In `map/mod.rs`, you need to add a line: `pub mod dungeon;`. This tells the module to expose the dungeon to the world.
 
