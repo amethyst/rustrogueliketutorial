@@ -57,8 +57,8 @@
     - [Into the Woods!](./chapter_53.md)
     - [XP](./chapter_54.md)
     - [Backtracking](./chapter_55.md)
-    - Into the caverns
-    - AI Cleanup
+    - [Into the caverns](./chapter_56.md)
+    - AI Cleanup and Status Effects
     - Item Stats and Vendors
     - Town Portals
     - Movement cleanup
