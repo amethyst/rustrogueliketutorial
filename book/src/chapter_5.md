@@ -265,6 +265,7 @@ impl<'a> System<'a> for VisibilitySystem {
         for (viewshed,pos) in (&mut viewshed, &pos).join() {
             viewshed.visible_tiles.clear();
             viewshed.visible_tiles = field_of_view(Point::new(pos.x, pos.y), viewshed.range, &*map);
+            viewshed.visible_tiles.retain(|p| p.x > 0 && p.x < map.width-1 && p.y > 0 && p.y < map.height-1 );
         }
     }
 }
@@ -275,6 +276,7 @@ There's quite a bit here, and the viewshed is actually the simplest part:
 * We've added a `ReadExpect<'a, Map>` - meaning that the system should be passed our `Map` for use. We used `ReadExpect`, because not having a map is a failure.
 * In the loop, we first clear the list of visible tiles.
 * Then we call RLTK's `field_of_view` function, providing the starting point (the location of the entity, from `pos`), the range (from the viewshed), and a slightly convoluted "dereference, then get a reference" to unwrap `Map` from the ECS.
+* Finally we use the vector's `retain` method to delete any entries that *don't* meet the criteria we specify. This is a *lambda* or *closure* - it iterates over the vector, passing `p` as a parameter. If p is inside the map boundaries, we keep it. This prevents other functions from trying to access a tile outside of the working map area.
 
 This will now run every frame (which is overkill, more on that later) - and store a list of visible tiles.
 
@@ -404,6 +406,7 @@ impl<'a> System<'a> for VisibilitySystem {
         for (ent,viewshed,pos) in (&entities, &mut viewshed, &pos).join() {
             viewshed.visible_tiles.clear();
             viewshed.visible_tiles = field_of_view(Point::new(pos.x, pos.y), viewshed.range, &*map);
+            viewshed.visible_tiles.retain(|p| p.x > 0 && p.x < map.width-1 && p.y > 0 && p.y < map.height-1 );
 
             // If this is the player, reveal what they can see
             let p : Option<&Player> = player.get(ent);
@@ -485,6 +488,7 @@ if viewshed.dirty {
     viewshed.dirty = false;
     viewshed.visible_tiles.clear();
     viewshed.visible_tiles = field_of_view(Point::new(pos.x, pos.y), viewshed.range, &*map);
+    viewshed.visible_tiles.retain(|p| p.x > 0 && p.x < map.width-1 && p.y > 0 && p.y < map.height-1 );
 
     // If this is the player, reveal what they can see
     let _p : Option<&Player> = player.get(ent);

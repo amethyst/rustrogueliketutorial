@@ -79,7 +79,8 @@ impl<'a> System<'a> for ItemUseSystem {
                         }
                         Some(area_effect) => {
                             // AoE
-                            let blast_tiles = rltk::field_of_view(target, area_effect.radius, &*map);
+                            let mut blast_tiles = rltk::field_of_view(target, area_effect.radius, &*map);
+                            blast_tiles.retain(|p| p.x > 0 && p.x < map.width-1 && p.y > 0 && p.y < map.height-1 );
                             for tile_idx in blast_tiles.iter() {
                                 let idx = map.xy_idx(tile_idx.x, tile_idx.y);
                                 for mob in map.tile_content[idx].iter() {

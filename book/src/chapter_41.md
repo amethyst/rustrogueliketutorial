@@ -362,36 +362,6 @@ If you `cargo run` now, targeting will work:
 
 ![Screenshot](./c41-s3.jpg).
 
-## Addendum 1: Fixing a bug in the visibility calculator
-
-You may encounter a crash when boundaries haven't properly been applied to the edge of the map. In `visibility_system.rs`, the following fix takes care of it:
-
-```rust
-for vis in viewshed.visible_tiles.iter() {
-        if vis.x > 0 && vis.x < map.width-1 && vis.y > 0 && vis.y < map.height-1 {
-            let idx = map.xy_idx(vis.x, vis.y);
-            map.revealed_tiles[idx] = true;
-            map.visible_tiles[idx] = true;
-
-            // Chance to reveal hidden things
-            for e in map.tile_content[idx].iter() {
-                let maybe_hidden = hidden.get(*e);
-                if let Some(_maybe_hidden) = maybe_hidden {
-                    if rng.roll_dice(1,24)==1 {
-                        let name = names.get(*e);
-                        if let Some(name) = name {
-                            log.entries.insert(0, format!("You spotted a {}.", &name.name));
-                        }
-                        hidden.remove(*e);
-                    }
-                }
-            }
-        }
-    }
-```
-
-This will be merged back into the tutorial soon - this addendum is to let you know we fixed it.
-
 ## Variable map sizes
 
 Now that our map isn't directly linked to our screen, we can have maps of any size we want! A word of caution: if you go with a *huge* map, it will take your player a *really long time* to explore it all - and it becomes more and more challenging to ensure that all of the map is interesting enough to want to visit it.
