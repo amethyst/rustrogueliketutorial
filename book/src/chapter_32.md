@@ -42,7 +42,7 @@ This makes a `vector`, each entry containing a `tuple`. Inside that tuple, we're
 The next step is to determine each cell's Voronoi membership:
 
 ```rust
-let mut voroni_distance = vec![(0, 0.0f32) ; n_seeds];
+let mut voronoi_distance = vec![(0, 0.0f32) ; n_seeds];
 let mut voronoi_membership : Vec<i32> = vec![0 ; self.map.width as usize * self.map.height as usize];
 for (i, vid) in voronoi_membership.iter_mut().enumerate() {
     let x = i as i32 % self.map.width;
@@ -53,12 +53,12 @@ for (i, vid) in voronoi_membership.iter_mut().enumerate() {
             rltk::Point::new(x, y), 
             pos.1
         );
-        voroni_distance[seed] = (seed, distance);
+        voronoi_distance[seed] = (seed, distance);
     }
 
-    voroni_distance.sort_by(|a,b| a.1.partial_cmp(&b.1).unwrap());
+    voronoi_distance.sort_by(|a,b| a.1.partial_cmp(&b.1).unwrap());
 
-    *vid = voroni_distance[0].0 as i32;
+    *vid = voronoi_distance[0].0 as i32;
 }
 ```
 
@@ -141,7 +141,7 @@ fn build(&mut self) {
         }
     }
 
-    let mut voroni_distance = vec![(0, 0.0f32) ; self.n_seeds];
+    let mut voronoi_distance = vec![(0, 0.0f32) ; self.n_seeds];
     let mut voronoi_membership : Vec<i32> = vec![0 ; self.map.width as usize * self.map.height as usize];
     for (i, vid) in voronoi_membership.iter_mut().enumerate() {
         let x = i as i32 % self.map.width;
@@ -169,12 +169,12 @@ fn build(&mut self) {
                     );
                 }
             }
-            voroni_distance[seed] = (seed, distance);
+            voronoi_distance[seed] = (seed, distance);
         }
 
-        voroni_distance.sort_by(|a,b| a.1.partial_cmp(&b.1).unwrap());
+        voronoi_distance.sort_by(|a,b| a.1.partial_cmp(&b.1).unwrap());
 
-        *vid = voroni_distance[0].0 as i32;
+        *vid = voronoi_distance[0].0 as i32;
     }
 
     for y in 1..self.map.height-1 {

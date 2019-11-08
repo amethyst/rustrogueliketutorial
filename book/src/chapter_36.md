@@ -1654,7 +1654,7 @@ impl VoronoiCellBuilder {
             }
         }
 
-        let mut voroni_distance = vec![(0, 0.0f32) ; self.n_seeds];
+        let mut voronoi_distance = vec![(0, 0.0f32) ; self.n_seeds];
         let mut voronoi_membership : Vec<i32> = vec![0 ; build_data.map.width as usize * build_data.map.height as usize];
         for (i, vid) in voronoi_membership.iter_mut().enumerate() {
             let x = i as i32 % build_data.map.width;
@@ -1682,12 +1682,12 @@ impl VoronoiCellBuilder {
                         );
                     }
                 }
-                voroni_distance[seed] = (seed, distance);
+                voronoi_distance[seed] = (seed, distance);
             }
 
-            voroni_distance.sort_by(|a,b| a.1.partial_cmp(&b.1).unwrap());
+            voronoi_distance.sort_by(|a,b| a.1.partial_cmp(&b.1).unwrap());
 
-            *vid = voroni_distance[0].0 as i32;
+            *vid = voronoi_distance[0].0 as i32;
         }
 
         for y in 1..build_data.map.height-1 {
