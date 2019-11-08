@@ -134,21 +134,32 @@ impl<'a> System<'a> for ParticleSpawnSystem {
 This is a very simple service: it iterates the requests, and creates an entity for each particle with the component parameters from the request. Then it clears the builder list. The last step is to add it to the system schedule in `main.rs`:
 
 ```rust
-let mut gs = State {
-    ecs: World::new(),
-    systems : DispatcherBuilder::new()
-        .with(MapIndexingSystem{}, "map_indexing_system", &[])
-        .with(VisibilitySystem{}, "visibility_system", &[])
-        .with(MonsterAI{}, "monster_ai", &["visibility_system", "map_indexing_system"])
-        .with(MeleeCombatSystem{}, "melee_combat", &["monster_ai"])
-        .with(DamageSystem{}, "damage", &["melee_combat"])
-        .with(ItemCollectionSystem{}, "pickup", &["melee_combat"])
-        .with(ItemUseSystem{}, "potions", &["melee_combat"])
-        .with(ItemDropSystem{}, "drop_items", &["melee_combat"])
-        .with(ItemRemoveSystem{}, "remove_items", &["melee_combat"])
-        .with(particle_system::ParticleSpawnSystem{}, "spawn_particles", &["potions", "melee_combat"])
-        .build(),
-};
+impl State {
+    fn run_systems(&mut self) {
+        let mut mapindex = MapIndexingSystem{};
+        mapindex.run_now(&self.ecs);
+        let mut vis = VisibilitySystem{};
+        vis.run_now(&self.ecs);
+        let mut mob = MonsterAI{};
+        mob.run_now(&self.ecs);
+        let mut melee = MeleeCombatSystem{};
+        melee.run_now(&self.ecs);
+        let mut damage = DamageSystem{};
+        damage.run_now(&self.ecs);
+        let mut pickup = ItemCollectionSystem{};
+        pickup.run_now(&self.ecs);
+        let mut itemuse = ItemUseSystem{};
+        itemuse.run_now(&self.ecs);
+        let mut drop_items = ItemDropSystem{};
+        drop_items.run_now(&self.ecs);
+        let mut item_remove = ItemRemoveSystem{};
+        item_remove.run_now(&self.ecs);
+        let mut particles = particle_system::ParticleSpawnSystem{};
+        particles.run_now(&self.ecs);
+
+        self.ecs.maintain();
+    }
+}
 ```
 
 We've made it depend upon likely particle spawners. We'll have to be a little careful to avoid accidentally making it concurrent with anything that might add to it.

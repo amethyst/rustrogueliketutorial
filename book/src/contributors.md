@@ -18,6 +18,8 @@ The following people have contributed to this project:
 * [Tommi Jalkanen](https://github.com/Koura) helped me remove some Dispatcher code that I'd accidentally left in place. He also found an issue with bounds checking on movement, for which I am eternally grateful!
 * [Gabriel Martinez](https://github.com/mystal) helped me fix the Vi keys.
 * [Dominic D](https://github.com/DominicD) found some issues with chapter 7.
+* [FlorentKI](https://github.com/FlorentKl) found some dispatch code that hadn't been properly deleted.
+* [Zirael07](https://github.com/Zireael07) found numerous typos and missing bits of code.
 
 ## Supporters
 

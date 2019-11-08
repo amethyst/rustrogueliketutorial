@@ -164,13 +164,17 @@ To prevent this - and make a turn-based game - we introduce a new concept to the
 pub enum RunState { Paused, Running }
 ```
 
-We add it to the State type:
+We add it to the `run_systems` call:
 
 ```rust
-pub struct State {
-    pub ecs: World,
-    pub systems: Dispatcher<'static, 'static>,
-    pub runstate : RunState
+impl State {
+    fn run_systems(&mut self) {
+        let mut vis = VisibilitySystem{};
+        vis.run_now(&self.ecs);
+        let mut mob = MonsterAI{};
+        mob.run_now(&self.ecs);
+        self.ecs.maintain();
+    }
 }
 ```
 
@@ -180,7 +184,7 @@ Now, we change our `tick` function to only run the simulation when the game isn'
 
 ```rust
 if self.runstate == RunState::Running {
-    self.systems.dispatch(&self.ecs);
+    self.run_systems();
     self.runstate = RunState::Paused;
 } else {
     self.runstate = player_input(self, ctx);
