@@ -68,7 +68,8 @@ members = [
     "chapter-53-woods",
     "chapter-54-xp",
     "chapter-55-backtrack",
-    "chapter-56-caverns"
+    "chapter-56-caverns",
+    "chapter-57-ai"
     ]
 
 [profile.dev]
