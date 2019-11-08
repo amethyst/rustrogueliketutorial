@@ -4,7 +4,7 @@ extern crate specs;
 use specs::prelude::*;
 use super::{Pools, Pool, Player, Renderable, Name, Position, Viewshed, Rect,  
     SerializeMe, random_table::RandomTable, HungerClock, HungerState, Map, TileType, raws::*,
-    Attribute, Attributes, Skills, Skill };
+    Attribute, Attributes, Skills, Skill, LightSource };
 use crate::specs::saveload::{MarkedBuilder, SimpleMarker};
 use std::collections::HashMap;
 use crate::{attr_bonus, player_hp_at_level, mana_at_level};
@@ -48,6 +48,7 @@ pub fn player(ecs : &mut World, player_x : i32, player_y : i32) -> Entity {
             xp: 0,
             level: 1
         })
+        .with(LightSource{ color: rltk::RGB::from_f32(1.0, 1.0, 0.5), range: 8 })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 

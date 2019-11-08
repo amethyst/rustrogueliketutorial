@@ -17,7 +17,8 @@ pub struct Mob {
     pub mana : Option<i32>,
     pub equipped : Option<Vec<String>>,
     pub natural : Option<MobNatural>,
-    pub loot_table : Option<String>
+    pub loot_table : Option<String>,
+    pub light : Option<MobLight>
 }
 
 #[derive(Deserialize, Debug)]
@@ -39,4 +40,11 @@ pub struct NaturalAttack {
     pub name : String,
     pub hit_bonus : i32,
     pub damage : String
+}
+
+
+#[derive(Deserialize, Debug)]
+pub struct MobLight {
+    pub range : i32,
+    pub color : String
 }

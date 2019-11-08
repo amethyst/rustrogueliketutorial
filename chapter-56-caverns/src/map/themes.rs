@@ -12,6 +12,9 @@ pub fn tile_glyph(idx: usize, map : &Map) -> (u8, RGB, RGB) {
     if !map.visible_tiles[idx] { 
         fg = fg.to_greyscale();
         bg = RGB::from_f32(0., 0., 0.); // Don't show stains out of visual range
+    } else if !map.outdoors {
+        fg = fg * map.light[idx];
+        bg = bg * map.light[idx];
     }
 
     (glyph, fg, bg)
@@ -55,7 +58,7 @@ fn get_limestone_cavern_glyph(idx:usize, map: &Map) -> (u8, RGB, RGB) {
         TileType::UpStairs => { glyph = rltk::to_cp437('<'); fg = RGB::from_f32(0., 1.0, 1.0); }
         TileType::Stalactite => { glyph = rltk::to_cp437('╨'); fg = RGB::from_f32(0.7, 0.7, 0.7); }
         TileType::Stalagmite => { glyph = rltk::to_cp437('╥'); fg = RGB::from_f32(0.7, 0.7, 0.7); }
-        _ => { glyph = rltk::to_cp437('░'); fg = RGB::from_f32(0.4, 0.4, 0.4); }
+        _ => { glyph = rltk::to_cp437('\''); fg = RGB::from_f32(0.4, 0.4, 0.4); }
     }
 
     (glyph, fg, bg)

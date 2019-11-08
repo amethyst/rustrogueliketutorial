@@ -42,6 +42,7 @@ pub mod bystander_ai_system;
 mod gamesystem;
 pub use gamesystem::*;
 pub mod animal_ai_system;
+mod lighting_system;
 #[macro_use]
 extern crate lazy_static;
 
@@ -106,6 +107,8 @@ impl State {
         hunger.run_now(&self.ecs);
         let mut particles = particle_system::ParticleSpawnSystem{};
         particles.run_now(&self.ecs);
+        let mut lighting = lighting_system::LightingSystem{};
+        lighting.run_now(&self.ecs);
 
         self.ecs.maintain();
     }
@@ -450,6 +453,7 @@ fn main() {
     gs.ecs.register::<Carnivore>();
     gs.ecs.register::<Herbivore>();
     gs.ecs.register::<OtherLevelPosition>();
+    gs.ecs.register::<LightSource>();
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
     raws::load_raws();

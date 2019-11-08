@@ -39,6 +39,12 @@ pub struct Viewshed {
     pub dirty : bool
 }
 
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct LightSource {
+    pub color : RGB,
+    pub range: i32
+}
+
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Monster {}
 

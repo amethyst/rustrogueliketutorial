@@ -413,6 +413,274 @@ So bats are harmless herbivores who largely run away from you. Spiders and cubes
 
 Not too bad! It's playable, the right monsters appear, and overall not a bad experience at all.
 
+## Lighting!
+
+One of the things that makes limestone caverns so amazing is the lighting; you peer through the marble with the light from your helmet torch, casting shadows and giving everything an eerie look. We can add cosmetic lighting to the game without too much difficulty (it might make its way into a stealth system at some point!)
+
+Let's start by making a new component, `LightSource`. In `components.rs`:
+
+```rust
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct LightSource {
+    pub color : RGB,
+    pub range: i32
+}
+```
+
+As always, register your new component in `main.rs` and `saveload_system.rs`! The light source defines two values: `color` (the color of the light) and `range` - which will govern its intensity/fall-off. We also need to add light information to the map. In `map/mod.rs`:
+
+```rust
+#[derive(Default, Serialize, Deserialize, Clone)]
+pub struct Map {
+    pub tiles : Vec<TileType>,
+    pub width : i32,
+    pub height : i32,
+    pub revealed_tiles : Vec<bool>,
+    pub visible_tiles : Vec<bool>,
+    pub blocked : Vec<bool>,
+    pub depth : i32,
+    pub bloodstains : HashSet<usize>,
+    pub view_blocked : HashSet<usize>,
+    pub name : String,
+    pub outdoors : bool,
+    pub light : Vec<rltk::RGB>,
+
+    #[serde(skip_serializing)]
+    #[serde(skip_deserializing)]
+    pub tile_content : Vec<Vec<Entity>>
+}
+```
+
+There are two new values here: `outdoors`, which indicates "there's natural light, don't apply lighting", and `light` - which is a vector of `RGB` colors indicating the light levels on each tile. You'll also need to update the `new` constructor to include these:
+
+```rust
+pub fn new<S : ToString>(new_depth : i32, width: i32, height: i32, name: S) -> Map {
+    let map_tile_count = (width*height) as usize;
+    Map{
+        tiles : vec![TileType::Wall; map_tile_count],
+        width,
+        height,
+        revealed_tiles : vec![false; map_tile_count],
+        visible_tiles : vec![false; map_tile_count],
+        blocked : vec![false; map_tile_count],
+        tile_content : vec![Vec::new(); map_tile_count],
+        depth: new_depth,
+        bloodstains: HashSet::new(),
+        view_blocked : HashSet::new(),
+        name : name.to_string(),
+        outdoors : true,
+        light: vec![rltk::RGB::from_f32(0.0, 0.0, 0.0); map_tile_count]
+    }
+}
+```
+
+Notice that we're making `outdoors` the default mode - so lighting won't suddenly apply to all maps (potentially messing up what we've already done; it'd be hard to explain why you woke up in the morning and the sky is dark - well, that might be a story hook for another game!). We also initialize the lighting to all black, one color per tile.
+
+Now, we'll adjust `map/themes.rs` to handle lighting. We're deliberately not darkening entities (so you can still spot them), just the map tiles:
+
+```rust
+pub fn tile_glyph(idx: usize, map : &Map) -> (u8, RGB, RGB) {
+    let (glyph, mut fg, mut bg) = match map.depth {
+        3 => get_limestone_cavern_glyph(idx, map),
+        2 => get_forest_glyph(idx, map),
+        _ => get_tile_glyph_default(idx, map)
+    };
+
+    if map.bloodstains.contains(&idx) { bg = RGB::from_f32(0.75, 0., 0.); }
+    if !map.visible_tiles[idx] { 
+        fg = fg.to_greyscale();
+        bg = RGB::from_f32(0., 0., 0.); // Don't show stains out of visual range
+    } else if !map.outdoors {
+        fg = fg * map.light[idx];
+        bg = bg * map.light[idx];
+    }
+
+    (glyph, fg, bg)
+}
+```
+
+This is quite simple: if we can't see the tile, we'll still use greyscales. If we *can* see the tile, and `outdoors` is `false` - then we'll multiply the colors by the light intensity.
+
+Next, let's give the player a light source. For now, we'll always give him/her/it a slightly yellow torch. In `spawner.rs` add this to the list of components built for the player:
+
+```rust
+.with(LightSource{ color: rltk::RGB::from_f32(1.0, 1.0, 0.5), range: 8 })
+```
+
+We'll also update our `map_builders/limestone_caverns.rs` to use lighting in the caves. At the very end of the custom builder, change `take_snapshot` to:
+
+```rust
+build_data.take_snapshot();
+build_data.map.outdoors = false;
+```
+
+Lastly, we need a *system* to actually calculate the lighting. Make a new file, `lighting_system.rs`:
+
+```rust
+extern crate specs;
+use specs::prelude::*;
+use super::{Viewshed, Position, Map, LightSource};
+use rltk::RGB;
+
+pub struct LightingSystem {}
+
+impl<'a> System<'a> for LightingSystem {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( WriteExpect<'a, Map>,
+                        ReadStorage<'a, Viewshed>, 
+                        ReadStorage<'a, Position>,
+                        ReadStorage<'a, LightSource>);
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (mut map, viewshed, positions, lighting) = data;
+
+        if map.outdoors {
+            return;
+        }
+
+        let black = RGB::from_f32(0.0, 0.0, 0.0);
+        for l in map.light.iter_mut() {
+            *l = black;
+        }
+
+        for (viewshed, pos, light) in (&viewshed, &positions, &lighting).join() {
+            let light_point = rltk::Point::new(pos.x, pos.y);
+            let range_f = light.range as f32;
+            for t in viewshed.visible_tiles.iter() {
+                if t.x > 0 && t.x < map.width && t.y > 0 && t.y < map.height {
+                    let idx = map.xy_idx(t.x, t.y);
+                    let distance = rltk::DistanceAlg::Pythagoras.distance2d(light_point, *t);                    
+                    let intensity = (range_f - distance) / range_f;
+
+                    map.light[idx] = map.light[idx] + (light.color * intensity);
+                }
+            }
+        }
+    }
+}
+```
+
+This is a really simple system! If the map is outdoors, it simply returns. Otherwise:
+
+1. It sets the entire map lighting to be dark.
+2. It iterates all entities that have a position, viewshed and light source.
+3. For each of these entities, it iterates all visible tiles.
+4. It calculates the *distance* to the light source for the visible tile, and inverts it - so further from the light source is darker. This is then divided by the light's range, to scale it into the 0..1 range.
+5. This lighting amount if added to the tile's lighting.
+
+Finally, we add the system to `main.rs`'s `run_systems` function (as the last system to run):
+
+```rust
+let mut lighting = lighting_system::LightingSystem{};
+lighting.run_now(&self.ecs);
+```
+
+If you `cargo run` now, you have a functional lighting system!
+
+![Screenshot](./c56-s5.gif)
+
+All that remains is to let NPCs have light, too. In `raws/mob_structs.rs`, add a new class:
+
+```rust
+#[derive(Deserialize, Debug)]
+pub struct MobLight {
+    pub range : i32,
+    pub color : String
+}
+```
+
+And add it into the main mob structure:
+
+```rust
+#[derive(Deserialize, Debug)]
+pub struct Mob {
+    pub name : String,
+    pub renderable : Option<Renderable>,
+    pub blocks_tile : bool,
+    pub vision_range : i32,
+    pub ai : String,
+    pub quips : Option<Vec<String>>,
+    pub attributes : MobAttributes,
+    pub skills : Option<HashMap<String, i32>>,
+    pub level : Option<i32>,
+    pub hp : Option<i32>,
+    pub mana : Option<i32>,
+    pub equipped : Option<Vec<String>>,
+    pub natural : Option<MobNatural>,
+    pub loot_table : Option<String>,
+    pub light : Option<MobLight>
+}
+```
+
+Now we can modify `spawn_named_mob` in `raws/rawmaster.rs` to support it:
+
+```rust
+if let Some(light) = &mob_template.light {
+    eb = eb.with(LightSource{ range: light.range, color : rltk::RGB::from_hex(&light.color).expect("Bad color") });
+}
+```
+
+Let's modify the gelatinous cube to glow. In `spawns.json`:
+
+```json
+{
+    "name" : "Gelatinous Cube",
+    "level" : 2,
+    "attributes" : {},
+    "renderable": {
+        "glyph" : "▄",
+        "fg" : "#FF0000",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "vision_range" : 4,
+    "ai" : "carnivore",
+    "natural" : {
+        "armor_class" : 12,
+        "attacks" : [
+            { "name" : "engulf", "hit_bonus" : 0, "damage" : "1d8" }
+        ]   
+    },
+    "light" : {
+        "range" : 4,
+        "color" : "#550000"
+    }
+}
+```
+
+We'll also give bandits a torch:
+
+```json
+{
+    "name" : "Bandit",
+    "renderable": {
+        "glyph" : "☻",
+        "fg" : "#FF0000",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "vision_range" : 6,
+    "ai" : "melee",
+    "quips" : [ "Stand and deliver!", "Alright, hand it over" ],
+    "attributes" : {},
+    "equipped" : [ "Dagger", "Shield", "Leather Armor", "Leather Boots" ],
+    "light" : {
+        "range" : 6,
+        "color" : "#FFFF55"
+    }
+},
+```
+
+Now, when you `cargo run` and roam the caverns - you will see light emitted from these entities. Here's a bandit with a torch:
+
+![Screenshot](./c56-s6.jpg)
+
+## Wrap Up
+
+In this chapter, we've added a whole new level and theme - and lit the caverns! Not bad progress. The game is really starting to come together.
+
 ...
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-56-caverns)**
