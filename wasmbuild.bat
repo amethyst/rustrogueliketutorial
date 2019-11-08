@@ -25,7 +25,7 @@ CALL :Stage chapter-23-generic-map
 CALL :Stage chapter-24-map-testing
 CALL :Stage chapter-25-bsproom-dungeons
 CALL :Stage chapter-26-bsp-interiors
-CALL :Stage chapter-27-cellular-automota
+CALL :Stage chapter-27-cellular-automata
 CALL :Stage chapter-28-drunkards-walk
 CALL :Stage chapter-29-mazes
 CALL :Stage chapter-30-dla

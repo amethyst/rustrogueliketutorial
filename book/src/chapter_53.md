@@ -49,12 +49,12 @@ pub fn level_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator, widt
 To implement this, we'll make a new file - `map_builders/forest.rs` and give it some placeholder content (just like we did for the town):
 
 ```rust
-use super::{BuilderChain, CellularAutomotaBuilder, XStart, YStart, AreaStartingPosition, 
+use super::{BuilderChain, CellularAutomataBuilder, XStart, YStart, AreaStartingPosition, 
     CullUnreachable, VoronoiSpawning, DistantExit};
 
 pub fn forest_builder(new_depth: i32, _rng: &mut rltk::RandomNumberGenerator, width: i32, height: i32) -> BuilderChain {
     let mut chain = BuilderChain::new(new_depth, width, height, "Into the Woods");
-    chain.start_with(CellularAutomotaBuilder::new());
+    chain.start_with(CellularAutomataBuilder::new());
     chain.with(AreaStartingPosition::new(XStart::CENTER, YStart::CENTER));
     chain.with(CullUnreachable::new());
     chain.with(AreaStartingPosition::new(XStart::LEFT, YStart::CENTER));
@@ -214,7 +214,7 @@ We specified that a roads runs through the level, but we don't have a builder fo
 ```rust
 pub fn forest_builder(new_depth: i32, _rng: &mut rltk::RandomNumberGenerator, width: i32, height: i32) -> BuilderChain {
     let mut chain = BuilderChain::new(new_depth, width, height, "Into the Woods");
-    chain.start_with(CellularAutomotaBuilder::new());
+    chain.start_with(CellularAutomataBuilder::new());
     chain.with(AreaStartingPosition::new(XStart::CENTER, YStart::CENTER));
     chain.with(CullUnreachable::new());
     chain.with(AreaStartingPosition::new(XStart::LEFT, YStart::CENTER));

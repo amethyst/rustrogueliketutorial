@@ -144,7 +144,7 @@ pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
     match builder {
         1 => Box::new(BspDungeonBuilder::new(new_depth)),
         2 => Box::new(BspInteriorBuilder::new(new_depth)),
-        3 => Box::new(CellularAutomotaBuilder::new(new_depth)),
+        3 => Box::new(CellularAutomataBuilder::new(new_depth)),
         4 => Box::new(DrunkardsWalkBuilder::open_area(new_depth)),
         5 => Box::new(DrunkardsWalkBuilder::open_halls(new_depth)),
         6 => Box::new(DrunkardsWalkBuilder::winding_passages(new_depth)),
@@ -1070,7 +1070,7 @@ Rather than loading one of our `.xp` files, lets feed in the results of a `Cellu
 ```rust
 const CHUNK_SIZE :i32 = 8;
 
-let mut ca = super::CellularAutomotaBuilder::new(0);
+let mut ca = super::CellularAutomataBuilder::new(0);
 ca.build_map();
 self.map = ca.get_map();
 for t in self.map.tiles.iter_mut() {
@@ -1189,7 +1189,7 @@ pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
     match builder {
         1 => { result = Box::new(BspDungeonBuilder::new(new_depth)); }
         2 => { result = Box::new(BspInteriorBuilder::new(new_depth)); }
-        3 => { result = Box::new(CellularAutomotaBuilder::new(new_depth)); }
+        3 => { result = Box::new(CellularAutomataBuilder::new(new_depth)); }
         4 => { result = Box::new(DrunkardsWalkBuilder::open_area(new_depth)); }
         5 => { result = Box::new(DrunkardsWalkBuilder::open_halls(new_depth)); }
         6 => { result = Box::new(DrunkardsWalkBuilder::winding_passages(new_depth)); }

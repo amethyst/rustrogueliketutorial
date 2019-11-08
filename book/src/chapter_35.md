@@ -646,7 +646,7 @@ Box::new(
             prefab_builder::prefab_sections::UNDERGROUND_FORT,
             Box::new(WaveformCollapseBuilder::derived_map(
                 new_depth, 
-                Box::new(CellularAutomotaBuilder::new(new_depth))
+                Box::new(CellularAutomataBuilder::new(new_depth))
             ))
         ))
     )
@@ -677,7 +677,7 @@ pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
     match builder {
         1 => { result = Box::new(BspDungeonBuilder::new(new_depth)); }
         2 => { result = Box::new(BspInteriorBuilder::new(new_depth)); }
-        3 => { result = Box::new(CellularAutomotaBuilder::new(new_depth)); }
+        3 => { result = Box::new(CellularAutomataBuilder::new(new_depth)); }
         4 => { result = Box::new(DrunkardsWalkBuilder::open_area(new_depth)); }
         5 => { result = Box::new(DrunkardsWalkBuilder::open_halls(new_depth)); }
         6 => { result = Box::new(DrunkardsWalkBuilder::winding_passages(new_depth)); }

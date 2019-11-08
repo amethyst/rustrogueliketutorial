@@ -467,7 +467,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "chapter-27-cellular-automota"
+name = "chapter-27-cellular-automata"
 version = "0.1.0"
 dependencies = [
  "rltk 0.5.2 (git+https://github.com/thebracket/rltk_rs)",

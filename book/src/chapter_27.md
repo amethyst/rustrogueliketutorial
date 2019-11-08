@@ -14,7 +14,7 @@ Sometimes, you need a break from rectangular rooms. You might want a nice, organ
 
 ## Scaffolding
 
-Once again, we're going to take a bunch of code from the previous tutorial and re-use it for the new generator. Create a new file, `map_builders/cellular_automota.rd` and place the following in it:
+Once again, we're going to take a bunch of code from the previous tutorial and re-use it for the new generator. Create a new file, `map_builders/cellular_automata.rd` and place the following in it:
 
 ```rust
 use super::{MapBuilder, Map, Rect, apply_room_to_map, 
@@ -24,14 +24,14 @@ use specs::prelude::*;
 
 const MIN_ROOM_SIZE : i32 = 8;
 
-pub struct CellularAutomotaBuilder {
+pub struct CellularAutomataBuilder {
     map : Map,
     starting_position : Position,
     depth: i32,
     history: Vec<Map>
 }
 
-impl MapBuilder for CellularAutomotaBuilder {
+impl MapBuilder for CellularAutomataBuilder {
     fn get_map(&self) -> Map {
         self.map.clone()
     }
@@ -63,9 +63,9 @@ impl MapBuilder for CellularAutomotaBuilder {
     }
 }
 
-impl CellularAutomotaBuilder {
-    pub fn new(new_depth : i32) -> CellularAutomotaBuilder {
-        CellularAutomotaBuilder{
+impl CellularAutomataBuilder {
+    pub fn new(new_depth : i32) -> CellularAutomataBuilder {
+        CellularAutomataBuilder{
             map : Map::new(new_depth),
             starting_position : Position{ x: 0, y : 0 },
             depth : new_depth,
@@ -86,7 +86,7 @@ pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
         2 => Box::new(BspInteriorBuilder::new(new_depth)),
         _ => Box::new(SimpleMapBuilder::new(new_depth))
     }*/
-    Box::new(CellularAutomotaBuilder::new(new_depth))
+    Box::new(CellularAutomataBuilder::new(new_depth))
 }
 ```
 
@@ -128,7 +128,7 @@ fn build(&mut self) {
     }
     self.take_snapshot();
 
-    // Now we iteratively apply cellular automota rules
+    // Now we iteratively apply cellular automata rules
     for _i in 0..15 {
         let mut newtiles = self.map.tiles.clone();
 
@@ -341,7 +341,7 @@ This is similar to the previous spawning code, but not quite the same (although 
     3. We insert a spawn into the `spawn_points` map, listing both the index and a random roll on the spawn table.
     4. We remove the entry we just used from `areas` - that way, we *can't* accidentally pick it again. Note that we're not checking to see if the array is empty: in step 6 above, we guaranteed that we won't spawn more entities than we have room for, so (at least in theory) that particular bug can't happen!
 
-The best way to test this is to uncomment out the `random_builder` code (and comment the `CellularAutomotaBuilder` entry) and give it a go. It should play just like before. Once you've tested it, go back to always spawning the map type we're working on.
+The best way to test this is to uncomment out the `random_builder` code (and comment the `CellularAutomataBuilder` entry) and give it a go. It should play just like before. Once you've tested it, go back to always spawning the map type we're working on.
 
 ## Grouped placement in our map - Enter the Voronoi!
 
@@ -349,10 +349,10 @@ The best way to test this is to uncomment out the `random_builder` code (and com
 
 First of all, what *is* noise. "Noise" in this case doesn't refer to the loud heavy metal you accidentally pipe out of your patio speakers at 2am while wondering what a stereo receiver you found in your new house does (true story...); it refers to random data - like the noise on old analog TVs if you didn't tune to a station (ok, I'm showing my age there). Like most things random, there's lots of ways to make it not-really-random and group it into useful patterns. A noise library provides lots of types of noise. [Perlin/Simplex noise](http://bfnightly.bracketproductions.com/wasmtest/ex12/) makes really good approximations of landscapes. White noise looks like someone randomly threw paint at a piece of paper. *Cellular Noise* randomly places points on a grid, and then plots Voronoi diagrams around them. We're interested in the latter.
 
-This is a somewhat complicated way to do things, so we'll take it a step at a time. Lets start by adding a structure to store generated areas into our `CellularAutomotaBuilder` structure:
+This is a somewhat complicated way to do things, so we'll take it a step at a time. Lets start by adding a structure to store generated areas into our `CellularAutomataBuilder` structure:
 
 ```rust
-pub struct CellularAutomotaBuilder {
+pub struct CellularAutomataBuilder {
     map : Map,
     starting_position : Position,
     depth: i32,
@@ -364,9 +364,9 @@ pub struct CellularAutomotaBuilder {
 In `new`, we also have to initialize it:
 
 ```rust
-impl CellularAutomotaBuilder {
-    pub fn new(new_depth : i32) -> CellularAutomotaBuilder {
-        CellularAutomotaBuilder{
+impl CellularAutomataBuilder {
+    pub fn new(new_depth : i32) -> CellularAutomataBuilder {
+        CellularAutomataBuilder{
             map : Map::new(new_depth),
             starting_position : Position{ x: 0, y : 0 },
             depth : new_depth,
@@ -446,7 +446,7 @@ pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
     match builder {
         1 => Box::new(BspDungeonBuilder::new(new_depth)),
         2 => Box::new(BspInteriorBuilder::new(new_depth)),
-        3 => Box::new(CellularAutomotaBuilder::new(new_depth)),
+        3 => Box::new(CellularAutomataBuilder::new(new_depth)),
         _ => Box::new(SimpleMapBuilder::new(new_depth))
     }
 }
@@ -456,10 +456,10 @@ pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
 
 We've made a pretty nice map generator, and fixed our dependency upon rooms. Cellular Automata are a *really* flexible algorithm, and can be used for all kinds of organic looking maps. With a bit of tweaking to the rules, you can make a really large variety of maps.
 
-**The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-27-cellular-automota)**
+**The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-27-cellular-automata)**
 
 
-[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-27-cellular-automota/)
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-27-cellular-automata/)
 ---
 
 Copyright (C) 2019, Herbert Wolverson.

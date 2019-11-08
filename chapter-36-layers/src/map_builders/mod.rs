@@ -3,7 +3,7 @@ use specs::prelude::*;
 mod simple_map;
 mod bsp_dungeon;
 mod bsp_interior;
-mod cellular_automota;
+mod cellular_automata;
 mod drunkard;
 mod maze;
 mod dla;
@@ -22,7 +22,7 @@ use distant_exit::DistantExit;
 use simple_map::SimpleMapBuilder;
 use bsp_dungeon::BspDungeonBuilder;
 use bsp_interior::BspInteriorBuilder;
-use cellular_automota::CellularAutomotaBuilder;
+use cellular_automata::CellularAutomataBuilder;
 use drunkard::DrunkardsWalkBuilder;
 use voronoi::VoronoiCellBuilder;
 use waveform_collapse::WaveformCollapseBuilder;
@@ -125,7 +125,7 @@ fn random_initial_builder(rng: &mut rltk::RandomNumberGenerator) -> (Box<dyn Ini
     match builder {
         1 => result = (BspDungeonBuilder::new(), true),
         2 => result = (BspInteriorBuilder::new(), true),
-        3 => result = (CellularAutomotaBuilder::new(), false),
+        3 => result = (CellularAutomataBuilder::new(), false),
         4 => result = (DrunkardsWalkBuilder::open_area(), false),
         5 => result = (DrunkardsWalkBuilder::open_halls(), false),
         6 => result = (DrunkardsWalkBuilder::winding_passages(), false),

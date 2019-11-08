@@ -697,32 +697,32 @@ builder
 
 You should understand the basic idea here, now - we're breaking up builders into small chunks, and implementing the appropriate traits for the map type. Looking at Cellular Automata maps, you'll see that we do things a little differently:
 
-* We make a map as usual. This obviously belongs in `CellularAutomotaBuilder`.
+* We make a map as usual. This obviously belongs in `CellularAutomataBuilder`.
 * We search for a starting point close to the middle. This looks like it should be a separate step.
 * We search the map for unreachable areas and cull them. This also looks like a separate step.
 * We place the exit far from the starting position. That's *also* a different algorithm step.
 
 The good news is that the last three of those are used in lots of other builders - so implementing them will let us reuse the code, and not keep repeating ourselves. The bad news is that if we run our cellular automata builder with the existing room-based steps, it will crash - we don't *have* rooms!
 
-So we'll start by constructing the basic map builder. Like the others, this is mostly just rearranging code to fit with the new trait scheme. Here's the new `cellular_automota.rs` file:
+So we'll start by constructing the basic map builder. Like the others, this is mostly just rearranging code to fit with the new trait scheme. Here's the new `cellular_automata.rs` file:
 
 ```rust
 use super::{InitialMapBuilder, BuilderMap, TileType};
 use rltk::RandomNumberGenerator;
 
-pub struct CellularAutomotaBuilder {}
+pub struct CellularAutomataBuilder {}
 
-impl InitialMapBuilder for CellularAutomotaBuilder {
+impl InitialMapBuilder for CellularAutomataBuilder {
     #[allow(dead_code)]
     fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap) {
         self.build(rng, build_data);
     }
 }
 
-impl CellularAutomotaBuilder {
+impl CellularAutomataBuilder {
     #[allow(dead_code)]
-    pub fn new() -> Box<CellularAutomotaBuilder> {
-        Box::new(CellularAutomotaBuilder{})
+    pub fn new() -> Box<CellularAutomataBuilder> {
+        Box::new(CellularAutomataBuilder{})
     }
 
     #[allow(clippy::map_entry)]
@@ -738,7 +738,7 @@ impl CellularAutomotaBuilder {
         }
         build_data.take_snapshot();
 
-        // Now we iteratively apply cellular automota rules
+        // Now we iteratively apply cellular automata rules
         for _i in 0..15 {
             let mut newtiles = build_data.map.tiles.clone();
 
@@ -1024,7 +1024,7 @@ We've finally got all the pieces together, so lets give it a test. In `random_bu
 
 ```rust
 let mut builder = BuilderChain::new(new_depth);
-builder.start_with(CellularAutomotaBuilder::new());
+builder.start_with(CellularAutomataBuilder::new());
 builder.with(AreaStartingPosition::new(XStart::CENTER, YStart::CENTER));
 builder.with(CullUnreachable::new());
 builder.with(VoronoiSpawning::new());
@@ -2176,7 +2176,7 @@ fn random_initial_builder(rng: &mut rltk::RandomNumberGenerator) -> (Box<dyn Ini
     match builder {
         1 => result = (BspDungeonBuilder::new(), true),
         2 => result = (BspInteriorBuilder::new(), true),
-        3 => result = (CellularAutomotaBuilder::new(), false),
+        3 => result = (CellularAutomataBuilder::new(), false),
         4 => result = (DrunkardsWalkBuilder::open_area(), false),
         5 => result = (DrunkardsWalkBuilder::open_halls(), false),
         6 => result = (DrunkardsWalkBuilder::winding_passages(), false),

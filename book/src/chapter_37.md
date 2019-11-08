@@ -56,7 +56,7 @@ fn apply_iteration(&mut self, build_data : &mut BuilderMap) {
 The `build` function is easily modified to call this on each iteration:
 
 ```rust
-// Now we iteratively apply cellular automota rules
+// Now we iteratively apply cellular automata rules
 for _i in 0..15 {
     self.apply_iteration(build_data);
 }
@@ -65,7 +65,7 @@ for _i in 0..15 {
 Finally, we'll add an implementation of `MetaMapBuilder` to the mix:
 
 ```rust
-impl MetaMapBuilder for CellularAutomotaBuilder {
+impl MetaMapBuilder for CellularAutomataBuilder {
     #[allow(dead_code)]
     fn build_map(&mut self, _rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap) {
         self.apply_iteration(build_data);
@@ -81,7 +81,7 @@ Now lets modify `map_builders/mod.rs`'s `random_builder` to force it to use this
 pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> BuilderChain {
     let mut builder = BuilderChain::new(new_depth);
     builder.start_with(VoronoiCellBuilder::pythagoras());
-    builder.with(CellularAutomotaBuilder::new());
+    builder.with(CellularAutomataBuilder::new());
     builder.with(AreaStartingPosition::new(XStart::CENTER, YStart::CENTER));
     builder.with(CullUnreachable::new());
     builder.with(VoronoiSpawning::new());
@@ -818,7 +818,7 @@ Now we'll create a function for the non-room spawners:
 fn random_shape_builder(rng: &mut rltk::RandomNumberGenerator, builder : &mut BuilderChain) {
     let builder_roll = rng.roll_dice(1, 16);
     match builder_roll {
-        1 => builder.start_with(CellularAutomotaBuilder::new()),
+        1 => builder.start_with(CellularAutomataBuilder::new()),
         2 => builder.start_with(DrunkardsWalkBuilder::open_area()),
         3 => builder.start_with(DrunkardsWalkBuilder::open_halls()),
         4 => builder.start_with(DrunkardsWalkBuilder::winding_passages()),

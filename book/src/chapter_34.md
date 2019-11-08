@@ -86,7 +86,7 @@ pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
     match builder {
         1 => { result = Box::new(BspDungeonBuilder::new(new_depth)); }
         2 => { result = Box::new(BspInteriorBuilder::new(new_depth)); }
-        3 => { result = Box::new(CellularAutomotaBuilder::new(new_depth)); }
+        3 => { result = Box::new(CellularAutomataBuilder::new(new_depth)); }
         4 => { result = Box::new(DrunkardsWalkBuilder::open_area(new_depth)); }
         5 => { result = Box::new(DrunkardsWalkBuilder::open_halls(new_depth)); }
         6 => { result = Box::new(DrunkardsWalkBuilder::winding_passages(new_depth)); }
@@ -269,7 +269,7 @@ pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
     match builder {
         1 => { result = Box::new(BspDungeonBuilder::new(new_depth)); }
         2 => { result = Box::new(BspInteriorBuilder::new(new_depth)); }
-        3 => { result = Box::new(CellularAutomotaBuilder::new(new_depth)); }
+        3 => { result = Box::new(CellularAutomataBuilder::new(new_depth)); }
         4 => { result = Box::new(DrunkardsWalkBuilder::open_area(new_depth)); }
         5 => { result = Box::new(DrunkardsWalkBuilder::open_halls(new_depth)); }
         6 => { result = Box::new(DrunkardsWalkBuilder::winding_passages(new_depth)); }
@@ -813,7 +813,7 @@ Box::new(
         new_depth, 
         Some(
             Box::new(
-                CellularAutomotaBuilder::new(new_depth)
+                CellularAutomataBuilder::new(new_depth)
             )
         )
     )
@@ -1015,7 +1015,7 @@ for room in self.rooms.iter().skip(1) {
 
 We can now *delete* `SimpleMapBuilder`'s implementation of `spawn_entities` - the default will work fine.
 
-The same changes can be made to all of the builders that rely on room spawning; for brevity, I won't spell them all out here - you can find them in the source code. The various builders that use Voronoi diagrams are similarly simple to update. For example, Cellular Automata. Add the `spawn_list` to the builder structure, and add a `spawn_list : Vec::new()` into the constructor. Move the monster spawning from `spawn_entities` into the end of `build` and delete the function. Copy the `get_spawn_list` from the other implementations. We changed the region spawning code a little, so here's the implementation from `cellular_automota.rs`:
+The same changes can be made to all of the builders that rely on room spawning; for brevity, I won't spell them all out here - you can find them in the source code. The various builders that use Voronoi diagrams are similarly simple to update. For example, Cellular Automata. Add the `spawn_list` to the builder structure, and add a `spawn_list : Vec::new()` into the constructor. Move the monster spawning from `spawn_entities` into the end of `build` and delete the function. Copy the `get_spawn_list` from the other implementations. We changed the region spawning code a little, so here's the implementation from `cellular_automata.rs`:
 
 ```rust
 // Now we build a noise map for use in spawning entities later

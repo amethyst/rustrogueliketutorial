@@ -3,7 +3,7 @@ use specs::prelude::*;
 mod simple_map;
 mod bsp_dungeon;
 mod bsp_interior;
-mod cellular_automota;
+mod cellular_automata;
 mod drunkard;
 mod maze;
 mod dla;
@@ -27,7 +27,7 @@ use distant_exit::DistantExit;
 use simple_map::SimpleMapBuilder;
 use bsp_dungeon::BspDungeonBuilder;
 use bsp_interior::BspInteriorBuilder;
-use cellular_automota::CellularAutomotaBuilder;
+use cellular_automata::CellularAutomataBuilder;
 use drunkard::DrunkardsWalkBuilder;
 use voronoi::VoronoiCellBuilder;
 use waveform_collapse::WaveformCollapseBuilder;
@@ -208,7 +208,7 @@ fn random_room_builder(rng: &mut rltk::RandomNumberGenerator, builder : &mut Bui
 fn random_shape_builder(rng: &mut rltk::RandomNumberGenerator, builder : &mut BuilderChain) {
     let builder_roll = rng.roll_dice(1, 16);
     match builder_roll {
-        1 => builder.start_with(CellularAutomotaBuilder::new()),
+        1 => builder.start_with(CellularAutomataBuilder::new()),
         2 => builder.start_with(DrunkardsWalkBuilder::open_area()),
         3 => builder.start_with(DrunkardsWalkBuilder::open_halls()),
         4 => builder.start_with(DrunkardsWalkBuilder::winding_passages()),
