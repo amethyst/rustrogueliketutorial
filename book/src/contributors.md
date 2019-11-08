@@ -30,6 +30,9 @@ I'd also like to take a moment to thank everyone who has sent me kind words, con
 * Ryan Orlando
 * Shane Sveller
 * Tom Leys
+* Crocodylus Pontifex (great name!)
+* Enrique Garcia
+* Pat LaBine
 
 
 ---
