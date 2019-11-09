@@ -84,6 +84,8 @@ impl State {
         initiative.run_now(&self.ecs);
         let mut turnstatus = ai::TurnStatusSystem{};
         turnstatus.run_now(&self.ecs);
+        let mut quipper = ai::QuipSystem{};
+        quipper.run_now(&self.ecs);
         let mut mob = ai::MonsterAI{};
         mob.run_now(&self.ecs);
         let mut animal = ai::AnimalAI{};

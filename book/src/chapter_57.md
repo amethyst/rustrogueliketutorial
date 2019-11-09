@@ -426,6 +426,56 @@ turnstatus.run_now(&self.ecs);
 
 This shows the new pattern we are using: systems do one thing, and can remove `MyTurn` to prevent future execution. You can also go into `monster_ai_system` and remove everything relating to confusion.
 
+## Quipping NPCs
+
+Remember when we added bandits, we gave them some commentary to say for flavor? You may have noticed that they aren't actually speaking! That's because we handled quipping in the bystander AI - rather than as a general concept. Let's move the quipping into its own system. Make a new file, `ai/quipping.rs`:
+
+```rust
+extern crate specs;
+use specs::prelude::*;
+use crate::{gamelog::GameLog, Quips, Name, MyTurn, Viewshed};
+
+pub struct QuipSystem {}
+
+impl<'a> System<'a> for QuipSystem {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( WriteExpect<'a, GameLog>,
+        WriteStorage<'a, Quips>,
+        ReadStorage<'a, Name>,
+        ReadStorage<'a, MyTurn>,
+        ReadExpect<'a, rltk::Point>,
+        ReadStorage<'a, Viewshed>,
+        WriteExpect<'a, rltk::RandomNumberGenerator>);
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (mut gamelog, mut quips, names, turns, player_pos, viewsheds, mut rng) = data;
+
+        for (quip, name, viewshed, _turn) in (&mut quips, &names, &viewsheds, &turns).join() {
+            if !quip.available.is_empty() && viewshed.visible_tiles.contains(&player_pos) && rng.roll_dice(1,6)==1 {
+                let quip_index = 
+                    if quip.available.len() == 1 { 0 } 
+                    else { (rng.roll_dice(1, quip.available.len() as i32)-1) as usize };
+                
+                gamelog.entries.insert(0,
+                    format!("{} says \"{}\"", name.name, quip.available[quip_index])
+                );
+                quip.available.remove(quip_index);
+            }                
+        }
+    }
+}
+```
+
+This is basically the quipping code from `bystander_ai_system`, so we don't really need to go over it in too much detail. You do want to add it into `run_systems` in `main.rs` so it functions (and add a `mod` and `pub use` statement in `ai/mod.rs`):
+
+```rust
+turnstatus.run_now(&self.ecs);
+let mut quipper = ai::QuipSystem{};
+quipper.run_now(&self.ecs);
+```
+
+Also go into `bystander_ai_system.rs` and remove all the quip code! It shortens it a *lot*, and if you `cargo run` now, Bandits can insult you. In fact, *any* NPC can be given quip lines now - and will merrily say things to you.
+
 ...
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-57-ai)**
