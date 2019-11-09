@@ -16,8 +16,6 @@ mod rect;
 pub use rect::Rect;
 mod visibility_system;
 use visibility_system::VisibilitySystem;
-mod monster_ai_system;
-use monster_ai_system::MonsterAI;
 mod map_indexing_system;
 use map_indexing_system::MapIndexingSystem;
 mod melee_combat_system;
@@ -38,11 +36,10 @@ pub mod trigger_system;
 pub mod map_builders;
 pub mod camera;
 pub mod raws;
-pub mod bystander_ai_system;
 mod gamesystem;
 pub use gamesystem::*;
-pub mod animal_ai_system;
 mod lighting_system;
+mod ai;
 #[macro_use]
 extern crate lazy_static;
 
@@ -83,11 +80,11 @@ impl State {
         mapindex.run_now(&self.ecs);
         let mut vis = VisibilitySystem{};
         vis.run_now(&self.ecs);
-        let mut mob = MonsterAI{};
+        let mut mob = ai::MonsterAI{};
         mob.run_now(&self.ecs);
-        let mut animal = animal_ai_system::AnimalAI{};
+        let mut animal = ai::AnimalAI{};
         animal.run_now(&self.ecs);
-        let mut bystander = bystander_ai_system::BystanderAI{};
+        let mut bystander = ai::BystanderAI{};
         bystander.run_now(&self.ecs);
         let mut triggers = trigger_system::TriggerSystem{};
         triggers.run_now(&self.ecs);

@@ -1,5 +1,5 @@
 use specs::prelude::*;
-use super::{Viewshed, Bystander, Map, Position, RunState, EntityMoved, gamelog::GameLog, Quips, Name};
+use crate::{Viewshed, Bystander, Map, Position, RunState, EntityMoved, gamelog::GameLog, Quips, Name};
 use rltk::Point;
 
 pub struct BystanderAI {}
