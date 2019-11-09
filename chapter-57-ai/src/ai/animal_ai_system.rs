@@ -1,7 +1,7 @@
 extern crate specs;
 use specs::prelude::*;
 use crate::{Viewshed, Herbivore, Carnivore, Item, Map, Position, WantsToMelee, RunState, 
-    Confusion, particle_system::ParticleBuilder, EntityMoved};
+    Confusion, particle_system::ParticleBuilder, EntityMoved, MyTurn};
 extern crate rltk;
 use rltk::{Point};
 
@@ -19,16 +19,16 @@ impl<'a> System<'a> for AnimalAI {
                         ReadStorage<'a, Item>,
                         WriteStorage<'a, WantsToMelee>,
                         WriteStorage<'a, EntityMoved>,
-                        WriteStorage<'a, Position> );
+                        WriteStorage<'a, Position>,
+                        ReadStorage<'a, MyTurn> );
 
     fn run(&mut self, data : Self::SystemData) {
         let (mut map, player_entity, runstate, entities, mut viewshed, 
-            herbivore, carnivore, item, mut wants_to_melee, mut entity_moved, mut position) = data;
-
-        if *runstate != RunState::MonsterTurn { return; }
+            herbivore, carnivore, item, mut wants_to_melee, mut entity_moved, 
+            mut position, turns) = data;
 
         // Herbivores run away a lot
-        for (entity, mut viewshed, _herbivore, mut pos) in (&entities, &mut viewshed, &herbivore, &mut position).join() {
+        for (entity, mut viewshed, _herbivore, mut pos, _turn) in (&entities, &mut viewshed, &herbivore, &mut position, &turns).join() {
             let mut run_away_from : Vec<i32> = Vec::new();
             for other_tile in viewshed.visible_tiles.iter() {
                 let view_idx = map.xy_idx(other_tile.x, other_tile.y);
@@ -61,7 +61,7 @@ impl<'a> System<'a> for AnimalAI {
         }
 
         // Carnivores just want to eat everything
-        for (entity, mut viewshed, _carnivore, mut pos) in (&entities, &mut viewshed, &carnivore, &mut position).join() {
+        for (entity, mut viewshed, _carnivore, mut pos, _turn) in (&entities, &mut viewshed, &carnivore, &mut position, &turns).join() {
             let mut run_towards : Vec<i32> = Vec::new();
             let mut attacked = false;
             for other_tile in viewshed.visible_tiles.iter() {

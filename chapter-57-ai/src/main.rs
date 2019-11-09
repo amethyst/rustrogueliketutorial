@@ -48,10 +48,10 @@ rltk::add_wasm_support!();
 const SHOW_MAPGEN_VISUALIZER : bool = false;
 
 #[derive(PartialEq, Copy, Clone)]
-pub enum RunState { AwaitingInput, 
+pub enum RunState { 
+    AwaitingInput, 
     PreRun, 
-    PlayerTurn, 
-    MonsterTurn, 
+    Ticking, 
     ShowInventory, 
     ShowDropItem, 
     ShowTargeting { range : i32, item : Entity},
@@ -80,6 +80,8 @@ impl State {
         mapindex.run_now(&self.ecs);
         let mut vis = VisibilitySystem{};
         vis.run_now(&self.ecs);
+        let mut initiative = ai::InitiativeSystem{};
+        initiative.run_now(&self.ecs);
         let mut mob = ai::MonsterAI{};
         mob.run_now(&self.ecs);
         let mut animal = ai::AnimalAI{};
@@ -158,18 +160,14 @@ impl GameState for State {
             RunState::AwaitingInput => {
                 newrunstate = player_input(self, ctx);
             }
-            RunState::PlayerTurn => {
+            RunState::Ticking => {
                 self.run_systems();
                 self.ecs.maintain();
                 match *self.ecs.fetch::<RunState>() {
+                    RunState::AwaitingInput => newrunstate = RunState::AwaitingInput,
                     RunState::MagicMapReveal{ .. } => newrunstate = RunState::MagicMapReveal{ row: 0 },
-                    _ => newrunstate = RunState::MonsterTurn
+                    _ => newrunstate = RunState::Ticking
                 }                
-            }
-            RunState::MonsterTurn => {
-                self.run_systems();
-                self.ecs.maintain();
-                newrunstate = RunState::AwaitingInput;
             }
             RunState::ShowInventory => {
                 let result = gui::show_inventory(self, ctx);
@@ -185,7 +183,7 @@ impl GameState for State {
                         } else {
                             let mut intent = self.ecs.write_storage::<WantsToUseItem>();
                             intent.insert(*self.ecs.fetch::<Entity>(), WantsToUseItem{ item: item_entity, target: None }).expect("Unable to insert intent");
-                            newrunstate = RunState::PlayerTurn;
+                            newrunstate = RunState::Ticking;
                         }
                     }
                 }
@@ -211,7 +209,7 @@ impl GameState for State {
                         let item_entity = result.1.unwrap();
                         let mut intent = self.ecs.write_storage::<WantsToDropItem>();
                         intent.insert(*self.ecs.fetch::<Entity>(), WantsToDropItem{ item: item_entity }).expect("Unable to insert intent");
-                        newrunstate = RunState::PlayerTurn;
+                        newrunstate = RunState::Ticking;
                     }
                 }
             }
@@ -224,7 +222,7 @@ impl GameState for State {
                         let item_entity = result.1.unwrap();
                         let mut intent = self.ecs.write_storage::<WantsToRemoveItem>();
                         intent.insert(*self.ecs.fetch::<Entity>(), WantsToRemoveItem{ item: item_entity }).expect("Unable to insert intent");
-                        newrunstate = RunState::PlayerTurn;
+                        newrunstate = RunState::Ticking;
                     }
                 }
             }
@@ -236,7 +234,7 @@ impl GameState for State {
                     gui::ItemMenuResult::Selected => {
                         let mut intent = self.ecs.write_storage::<WantsToUseItem>();
                         intent.insert(*self.ecs.fetch::<Entity>(), WantsToUseItem{ item, target: result.1 }).expect("Unable to insert intent");
-                        newrunstate = RunState::PlayerTurn;
+                        newrunstate = RunState::Ticking;
                     }
                 }
             }
@@ -289,7 +287,7 @@ impl GameState for State {
                     map.revealed_tiles[idx] = true;
                 }
                 if row == map.height-1 {
-                    newrunstate = RunState::MonsterTurn;
+                    newrunstate = RunState::Ticking;
                 } else {
                     newrunstate = RunState::MagicMapReveal{ row: row+1 };
                 }
@@ -411,6 +409,8 @@ fn main() {
     gs.ecs.register::<Herbivore>();
     gs.ecs.register::<OtherLevelPosition>();
     gs.ecs.register::<LightSource>();
+    gs.ecs.register::<Initiative>();
+    gs.ecs.register::<MyTurn>();
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
     raws::load_raws();

@@ -46,6 +46,14 @@ pub struct LightSource {
 }
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct Initiative {
+    pub current : i32
+}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct MyTurn {}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Monster {}
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]

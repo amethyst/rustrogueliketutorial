@@ -1,7 +1,7 @@
 extern crate specs;
 use specs::prelude::*;
 use crate::{Viewshed, Monster, Map, Position, WantsToMelee, RunState, 
-    Confusion, particle_system::ParticleBuilder, EntityMoved};
+    Confusion, particle_system::ParticleBuilder, EntityMoved, MyTurn};
 extern crate rltk;
 use rltk::{Point};
 
@@ -20,16 +20,15 @@ impl<'a> System<'a> for MonsterAI {
                         WriteStorage<'a, WantsToMelee>,
                         WriteStorage<'a, Confusion>,
                         WriteExpect<'a, ParticleBuilder>,
-                        WriteStorage<'a, EntityMoved>);
+                        WriteStorage<'a, EntityMoved>,
+                        ReadStorage<'a, MyTurn>);
 
     fn run(&mut self, data : Self::SystemData) {
         let (mut map, player_pos, player_entity, runstate, entities, mut viewshed, 
             monster, mut position, mut wants_to_melee, mut confused, mut particle_builder,
-            mut entity_moved) = data;
+            mut entity_moved, turns) = data;
 
-        if *runstate != RunState::MonsterTurn { return; }
-
-        for (entity, mut viewshed,_monster,mut pos) in (&entities, &mut viewshed, &monster, &mut position).join() {
+        for (entity, mut viewshed,_monster,mut pos, _turn) in (&entities, &mut viewshed, &monster, &mut position, &turns).join() {
             let mut can_act = true;
 
             let is_confused = confused.get_mut(entity);

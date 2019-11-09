@@ -225,6 +225,9 @@ pub fn spawn_named_mob(raws: &RawMaster, ecs : &mut World, key : &str, pos : Spa
         // Spawn in the specified location
         eb = spawn_position(pos, eb, key, raws);
 
+        // Initiative of 2
+        eb = eb.with(Initiative{current: 2});
+
         // Renderable
         if let Some(renderable) = &mob_template.renderable {
             eb = eb.with(get_renderable_component(renderable));
