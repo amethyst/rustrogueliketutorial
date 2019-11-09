@@ -474,7 +474,24 @@ let mut quipper = ai::QuipSystem{};
 quipper.run_now(&self.ecs);
 ```
 
-Also go into `bystander_ai_system.rs` and remove all the quip code! It shortens it a *lot*, and if you `cargo run` now, Bandits can insult you. In fact, *any* NPC can be given quip lines now - and will merrily say things to you.
+Also go into `bystander_ai_system.rs` and remove all the quip code! It shortens it a *lot*, and if you `cargo run` now, Bandits can insult you. In fact, *any* NPC can be given quip lines now - and will merrily say things to you. Once again, we've made the system smaller *and* gained functionality. Another win!
+
+## Making AIs appear to think
+
+Currently, we have a separate system for every type of AI - and wind up duplicating some code as a result. We also have some pretty unrealistic things going on: monsters remain completely static until they can see you, and forget all about you the moment you round a corner. Villagers move like random drunks, even when sober. Wolves hunt down deer - but again, only when they are visible. You can achieve a considerable increase in *apparent* AI intelligence (it's still quite dumb!) by giving NPCs *goals* - and having the goal last more than one turn. You can then switch the type-based decision making to be goal-based; helping the NPC achieve whatever it is that they want in life.
+
+Let's take a moment to consider what our NPCs really want in life:
+
+* Deer and other herbivores really want to eat grass, be left alone, and run away from things likely to kill them (which is everything, really; not a great place to be on the food chain).
+* Monsters want to guard the dungeon, kill players, and otherwise lead a peaceful life.
+* Wolves (and other carnivores) want to snack on players and herbivores.
+* Gelatinous Cubes aren't really known for thinking much!
+* Villagers really want to go about their daily lives, occasionally saying things to passing players.
+* Vendors want to stay in their shops and sell you things in a future chapter update!
+
+That doesn't really take into account transient objectives; an injured monster might want to get away from the fight, a monster might want to consider picking up the glowing *Longsword of Doom* that happens to be right next to them, and so on. It's a good start, though.
+
+We can actually boil a lot of this down to a "state machine". You've seen those before: `RunState` makes the whole game a state, and each of the UI boxes returns a current state. In this case, we'll let an NPC have a *state* - which represents *what they are trying to do right now*, and if they have achieved it yet.
 
 ...
 
