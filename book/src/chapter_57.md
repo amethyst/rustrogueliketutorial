@@ -370,7 +370,61 @@ impl<'a> System<'a> for MonsterAI {
 
 That takes care of the compilation errors! Now `cargo run` the game. It runs as before, just a little more slowly. We'll worry about performance once we have the basics going - so that's great progress, we have an initiative system!
 
+## Handling Status Effects
 
+Right now, we check for *confusion* in the `monster_ai_system` - and actually forgot about it in bystanders, vendors and animals. Rather than copy/pasting the code everywhere, we should use this as an opportunity to create a system to handle status effect turn skipping, and clean up the other systems to benefit. Make a new file, `ai/turn_status.rs`:
+
+```rust
+extern crate specs;
+use specs::prelude::*;
+use crate::{MyTurn, Confusion, RunState};
+
+pub struct TurnStatusSystem {}
+
+impl<'a> System<'a> for TurnStatusSystem {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( WriteStorage<'a, MyTurn>,
+                        WriteStorage<'a, Confusion>,
+                        Entities<'a>,
+                        ReadExpect<'a, RunState>);
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (mut turns, mut confusion, entities, runstate) = data;
+
+        if *runstate != RunState::Ticking { return; }
+
+        let mut not_my_turn : Vec<Entity> = Vec::new();
+        let mut not_confused : Vec<Entity> = Vec::new();
+        for (entity, _turn, confused) in (&entities, &mut turns, &mut confusion).join() {
+            confused.turns -= 1;
+            if confused.turns < 1 {
+                not_confused.push(entity);
+            } else {
+                not_my_turn.push(entity);
+            }
+        }
+
+        for e in not_my_turn {
+            turns.remove(e);
+        }
+
+        for e in not_confused {
+            confusion.remove(e);
+        }
+    }
+}
+```
+
+This is pretty simple: it iterates everyone who is confused, and decrements their turn counter. If they are still confused, it takes away `MyTurn`. If they have recovered, it takes away `Confusion`. You need to add a `mod` and `pub use` statement for it in `ai/mod.rs`, and add it to your `run_systems` function in `main.rs`:
+
+```rust
+let mut initiative = ai::InitiativeSystem{};
+initiative.run_now(&self.ecs);
+let mut turnstatus = ai::TurnStatusSystem{};
+turnstatus.run_now(&self.ecs);
+```
+
+This shows the new pattern we are using: systems do one thing, and can remove `MyTurn` to prevent future execution. You can also go into `monster_ai_system` and remove everything relating to confusion.
 
 ...
 
