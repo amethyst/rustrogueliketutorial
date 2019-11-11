@@ -1,6 +1,5 @@
 use specs::prelude::*;
-use crate::{Viewshed, Bystander, Map, Position, RunState, EntityMoved, MyTurn};
-use rltk::Point;
+use crate::{Viewshed, Bystander, Map, Position, EntityMoved, MyTurn};
 
 pub struct BystanderAI {}
 

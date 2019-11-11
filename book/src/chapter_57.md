@@ -491,7 +491,603 @@ Let's take a moment to consider what our NPCs really want in life:
 
 That doesn't really take into account transient objectives; an injured monster might want to get away from the fight, a monster might want to consider picking up the glowing *Longsword of Doom* that happens to be right next to them, and so on. It's a good start, though.
 
-We can actually boil a lot of this down to a "state machine". You've seen those before: `RunState` makes the whole game a state, and each of the UI boxes returns a current state. In this case, we'll let an NPC have a *state* - which represents *what they are trying to do right now*, and if they have achieved it yet.
+We can actually boil a lot of this down to a "state machine". You've seen those before: `RunState` makes the whole game a state, and each of the UI boxes returns a current state. In this case, we'll let an NPC have a *state* - which represents *what they are trying to do right now*, and if they have achieved it yet. We should be able to describe an AI's goals in terms of tags in the `json` raw file, and implement smaller sub-systems to make the AI behave somewhat believably.
+
+## Determining how an AI feels about other entities
+
+A lot of decisions facing AIs revolve around: who is that, and how do I feel about them? If they are an enemy, I should either attack or flee (depending upon my personality). If I feel neutral towards them, then I don't really care about their presence. If I like them, I may even want to stick close by! Entering *every* entity's feelings towards *every other* entity would be a huge data-entry chore - every time you added an entity, you'd need to go and add them to every single other entity (and remember to remove/edit them everywhere if you remove them/want to change them). That's not a great idea!
+
+Like a lot of games, we can resolve this with a simple *faction* system. NPCs (and the player) are members of a faction. The faction has *feelings* towards other factions (including a default). We can then do a simple faction lookup to see how an NPC feels about a potential target. We can also include faction information in the user interface, to help players understand what's going on.
+
+We'll start with a faction table in `spawns.json`. Here's a first draft:
+
+```json
+"faction_table" : [
+    { "name" : "Player", "responses": { }},
+    { "name" : "Mindless", "responses": { "Default" : "attack" } },
+    { "name" : "Townsfolk", "responses" : { "Default" : "ignore" } },
+    { "name" : "Bandits", "responses" : { "Default" : "attack" } },
+    { "name" : "Cave Goblins", "responses" : { "Default" : "attack" } },
+    { "name" : "Carnivores", "responses" : { "Default" : "attack" } },
+    { "name" : "Herbivores", "responses" : { "Default" : "flee" } }
+],
+```
+
+We'd also need to add an entry to each NPC, e.g.: `"faction" : "Bandit"`.
+
+To make this work, we need to create a new component to store faction membership. As always, it needs registration in `main.rs` and `saveload_system.rs` as well as definition in `components.rs`:
+
+```rust
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct Faction {
+    pub name : String
+}
+```
+
+Let's start to use this by opening up `spawner.rs` and modifying the `player` function to always add the player to the "Player" faction:
+
+```rust
+.with(Faction{name : "Player".to_string() })
+```
+
+Now we need to load the faction table while we load the rest of the raw data. We'll make a new file, `raws/faction_structs.rs` to hold this information. Our goal is to mirror what we came up with for the JSON:
+
+```rust
+use serde::{Deserialize};
+use std::collections::HashMap;
+
+#[derive(Deserialize, Debug)]
+pub struct FactionInfo {
+    pub name : String,
+    pub responses : HashMap<String, String>
+}
+```
+
+In turn, we add it to the `Raws` structure in `raws/mod.rs`:
+
+```rust
+#[derive(Deserialize, Debug)]
+pub struct Raws {
+    pub items : Vec<Item>,
+    pub mobs : Vec<Mob>,
+    pub props : Vec<Prop>,    
+    pub spawn_table : Vec<SpawnTableEntry>,
+    pub loot_tables : Vec<LootTable>,
+    pub faction_table : Vec<FactionInfo>
+}
+```
+
+We also need to add it to the raw constructor in `raws/rawmaster.rs`:
+
+```rust
+impl RawMaster {
+    pub fn empty() -> RawMaster {
+        RawMaster {
+            raws : Raws{ 
+                items: Vec::new(), 
+                mobs: Vec::new(), 
+                props: Vec::new(), 
+                spawn_table: Vec::new(),
+                loot_tables: Vec::new(),
+                faction_table : Vec::new(),
+            },
+            item_index : HashMap::new(),
+            mob_index : HashMap::new(),
+            prop_index : HashMap::new(),
+            loot_index : HashMap::new()
+        }
+    }
+```
+
+We'll also want to add some indexing into `Raws`. We need a better way to represent reactions than a string, so lets add an enum to `faction_structs.rs` first:
+
+```rust
+#[derive(PartialEq, Eq, Hash, Copy, Clone)]
+pub enum Reaction {
+    Ignore, Attack, Flee
+}
+```
+
+Now we add an index for reactions to `RawMaster`:
+
+```rust
+pub struct RawMaster {
+    raws : Raws,
+    item_index : HashMap<String, usize>,
+    mob_index : HashMap<String, usize>,
+    prop_index : HashMap<String, usize>,
+    loot_index : HashMap<String, usize>,
+    faction_index : HashMap<String, HashMap<String, Reaction>>
+}
+```
+
+Also add it to the `RawMaster` constructor as `faction_index : HashMap::new()`. Finally, we'll setup the index - open the `load` function and add this at the end:
+
+```rust
+for faction in self.raws.faction_table.iter() {
+    let mut reactions : HashMap<String, Reaction> = HashMap::new();
+    for other in faction.responses.iter() {
+        reactions.insert(
+            other.0.clone(),
+            match other.1.as_str() {
+                "ignore" => Reaction::Ignore,
+                "flee" => Reaction::Flee,
+                _ => Reaction::Attack
+            }
+        );
+    }
+    self.faction_index.insert(faction.name.clone(), reactions);
+}
+```
+
+This iterates through all of the factions, and then through their reactions to other factions - building a `HashMap` of how they respond to each faction. These are then stored in the `faction_index` table.
+
+So that *loads* the raw faction information, we still have to turn it into something readily usable in-game. We should also add a faction option to the `mob_structs.rs`:
+
+```rust
+#[derive(Deserialize, Debug)]
+pub struct Mob {
+    pub name : String,
+    pub renderable : Option<Renderable>,
+    pub blocks_tile : bool,
+    pub vision_range : i32,
+    pub ai : String,
+    pub quips : Option<Vec<String>>,
+    pub attributes : MobAttributes,
+    pub skills : Option<HashMap<String, i32>>,
+    pub level : Option<i32>,
+    pub hp : Option<i32>,
+    pub mana : Option<i32>,
+    pub equipped : Option<Vec<String>>,
+    pub natural : Option<MobNatural>,
+    pub loot_table : Option<String>,
+    pub light : Option<MobLight>,
+    pub faction : Option<String>
+}
+```
+
+And in `spawn_named_mob`, add the component. If there isn't one, we'll automatically apply "mindless" to the mob:
+
+```rust
+if let Some(faction) = &mob_template.faction {
+    eb = eb.with(Faction{ name: faction.clone() });
+} else {
+    eb = eb.with(Faction{ name : "Mindless".to_string() })
+}
+```
+
+Now in `rawmaster.rs`, we'll add one more function: to query the factions table to obtain a reaction about a faction:
+
+```rust
+pub fn faction_reaction(my_faction : &str, their_faction : &str, raws : &RawMaster) -> Reaction {
+    if raws.faction_index.contains_key(my_faction) {
+        let mf = &raws.faction_index[my_faction];
+        if mf.contains_key(their_faction) {
+            return mf[their_faction];
+        } else {
+            return mf["Default"];
+        }
+    }
+    Reaction::Ignore
+}
+```
+
+So, given the name of `my_faction` and the other entity's faction (`their_faction`), we can query the faction table and return a reaction. We default to `Ignore`, if there isn't one (which shouldn't happen, since we default to `Mindless`).
+
+## Common AI task: handling adjacent entities
+
+Pretty much every AI needs to know how to handle an adjacent entity. It might be an enemy (to attack or run away from), someone to ignore, etc. - but it needs to be handled. Rather than handling it separately in every AI module, lets build a common system to handle it. Let's make a new file, `ai/adjacent_ai_system.rs` (and add a `mod` and `pub use` entry for it in `ai/mod.rs` like the others):
+
+```rust
+extern crate specs;
+use specs::prelude::*;
+use crate::{MyTurn, Faction, Position, Map, raws::Reaction, WantsToMelee};
+
+pub struct AdjacentAI {}
+
+impl<'a> System<'a> for AdjacentAI {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( 
+        WriteStorage<'a, MyTurn>,
+        ReadStorage<'a, Faction>,
+        ReadStorage<'a, Position>,
+        ReadExpect<'a, Map>,
+        WriteStorage<'a, WantsToMelee>,
+        Entities<'a>,
+        ReadExpect<'a, Entity>
+    );
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (mut turns, factions, positions, map, mut want_melee, entities, player) = data;
+
+        let mut turn_done : Vec<Entity> = Vec::new();
+        for (entity, _turn, my_faction, pos) in (&entities, &turns, &factions, &positions).join() {
+            if entity != *player {
+                let mut reactions : Vec<(Entity, Reaction)> = Vec::new();
+                let idx = map.xy_idx(pos.x, pos.y);
+                let w = map.width;
+                let h = map.height;
+                // Add possible reactions to adjacents for each direction
+                if pos.x > 0 { evaluate(idx-1, &map, &factions, &my_faction.name, &mut reactions); }
+                if pos.x < w-1 { evaluate(idx+1, &map, &factions, &my_faction.name, &mut reactions); }
+                if pos.y > 0 { evaluate(idx-w as usize, &map, &factions, &my_faction.name, &mut reactions); }
+                if pos.y < h-1 { evaluate(idx+w as usize, &map, &factions, &my_faction.name, &mut reactions); }
+                if pos.y > 0 && pos.x > 0 { evaluate((idx-w as usize)-1, &map, &factions, &my_faction.name, &mut reactions); }
+                if pos.y > 0 && pos.x < w-1 { evaluate((idx-w as usize)+1, &map, &factions, &my_faction.name, &mut reactions); }
+                if pos.y < h-1 && pos.x > 0 { evaluate((idx+w as usize)-1, &map, &factions, &my_faction.name, &mut reactions); }
+                if pos.y < h-1 && pos.x < w-1 { evaluate((idx+w as usize)+1, &map, &factions, &my_faction.name, &mut reactions); }
+
+                let mut done = false;
+                for reaction in reactions.iter() {
+                    if let Reaction::Attack = reaction.1 {
+                        want_melee.insert(entity, WantsToMelee{ target: reaction.0 }).expect("Error inserting melee");
+                        done = true;
+                    }
+                }
+
+                if done { turn_done.push(entity); }
+            }
+        }
+
+        // Remove turn marker for those that are done
+        for done in turn_done.iter() {
+            turns.remove(*done);
+        }
+    }
+}
+
+fn evaluate(idx : usize, map : &Map, factions : &ReadStorage<Faction>, my_faction : &str, reactions : &mut Vec<(Entity, Reaction)>) {
+    for other_entity in map.tile_content[idx].iter() {
+        if let Some(faction) = factions.get(*other_entity) {
+            reactions.push((
+                *other_entity, 
+                crate::raws::faction_reaction(my_faction, &faction.name, &crate::raws::RAWS.lock().unwrap())
+            ));
+        }
+    }
+}
+```
+
+This system works as follows:
+
+1. We query all entities with a faction, a position, and a turn and make sure we aren't modifying the player's behavior by checking the entity with the player entity resource.
+2. We query the map for all adjacent tiles, recording reactions to neighboring entities.
+3. We iterate the resulting reactions, if it is an `Attack` reaction - we cancel their turn and initiate a `WantsToMelee` result.
+
+To actually *use* this system, add it into `run_systems` in `main.rs`, before the `MonsterAI`:
+
+```rust
+let mut adjacent = ai::AdjacentAI{};
+adjacent.run_now(&self.ecs);
+```
+
+If you `cargo run` the game now, pandemonium erupts! *Everyone* is in the "mindless" faction, and as a result is hostile to everyone else! This is actually a *great* demo of how our engine can perform; despite combat going on from all quarters, it runs pretty well:
+
+![Screenshot](./c57-s1.gif)
+
+## Restoring peace in the town
+
+It's also not at all what we had in mind for a peaceful starting town. It might work for a zombie apocalypse, but that's best left to *Cataclysm: Dark Days Ahead* (an excellent game, by the way)! Fortunately, we can restore peace to the town by adding a `"faction" : "Townsfolk"` line to all of the town NPCs. Here's the barkeep as an example; you need to do the same for all of the towns-people:
+
+```json
+{
+    "name" : "Barkeep",
+    "renderable": {
+        "glyph" : "☻",
+        "fg" : "#EE82EE",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "vision_range" : 4,
+    "ai" : "vendor",
+    "attributes" : {
+        "intelligence" : 13
+    },
+    "skills" : {
+        "Melee" : 2
+    },
+    "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
+    "faction" : "Townsfolk"
+},
+```
+
+Once you've put those in, you can `cargo run` - and have peace in our time! Well, almost: if you watch the combat log, the rats lay into one another with a vengeance. Again, not quite what we intended. Open up `spawns.json` and lets add a faction for rats - and have them ignore one another. We'll add ignoring one another to a few other factions, too - so bandits aren't slaying one another for no reason:
+
+```json
+"faction_table" : [
+    { "name" : "Player", "responses": { }},
+    { "name" : "Mindless", "responses": { "Default" : "attack" } },
+    { "name" : "Townsfolk", "responses" : { "Default" : "ignore" } },
+    { "name" : "Bandits", "responses" : { "Default" : "attack", "Bandits" : "ignore" } },
+    { "name" : "Cave Goblins", "responses" : { "Default" : "attack", "Cave Goblins" : "ignore" } },
+    { "name" : "Carnivores", "responses" : { "Default" : "attack", "Carnivores" : "ignore" } },
+    { "name" : "Herbivores", "responses" : { "Default" : "flee", "Herbivores" : "ignore" } },
+    { "name" : "Hungry Rodents", "responses": { "Default" : "attack", "Hungry Rodents" : "ignore" }}
+],
+```
+
+Also, add the `Rat` to the `Hungry Rodents` faction:
+
+```json
+{
+    "name" : "Rat",
+    "renderable": {
+        "glyph" : "r",
+        "fg" : "#FF0000",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "vision_range" : 8,
+    "ai" : "melee",
+    "attributes" : {
+        "Might" : 3,
+        "Fitness" : 3
+    },
+    "skills" : {
+        "Melee" : -1,
+        "Defense" : -1
+    },
+    "natural" : {
+        "armor_class" : 11,
+        "attacks" : [
+            { "name" : "bite", "hit_bonus" : 0, "damage" : "1d4" }
+        ]   
+    },
+    "faction" : "Hungry Rodents"
+},
+```
+
+`cargo run` now, and you'll see that the rats are leaving each other alone.
+
+## Responding to more distant entities
+
+Responding to those next to you is a great first step, and actually helps with processing time (since adjacent enemies are processed without a costly search of the entire viewshed) - but if there isn't an adjacent enemy, the AI needs to look for a more distant one. If one is spotted that needs a reaction, we need some components to indicate *intent*. In `components.rs` (and registered in `main.rs` and `saveload_system.rs`): 
+
+```rust
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct WantsToApproach {
+    pub idx : i32
+}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct WantsToFlee {
+    pub indices : Vec<i32>
+}
+```
+
+These are intended to indicate what the AI would like to do: either approach a tile (an enemy), or flee from a list of enemy tiles.
+
+We'll make another new system, `ai/visible_ai_system.rs` (and add it to `mod` and `pub use` in `ai/mod.rs`):
+
+```rust
+extern crate specs;
+use specs::prelude::*;
+use crate::{MyTurn, Faction, Position, Map, raws::Reaction, Viewshed, WantsToFlee, WantsToApproach};
+
+pub struct VisibleAI {}
+
+impl<'a> System<'a> for VisibleAI {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( 
+        ReadStorage<'a, MyTurn>,
+        ReadStorage<'a, Faction>,
+        ReadStorage<'a, Position>,
+        ReadExpect<'a, Map>,
+        WriteStorage<'a, WantsToApproach>,
+        WriteStorage<'a, WantsToFlee>,
+        Entities<'a>,
+        ReadExpect<'a, Entity>,
+        ReadStorage<'a, Viewshed>
+    );
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (turns, factions, positions, map, mut want_approach, mut want_flee, entities, player, viewsheds) = data;
+
+        for (entity, _turn, my_faction, pos, viewshed) in (&entities, &turns, &factions, &positions, &viewsheds).join() {
+            if entity != *player {
+                let my_idx = map.xy_idx(pos.x, pos.y);
+                let mut reactions : Vec<(usize, Reaction)> = Vec::new();
+                let mut flee : Vec<i32> = Vec::new();
+                for visible_tile in viewshed.visible_tiles.iter() {
+                    let idx = map.xy_idx(visible_tile.x, visible_tile.y);
+                    if my_idx != idx {
+                        evaluate(idx, &map, &factions, &my_faction.name, &mut reactions);
+                    }
+                }
+
+                let mut done = false;
+                for reaction in reactions.iter() {
+                    match reaction.1 {
+                        Reaction::Attack => {
+                            want_approach.insert(entity, WantsToApproach{ idx: reaction.0 as i32 }).expect("Unable to insert");
+                            done = true;
+                        }
+                        Reaction::Flee => {
+                            flee.push(reaction.0 as i32);
+                        }
+                        _ => {}
+                    }
+                }
+
+                if !done && !flee.is_empty() {
+                    want_flee.insert(entity, WantsToFlee{ indices : flee }).expect("Unable to insert");
+                }
+            }
+        }
+    }
+}
+
+fn evaluate(idx : usize, map : &Map, factions : &ReadStorage<Faction>, my_faction : &str, reactions : &mut Vec<(usize, Reaction)>) {
+    for other_entity in map.tile_content[idx].iter() {
+        if let Some(faction) = factions.get(*other_entity) {
+            reactions.push((
+                idx, 
+                crate::raws::faction_reaction(my_faction, &faction.name, &crate::raws::RAWS.lock().unwrap())
+            ));
+        }
+    }
+}
+```
+
+Remember that this won't run at all if we're already dealing with an adjacent enemy - so there's no need to worry about assigning melee. It also doesn't *do* anything - it triggers intent for other systems/services. So we don't have to worry about ending the turn. It simply scans every visible tile, and evaluates the available reactions to the tile's content. If it sees something it would like to attack, it set a `WantsToApproach` component. If it sees things from which it should flee, it populates a `WantsToFlee` structure.
+
+You'll want to add this into `run_systems` in `main.rs` also, after the adjacency check:
+
+```rust
+let mut visible = ai::VisibleAI{};
+visible.run_now(&self.ecs);
+```
+
+### Approaching
+
+Now that we're flagging a desire to approach a tile (for whatever reason; currently because the occupant deserves a whacking), we can write a very simple system to handle this. Make a new file, `ai/approach_ai_system.rs` (and `mod`/`pub use` it in `ai/mod.rs`):
+
+```rust
+extern crate specs;
+use specs::prelude::*;
+use crate::{MyTurn, WantsToApproach, Position, Map, Viewshed, EntityMoved};
+
+pub struct ApproachAI {}
+
+impl<'a> System<'a> for ApproachAI {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( 
+        WriteStorage<'a, MyTurn>,
+        WriteStorage<'a, WantsToApproach>,
+        WriteStorage<'a, Position>,
+        WriteExpect<'a, Map>,
+        WriteStorage<'a, Viewshed>,
+        WriteStorage<'a, EntityMoved>,
+        Entities<'a>
+    );
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (mut turns, mut want_approach, mut positions, mut map, 
+            mut viewsheds, mut entity_moved, entities) = data;
+            
+        let mut turn_done : Vec<Entity> = Vec::new();
+        for (entity, mut pos, approach, mut viewshed, _myturn) in 
+            (&entities, &mut positions, &want_approach, &mut viewsheds, &turns).join() 
+        {
+            turn_done.push(entity);
+            let path = rltk::a_star_search(
+                map.xy_idx(pos.x, pos.y) as i32, 
+                map.xy_idx(approach.idx % map.width, approach.idx / map.width) as i32, 
+                &mut *map
+            );
+            if path.success && path.steps.len()>1 {
+                let mut idx = map.xy_idx(pos.x, pos.y);
+                map.blocked[idx] = false;
+                pos.x = path.steps[1] % map.width;
+                pos.y = path.steps[1] / map.width;
+                entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
+                idx = map.xy_idx(pos.x, pos.y);
+                map.blocked[idx] = true;
+                viewshed.dirty = true;
+            }
+        }
+
+        want_approach.clear();
+
+        // Remove turn marker for those that are done
+        for done in turn_done.iter() {
+            turns.remove(*done);
+        }
+    }
+}
+```
+
+This is basically the same as the approach code from `MonsterAI`, but it applies to *all* approach requests - to any target. It also removes `MyTurn` when done, and removes all approach requests. Add it to `run_systems` in `main.rs`, after the distant AI handler:
+
+```rust
+let mut approach = ai::ApproachAI{};
+approach.run_now(&self.ecs);
+```
+
+### Fleeing
+
+We'll also want to implement a system for fleeing, mostly based on the fleeing code from our Animal AI. Make a new file, `flee_ai_system.rs` (and remember `mod` and `pub use` in `ai/mod.rs`):
+
+```rust
+extern crate specs;
+use specs::prelude::*;
+use crate::{MyTurn, WantsToFlee, Position, Map, Viewshed, EntityMoved};
+
+pub struct FleeAI {}
+
+impl<'a> System<'a> for FleeAI {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( 
+        WriteStorage<'a, MyTurn>,
+        WriteStorage<'a, WantsToFlee>,
+        WriteStorage<'a, Position>,
+        WriteExpect<'a, Map>,
+        WriteStorage<'a, Viewshed>,
+        WriteStorage<'a, EntityMoved>,
+        Entities<'a>
+    );
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (mut turns, mut want_flee, mut positions, mut map, 
+            mut viewsheds, mut entity_moved, entities) = data;
+            
+        let mut turn_done : Vec<Entity> = Vec::new();
+        for (entity, mut pos, flee, mut viewshed, _myturn) in 
+            (&entities, &mut positions, &want_flee, &mut viewsheds, &turns).join() 
+        {
+            turn_done.push(entity);
+            let my_idx = map.xy_idx(pos.x, pos.y);
+                map.populate_blocked();
+                let flee_map = rltk::DijkstraMap::new(map.width, map.height, &flee.indices, &*map, 100.0);
+                let flee_target = rltk::DijkstraMap::find_highest_exit(&flee_map, my_idx as i32, &*map);
+                if let Some(flee_target) = flee_target {
+                    if !map.blocked[flee_target as usize] {
+                        map.blocked[my_idx] = false;
+                        map.blocked[flee_target as usize] = true;
+                        viewshed.dirty = true;
+                        pos.x = flee_target % map.width;
+                        pos.y = flee_target / map.width;
+                        entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");                        
+                    }
+                }
+        }
+
+        want_flee.clear();
+
+        // Remove turn marker for those that are done
+        for done in turn_done.iter() {
+            turns.remove(*done);
+        }
+    }
+}
+```
+
+We also need to register in in `run_systems` (`main.rs`), after the approach system:
+
+```rust
+let mut flee = ai::FleeAI{};
+flee.run_now(&self.ecs);
+```
+
+For added effect, lets make Townsfolk run away from potentially hostile entities. In `spawns.json`:
+
+```json
+{ "name" : "Townsfolk", "responses" : { "Default" : "flee", "Player" : "ignore", "Townsfolk" : "ignore" } },
+```
+
+If you `cargo run` and play now, monsters will approach and attack - and cowards will flee from hostiles.
+
+## Cleaning up
+
+We're now performing the minimum AI performed by `MonsterAI` and much of the carnivore and herbivore handling in our generic systems, as well as giving townsfolk more intelligence than before! If you look at `MonsterAI` - there's nothing left that isn't performed already! So we can delete `ai/monster_ai_system.rs`, and remove it from `run_systems` (in `main.rs`) altogether! Once deleted, you should `cargo run` to see if the game is unchanged - it should be! 
+
+Likewise, the fleeing and approaching of `ai/animal_ai_system.rs` is now redundant. You can actually delete this system, too!
+
+It would be a good idea to make sure that all NPCs have a faction (except for Gelatinous Cubes, who actually are mindless) now. This has been performed on the source code version of `spawns.rs`.
+
+## Fixing Performance
 
 ...
 

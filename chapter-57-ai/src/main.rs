@@ -86,10 +86,14 @@ impl State {
         turnstatus.run_now(&self.ecs);
         let mut quipper = ai::QuipSystem{};
         quipper.run_now(&self.ecs);
-        let mut mob = ai::MonsterAI{};
-        mob.run_now(&self.ecs);
-        let mut animal = ai::AnimalAI{};
-        animal.run_now(&self.ecs);
+        let mut adjacent = ai::AdjacentAI{};
+        adjacent.run_now(&self.ecs);
+        let mut visible = ai::VisibleAI{};
+        visible.run_now(&self.ecs);
+        let mut approach = ai::ApproachAI{};
+        approach.run_now(&self.ecs);
+        let mut flee = ai::FleeAI{};
+        flee.run_now(&self.ecs);
         let mut bystander = ai::BystanderAI{};
         bystander.run_now(&self.ecs);
         let mut triggers = trigger_system::TriggerSystem{};
@@ -415,6 +419,9 @@ fn main() {
     gs.ecs.register::<LightSource>();
     gs.ecs.register::<Initiative>();
     gs.ecs.register::<MyTurn>();
+    gs.ecs.register::<Faction>();
+    gs.ecs.register::<WantsToApproach>();
+    gs.ecs.register::<WantsToFlee>();
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
     raws::load_raws();

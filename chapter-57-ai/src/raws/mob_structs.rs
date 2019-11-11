@@ -18,7 +18,8 @@ pub struct Mob {
     pub equipped : Option<Vec<String>>,
     pub natural : Option<MobNatural>,
     pub loot_table : Option<String>,
-    pub light : Option<MobLight>
+    pub light : Option<MobLight>,
+    pub faction : Option<String>
 }
 
 #[derive(Deserialize, Debug)]

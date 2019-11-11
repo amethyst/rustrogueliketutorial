@@ -33,6 +33,17 @@
     }
 ],
 
+"faction_table" : [
+    { "name" : "Player", "responses": { }},
+    { "name" : "Mindless", "responses": { "Default" : "attack" } },
+    { "name" : "Townsfolk", "responses" : { "Default" : "flee", "Player" : "ignore", "Townsfolk" : "ignore" } },
+    { "name" : "Bandits", "responses" : { "Default" : "attack", "Bandits" : "ignore" } },
+    { "name" : "Cave Goblins", "responses" : { "Default" : "attack", "Cave Goblins" : "ignore" } },
+    { "name" : "Carnivores", "responses" : { "Default" : "attack", "Carnivores" : "ignore" } },
+    { "name" : "Herbivores", "responses" : { "Default" : "flee", "Herbivores" : "ignore" } },
+    { "name" : "Hungry Rodents", "responses": { "Default" : "attack", "Hungry Rodents" : "ignore" }}
+],
+
 "items" : [
     {
         "name" : "Health Potion",
@@ -435,7 +446,8 @@
         "skills" : {
             "Melee" : 2
         },
-        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ]
+        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
+        "faction" : "Townsfolk"
     },
 
     {
@@ -450,7 +462,8 @@
         "vision_range" : 4,
         "ai" : "vendor",
         "attributes" : {},
-        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ]
+        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
+        "faction" : "Townsfolk"
     },
 
     {
@@ -466,7 +479,8 @@
         "ai" : "bystander",
         "quips" : [ "Quiet down, it's too early!", "Oh my, I drank too much.", "Still saving the world, eh?" ],
         "attributes" : {},
-        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ]
+        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
+        "faction" : "Townsfolk"
     },
 
     {
@@ -481,7 +495,8 @@
         "vision_range" : 4,
         "ai" : "bystander",
         "attributes" : {},
-        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ]
+        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
+        "faction" : "Townsfolk"
     },
 
     {
@@ -497,7 +512,8 @@
         "ai" : "bystander",
         "quips" : [ "Great to see a new face here!", "I hear there's going to be a good sermon on tea", "Want some cake?" ],
         "attributes" : {},
-        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ]
+        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
+        "faction" : "Townsfolk"
     },
 
     {
@@ -512,7 +528,8 @@
         "vision_range" : 4,
         "ai" : "vendor",
         "attributes" : {},
-        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ]
+        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
+        "faction" : "Townsfolk"
     },
 
     {
@@ -527,7 +544,8 @@
         "vision_range" : 4,
         "ai" : "vendor",
         "attributes" : {},
-        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ]
+        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
+        "faction" : "Townsfolk"
     },
 
     {
@@ -542,7 +560,8 @@
         "vision_range" : 4,
         "ai" : "vendor",
         "attributes" : {},
-        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ]
+        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
+        "faction" : "Townsfolk"
     },
 
     {
@@ -558,7 +577,8 @@
         "ai" : "bystander",
         "quips" : [ "Hello, dear", "Off saving the world again?", "Be careful in the dungeon!", "Your father would be so proud, were he here." ],
         "attributes" : {},
-        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ]
+        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
+        "faction" : "Townsfolk"
     },
 
     {
@@ -574,7 +594,8 @@
         "ai" : "bystander",
         "quips" : [ "Why are you in my house?" ],
         "attributes" : {},
-        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ]
+        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
+        "faction" : "Townsfolk"
     },
 
     {
@@ -590,7 +611,8 @@
         "ai" : "bystander",
         "quips" : [ "Lovely day, eh?", "Nice weather", "Hello" ],
         "attributes" : {},
-        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ]
+        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
+        "faction" : "Townsfolk"
     },
 
     {
@@ -606,7 +628,8 @@
         "ai" : "bystander",
         "quips" : [ "They're biting today!", "I caught something, but it wasn't a fish!", "Looks like rain" ],
         "attributes" : {},
-        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ]
+        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
+        "faction" : "Townsfolk"
     },
 
     {
@@ -622,7 +645,8 @@
         "ai" : "bystander",
         "quips" : [ "Arrr", "Grog!", "Booze!" ],
         "attributes" : {},
-        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ]
+        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
+        "faction" : "Townsfolk"
     },
 
     {
@@ -638,7 +662,8 @@
         "ai" : "bystander",
         "quips" : [ "Hic", "Need... more... booze!", "Spare a copper?" ],
         "attributes" : {},
-        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ]
+        "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
+        "faction" : "Townsfolk"
     },
 
     {
@@ -665,7 +690,8 @@
             "attacks" : [
                 { "name" : "bite", "hit_bonus" : 0, "damage" : "1d4" }
             ]   
-        }
+        },
+        "faction" : "Hungry Rodents"
     },
 
     {
@@ -693,7 +719,8 @@
                 { "name" : "bite", "hit_bonus" : 0, "damage" : "1d6" }
             ]   
         },
-        "loot_table" : "Animal"
+        "loot_table" : "Animal",
+        "faction" : "Carnivore"
     },
 
     {
@@ -721,7 +748,8 @@
                 { "name" : "bite", "hit_bonus" : 0, "damage" : "1d4" }
             ]   
         },
-        "loot_table" : "Animal"
+        "loot_table" : "Animal",
+        "faction" : "Carnivore"
     },
 
     {
@@ -749,7 +777,8 @@
                 { "name" : "bite", "hit_bonus" : 0, "damage" : "1d4" }
             ]   
         },
-        "loot_table" : "Animal"
+        "loot_table" : "Animal",
+        "faction" : "Herbivore"
     },
 
     {
@@ -769,7 +798,8 @@
         "light" : {
             "range" : 6,
             "color" : "#FFFF55"
-        }
+        },
+        "faction" : "Bandits"
     },
 
     {
@@ -783,7 +813,8 @@
         "blocks_tile" : true,
         "vision_range" : 8,
         "ai" : "melee",
-        "attributes" : {}
+        "attributes" : {},
+        "faction" : "Cave Goblins"
     },
 
     {
@@ -797,7 +828,8 @@
         "blocks_tile" : true,
         "vision_range" : 8,
         "ai" : "melee",
-        "attributes" : {}
+        "attributes" : {},
+        "faction" : "Cave Goblins"
     },
 
     {
@@ -811,7 +843,8 @@
         "blocks_tile" : true,
         "vision_range" : 4,
         "ai" : "melee",
-        "attributes" : {}
+        "attributes" : {},
+        "faction" : "Cave Goblins"
     },
 
     {
@@ -838,7 +871,8 @@
             "attacks" : [
                 { "name" : "bite", "hit_bonus" : 0, "damage" : "1d4" }
             ]   
-        }
+        },
+        "faction" : "Herbivore"
     },
 
     {
@@ -859,7 +893,8 @@
             "attacks" : [
                 { "name" : "bite", "hit_bonus" : 1, "damage" : "1d12" }
             ]   
-        }
+        },
+        "faction" : "Carnivore"
     },
 
     {

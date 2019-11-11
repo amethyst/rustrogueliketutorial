@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use specs::prelude::*;
 use crate::components::*;
-use super::Raws;
+use super::{Raws, faction_structs::Reaction};
 use crate::random_table::{RandomTable};
 use crate::{attr_bonus, npc_hp, mana_at_level};
 use regex::Regex;
@@ -41,7 +41,8 @@ pub struct RawMaster {
     item_index : HashMap<String, usize>,
     mob_index : HashMap<String, usize>,
     prop_index : HashMap<String, usize>,
-    loot_index : HashMap<String, usize>
+    loot_index : HashMap<String, usize>,
+    faction_index : HashMap<String, HashMap<String, Reaction>>
 }
 
 impl RawMaster {
@@ -52,12 +53,14 @@ impl RawMaster {
                 mobs: Vec::new(), 
                 props: Vec::new(), 
                 spawn_table: Vec::new(),
-                loot_tables: Vec::new()
+                loot_tables: Vec::new(),
+                faction_table : Vec::new(),
             },
             item_index : HashMap::new(),
             mob_index : HashMap::new(),
             prop_index : HashMap::new(),
-            loot_index : HashMap::new()
+            loot_index : HashMap::new(),
+            faction_index : HashMap::new()
         }
     }
 
@@ -96,7 +99,34 @@ impl RawMaster {
         for (i,loot) in self.raws.loot_tables.iter().enumerate() {
             self.loot_index.insert(loot.name.clone(), i);
         }
+
+        for faction in self.raws.faction_table.iter() {
+            let mut reactions : HashMap<String, Reaction> = HashMap::new();
+            for other in faction.responses.iter() {
+                reactions.insert(
+                    other.0.clone(),
+                    match other.1.as_str() {
+                        "ignore" => Reaction::Ignore,
+                        "flee" => Reaction::Flee,
+                        _ => Reaction::Attack
+                    }
+                );
+            }
+            self.faction_index.insert(faction.name.clone(), reactions);
+        }
     }    
+}
+
+pub fn faction_reaction(my_faction : &str, their_faction : &str, raws : &RawMaster) -> Reaction {
+    if raws.faction_index.contains_key(my_faction) {
+        let mf = &raws.faction_index[my_faction];
+        if mf.contains_key(their_faction) {
+            return mf[their_faction];
+        } else {
+            return mf["Default"];
+        }
+    }
+    Reaction::Ignore
 }
 
 fn find_slot_for_equippable_item(tag : &str, raws: &RawMaster) -> EquipmentSlot {
@@ -335,6 +365,12 @@ pub fn spawn_named_mob(raws: &RawMaster, ecs : &mut World, key : &str, pos : Spa
 
         if let Some(light) = &mob_template.light {
             eb = eb.with(LightSource{ range: light.range, color : rltk::RGB::from_hex(&light.color).expect("Bad color") });
+        }
+
+        if let Some(faction) = &mob_template.faction {
+            eb = eb.with(Faction{ name: faction.clone() });
+        } else {
+            eb = eb.with(Faction{ name : "Mindless".to_string() })
         }
 
         let new_mob = eb.build();

@@ -54,6 +54,21 @@ pub struct Initiative {
 pub struct MyTurn {}
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct Faction {
+    pub name : String
+}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct WantsToApproach {
+    pub idx : i32
+}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct WantsToFlee {
+    pub indices : Vec<i32>
+}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Monster {}
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
