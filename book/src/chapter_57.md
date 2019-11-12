@@ -664,8 +664,10 @@ pub fn faction_reaction(my_faction : &str, their_faction : &str, raws : &RawMast
         let mf = &raws.faction_index[my_faction];
         if mf.contains_key(their_faction) {
             return mf[their_faction];
-        } else {
+        } else if mf.contains_key("Default") {
             return mf["Default"];
+        } else {
+            return Reaction::Ignore;
         }
     }
     Reaction::Ignore
@@ -1085,9 +1087,417 @@ We're now performing the minimum AI performed by `MonsterAI` and much of the car
 
 Likewise, the fleeing and approaching of `ai/animal_ai_system.rs` is now redundant. You can actually delete this system, too!
 
-It would be a good idea to make sure that all NPCs have a faction (except for Gelatinous Cubes, who actually are mindless) now. This has been performed on the source code version of `spawns.rs`.
+It would be a good idea to make sure that all NPCs have a faction (except for Gelatinous Cubes, who actually are mindless) now. You can check out the source code of `spawns.json` to see the changes: it's pretty obvious, everything now has a faction.
+
+## The remaining AI: Bystanders
+
+So the remaining distinct AI module is the bystander, and they are doing just the one thing: moving randomly. This is actually a behavior that would fit well for deer, too (rather than just standing around). It would be nice if townsfolk showed *slightly* more intelligence, too.
+
+Let's think about how our AI now works:
+
+* *Initiative* determines if it's an NPC's turn.
+* *Status* can take that away, depending upon effects being experienced.
+* *Adjacency* determines immediate responses to nearby entities.
+* *Vision* determines responses to slightly less nearby entities.
+* *Per-AI systems* determine what the entity does now.
+
+We could replace per-AI systems with a more generic set of "move options". These would govern what an NPC does if none of the other systems have caused it to act. Now let's think about how how we'd *like* townsfolk and others to move:
+
+* Vendors stay in their shop.
+* Patrons should stay in the shop they are patronizing.
+* Drunk should stumble around at random. Deer should probably also move randomly, it just makes sense.
+* Regular townsfolk should move between buildings, acting like they have a plan.
+* Guards could patrol (we don't have any guards, but they would make sense). It might be nice for other monster types to patrol rather than staying static, also. Maybe bandits should roam the forest in search of victims.
+* Hostiles should chase their target beyond visual range, but with some chance of escape.
+
+### Making a movement mode component
+
+Let's make a new component (in `components.rs`, and registered in `main.rs` and `saveload_system.rs`) to capture movement mode. We'll start with the easy ones: static (not going anywhere), and random (wandering like a fool!). Note that you don't need to register the enum - just the component:
+
+```rust
+#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq, Hash)]
+pub enum Movement { 
+    Static, 
+    Random
+}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct MoveMode {
+    pub mode : Movement
+}
+```
+
+Now we'll open up `raws/mob_structs.rs` and edit it to capture a movement mode - and no longer provide an AI tag (since this will let us do-away with them completely):
+
+```rust
+#[derive(Deserialize, Debug)]
+pub struct Mob {
+    pub name : String,
+    pub renderable : Option<Renderable>,
+    pub blocks_tile : bool,
+    pub vision_range : i32,
+    pub movement : String,
+    pub quips : Option<Vec<String>>,
+    pub attributes : MobAttributes,
+    pub skills : Option<HashMap<String, i32>>,
+    pub level : Option<i32>,
+    pub hp : Option<i32>,
+    pub mana : Option<i32>,
+    pub equipped : Option<Vec<String>>,
+    pub natural : Option<MobNatural>,
+    pub loot_table : Option<String>,
+    pub light : Option<MobLight>,
+    pub faction : Option<String>
+}
+```
+
+(We renamed `ai` to `movement`). This breaks a chunk of `rawmaster`; open up the `spawn_named_mob` function and replace the AI tag selection with:
+
+```rust
+match mob_template.movement.as_ref() {
+    "random" => eb = eb.with(MoveMode{ mode: Movement::Random }),
+    _ => eb = eb.with(MoveMode{ mode: Movement::Static })
+}
+```
+
+Now, we need a new system to handle "default" (i.e. we've tried everything else) movement. Make a new file, `ai/default_move_system.rs` (don't forget to `mod` and `pub use` it in `ai/mod.rs`!):
+
+```rust
+extern crate specs;
+use specs::prelude::*;
+use crate::{MyTurn, MoveMode, Movement, Position, Map, Viewshed, EntityMoved};
+
+pub struct DefaultMoveAI {}
+
+impl<'a> System<'a> for DefaultMoveAI {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( 
+        WriteStorage<'a, MyTurn>,
+        ReadStorage<'a, MoveMode>,
+        WriteStorage<'a, Position>,
+        WriteExpect<'a, Map>,
+        WriteStorage<'a, Viewshed>,
+        WriteStorage<'a, EntityMoved>,
+        WriteExpect<'a, rltk::RandomNumberGenerator>,
+        Entities<'a>
+    );
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (mut turns, move_mode, mut positions, mut map, 
+            mut viewsheds, mut entity_moved, mut rng, entities) = data;
+            
+        let mut turn_done : Vec<Entity> = Vec::new();
+        for (entity, mut pos, mode, mut viewshed, _myturn) in 
+            (&entities, &mut positions, &move_mode, &mut viewsheds, &turns).join() 
+        {
+            turn_done.push(entity);
+            
+            match mode.mode {
+                Movement::Static => {},
+                Movement::Random => {
+                    let mut x = pos.x;
+                    let mut y = pos.y;
+                    let move_roll = rng.roll_dice(1, 5);
+                    match move_roll {
+                        1 => x -= 1,
+                        2 => x += 1,
+                        3 => y -= 1,
+                        4 => y += 1,
+                        _ => {}
+                    }
+
+                    if x > 0 && x < map.width-1 && y > 0 && y < map.height-1 {
+                        let dest_idx = map.xy_idx(x, y);
+                        if !map.blocked[dest_idx] {
+                            let idx = map.xy_idx(pos.x, pos.y);
+                            map.blocked[idx] = false;
+                            pos.x = x;
+                            pos.y = y;
+                            entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
+                            map.blocked[dest_idx] = true;
+                            viewshed.dirty = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Remove turn marker for those that are done
+        for done in turn_done.iter() {
+            turns.remove(*done);
+        }
+    }
+}
+```
+
+Now open up `main.rs`, find `run_systems` and *replace* the call to `BystanderAI` with `DefaultMoveAI`:
+
+```rust
+let mut defaultmove = ai::DefaultMoveAI{};
+defaultmove.run_now(&self.ecs);
+```
+
+Finally, we need to open up `spawns.json` and replace *all* references to `ai=` in mobs with `movement=`. Choose `static` for all of them except for Patrons, herbivores and Drunks.
+
+If you `cargo run` now, you'll see that everyone stands around - except for the random ones, who wander aimlessly.
+
+One last thing for this segment: go ahead and delete the `bystander_ai_system.rs` file, and all references to it. We don't need it anymore!
+
+### Adding in waypoint-based movement
+
+We mentioned that we'd like townsfolk to mill about, but not randomly. Open up `components.rs`, and add a mode to `Movement`:
+
+```rust
+#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq, Hash)]
+pub enum Movement { 
+    Static, 
+    Random,
+    RandomWaypoint{ path : Option<Vec<i32>> }
+}
+```
+
+Notice that we're using Rust's feature that `enum` is really a `union` in other languages, to add in an optional `path` for random movement. This represents where the AI is trying to go - or `None` if there isn't a current target (either because they just started, or they got there). We're hoping to not run an expensive A-Star search every turn, so we'll store the path - and keep following it until it is invalid.
+
+Now in `rawmaster.rs`, we'll add it to the list of movement modes:
+
+```rust
+match mob_template.movement.as_ref() {
+    "random" => eb = eb.with(MoveMode{ mode: Movement::Random }),
+    "random_waypoint" => eb = eb.with(MoveMode{ mode: Movement::RandomWaypoint{ path: None } }),
+    _ => eb = eb.with(MoveMode{ mode: Movement::Static })
+}
+```
+
+And in `default_move_system.rs`, we can add in the actual movement logic:
+
+```rust
+Movement::RandomWaypoint{path} => {
+    if let Some(path) = path {
+        // We have a target - go there
+        let mut idx = map.xy_idx(pos.x, pos.y);
+        if path.len()>1 {
+            if !map.blocked[path[1] as usize] {
+                map.blocked[idx] = false;
+                pos.x = path[1] % map.width;
+                pos.y = path[1] / map.width;
+                entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
+                idx = map.xy_idx(pos.x, pos.y);
+                map.blocked[idx] = true;
+                viewshed.dirty = true;
+                path.remove(0); // Remove the first step in the path
+            }
+            // Otherwise we wait a turn to see if the path clears up
+        } else {
+            mode.mode = Movement::RandomWaypoint{ path : None };
+        }
+    } else {
+        let target_x = rng.roll_dice(1, map.width-2);
+        let target_y = rng.roll_dice(1, map.height-2);
+        let idx = map.xy_idx(target_x, target_y);
+        if tile_walkable(map.tiles[idx]) {
+            let path = rltk::a_star_search(
+                map.xy_idx(pos.x, pos.y) as i32, 
+                map.xy_idx(target_x, target_y) as i32, 
+                &mut *map
+            );
+            if path.success && path.steps.len()>1 {
+                mode.mode = Movement::RandomWaypoint{ 
+                    path: Some(path.steps)
+                };
+            }
+        }
+    }
+```
+
+This is a bit convoluted, so let's walk through it:
+
+1. We match on `RandomWaypoint` and capture `path` as a variable (to access it inside the enum).
+2. If a path exists:
+    1. If it has more than one entry.
+        1. If the next step isn't blocked.
+            1. Actually perform the move by following the path.
+            2. Remove the first entry from the path, so we keep following it.
+        2. Wait a turn, the path may clear up
+    2. Give up and set no path.
+3. If the path doesn't exist:
+    1. Pick a random location.
+    2. If the random location is walkable, path to it.
+    3. If the path succeeded, store it as the AI's `path`.
+    4. Otherwise, leave with no path - knowing we'll be back next turn to try another one.
+
+If you `cargo run` now (and set some AI types in `spawns.json` to `random_waypoint`), you'll see that villagers now act like they have a plan - they move along paths. Because A-Star respects our movement costs, they even automatically prefer paths and roads! It looks *much* more realistic now.
+
+## Chasing the target
+
+## Removing per-AI tags
+
+We're no longer using the `Bystander`, `Monster`, `Carnivore`, `Herbivore` and `Vendor` tags! Open up `components.rs` and delete them. You'll also need to delete their registration in `main.rs` and `saveload_system.rs`. Once they are gone, you will still see errors in `player.rs`; why? We used to use these tags to determine if we should attack or trade-places with an NPC. We can replace the failing code in `try_move_player` quite easily. First, remove the references to these components from your `using` statements. Then replace these two lines:
+
+```rust
+let bystanders = ecs.read_storage::<Bystander>();
+let vendors = ecs.read_storage::<Vendor>();
+```
+
+with:
+
+```rust
+let factions = ecs.read_storage::<Faction>();
+```
+
+Then we replace the tag check with:
+
+```rust
+for potential_target in map.tile_content[destination_idx].iter() {
+    let mut hostile = true;
+    if combat_stats.get(*potential_target).is_some() {
+        if let Some(faction) = factions.get(*potential_target) {
+            let reaction = crate::raws::faction_reaction(
+                &faction.name, 
+                "Player", 
+                &crate::raws::RAWS.lock().unwrap()
+            );
+            if reaction != Reaction::Attack { hostile = false; }
+        }
+    }
+    if !hostile {
+        // Note that we want to move the bystander
+```
+
+Notice that we're using the faction system we made earlier! There's one more fix to `player.rs` - deciding if we can heal because of nearby monsters. It's basically the same change - we check if an entity is hostile, and if it is it prohibits healing (because you are nervous/on-edge!):
+
+```rust
+fn skip_turn(ecs: &mut World) -> RunState {
+    let player_entity = ecs.fetch::<Entity>();
+    let viewshed_components = ecs.read_storage::<Viewshed>();
+    let factions = ecs.read_storage::<Faction>();
+
+    let worldmap_resource = ecs.fetch::<Map>();
+
+    let mut can_heal = true;
+    let viewshed = viewshed_components.get(*player_entity).unwrap();
+    for tile in viewshed.visible_tiles.iter() {
+        let idx = worldmap_resource.xy_idx(tile.x, tile.y);
+        for entity_id in worldmap_resource.tile_content[idx].iter() {
+            let faction = factions.get(*entity_id);
+            match faction {
+                None => {}
+                Some(faction) => { 
+                    let reaction = crate::raws::faction_reaction(
+                        &faction.name, 
+                        "Player", 
+                        &crate::raws::RAWS.lock().unwrap()
+                    );
+                    if reaction == Reaction::Attack {
+                        can_heal = false; 
+                    }
+                }
+            }
+        }
+    }
+    ...
+```
+
+## Distance Culling AI
+
+We're currently spending a *lot* of CPU cycles on events far from the player. Performance is still ok, but this is sub-optimal for two reasons:
+
+* We may just run around finding dead people if the factions are fighting while we are far away. It tells a better story to arrive as something is happening rather than just finding the aftermath.
+* We don't want to waste our precious CPU cycles!
+
+Let's open up `initiative_system.rs` and modify it to check the distance to the player, and not have a turn if they are far away:
+
+```rust
+extern crate specs;
+use specs::prelude::*;
+use crate::{Initiative, Position, MyTurn, Attributes, RunState};
+
+pub struct InitiativeSystem {}
+
+impl<'a> System<'a> for InitiativeSystem {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( WriteStorage<'a, Initiative>,
+                        ReadStorage<'a, Position>,
+                        WriteStorage<'a, MyTurn>,
+                        Entities<'a>,
+                        WriteExpect<'a, rltk::RandomNumberGenerator>,
+                        ReadStorage<'a, Attributes>,
+                        WriteExpect<'a, RunState>,
+                        ReadExpect<'a, Entity>,
+                        ReadExpect<'a, rltk::Point>);
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (mut initiatives, positions, mut turns, entities, mut rng, attributes, 
+            mut runstate, player, player_pos) = data;
+
+        if *runstate != RunState::Ticking { return; }
+
+        // Clear any remaining MyTurn we left by mistkae
+        turns.clear();
+
+        // Roll initiative
+        for (entity, initiative, pos) in (&entities, &mut initiatives, &positions).join() {
+            initiative.current -= 1;
+            if initiative.current < 1 {
+                let mut myturn = true;
+
+                // Re-roll
+                initiative.current = 6 + rng.roll_dice(1, 6);
+
+                // Give a bonus for quickness
+                if let Some(attr) = attributes.get(entity) {
+                    initiative.current -= attr.quickness.bonus;
+                }
+
+                // TODO: More initiative granting boosts/penalties will go here later
+
+                // If its the player, we want to go to an AwaitingInput state
+                if entity == *player {
+                    *runstate = RunState::AwaitingInput;
+                } else {
+                    let distance = rltk::DistanceAlg::Pythagoras.distance2d(*player_pos, rltk::Point::new(pos.x, pos.y));
+                    if distance > 20.0 {
+                        myturn = false;
+                    }
+                }
+
+                // It's my turn!
+                if myturn {
+                    turns.insert(entity, MyTurn{}).expect("Unable to insert turn");
+                }
+
+            }
+        }
+    }
+}
+```
 
 ## Fixing Performance
+
+You may have noticed a performance drop while we worked through this chapter. We've added a lot of functionality, so the systems seemed like the culprit - but they aren't! Our systems are actually running at a really good speed (one advantage of doing one thing per system: your CPU cache is very happy!). If you'd like to prove it, do a debug build, fire up a profiler (I use [Very Sleepy](http://www.codersnotes.com/sleepy/) on Windows) and attach it to the game! 
+
+The culprit is actually *initiative*. Not every entity is moving on the same tick anymore, so it's taking more cycles through the main loop to get to the player's turn. This is a *small* slowdown, but noticeable. Fortunately, you can fix it with a quick change to the main loop in `main.rs`:
+
+```rust
+RunState::Ticking => {
+    while newrunstate == RunState::Ticking {
+        self.run_systems();
+        self.ecs.maintain();
+        match *self.ecs.fetch::<RunState>() {
+            RunState::AwaitingInput => newrunstate = RunState::AwaitingInput,
+            RunState::MagicMapReveal{ .. } => newrunstate = RunState::MagicMapReveal{ row: 0 },
+            _ => newrunstate = RunState::Ticking
+        }                
+    }
+}
+```
+
+This runs all initiative cycles until it's the player's turn. It brings the game back up to full speed.
+
+## Wrap-Up
+
+This has been a *long* chapter, for which I apologize - but it's been a really productive one! Instead of standing around or roaming completely randomly, AI now operates in layers - deciding first on adjacent targets, then visible targets, and then a default action. It can even hunt you down. This has gone a long way to make the AI feel smarter.
+
+If you `cargo run` now, you can enjoy a much richer world!
 
 ...
 

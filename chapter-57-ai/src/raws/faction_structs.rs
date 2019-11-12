@@ -7,7 +7,7 @@ pub struct FactionInfo {
     pub responses : HashMap<String, String>
 }
 
-#[derive(PartialEq, Eq, Hash, Copy, Clone)]
+#[derive(PartialEq, Eq, Hash, Copy, Clone, Debug)]
 pub enum Reaction {
     Ignore, Attack, Flee
 }

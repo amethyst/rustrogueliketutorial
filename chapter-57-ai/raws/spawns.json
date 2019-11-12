@@ -439,7 +439,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 4,
-        "ai" : "vendor",
+        "movement" : "static",
         "attributes" : {
             "intelligence" : 13
         },
@@ -460,7 +460,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 4,
-        "ai" : "vendor",
+        "movement" : "static",
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
         "faction" : "Townsfolk"
@@ -476,7 +476,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 4,
-        "ai" : "bystander",
+        "movement" : "random",
         "quips" : [ "Quiet down, it's too early!", "Oh my, I drank too much.", "Still saving the world, eh?" ],
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
@@ -493,7 +493,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 4,
-        "ai" : "bystander",
+        "movement" : "static",
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
         "faction" : "Townsfolk"
@@ -509,7 +509,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 4,
-        "ai" : "bystander",
+        "movement" : "random",
         "quips" : [ "Great to see a new face here!", "I hear there's going to be a good sermon on tea", "Want some cake?" ],
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
@@ -526,7 +526,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 4,
-        "ai" : "vendor",
+        "movement" : "static",
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
         "faction" : "Townsfolk"
@@ -542,7 +542,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 4,
-        "ai" : "vendor",
+        "movement" : "static",
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
         "faction" : "Townsfolk"
@@ -558,7 +558,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 4,
-        "ai" : "vendor",
+        "movement" : "static",
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
         "faction" : "Townsfolk"
@@ -574,7 +574,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 4,
-        "ai" : "bystander",
+        "movement" : "static",
         "quips" : [ "Hello, dear", "Off saving the world again?", "Be careful in the dungeon!", "Your father would be so proud, were he here." ],
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
@@ -591,7 +591,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 4,
-        "ai" : "bystander",
+        "movement" : "random_waypoint",
         "quips" : [ "Why are you in my house?" ],
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
@@ -608,7 +608,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 4,
-        "ai" : "bystander",
+        "movement" : "random_waypoint",
         "quips" : [ "Lovely day, eh?", "Nice weather", "Hello" ],
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
@@ -625,7 +625,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 4,
-        "ai" : "bystander",
+        "movement" : "random_waypoint",
         "quips" : [ "They're biting today!", "I caught something, but it wasn't a fish!", "Looks like rain" ],
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
@@ -642,7 +642,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 4,
-        "ai" : "bystander",
+        "movement" : "random_waypoint",
         "quips" : [ "Arrr", "Grog!", "Booze!" ],
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
@@ -659,7 +659,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 4,
-        "ai" : "bystander",
+        "movement" : "random",
         "quips" : [ "Hic", "Need... more... booze!", "Spare a copper?" ],
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
@@ -676,7 +676,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 8,
-        "ai" : "melee",
+        "movement" : "static",
         "attributes" : {
             "Might" : 3,
             "Fitness" : 3
@@ -704,7 +704,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 8,
-        "ai" : "carnivore",
+        "movement" : "static",
         "attributes" : {
             "Might" : 3,
             "Fitness" : 3
@@ -720,7 +720,7 @@
             ]   
         },
         "loot_table" : "Animal",
-        "faction" : "Carnivore"
+        "faction" : "Carnivores"
     },
 
     {
@@ -733,7 +733,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 8,
-        "ai" : "carnivore",
+        "movement" : "static",
         "attributes" : {
             "Might" : 3,
             "Fitness" : 3
@@ -749,7 +749,7 @@
             ]   
         },
         "loot_table" : "Animal",
-        "faction" : "Carnivore"
+        "faction" : "Carnivores"
     },
 
     {
@@ -762,7 +762,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 8,
-        "ai" : "herbivore",
+        "movement" : "random",
         "attributes" : {
             "Might" : 3,
             "Fitness" : 3
@@ -778,7 +778,7 @@
             ]   
         },
         "loot_table" : "Animal",
-        "faction" : "Herbivore"
+        "faction" : "Herbivores"
     },
 
     {
@@ -791,7 +791,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 6,
-        "ai" : "melee",
+        "movement" : "random_waypoint",
         "quips" : [ "Stand and deliver!", "Alright, hand it over" ],
         "attributes" : {},
         "equipped" : [ "Dagger", "Shield", "Leather Armor", "Leather Boots" ],
@@ -812,7 +812,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 8,
-        "ai" : "melee",
+        "movement" : "static",
         "attributes" : {},
         "faction" : "Cave Goblins"
     },
@@ -827,7 +827,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 8,
-        "ai" : "melee",
+        "movement" : "static",
         "attributes" : {},
         "faction" : "Cave Goblins"
     },
@@ -842,7 +842,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 4,
-        "ai" : "melee",
+        "movement" : "static",
         "attributes" : {},
         "faction" : "Cave Goblins"
     },
@@ -857,7 +857,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 6,
-        "ai" : "herbivore",
+        "movement" : "random",
         "attributes" : {
             "Might" : 3,
             "Fitness" : 3
@@ -872,7 +872,7 @@
                 { "name" : "bite", "hit_bonus" : 0, "damage" : "1d4" }
             ]   
         },
-        "faction" : "Herbivore"
+        "faction" : "Herbivores"
     },
 
     {
@@ -887,14 +887,14 @@
         },
         "blocks_tile" : true,
         "vision_range" : 6,
-        "ai" : "carnivore",
+        "movement" : "static",
         "natural" : {
             "armor_class" : 12,
             "attacks" : [
                 { "name" : "bite", "hit_bonus" : 1, "damage" : "1d12" }
             ]   
         },
-        "faction" : "Carnivore"
+        "faction" : "Carnivores"
     },
 
     {
@@ -909,7 +909,7 @@
         },
         "blocks_tile" : true,
         "vision_range" : 4,
-        "ai" : "carnivore",
+        "movement" : "static",
         "natural" : {
             "armor_class" : 12,
             "attacks" : [

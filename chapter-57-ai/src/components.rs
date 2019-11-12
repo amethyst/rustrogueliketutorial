@@ -68,14 +68,17 @@ pub struct WantsToFlee {
     pub indices : Vec<i32>
 }
 
-#[derive(Component, Debug, Serialize, Deserialize, Clone)]
-pub struct Monster {}
+#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq, Hash)]
+pub enum Movement { 
+    Static, 
+    Random,
+    RandomWaypoint{ path : Option<Vec<i32>> }
+}
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
-pub struct Bystander {}
-
-#[derive(Component, Debug, Serialize, Deserialize, Clone)]
-pub struct Vendor {}
+pub struct MoveMode {
+    pub mode : Movement
+}
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Name {
@@ -138,12 +141,6 @@ pub struct SufferDamage {
 pub struct LootTable {
     pub table : String
 }
-
-#[derive(Component, Debug, Serialize, Deserialize, Clone)]
-pub struct Carnivore {}
-
-#[derive(Component, Debug, Serialize, Deserialize, Clone)]
-pub struct Herbivore {}
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Item {}
