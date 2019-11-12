@@ -152,8 +152,6 @@ impl State {
 }
 ```
 
-The `&["visibility_system"]` is new - it says "run this after visibility, since we depend upon its results. At this point, we don't actually care - but we will, so we'll put it in there now.
-
 If you `cargo run` your project now, it will be very slow - and your console will fill up with "Monster considers their own existence". The AI is running - but it's running every tick!
 
 # Turn-based game, in a tick-based world
