@@ -144,17 +144,7 @@ fn is_exit_valid(&self, x:i32, y:i32) -> bool {
 }
 ```
 
-This is quite straightforward: it checks that `x` and `y` are within the map, returning `false` if the exit is outside of the map (this type of *bounds checking* is worth doing, it prevents your program from crashing because you tried to read outside of the the valid memory area). It then checks the *index* of the tiles array for the specified coordinates, and returns the *inverse* of `blocked` (the `!` is the same as `not` in most languages - so read it as "not blocked at `idx`"). While we're in `map`, there's one more function we are going to need:
-
-```rust
-pub fn clear_content_index(&mut self) {
-    for content in self.tile_content.iter_mut() {
-        content.clear();
-    }
-}
-```
-
-This is also quite simple: it iterates (visits) every vector in the `tile_content` list, mutably (the `iter_mut` obtains a *mutable iterator*). It then tells each vector to `clear` itself - remove all content (it doesn't actually guarantee that it will free up the memory; vectors can keep empty sections ready for more data. This is actually a *good* thing, because acquiring new memory is one of the slowest things a program can do - so it helps keep things running fast).
+This is quite straightforward: it checks that `x` and `y` are within the map, returning `false` if the exit is outside of the map (this type of *bounds checking* is worth doing, it prevents your program from crashing because you tried to read outside of the the valid memory area). It then checks the *index* of the tiles array for the specified coordinates, and returns the *inverse* of `blocked` (the `!` is the same as `not` in most languages - so read it as "not blocked at `idx`").
 
 Now we'll make a new component, `BlocksTile`. You should know the drill by now; in `Components.rs`:
 
@@ -366,6 +356,18 @@ And we'll add a basic initializer to the new map code:
 ```rust
 tile_content : vec![Vec::new(); 80*50]
 ```
+
+While we're in `map`, there's one more function we are going to need:
+
+```rust
+pub fn clear_content_index(&mut self) {
+    for content in self.tile_content.iter_mut() {
+        content.clear();
+    }
+}
+```
+
+This is also quite simple: it iterates (visits) every vector in the `tile_content` list, mutably (the `iter_mut` obtains a *mutable iterator*). It then tells each vector to `clear` itself - remove all content (it doesn't actually guarantee that it will free up the memory; vectors can keep empty sections ready for more data. This is actually a *good* thing, because acquiring new memory is one of the slowest things a program can do - so it helps keep things running fast).
 
 Then we'll upgrade the indexing system to index all entities by tile:
 
