@@ -213,12 +213,12 @@ This tells the map to setup blocking from the terrain, and then iterates all ent
 ```rust
 impl State {
     fn run_systems(&mut self) {
-        let mut mapindex = MapIndexingSystem{};
-        mapindex.run_now(&self.ecs);
         let mut vis = VisibilitySystem{};
         vis.run_now(&self.ecs);
         let mut mob = MonsterAI{};
         mob.run_now(&self.ecs);
+        let mut mapindex = MapIndexingSystem{};
+        mapindex.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }

@@ -124,12 +124,12 @@ We also need to add the system to our list of systems to run:
 ```rust
 impl State {
     fn run_systems(&mut self) {
-        let mut mapindex = MapIndexingSystem{};
-        mapindex.run_now(&self.ecs);
         let mut vis = VisibilitySystem{};
         vis.run_now(&self.ecs);
         let mut mob = MonsterAI{};
         mob.run_now(&self.ecs);
+        let mut mapindex = MapIndexingSystem{};
+        mapindex.run_now(&self.ecs);
         let mut bystander = bystander_ai_system::BystanderAI{};
         bystander.run_now(&self.ecs);
         let mut triggers = trigger_system::TriggerSystem{};

@@ -79,12 +79,12 @@ pub struct State {
 
 impl State {
     fn run_systems(&mut self) {
-        let mut mapindex = MapIndexingSystem{};
-        mapindex.run_now(&self.ecs);
         let mut vis = VisibilitySystem{};
         vis.run_now(&self.ecs);
         let mut mob = MonsterAI{};
         mob.run_now(&self.ecs);
+        let mut mapindex = MapIndexingSystem{};
+        mapindex.run_now(&self.ecs);
         let mut animal = animal_ai_system::AnimalAI{};
         animal.run_now(&self.ecs);
         let mut bystander = bystander_ai_system::BystanderAI{};

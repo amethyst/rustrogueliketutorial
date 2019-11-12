@@ -21,6 +21,7 @@ The following people have contributed to this project:
 * [FlorentKI](https://github.com/FlorentKl) found some dispatch code that hadn't been properly deleted.
 * [Zirael07](https://github.com/Zireael07) found numerous typos and missing bits of code.
 * [Tyler Vipond](https://github.com/tylervipond) found a duplicate code issue in chapter 7.
+* [JP Moresmau](https://github.com/JPMoresmau) found a problem with the order in which systems were running, allowing you to run through mobs.
 
 ## Supporters
 
