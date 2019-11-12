@@ -60,6 +60,7 @@
     - [Into the caverns](./chapter_56.md)
     - [Better AI](./chapter_57.md)
     - Item Stats and Vendors
+    - More caverns
     - Town Portals
     - Movement cleanup
     - Random Seeds

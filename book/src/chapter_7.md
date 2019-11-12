@@ -21,7 +21,7 @@ In our `Map` implementation, we'll need a helper function:
 ```rust
 fn is_exit_valid(&self, x:i32, y:i32) -> bool {
     if x < 1 || x > self.width-1 || y < 1 || y > self.height-1 { return false; }
-    let idx = (y * self.width) + x;
+    let idx = self.xy_idx(x, y);
     self.tiles[idx as usize] != TileType::Wall
 }
 ```
@@ -139,8 +139,8 @@ This function is very simple: it sets `blocked` for a tile to true if its a wall
 ```rust
 fn is_exit_valid(&self, x:i32, y:i32) -> bool {
     if x < 1 || x > self.width-1 || y < 1 || y > self.height-1 { return false; }
-    let idx = (y * self.width) + x;
-    !self.blocked[idx as usize]
+    let idx = self.xy_idx(x, y);
+    !self.blocked[idx]
 }
 ```
 

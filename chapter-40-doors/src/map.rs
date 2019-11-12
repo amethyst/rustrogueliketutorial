@@ -38,8 +38,8 @@ impl Map {
 
     fn is_exit_valid(&self, x:i32, y:i32) -> bool {
         if x < 1 || x > self.width-1 || y < 1 || y > self.height-1 { return false; }
-        let idx = (y * self.width) + x;
-        !self.blocked[idx as usize]
+        let idx = self.xy_idx(x, y);
+        !self.blocked[idx]
     }
 
     pub fn populate_blocked(&mut self) {        

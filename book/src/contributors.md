@@ -20,6 +20,7 @@ The following people have contributed to this project:
 * [Dominic D](https://github.com/DominicD) found some issues with chapter 7.
 * [FlorentKI](https://github.com/FlorentKl) found some dispatch code that hadn't been properly deleted.
 * [Zirael07](https://github.com/Zireael07) found numerous typos and missing bits of code.
+* [Tyler Vipond](https://github.com/tylervipond) found a duplicate code issue in chapter 7.
 
 ## Supporters
 
