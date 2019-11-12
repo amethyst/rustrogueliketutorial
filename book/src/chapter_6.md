@@ -336,6 +336,23 @@ impl<'a> System<'a> for MonsterAI {
 }
 ```
 
+We also need to give the player a name; we've explicitly included names in the AI's join, so we better be sure that the player has one! Otherwise, the AI will ignore the player altogether. In `main.rs`, we'll include one in the `Player` creation:
+
+```rust
+gs.ecs
+    .create_entity()
+    .with(Position { x: player_x, y: player_y })
+    .with(Renderable {
+        glyph: rltk::to_cp437('@'),
+        fg: RGB::named(rltk::YELLOW),
+        bg: RGB::named(rltk::BLACK),
+    })
+    .with(Player{})
+    .with(Viewshed{ visible_tiles : Vec::new(), range: 8, dirty: true })
+    .with(Name{name: "Player".to_string() })
+    .build();
+```
+
 If you `cargo run` the project, you now see things like *Goblin #9 shouts insults* - so you can tell who is shouting.
 
 ![Screenshot](./c6-s3.gif)
