@@ -547,7 +547,7 @@ impl<'a> System<'a> for PotionUseSystem {
             match potion {
                 None => {}
                 Some(potion) => {
-                    stats.hp = i32::max(stats.max_hp, stats.hp + potion.heal_amount);
+                    stats.hp = i32::min(stats.max_hp, stats.hp + potion.heal_amount);
                     if entity == *player_entity {
                         gamelog.entries.insert(0, format!("You drink the {}, healing {} hp.", names.get(drink.potion).unwrap().name, potion.heal_amount));
                     }
