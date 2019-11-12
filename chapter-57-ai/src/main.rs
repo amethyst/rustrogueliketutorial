@@ -94,6 +94,8 @@ impl State {
         approach.run_now(&self.ecs);
         let mut flee = ai::FleeAI{};
         flee.run_now(&self.ecs);
+        let mut chase = ai::ChaseAI{};
+        chase.run_now(&self.ecs);
         let mut defaultmove = ai::DefaultMoveAI{};
         defaultmove.run_now(&self.ecs);
         let mut triggers = trigger_system::TriggerSystem{};
@@ -420,6 +422,7 @@ fn main() {
     gs.ecs.register::<WantsToApproach>();
     gs.ecs.register::<WantsToFlee>();
     gs.ecs.register::<MoveMode>();
+    gs.ecs.register::<Chasing>();
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
     raws::load_raws();

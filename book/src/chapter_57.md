@@ -1329,6 +1329,217 @@ If you `cargo run` now (and set some AI types in `spawns.json` to `random_waypoi
 
 ## Chasing the target
 
+Our other stated goal is that once an AI starts to chase a target, it shouldn't give up just because it lost line-of-sight. On the other hand, it shouldn't have an omniscient view of the map and perfectly track its target either! It also needs to not be the *default* action - but should occur before defaults if it is an option.
+
+We can accomplish this by creating a new component (in `components.rs`, remembering to register in `main.rs` and `saveload_system.rs`):
+
+```rust
+#[derive(Component, Debug, Clone)]
+pub struct Chasing {
+    pub target : Entity
+}
+```
+
+Unfortunately, we're storing an `Entity` - so we need some extra boilerplate to make the serialization system happy:
+
+```rust
+// Chasing wrapper
+#[derive(Serialize, Deserialize, Clone)]
+pub struct ChasingData<M>(M);
+
+impl<M: Marker + Serialize> ConvertSaveload<M> for Chasing
+where
+    for<'de> M: Deserialize<'de>,
+{
+    type Data = ChasingData<M>;
+    type Error = NoError;
+
+    fn convert_into<F>(&self, mut ids: F) -> Result<Self::Data, Self::Error>
+    where
+        F: FnMut(Entity) -> Option<M>,
+    {
+        let marker = ids(self.target).unwrap();
+        Ok(ChasingData(marker))
+    }
+
+    fn convert_from<F>(data: Self::Data, mut ids: F) -> Result<Self, Self::Error>
+    where
+        F: FnMut(M) -> Option<Entity>,
+    {
+        let entity = ids(data.0).unwrap();
+        Ok(Chasing{target: entity})
+    }
+}
+```
+
+Now we can modify our `visible_ai_system.rs` file to add a `Chasing` component whenever it wants to chase after a target. There's a lot of small changes, so I've included the whole file:
+
+```rust
+extern crate specs;
+use specs::prelude::*;
+use crate::{MyTurn, Faction, Position, Map, raws::Reaction, Viewshed, WantsToFlee, 
+    WantsToApproach, Chasing};
+
+pub struct VisibleAI {}
+
+impl<'a> System<'a> for VisibleAI {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( 
+        ReadStorage<'a, MyTurn>,
+        ReadStorage<'a, Faction>,
+        ReadStorage<'a, Position>,
+        ReadExpect<'a, Map>,
+        WriteStorage<'a, WantsToApproach>,
+        WriteStorage<'a, WantsToFlee>,
+        Entities<'a>,
+        ReadExpect<'a, Entity>,
+        ReadStorage<'a, Viewshed>,
+        WriteStorage<'a, Chasing>
+    );
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (turns, factions, positions, map, mut want_approach, mut want_flee, entities, player, 
+            viewsheds, mut chasing) = data;
+
+        for (entity, _turn, my_faction, pos, viewshed) in (&entities, &turns, &factions, &positions, &viewsheds).join() {
+            if entity != *player {
+                let my_idx = map.xy_idx(pos.x, pos.y);
+                let mut reactions : Vec<(usize, Reaction, Entity)> = Vec::new();
+                let mut flee : Vec<i32> = Vec::new();
+                for visible_tile in viewshed.visible_tiles.iter() {
+                    let idx = map.xy_idx(visible_tile.x, visible_tile.y);
+                    if my_idx != idx {
+                        evaluate(idx, &map, &factions, &my_faction.name, &mut reactions);
+                    }
+                }
+
+                let mut done = false;
+                for reaction in reactions.iter() {
+                    match reaction.1 {
+                        Reaction::Attack => {
+                            want_approach.insert(entity, WantsToApproach{ idx: reaction.0 as i32 }).expect("Unable to insert");
+                            chasing.insert(entity, Chasing{ target: reaction.2}).expect("Unable to insert");
+                            done = true;
+                        }
+                        Reaction::Flee => {
+                            flee.push(reaction.0 as i32);
+                        }
+                        _ => {}
+                    }
+                }
+
+                if !done && !flee.is_empty() {
+                    want_flee.insert(entity, WantsToFlee{ indices : flee }).expect("Unable to insert");
+                }
+            }
+        }
+    }
+}
+
+fn evaluate(idx : usize, map : &Map, factions : &ReadStorage<Faction>, my_faction : &str, reactions : &mut Vec<(usize, Reaction, Entity)>) {
+    for other_entity in map.tile_content[idx].iter() {
+        if let Some(faction) = factions.get(*other_entity) {
+            reactions.push((
+                idx, 
+                crate::raws::faction_reaction(my_faction, &faction.name, &crate::raws::RAWS.lock().unwrap()),
+                *other_entity
+            ));
+        }
+    }
+}
+```
+
+That's a great start: when going after an NPC, we'll automatically start chasing them. Now, lets make a new system to handle chasing; create `ai/chase_ai_system.rs` (and `mod`, `pub use` in `ai/mod.rs`):
+
+```rust
+extern crate specs;
+use specs::prelude::*;
+use crate::{MyTurn, Chasing, Position, Map, Viewshed, EntityMoved};
+use std::collections::HashMap;
+
+pub struct ChaseAI {}
+
+impl<'a> System<'a> for ChaseAI {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( 
+        WriteStorage<'a, MyTurn>,
+        WriteStorage<'a, Chasing>,
+        WriteStorage<'a, Position>,
+        WriteExpect<'a, Map>,
+        WriteStorage<'a, Viewshed>,
+        WriteStorage<'a, EntityMoved>,
+        Entities<'a>
+    );
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (mut turns, mut chasing, mut positions, mut map, 
+            mut viewsheds, mut entity_moved, entities) = data;
+        
+        let mut targets : HashMap<Entity, (i32, i32)> = HashMap::new();
+        let mut end_chase : Vec<Entity> = Vec::new();
+        for (entity, _turn, chasing) in (&entities, &turns, &chasing).join() {
+            let target_pos = positions.get(chasing.target);
+            if let Some(target_pos) = target_pos {
+                targets.insert(entity, (target_pos.x, target_pos.y));
+            } else {
+                end_chase.push(entity);
+            }
+        }
+
+        for done in end_chase.iter() {
+            chasing.remove(*done);
+        }
+        end_chase.clear();
+
+        let mut turn_done : Vec<Entity> = Vec::new();
+        for (entity, mut pos, _chase, mut viewshed, _myturn) in 
+            (&entities, &mut positions, &chasing, &mut viewsheds, &turns).join() 
+        {
+            turn_done.push(entity);
+            let target_pos = targets[&entity];
+            let path = rltk::a_star_search(
+                map.xy_idx(pos.x, pos.y) as i32, 
+                map.xy_idx(target_pos.0, target_pos.1) as i32, 
+                &mut *map
+            );
+            if path.success && path.steps.len()>1 && path.steps.len()<15 {
+                let mut idx = map.xy_idx(pos.x, pos.y);
+                map.blocked[idx] = false;
+                pos.x = path.steps[1] % map.width;
+                pos.y = path.steps[1] / map.width;
+                entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
+                idx = map.xy_idx(pos.x, pos.y);
+                map.blocked[idx] = true;
+                viewshed.dirty = true;
+                turn_done.push(entity);
+            } else {
+                end_chase.push(entity);
+            }
+        }
+
+        for done in end_chase.iter() {
+            chasing.remove(*done);
+        }
+        for done in turn_done.iter() {
+            turns.remove(*done);
+        }
+    }
+}
+```
+
+This system ended up being more complicated than I hoped, becuase the borrow checker *really* didn't want me reaching into `Position` storage twice. So we ended up with the following:
+
+1. We iterate all entities that have a `Chasing` component, as well as a turn. We look to see if their target is valid, and if it is - we store it in a temporary HashMap. This gets around needing to look inside `Position` twice. If it isn't valid, we remove the component.
+2. We iterate everyone who is still chasing, and path to their target. If the path succeeds, then it follows the path. If if doesn't, we remove the chasing component.
+3. We remove everyone who took a turn from the `MyTurn` list.
+
+Add it into `run_systems` before the default movement system:
+
+```rust
+let mut approach = ai::ApproachAI{};
+approach.run_now(&self.ecs);
+```
+
 ## Removing per-AI tags
 
 We're no longer using the `Bystander`, `Monster`, `Carnivore`, `Herbivore` and `Vendor` tags! Open up `components.rs` and delete them. You'll also need to delete their registration in `main.rs` and `saveload_system.rs`. Once they are gone, you will still see errors in `player.rs`; why? We used to use these tags to determine if we should attack or trade-places with an NPC. We can replace the failing code in `try_move_player` quite easily. First, remove the references to these components from your `using` statements. Then replace these two lines:

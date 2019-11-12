@@ -58,7 +58,7 @@
     - [XP](./chapter_54.md)
     - [Backtracking](./chapter_55.md)
     - [Into the caverns](./chapter_56.md)
-    - AI Cleanup and Status Effects
+    - [Better AI](./chapter_57.md)
     - Item Stats and Vendors
     - Town Portals
     - Movement cleanup

@@ -131,6 +131,12 @@ pub struct WantsToMelee {
     pub target : Entity
 }
 
+// See wrapper below for serialization
+#[derive(Component, Debug, Clone)]
+pub struct Chasing {
+    pub target : Entity
+}
+
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct SufferDamage {
     pub amount : i32,
@@ -311,6 +317,34 @@ pub struct SerializationHelper {
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct DMSerializationHelper {
     pub map : super::map::MasterDungeonMap
+}
+
+// Chasing wrapper
+#[derive(Serialize, Deserialize, Clone)]
+pub struct ChasingData<M>(M);
+
+impl<M: Marker + Serialize> ConvertSaveload<M> for Chasing
+where
+    for<'de> M: Deserialize<'de>,
+{
+    type Data = ChasingData<M>;
+    type Error = NoError;
+
+    fn convert_into<F>(&self, mut ids: F) -> Result<Self::Data, Self::Error>
+    where
+        F: FnMut(Entity) -> Option<M>,
+    {
+        let marker = ids(self.target).unwrap();
+        Ok(ChasingData(marker))
+    }
+
+    fn convert_from<F>(data: Self::Data, mut ids: F) -> Result<Self, Self::Error>
+    where
+        F: FnMut(M) -> Option<Entity>,
+    {
+        let entity = ids(data.0).unwrap();
+        Ok(Chasing{target: entity})
+    }
 }
 
 // WantsToMelee wrapper
