@@ -53,6 +53,7 @@ CALL :Stage chapter-54-xp
 CALL :Stage chapter-55-backtrack
 CALL :Stage chapter-56-caverns
 CALL :Stage chapter-57-ai
+CALL :Stage chapter-58-itemstats
 
 REM Publish or perish
 cd book\book\wasm

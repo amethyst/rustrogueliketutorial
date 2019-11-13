@@ -59,6 +59,7 @@
     - [Backtracking](./chapter_55.md)
     - [Into the caverns](./chapter_56.md)
     - [Better AI](./chapter_57.md)
+    - [Item Stats](./chapter_58.md)
     - Item Stats and Vendors
     - More caverns
     - Town Portals
