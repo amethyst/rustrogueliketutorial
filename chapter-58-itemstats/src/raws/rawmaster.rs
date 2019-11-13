@@ -325,9 +325,12 @@ pub fn spawn_named_mob(raws: &RawMaster, ecs : &mut World, key : &str, pos : Spa
             level: mob_level,
             xp: 0,
             hit_points : Pool{ current: mob_hp, max: mob_hp },
-            mana: Pool{current: mob_mana, max: mob_mana}
+            mana: Pool{current: mob_mana, max: mob_mana},
+            total_weight : 0.0,
+            total_initiative_penalty : 0.0
         };
         eb = eb.with(pools);
+        eb = eb.with(EquipmentChanged{});
 
         let mut skills = Skills{ skills: HashMap::new() };
         skills.skills.insert(Skill::Melee, 1);

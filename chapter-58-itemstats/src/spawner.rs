@@ -4,7 +4,7 @@ extern crate specs;
 use specs::prelude::*;
 use super::{Pools, Pool, Player, Renderable, Name, Position, Viewshed, Rect,  
     SerializeMe, random_table::RandomTable, HungerClock, HungerState, Map, TileType, raws::*,
-    Attribute, Attributes, Skills, Skill, LightSource, Initiative, Faction };
+    Attribute, Attributes, Skills, Skill, LightSource, Initiative, Faction, EquipmentChanged };
 use crate::specs::saveload::{MarkedBuilder, SimpleMarker};
 use std::collections::HashMap;
 use crate::{attr_bonus, player_hp_at_level, mana_at_level};
@@ -46,8 +46,11 @@ pub fn player(ecs : &mut World, player_x : i32, player_y : i32) -> Entity {
                 max: mana_at_level(11, 1)
             },
             xp: 0,
-            level: 1
+            level: 1,
+            total_weight : 0.0,
+            total_initiative_penalty : 0.0
         })
+        .with(EquipmentChanged{})
         .with(LightSource{ color: rltk::RGB::from_f32(1.0, 1.0, 0.5), range: 8 })
         .with(Initiative{current: 0})
         .with(Faction{name : "Player".to_string() })

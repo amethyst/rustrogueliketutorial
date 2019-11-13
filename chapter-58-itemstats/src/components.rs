@@ -99,7 +99,9 @@ pub struct Pools {
     pub hit_points : Pool,
     pub mana : Pool,
     pub xp : i32,
-    pub level : i32
+    pub level : i32,
+    pub total_weight : f32,
+    pub total_initiative_penalty : f32
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -147,6 +149,9 @@ pub struct SufferDamage {
 pub struct LootTable {
     pub table : String
 }
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct EquipmentChanged {}
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Item {

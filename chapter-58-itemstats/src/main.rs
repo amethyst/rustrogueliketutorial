@@ -80,6 +80,8 @@ impl State {
         mapindex.run_now(&self.ecs);
         let mut vis = VisibilitySystem{};
         vis.run_now(&self.ecs);
+        let mut encumbrance = ai::EncumbranceSystem{};
+        encumbrance.run_now(&self.ecs);
         let mut initiative = ai::InitiativeSystem{};
         initiative.run_now(&self.ecs);
         let mut turnstatus = ai::TurnStatusSystem{};
@@ -423,6 +425,7 @@ fn main() {
     gs.ecs.register::<WantsToFlee>();
     gs.ecs.register::<MoveMode>();
     gs.ecs.register::<Chasing>();
+    gs.ecs.register::<EquipmentChanged>();
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
     raws::load_raws();
