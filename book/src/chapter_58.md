@@ -351,7 +351,7 @@ impl<'a> System<'a> for ItemDropSystem {
             }
             positions.insert(to_drop.item, Position{ x : dropper_pos.x, y : dropper_pos.y }).expect("Unable to insert position");
             backpack.remove(to_drop.item);
-            dirty.insert(entity, EquipmentChanged{});
+            dirty.insert(entity, EquipmentChanged{}).expect("Unable to insert");
 
             if entity == *player_entity {
                 gamelog.entries.insert(0, format!("You drop up the {}.", names.get(to_drop.item).unwrap().name));
@@ -432,7 +432,488 @@ Alright - the initiative penalties take effect! You can play the game for a bit,
 
 ## All About the Cash
 
+We've added a `base_value` field to items, but aren't doing anything with it. In fact, we have no notion of currency whatsoever. Lets go with a simplified "gold pieces" system; gold is the major number (before the decimal point), silver is the fractional (with 10 silver to the gold). We'll not worry about smaller coinages.
 
+In many ways, currency is a `pool` - just like hit points and similar. You spend it, gain it, and it's best handled as an abstract number rather than trying to track each individual coin (although that's quite possible with an ECS!). So we'll further extend the `Pools` component to specify gold:
+
+```rust
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct Pools {
+    pub hit_points : Pool,
+    pub mana : Pool,
+    pub xp : i32,
+    pub level : i32,
+    pub total_weight : f32,
+    pub total_initiative_penalty : f32,
+    pub gold : f32
+}
+```
+
+Applying it to pools means that the player, and all NPCs potentially have gold! Open up `spawner.rs`, and modify the `player` function to start the impoverished hero with no money at all:
+
+```rust
+.with(Pools{
+    hit_points : Pool{ 
+        current: player_hp_at_level(11, 1), 
+        max: player_hp_at_level(11, 1) 
+    },
+    mana: Pool{
+        current: mana_at_level(11, 1),
+        max: mana_at_level(11, 1)
+    },
+    xp: 0,
+    level: 1,
+    total_weight : 0.0,
+    total_initiative_penalty : 0.0,
+    gold : 0.0
+})
+```
+
+NPCs should also carry gold, so you can liberate them from the burdens of mercantilist thought when slain! Open up `raws/mob_structs.rs` and we'll add a "gold" field to the NPC definition:
+
+```rust
+#[derive(Deserialize, Debug)]
+pub struct Mob {
+    pub name : String,
+    pub renderable : Option<Renderable>,
+    pub blocks_tile : bool,
+    pub vision_range : i32,
+    pub movement : String,
+    pub quips : Option<Vec<String>>,
+    pub attributes : MobAttributes,
+    pub skills : Option<HashMap<String, i32>>,
+    pub level : Option<i32>,
+    pub hp : Option<i32>,
+    pub mana : Option<i32>,
+    pub equipped : Option<Vec<String>>,
+    pub natural : Option<MobNatural>,
+    pub loot_table : Option<String>,
+    pub light : Option<MobLight>,
+    pub faction : Option<String>,
+    pub gold : Option<String>
+}
+```
+
+We've made `gold` an `Option` - so it doesn't have to be present (after all, why would a rat carry cash?). We've also made it a `String` - so it can be a dice roll rather than a specific number. It's dull to have bandits *always* drop one gold! Now we need to modify `rawmaster.rs`'s `spawn_named_mob` function to actually apply gold to NPCs:
+
+```rust
+let pools = Pools{
+    level: mob_level,
+    xp: 0,
+    hit_points : Pool{ current: mob_hp, max: mob_hp },
+    mana: Pool{current: mob_mana, max: mob_mana},
+    total_weight : 0.0,
+    total_initiative_penalty : 0.0,
+    gold : if let Some(gold) = &mob_template.gold {    
+            let mut rng = rltk::RandomNumberGenerator::new();                
+            let (n, d, b) = parse_dice_string(&gold);
+            (rng.roll_dice(n, d) + b) as f32
+        } else {
+            0.0
+        }
+};
+```
+
+So we're telling the spawner: if there is no gold specified, use zero. Otherwise, parse the dice string and roll it - and use that number of gold pieces.
+
+Next, when the player kills someone - we should loot their cash. You pretty much *always* want to pick money up, so there's no real need to drop it and make the player remember to collect it. In `damage_system.rs`, first add a new mutable variable next to `xp_gain`:
+
+```rust
+let mut xp_gain = 0;
+let mut gold_gain = 0.0f32;
+```
+
+Then next to where we add XP:
+
+```rust
+if stats.hit_points.current < 1 && damage.from_player {
+    xp_gain += stats.level * 100;
+    gold_gain += stats.gold;
+}
+```
+
+Then when we update the player's XP, we also update their gold:
+
+```rust
+if xp_gain != 0 || gold_gain != 0.0 {
+    let mut player_stats = stats.get_mut(*player).unwrap();
+    let player_attributes = attributes.get(*player).unwrap();
+    player_stats.xp += xp_gain;
+    player_stats.gold += gold_gain;
+```
+
+Next, we should show the player how much gold they have. Open up `gui.rs` again, and next to where we put in weight and initiative we add one more line:
+
+```rust
+ctx.print_color(50,11, rltk::RGB::named(rltk::GOLD), black, &format!("Gold: {:.1}", player_pools.gold));
+```
+
+Lastly, we should give Bandits some gold. In `spawns.json`, open up the `Bandit` entry and apply gold:
+
+```json
+{
+    "name" : "Bandit",
+    "renderable": {
+        "glyph" : "☻",
+        "fg" : "#FF0000",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "vision_range" : 6,
+    "movement" : "random_waypoint",
+    "quips" : [ "Stand and deliver!", "Alright, hand it over" ],
+    "attributes" : {},
+    "equipped" : [ "Dagger", "Shield", "Leather Armor", "Leather Boots" ],
+    "light" : {
+        "range" : 6,
+        "color" : "#FFFF55"
+    },
+    "faction" : "Bandits",
+    "gold" : "1d6"
+},
+```
+
+(In the [in the source code](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-58-itemstats/raws/spawns.json), I've also given gold to goblins, orcs and other humanoids. You should, too!)
+
+If you `cargo run` now, you'll be able to gain gold by slaying enemies (you also see me equipping myself after slaying the bandit, initiative and weights update properly):
+
+![Screenshot](./c58-s2.gif)
+
+## Trading with vendors
+
+Another good way to gain gold (and free up your inventory) is to sell it to vendors. We'd like to keep the interface simple, so we want walking into a vendor to trigger a vendor screen. Let's modify the `Barkeep` entry to include a note that he's a) a vendor, and b) sells food.
+
+```json
+{
+    "name" : "Barkeep",
+    "renderable": {
+        "glyph" : "☻",
+        "fg" : "#EE82EE",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "vision_range" : 4,
+    "movement" : "static",
+    "attributes" : {
+        "intelligence" : 13
+    },
+    "skills" : {
+        "Melee" : 2
+    },
+    "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
+    "faction" : "Townsfolk",
+    "gold" : "2d6",
+    "vendor" : [ "food" ]
+},
+```
+
+We need to update `raws/mob_structs.rs` to support vendor tags being an option, that will contain a list of category strings:
+
+```rust
+#[derive(Deserialize, Debug)]
+pub struct Mob {
+    pub name : String,
+    pub renderable : Option<Renderable>,
+    pub blocks_tile : bool,
+    pub vision_range : i32,
+    pub movement : String,
+    pub quips : Option<Vec<String>>,
+    pub attributes : MobAttributes,
+    pub skills : Option<HashMap<String, i32>>,
+    pub level : Option<i32>,
+    pub hp : Option<i32>,
+    pub mana : Option<i32>,
+    pub equipped : Option<Vec<String>>,
+    pub natural : Option<MobNatural>,
+    pub loot_table : Option<String>,
+    pub light : Option<MobLight>,
+    pub faction : Option<String>,
+    pub gold : Option<String>,
+    pub vendor : Option<Vec<String>>
+}
+```
+
+We'll also need to make a `Vendor` component. You may remember that we had one before, but it was tied to AI - this time, it's actually designed to handle buying/selling. Add it to `components.rs` (and register in `main.rs` and `saveload_system.rs`):
+
+```rust
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct Vendor {
+    pub categories : Vec<String>
+}
+```
+
+A quick change to `rawmaster.rs`'s `spawn_named_mob` makes this component attach to vendors:
+
+```rust
+if let Some(vendor) = &mob_template.vendor {
+    eb = eb.with(Vendor{ categories : vendor.clone() });
+}
+```
+
+Let's open `main.rs` and add a new state to `RunState`:
+
+```rust
+#[derive(PartialEq, Copy, Clone)]
+pub enum VendorMode { Buy, Sell }
+
+#[derive(PartialEq, Copy, Clone)]
+pub enum RunState { 
+    AwaitingInput, 
+    PreRun, 
+    Ticking, 
+    ShowInventory, 
+    ShowDropItem, 
+    ShowTargeting { range : i32, item : Entity},
+    MainMenu { menu_selection : gui::MainMenuSelection },
+    SaveGame,
+    NextLevel,
+    PreviousLevel,
+    ShowRemoveItem,
+    GameOver,
+    MagicMapReveal { row : i32 },
+    MapGeneration,
+    ShowCheatMenu,
+    ShowVendor { vendor: Entity, mode : VendorMode }
+}
+```
+
+Now we need to update `player.rs`'s `try_move_player` function to trigger vendor mode if we walk into a vendor:
+
+```rust
+...
+let vendors = ecs.read_storage::<Vendor>();
+let mut result = RunState::AwaitingInput;
+
+let mut swap_entities : Vec<(Entity, i32, i32)> = Vec::new();
+
+for (entity, _player, pos, viewshed) in (&entities, &players, &mut positions, &mut viewsheds).join() {
+    let destination_idx = map.xy_idx(pos.x + delta_x, pos.y + delta_y);
+
+    for potential_target in map.tile_content[destination_idx].iter() {
+        if let Some(_vendor) = vendors.get(*potential_target) {
+            return RunState::ShowVendor{ vendor: *potential_target, mode : VendorMode::Sell }
+        }
+...
+```
+
+We also need a way to determine what goods the vendor has for sale. In `raws/item_structs.rs`, we'll add a new optional field to item definitions: a vendor category:
+
+```rust
+#[derive(Deserialize, Debug)]
+pub struct Item {
+    pub name : String,
+    pub renderable : Option<Renderable>,
+    pub consumable : Option<Consumable>,
+    pub weapon : Option<Weapon>,
+    pub wearable : Option<Wearable>,
+    pub initiative_penalty : Option<f32>,
+    pub weight_lbs : Option<f32>,
+    pub base_value : Option<f32>,
+    pub vendor_category : Option<String>
+}
+```
+
+Go into `spawns.json`, and add a vendor category tag to `Rations`:
+
+```json
+{
+    "name" : "Rations",
+    "renderable": {
+        "glyph" : "%",
+        "fg" : "#00FF00",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "consumable" : {
+        "effects" : { 
+            "food" : ""
+        }
+    },
+    "weight_lbs" : 2.0,
+    "base_value" : 0.5,
+    "vendor_category" : "food"
+},
+```
+
+Now we can add this function to `raws/rawmaster.rs` to retrieve items for sale in categories:
+
+```rust
+pub fn get_vendor_items(categories: &[String], raws : &RawMaster) -> Vec<(String, f32)> {
+    let mut result : Vec<(String, f32)> = Vec::new();
+
+    for item in raws.raws.items.iter() {
+        if let Some(cat) = &item.vendor_category {
+            if categories.contains(cat) && item.base_value.is_some() {
+                result.push((
+                    item.name.clone(),
+                    item.base_value.unwrap()
+                ));
+            }
+        }
+    }
+
+    result
+}
+```
+
+We'll head over to `gui.rs` and create a new function, `show_vendor_menu`, along with two helper functions and an enum! Let's start with the enum:
+
+```rust
+#[derive(PartialEq, Copy, Clone)]
+pub enum VendorResult { NoResponse, Cancel, Sell, BuyMode, SellMode, Buy }
+```
+
+This represents the choices the player may make when talking to a vendor: nothing, cancel the conversation, buy or sell an item, and switch between buy and sell modes.
+
+The function to display items for sale is *very* similar to the UI for dropping an item (it's a modified copy):
+
+```rust
+fn vendor_sell_menu(gs : &mut State, ctx : &mut Rltk, _vendor : Entity, _mode : VendorMode) -> (VendorResult, Option<Entity>, Option<String>, Option<f32>) {
+    let player_entity = gs.ecs.fetch::<Entity>();
+    let names = gs.ecs.read_storage::<Name>();
+    let backpack = gs.ecs.read_storage::<InBackpack>();
+    let items = gs.ecs.read_storage::<Item>();
+    let entities = gs.ecs.entities();
+
+    let inventory = (&backpack, &names).join().filter(|item| item.0.owner == *player_entity );
+    let count = inventory.count();
+
+    let mut y = (25 - (count / 2)) as i32;
+    ctx.draw_box(15, y-2, 51, (count+3) as i32, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK));
+    ctx.print_color(18, y-2, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Sell Which Item? (tab to switch to buy mode)");
+    ctx.print_color(18, y+count as i32+1, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "ESCAPE to cancel");
+
+    let mut equippable : Vec<Entity> = Vec::new();
+    let mut j = 0;
+    for (entity, _pack, name, item) in (&entities, &backpack, &names, &items).join().filter(|item| item.1.owner == *player_entity ) {
+        ctx.set(17, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437('('));
+        ctx.set(18, y, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), 97+j as u8);
+        ctx.set(19, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437(')'));
+
+        ctx.print(21, y, &name.name.to_string());
+        ctx.print(50, y, &format!("{:.1} gp", item.base_value * 0.8));
+        equippable.push(entity);
+        y += 1;
+        j += 1;
+    }
+
+    match ctx.key {
+        None => (VendorResult::NoResponse, None, None, None),
+        Some(key) => {
+            match key {
+                VirtualKeyCode::Tab => { (VendorResult::BuyMode, None, None, None) }
+                VirtualKeyCode::Escape => { (VendorResult::Cancel, None, None, None) }
+                _ => { 
+                    let selection = rltk::letter_to_option(key);
+                    if selection > -1 && selection < count as i32 {
+                        return (VendorResult::Sell, Some(equippable[selection as usize]), None, None);
+                    }
+                    (VendorResult::NoResponse, None, None, None)
+                }
+            }
+        }
+    }
+}
+```
+
+Buying is also similar, but instead of querying a backpack we use the `get_vendor_items` function we wrote earlier to obtain a list of things to sell:
+
+```rust
+fn vendor_buy_menu(gs : &mut State, ctx : &mut Rltk, vendor : Entity, _mode : VendorMode) -> (VendorResult, Option<Entity>, Option<String>, Option<f32>) {
+    use crate::raws::*;
+
+    let vendors = gs.ecs.read_storage::<Vendor>();
+
+    let inventory = crate::raws::get_vendor_items(&vendors.get(vendor).unwrap().categories, &RAWS.lock().unwrap());
+    let count = inventory.len();
+
+    let mut y = (25 - (count / 2)) as i32;
+    ctx.draw_box(15, y-2, 51, (count+3) as i32, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK));
+    ctx.print_color(18, y-2, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Buy Which Item? (tab to switch to sell mode)");
+    ctx.print_color(18, y+count as i32+1, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "ESCAPE to cancel");
+
+    for (j,sale) in inventory.iter().enumerate() {
+        ctx.set(17, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437('('));
+        ctx.set(18, y, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), 97+j as u8);
+        ctx.set(19, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437(')'));
+
+        ctx.print(21, y, &sale.0);
+        ctx.print(50, y, &format!("{:.1} gp", sale.1 * 1.2));
+        y += 1;
+    }
+
+    match ctx.key {
+        None => (VendorResult::NoResponse, None, None, None),
+        Some(key) => {
+            match key {
+                VirtualKeyCode::Tab => { (VendorResult::SellMode, None, None, None) }
+                VirtualKeyCode::Escape => { (VendorResult::Cancel, None, None, None) }
+                _ => {
+                    let selection = rltk::letter_to_option(key);
+                    if selection > -1 && selection < count as i32 {
+                        return (VendorResult::Buy, None, Some(inventory[selection as usize].0.clone()), Some(inventory[selection as usize].1));
+                    }
+                    (VendorResult::NoResponse, None, None, None)
+                }
+            }
+        }
+    }
+}
+```
+
+Finally, we offer a public function that simply directs to the relevant mode:
+
+```rust
+pub fn show_vendor_menu(gs : &mut State, ctx : &mut Rltk, vendor : Entity, mode : VendorMode) -> (VendorResult, Option<Entity>, Option<String>, Option<f32>) {
+    match mode {
+        VendorMode::Buy => vendor_buy_menu(gs, ctx, vendor, mode),
+        VendorMode::Sell => vendor_sell_menu(gs, ctx, vendor, mode)
+    }    
+}
+```
+
+Back in `main.rs`, we need to add vending to the game's overall state machine:
+
+```rust
+RunState::ShowVendor{vendor, mode} => {
+    let result = gui::show_vendor_menu(self, ctx, vendor, mode);
+    match result.0 {
+        gui::VendorResult::Cancel => newrunstate = RunState::AwaitingInput,
+        gui::VendorResult::NoResponse => {}
+        gui::VendorResult::Sell => {
+            let price = self.ecs.read_storage::<Item>().get(result.1.unwrap()).unwrap().base_value * 0.8;
+            self.ecs.write_storage::<Pools>().get_mut(*self.ecs.fetch::<Entity>()).unwrap().gold += price;
+            self.ecs.delete_entity(result.1.unwrap()).expect("Unable to delete");
+        }
+        gui::VendorResult::Buy => {
+            let tag = result.2.unwrap();
+            let price = result.3.unwrap();
+            let mut pools = self.ecs.write_storage::<Pools>();
+            let player_pools = pools.get_mut(*self.ecs.fetch::<Entity>()).unwrap();
+            if player_pools.gold >= price {
+                player_pools.gold -= price;
+                std::mem::drop(pools);
+                let player_entity = *self.ecs.fetch::<Entity>();
+                crate::raws::spawn_named_item(&RAWS.lock().unwrap(), &mut self.ecs, &tag, SpawnType::Carried{ by: player_entity });
+            }
+        }
+        gui::VendorResult::BuyMode => newrunstate = RunState::ShowVendor{ vendor, mode: VendorMode::Buy },
+        gui::VendorResult::SellMode => newrunstate = RunState::ShowVendor{ vendor, mode: VendorMode::Sell }
+    }
+}
+```
+
+You can now buy and sell goods from vendors! The UI could use a little more improvement (for a future chapter!), but the functionality is there. Now you have a reason to pickup useless loot and cash!
+
+![Screenshot](./c58-s3.gif)
+
+Lastly, going through `spawns.json` to add items to vendor categories is a great idea - and setting vendors to sell these categories. You've seen `Rations` as an example - now it's time to go hog-wild on items! [In the source code](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-58-itemstats/raws/spawns.json), I've filled out what I think to be reasonable defaults.
+
+## Wrap-Up
+
+The game now has money, buying and selling! That gives a great reason to get back to the town, and pick up otherwise useless items. The game also now has inventory weight and encumbrance, and a benefit to using smaller weapons. This has laid the groundwork for a much deeper game.
 
 ...
 

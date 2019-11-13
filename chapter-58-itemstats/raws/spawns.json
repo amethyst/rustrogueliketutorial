@@ -57,7 +57,8 @@
             "effects" : { "provides_healing" : "8" }
         },
         "weight_lbs" : 0.5,
-        "base_value" : 50.0
+        "base_value" : 50.0,
+        "vendor_category" : "alchemy"
     },
 
     {
@@ -75,7 +76,8 @@
             }
         },
         "weight_lbs" : 0.5,
-        "base_value" : 50.0
+        "base_value" : 50.0,
+        "vendor_category" : "alchemy"
     },
 
     {
@@ -94,7 +96,8 @@
             }
         },
         "weight_lbs" : 0.5,
-        "base_value" : 100.0
+        "base_value" : 100.0,
+        "vendor_category" : "alchemy"
     },
 
     {
@@ -113,7 +116,8 @@
             }
         },
         "weight_lbs" : 0.5,
-        "base_value" : 75.0
+        "base_value" : 75.0,
+        "vendor_category" : "alchemy"
     },
 
     {
@@ -130,7 +134,8 @@
             }
         },
         "weight_lbs" : 0.5,
-        "base_value" : 50.0
+        "base_value" : 50.0,
+        "vendor_category" : "alchemy"
     },
 
     {
@@ -147,7 +152,8 @@
             }
         },
         "weight_lbs" : 2.0,
-        "base_value" : 0.5
+        "base_value" : 0.5,
+        "vendor_category" : "food"
     },
 
     {
@@ -164,7 +170,8 @@
             }
         },
         "weight_lbs" : 2.0,
-        "base_value" : 0.5
+        "base_value" : 0.5,
+        "vendor_category" : "food"
     },
 
     {
@@ -208,7 +215,8 @@
             "effects" : { "provides_healing" : "4" }
         },
         "weight_lbs" : 2.0,
-        "base_value" : 0.5
+        "base_value" : 0.5,
+        "vendor_category" : "food"
     },
 
     {
@@ -227,7 +235,8 @@
         },
         "weight_lbs" : 3.0,
         "base_value" : 10.0,
-        "initiative_penalty" : 2
+        "initiative_penalty" : 2,
+        "vendor_category" : "junk"
     },
 
     {
@@ -246,7 +255,8 @@
         },
         "weight_lbs" : 1.0,
         "base_value" : 2.0,
-        "initiative_penalty" : 0
+        "initiative_penalty" : 0,
+        "vendor_category" : "weapon"
     },
 
     {
@@ -265,7 +275,8 @@
         },
         "weight_lbs" : 2.0,
         "base_value" : 10.0,
-        "initiative_penalty" : 1
+        "initiative_penalty" : 1,
+        "vendor_category" : "weapon"
     },
 
     {
@@ -284,7 +295,8 @@
         },
         "weight_lbs" : 3.0,
         "base_value" : 15.0,
-        "initiative_penalty" : 2
+        "initiative_penalty" : 2,
+        "vendor_category" : "weapon"
     },
 
     {
@@ -303,7 +315,8 @@
         },
         "weight_lbs" : 4.0,
         "base_value" : 10.0,
-        "initiative_penalty" : 2
+        "initiative_penalty" : 2,
+        "vendor_category" : "weapon"
     },
 
     {
@@ -320,7 +333,8 @@
         },
         "weight_lbs" : 5.0,
         "base_value" : 3.0,
-        "initiative_penalty" : 0.5
+        "initiative_penalty" : 0.5,
+        "vendor_category" : "armor"
     },
 
     {
@@ -337,7 +351,8 @@
         },
         "weight_lbs" : 45.0,
         "base_value" : 30.0,
-        "initiative_penalty" : 1.0
+        "initiative_penalty" : 1.0,
+        "vendor_category" : "armor"
     },
 
     {
@@ -354,7 +369,8 @@
         },
         "weight_lbs" : 1.0,
         "base_value" : 1.0,
-        "initiative_penalty" : 0.1
+        "initiative_penalty" : 0.1,
+        "vendor_category" : "junk"
     },
 
     {
@@ -371,7 +387,8 @@
         },
         "weight_lbs" : 1.0,
         "base_value" : 1.0,
-        "initiative_penalty" : 0.1
+        "initiative_penalty" : 0.1,
+        "vendor_category" : "junk"
     },
 
     {
@@ -388,7 +405,8 @@
         },
         "weight_lbs" : 1.0,
         "base_value" : 1.0,
-        "initiative_penalty" : 0.1
+        "initiative_penalty" : 0.1,
+        "vendor_category" : "junk"
     },
 
     {
@@ -407,7 +425,8 @@
         },
         "weight_lbs" : 2.0,
         "base_value" : 0.1,
-        "initiative_penalty" : 2.0
+        "initiative_penalty" : 2.0,
+        "vendor_category" : "junk"
     },
 
     {
@@ -424,7 +443,8 @@
         },
         "weight_lbs" : 1.0,
         "base_value" : 1.0,
-        "initiative_penalty" : 0.1
+        "initiative_penalty" : 0.1,
+        "vendor_category" : "clothes"
     },
 
     {
@@ -441,7 +461,8 @@
         },
         "weight_lbs" : 1.0,
         "base_value" : 1.0,
-        "initiative_penalty" : 0.1
+        "initiative_penalty" : 0.1,
+        "vendor_category" : "clothes"
     },
 
     {
@@ -458,7 +479,8 @@
         },
         "weight_lbs" : 1.0,
         "base_value" : 1.0,
-        "initiative_penalty" : 0.1
+        "initiative_penalty" : 0.1,
+        "vendor_category" : "clothes"
     },
 
     {
@@ -475,7 +497,8 @@
         },
         "weight_lbs" : 15.0,
         "base_value" : 10.0,
-        "initiative_penalty" : 0.5
+        "initiative_penalty" : 0.5,
+        "vendor_category" : "clothes"
     },
 
     {
@@ -492,7 +515,8 @@
         },
         "weight_lbs" : 2.0,
         "base_value" : 5.0,
-        "initiative_penalty" : 0.25
+        "initiative_penalty" : 0.25,
+        "vendor_category" : "clothes"
     }
 ],
 
@@ -515,7 +539,9 @@
             "Melee" : 2
         },
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
-        "faction" : "Townsfolk"
+        "faction" : "Townsfolk",
+        "gold" : "2d6",
+        "vendor" : [ "food" ]
     },
 
     {
@@ -531,7 +557,9 @@
         "movement" : "static",
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
-        "faction" : "Townsfolk"
+        "faction" : "Townsfolk",
+        "gold" : "2d6",
+        "vendor" : [ "junk" ]
     },
 
     {
@@ -548,7 +576,8 @@
         "quips" : [ "Quiet down, it's too early!", "Oh my, I drank too much.", "Still saving the world, eh?" ],
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
-        "faction" : "Townsfolk"
+        "faction" : "Townsfolk",
+        "gold" : "1d4"
     },
 
     {
@@ -564,7 +593,8 @@
         "movement" : "static",
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
-        "faction" : "Townsfolk"
+        "faction" : "Townsfolk",
+        "gold" : "2d6"
     },
 
     {
@@ -581,7 +611,8 @@
         "quips" : [ "Great to see a new face here!", "I hear there's going to be a good sermon on tea", "Want some cake?" ],
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
-        "faction" : "Townsfolk"
+        "faction" : "Townsfolk",
+        "gold" : "1d4"
     },
 
     {
@@ -597,7 +628,9 @@
         "movement" : "static",
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
-        "faction" : "Townsfolk"
+        "faction" : "Townsfolk",
+        "gold" : "2d6",
+        "vendor" : [ "armor", "weapon" ]
     },
 
     {
@@ -613,7 +646,9 @@
         "movement" : "static",
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
-        "faction" : "Townsfolk"
+        "faction" : "Townsfolk",
+        "gold" : "2d6",
+        "vendor" : [ "clothes" ]
     },
 
     {
@@ -629,7 +664,9 @@
         "movement" : "static",
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
-        "faction" : "Townsfolk"
+        "faction" : "Townsfolk",
+        "gold" : "2d6",
+        "vendor" : [ "alchemy" ]
     },
 
     {
@@ -646,7 +683,8 @@
         "quips" : [ "Hello, dear", "Off saving the world again?", "Be careful in the dungeon!", "Your father would be so proud, were he here." ],
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
-        "faction" : "Townsfolk"
+        "faction" : "Townsfolk",
+        "gold" : "2d6"
     },
 
     {
@@ -663,7 +701,8 @@
         "quips" : [ "Why are you in my house?" ],
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
-        "faction" : "Townsfolk"
+        "faction" : "Townsfolk",
+        "gold" : "1d2"
     },
 
     {
@@ -680,7 +719,8 @@
         "quips" : [ "Lovely day, eh?", "Nice weather", "Hello" ],
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
-        "faction" : "Townsfolk"
+        "faction" : "Townsfolk",
+        "gold" : "1d2"
     },
 
     {
@@ -697,7 +737,8 @@
         "quips" : [ "They're biting today!", "I caught something, but it wasn't a fish!", "Looks like rain" ],
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
-        "faction" : "Townsfolk"
+        "faction" : "Townsfolk",
+        "gold" : "1d2"
     },
 
     {
@@ -714,7 +755,8 @@
         "quips" : [ "Arrr", "Grog!", "Booze!" ],
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
-        "faction" : "Townsfolk"
+        "faction" : "Townsfolk",
+        "gold" : "2d6"
     },
 
     {
@@ -731,7 +773,8 @@
         "quips" : [ "Hic", "Need... more... booze!", "Spare a copper?" ],
         "attributes" : {},
         "equipped" : [ "Cudgel", "Cloth Tunic", "Cloth Pants", "Slippers" ],
-        "faction" : "Townsfolk"
+        "faction" : "Townsfolk",
+        "gold" : "1d2"
     },
 
     {
@@ -867,7 +910,8 @@
             "range" : 6,
             "color" : "#FFFF55"
         },
-        "faction" : "Bandits"
+        "faction" : "Bandits",
+        "gold" : "1d6"
     },
 
     {
@@ -882,7 +926,8 @@
         "vision_range" : 8,
         "movement" : "static",
         "attributes" : {},
-        "faction" : "Cave Goblins"
+        "faction" : "Cave Goblins",
+        "gold" : "1d8"
     },
 
     {
@@ -897,7 +942,8 @@
         "vision_range" : 8,
         "movement" : "static",
         "attributes" : {},
-        "faction" : "Cave Goblins"
+        "faction" : "Cave Goblins",
+        "gold" : "1d6"
     },
 
     {
@@ -912,7 +958,8 @@
         "vision_range" : 4,
         "movement" : "static",
         "attributes" : {},
-        "faction" : "Cave Goblins"
+        "faction" : "Cave Goblins",
+        "gold" : "1d4"
     },
 
     {

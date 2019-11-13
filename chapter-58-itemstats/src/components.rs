@@ -51,6 +51,11 @@ pub struct Initiative {
 }
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct Vendor {
+    pub categories : Vec<String>
+}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct MyTurn {}
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
@@ -101,7 +106,8 @@ pub struct Pools {
     pub xp : i32,
     pub level : i32,
     pub total_weight : f32,
-    pub total_initiative_penalty : f32
+    pub total_initiative_penalty : f32,
+    pub gold : f32
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

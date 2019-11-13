@@ -151,6 +151,23 @@ fn find_slot_for_equippable_item(tag : &str, raws: &RawMaster) -> EquipmentSlot 
     panic!("Trying to equip {}, but it has no slot tag.", tag);
 }
 
+pub fn get_vendor_items(categories: &[String], raws : &RawMaster) -> Vec<(String, f32)> {
+    let mut result : Vec<(String, f32)> = Vec::new();
+
+    for item in raws.raws.items.iter() {
+        if let Some(cat) = &item.vendor_category {
+            if categories.contains(cat) && item.base_value.is_some() {
+                result.push((
+                    item.name.clone(),
+                    item.base_value.unwrap()
+                ));
+            }
+        }
+    }
+
+    result
+}
+
 fn spawn_position<'a>(pos : SpawnType, new_entity : EntityBuilder<'a>, tag : &str, raws: &RawMaster) -> EntityBuilder<'a> {
     let eb = new_entity;
 
@@ -327,7 +344,14 @@ pub fn spawn_named_mob(raws: &RawMaster, ecs : &mut World, key : &str, pos : Spa
             hit_points : Pool{ current: mob_hp, max: mob_hp },
             mana: Pool{current: mob_mana, max: mob_mana},
             total_weight : 0.0,
-            total_initiative_penalty : 0.0
+            total_initiative_penalty : 0.0,
+            gold : if let Some(gold) = &mob_template.gold {    
+                    let mut rng = rltk::RandomNumberGenerator::new();                
+                    let (n, d, b) = parse_dice_string(&gold);
+                    (rng.roll_dice(n, d) + b) as f32
+                } else {
+                    0.0
+                }
         };
         eb = eb.with(pools);
         eb = eb.with(EquipmentChanged{});
@@ -383,6 +407,10 @@ pub fn spawn_named_mob(raws: &RawMaster, ecs : &mut World, key : &str, pos : Spa
             eb = eb.with(Faction{ name: faction.clone() });
         } else {
             eb = eb.with(Faction{ name : "Mindless".to_string() })
+        }
+
+        if let Some(vendor) = &mob_template.vendor {
+            eb = eb.with(Vendor{ categories : vendor.clone() });
         }
 
         let new_mob = eb.build();

@@ -24,6 +24,7 @@ impl<'a> System<'a> for DamageSystem {
         let (mut stats, mut damage, positions, mut map, entities, player, attributes, 
             mut log, mut particles, player_pos) = data;
         let mut xp_gain = 0;
+        let mut gold_gain = 0.0f32;
 
         for (entity, mut stats, damage) in (&entities, &mut stats, &damage).join() {
             stats.hit_points.current -= damage.amount;
@@ -35,13 +36,15 @@ impl<'a> System<'a> for DamageSystem {
 
             if stats.hit_points.current < 1 && damage.from_player {
                 xp_gain += stats.level * 100;
+                gold_gain += stats.gold;
             }
         }
 
-        if xp_gain != 0 {
+        if xp_gain != 0 || gold_gain != 0.0 {
             let mut player_stats = stats.get_mut(*player).unwrap();
             let player_attributes = attributes.get(*player).unwrap();
             player_stats.xp += xp_gain;
+            player_stats.gold += gold_gain;
             if player_stats.xp >= player_stats.level * 1000 {
                 // We've gone up a level!
                 player_stats.level += 1;

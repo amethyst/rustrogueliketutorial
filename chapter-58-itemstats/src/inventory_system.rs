@@ -73,7 +73,7 @@ impl<'a> System<'a> for ItemUseSystem {
             provides_food, mut hunger_clocks, magic_mapper, mut runstate, mut dirty) = data;
 
         for (entity, useitem) in (&entities, &wants_use).join() {
-            dirty.insert(entity, EquipmentChanged{});
+            dirty.insert(entity, EquipmentChanged{}).expect("Unable to insert");
             let mut used_item = true;
 
             // Targeting
@@ -288,7 +288,7 @@ impl<'a> System<'a> for ItemDropSystem {
             }
             positions.insert(to_drop.item, Position{ x : dropper_pos.x, y : dropper_pos.y }).expect("Unable to insert position");
             backpack.remove(to_drop.item);
-            dirty.insert(entity, EquipmentChanged{});
+            dirty.insert(entity, EquipmentChanged{}).expect("Unable to insert");
 
             if entity == *player_entity {
                 gamelog.entries.insert(0, format!("You drop up the {}.", names.get(to_drop.item).unwrap().name));
