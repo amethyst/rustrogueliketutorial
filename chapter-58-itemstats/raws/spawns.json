@@ -55,7 +55,9 @@
         },
         "consumable" : {
             "effects" : { "provides_healing" : "8" }
-        }
+        },
+        "weight_lbs" : 0.5,
+        "base_value" : 50.0
     },
 
     {
@@ -71,7 +73,9 @@
                 "ranged" : "6",
                 "damage" : "20"
             }
-        }
+        },
+        "weight_lbs" : 0.5,
+        "base_value" : 50.0
     },
 
     {
@@ -88,7 +92,9 @@
                 "damage" : "20",
                 "area_of_effect" : "3"
             }
-        }
+        },
+        "weight_lbs" : 0.5,
+        "base_value" : 100.0
     },
 
     {
@@ -105,7 +111,9 @@
                 "damage" : "20",
                 "confusion" : "4"
             }
-        }
+        },
+        "weight_lbs" : 0.5,
+        "base_value" : 75.0
     },
 
     {
@@ -120,7 +128,9 @@
             "effects" : { 
                 "magic_mapping" : ""
             }
-        }
+        },
+        "weight_lbs" : 0.5,
+        "base_value" : 50.0
     },
 
     {
@@ -135,7 +145,9 @@
             "effects" : { 
                 "food" : ""
             }
-        }
+        },
+        "weight_lbs" : 2.0,
+        "base_value" : 0.5
     },
 
     {
@@ -150,7 +162,9 @@
             "effects" : { 
                 "food" : ""
             }
-        }
+        },
+        "weight_lbs" : 2.0,
+        "base_value" : 0.5
     },
 
     {
@@ -160,7 +174,9 @@
             "fg" : "#A52A2A",
             "bg" : "#000000",
             "order" : 2
-        }
+        },
+        "weight_lbs" : 2.0,
+        "base_value" : 5.0
     },
 
     {
@@ -175,7 +191,9 @@
             "effects" : { 
                 "food" : ""
             }
-        }
+        },
+        "weight_lbs" : 2.0,
+        "base_value" : 0.5
     },
 
     {
@@ -188,7 +206,9 @@
         },
         "consumable" : {
             "effects" : { "provides_healing" : "4" }
-        }
+        },
+        "weight_lbs" : 2.0,
+        "base_value" : 0.5
     },
 
     {
@@ -204,7 +224,10 @@
             "attribute" : "Might",
             "base_damage" : "1d8-1",
             "hit_bonus" : -1
-        }
+        },
+        "weight_lbs" : 3.0,
+        "base_value" : 10.0,
+        "initiative_penalty" : 2
     },
 
     {
@@ -220,7 +243,10 @@
             "attribute" : "Quickness",
             "base_damage" : "1d4",
             "hit_bonus" : 0
-        }
+        },
+        "weight_lbs" : 1.0,
+        "base_value" : 2.0,
+        "initiative_penalty" : 0
     },
 
     {
@@ -236,7 +262,10 @@
             "attribute" : "Might",
             "base_damage" : "1d6",
             "hit_bonus" : 0
-        }
+        },
+        "weight_lbs" : 2.0,
+        "base_value" : 10.0,
+        "initiative_penalty" : 1
     },
 
     {
@@ -252,7 +281,10 @@
             "attribute" : "Might",
             "base_damage" : "1d8",
             "hit_bonus" : 0
-        }
+        },
+        "weight_lbs" : 3.0,
+        "base_value" : 15.0,
+        "initiative_penalty" : 2
     },
 
     {
@@ -266,9 +298,12 @@
         "weapon" : {
             "range" : "melee",
             "attribute" : "Might",
-            "base_damage" : "1d8+1",
+            "base_damage" : "1d8",
             "hit_bonus" : 0
-        }
+        },
+        "weight_lbs" : 4.0,
+        "base_value" : 10.0,
+        "initiative_penalty" : 2
     },
 
     {
@@ -282,7 +317,10 @@
         "wearable" : {
             "slot" : "Shield",
             "armor_class" : 1.0
-        }
+        },
+        "weight_lbs" : 5.0,
+        "base_value" : 3.0,
+        "initiative_penalty" : 0.5
     },
 
     {
@@ -296,7 +334,10 @@
         "wearable" : {
             "slot" : "Shield",
             "armor_class" : 2.0
-        }
+        },
+        "weight_lbs" : 45.0,
+        "base_value" : 30.0,
+        "initiative_penalty" : 1.0
     },
 
     {
@@ -310,7 +351,10 @@
         "wearable" : {
             "slot" : "Torso",
             "armor_class" : 0.1
-        }
+        },
+        "weight_lbs" : 1.0,
+        "base_value" : 1.0,
+        "initiative_penalty" : 0.1
     },
 
     {
@@ -324,7 +368,10 @@
         "wearable" : {
             "slot" : "Legs",
             "armor_class" : 0.1
-        }
+        },
+        "weight_lbs" : 1.0,
+        "base_value" : 1.0,
+        "initiative_penalty" : 0.1
     },
 
     {
@@ -338,7 +385,10 @@
         "wearable" : {
             "slot" : "Feet",
             "armor_class" : 0.1
-        }
+        },
+        "weight_lbs" : 1.0,
+        "base_value" : 1.0,
+        "initiative_penalty" : 0.1
     },
 
     {
@@ -354,7 +404,10 @@
             "attribute" : "Quickness",
             "base_damage" : "1d4",
             "hit_bonus" : 0
-        }
+        },
+        "weight_lbs" : 2.0,
+        "base_value" : 0.1,
+        "initiative_penalty" : 2.0
     },
 
     {
@@ -368,7 +421,10 @@
         "wearable" : {
             "slot" : "Torso",
             "armor_class" : 0.1
-        }
+        },
+        "weight_lbs" : 1.0,
+        "base_value" : 1.0,
+        "initiative_penalty" : 0.1
     },
 
     {
@@ -382,7 +438,10 @@
         "wearable" : {
             "slot" : "Legs",
             "armor_class" : 0.1
-        }
+        },
+        "weight_lbs" : 1.0,
+        "base_value" : 1.0,
+        "initiative_penalty" : 0.1
     },
 
     {
@@ -396,7 +455,10 @@
         "wearable" : {
             "slot" : "Feet",
             "armor_class" : 0.1
-        }
+        },
+        "weight_lbs" : 1.0,
+        "base_value" : 1.0,
+        "initiative_penalty" : 0.1
     },
 
     {
@@ -410,7 +472,10 @@
         "wearable" : {
             "slot" : "Torso",
             "armor_class" : 1.0
-        }
+        },
+        "weight_lbs" : 15.0,
+        "base_value" : 10.0,
+        "initiative_penalty" : 0.5
     },
 
     {
@@ -424,7 +489,10 @@
         "wearable" : {
             "slot" : "Feet",
             "armor_class" : 0.2
-        }
+        },
+        "weight_lbs" : 2.0,
+        "base_value" : 5.0,
+        "initiative_penalty" : 0.25
     }
 ],
 

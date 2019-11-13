@@ -65,4 +65,5 @@
     - Town Portals
     - Movement cleanup
     - Random Seeds
+    - Caverns to Fort Transition
 - [Contributors](./contributors.md)

@@ -203,7 +203,11 @@ pub fn spawn_named_item(raws: &RawMaster, ecs : &mut World, key : &str, pos : Sp
 
         eb = eb.with(Name{ name : item_template.name.clone() });
 
-        eb = eb.with(crate::components::Item{});
+        eb = eb.with(crate::components::Item{
+            initiative_penalty : item_template.initiative_penalty.unwrap_or(0.0),
+            weight_lbs : item_template.weight_lbs.unwrap_or(0.0),
+            base_value : item_template.base_value.unwrap_or(0.0)            
+        });
 
         if let Some(consumable) = &item_template.consumable {
             eb = eb.with(crate::components::Consumable{});

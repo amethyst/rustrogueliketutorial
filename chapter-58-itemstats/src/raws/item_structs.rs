@@ -7,7 +7,10 @@ pub struct Item {
     pub renderable : Option<Renderable>,
     pub consumable : Option<Consumable>,
     pub weapon : Option<Weapon>,
-    pub wearable : Option<Wearable>
+    pub wearable : Option<Wearable>,
+    pub initiative_penalty : Option<f32>,
+    pub weight_lbs : Option<f32>,
+    pub base_value : Option<f32>
 }
 
 #[derive(Deserialize, Debug)]
