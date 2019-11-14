@@ -140,7 +140,7 @@ impl GameState for State {
                     if self.mapgen_timer > 200.0 {
                         self.mapgen_timer = 0.0;
                         self.mapgen_index += 1;
-                        if self.mapgen_index == self.mapgen_history.len() {
+                        if self.mapgen_index >= self.mapgen_history.len() {
                             //self.mapgen_index -= 1;
                             newrunstate = self.mapgen_next_state.unwrap();
                         }

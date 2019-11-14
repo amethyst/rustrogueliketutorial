@@ -607,7 +607,7 @@ This is a lot like our regular map drawing, but we lock the camera to the middle
 In `main.rs`, replace the call to `draw_map` with:
 
 ```rust
-camera::render_debug_map(&self.mapgen_history[self.mapgen_index], ctx);
+if self.mapgen_index < self.mapgen_history.len() { camera::render_debug_map(&self.mapgen_history[self.mapgen_index], ctx); }
 ```
 
 Now you can go into `map.rs` and remove `draw_map`, `wall_glyph` and `is_revealed_and_wall` completely.

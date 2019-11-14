@@ -323,7 +323,7 @@ match newrunstate {
         if self.mapgen_timer > 300.0 {
             self.mapgen_timer = 0.0;
             self.mapgen_index += 1;
-            if self.mapgen_index == self.mapgen_history.len() {
+            if self.mapgen_index >= self.mapgen_history.len() {
                 newrunstate = self.mapgen_next_state.unwrap();
             }
         }

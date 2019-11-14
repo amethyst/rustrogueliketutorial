@@ -45,7 +45,7 @@ extern crate lazy_static;
 
 rltk::add_wasm_support!();
 
-const SHOW_MAPGEN_VISUALIZER : bool = false;
+const SHOW_MAPGEN_VISUALIZER : bool = true;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum VendorMode { Buy, Sell }
@@ -154,14 +154,14 @@ impl GameState for State {
                 if !SHOW_MAPGEN_VISUALIZER {
                     newrunstate = self.mapgen_next_state.unwrap();
                 } else {
-                    ctx.cls();                
-                    camera::render_debug_map(&self.mapgen_history[self.mapgen_index], ctx);
+                    ctx.cls();
+                    if self.mapgen_index < self.mapgen_history.len() { if self.mapgen_index < self.mapgen_history.len() { camera::render_debug_map(&self.mapgen_history[self.mapgen_index], ctx); } }
 
                     self.mapgen_timer += ctx.frame_time_ms;
-                    if self.mapgen_timer > 500.0 {
+                    if self.mapgen_timer > 50.0 {
                         self.mapgen_timer = 0.0;
                         self.mapgen_index += 1;
-                        if self.mapgen_index == self.mapgen_history.len() {
+                        if self.mapgen_index >= self.mapgen_history.len() {
                             //self.mapgen_index -= 1;
                             newrunstate = self.mapgen_next_state.unwrap();
                         }
@@ -215,6 +215,13 @@ impl GameState for State {
                         self.goto_level(1);
                         self.mapgen_next_state = Some(RunState::PreRun);
                         newrunstate = RunState::MapGeneration;
+                    }
+                    gui::CheatMenuResult::Heal => {
+                        let player = self.ecs.fetch::<Entity>();
+                        let mut pools = self.ecs.write_storage::<Pools>();
+                        let mut player_pools = pools.get_mut(*player).unwrap();
+                        player_pools.hit_points.current = player_pools.hit_points.max;
+                        newrunstate = RunState::AwaitingInput;
                     }
                 }
             }
