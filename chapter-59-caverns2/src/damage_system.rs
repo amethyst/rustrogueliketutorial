@@ -27,7 +27,9 @@ impl<'a> System<'a> for DamageSystem {
         let mut gold_gain = 0.0f32;
 
         for (entity, mut stats, damage) in (&entities, &mut stats, &damage).join() {
-            stats.hit_points.current -= damage.amount;
+            if !stats.god_mode {
+                stats.hit_points.current -= damage.amount;
+            }
             let pos = positions.get(entity);
             if let Some(pos) = pos {
                 let idx = map.xy_idx(pos.x, pos.y);

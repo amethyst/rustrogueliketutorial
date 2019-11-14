@@ -223,6 +223,20 @@ impl GameState for State {
                         player_pools.hit_points.current = player_pools.hit_points.max;
                         newrunstate = RunState::AwaitingInput;
                     }
+                    gui::CheatMenuResult::Reveal => {
+                        let mut map = self.ecs.fetch_mut::<Map>();
+                        for v in map.revealed_tiles.iter_mut() {
+                            *v = true;
+                        }
+                        newrunstate = RunState::AwaitingInput;
+                    }
+                    gui::CheatMenuResult::GodMode => {
+                        let player = self.ecs.fetch::<Entity>();
+                        let mut pools = self.ecs.write_storage::<Pools>();
+                        let mut player_pools = pools.get_mut(*player).unwrap();
+                        player_pools.god_mode = true;
+                        newrunstate = RunState::AwaitingInput;
+                    }
                 }
             }
             RunState::ShowDropItem => {
