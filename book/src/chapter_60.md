@@ -259,7 +259,7 @@ The level is basically empty, other than various drops such as rations! We limit
 In `spawns.json`, in the `spawn_table` section - let's add some placeholder spawns for dragon-like things:
 
 ```json
-{ "name" : "Dragon Wyrmling", "weight" : 3, "min_depth" : 5, "max_depth" : 7 },
+{ "name" : "Dragon Wyrmling", "weight" : 1, "min_depth" : 5, "max_depth" : 7 },
 { "name" : "Lizardman", "weight" : 10, "min_depth" : 5, "max_depth" : 7 },
 { "name" : "Giant Lizard", "weight" : 4, "min_depth" : 5, "max_depth" : 7 }
 ```
@@ -460,6 +460,8 @@ The stone-fall trap and landmines are like an extra-dangerous bear trap:
 
 ## Dwarf Loot
 
+These are just more items for the `items` section of `spawns.json`:
+
 ```json
 {
     "name" : "Breastplate",
@@ -519,6 +521,10 @@ The stone-fall trap and landmines are like an extra-dangerous bear trap:
     "vendor_category" : "weapon"
 },
 ```
+
+## Wrap-Up
+
+The level is still a bit too likely to murder you, but it works. We'll be making things a bit easier in the coming chapters, so we'll leave the difficulty at "iron man" for now!
 
 ...
 

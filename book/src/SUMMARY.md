@@ -63,7 +63,9 @@
     - [Deep caverns](./chapter_59.md)
     - [Cavern to Dwarf Fort](./chapter_60.md)
     - Town Portals
+    - Magic Items
+    - Magic Spells
+    - Fortress level
     - Movement cleanup
     - Random Seeds
-    - Caverns to Fort Transition
 - [Contributors](./contributors.md)

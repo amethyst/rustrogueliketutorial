@@ -26,7 +26,7 @@
     { "name" : "Bat", "weight" : 15, "min_depth" : 3, "max_depth" : 3 },
     { "name" : "Large Spider", "weight" : 3, "min_depth" : 3, "max_depth" : 3 },
     { "name" : "Gelatinous Cube", "weight" : 3, "min_depth" : 3, "max_depth" : 3 },
-    { "name" : "Dragon Wyrmling", "weight" : 3, "min_depth" : 5, "max_depth" : 7 },
+    { "name" : "Dragon Wyrmling", "weight" : 1, "min_depth" : 5, "max_depth" : 7 },
     { "name" : "Lizardman", "weight" : 10, "min_depth" : 5, "max_depth" : 7 },
     { "name" : "Giant Lizard", "weight" : 4, "min_depth" : 5, "max_depth" : 7 },
     { "name" : "Rock Golem", "weight" : 4, "min_depth" : 5, "max_depth" : 7 },
