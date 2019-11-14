@@ -61,6 +61,7 @@
     - [Better AI](./chapter_57.md)
     - [Item Stats and Vendors](./chapter_58.md)
     - [Deep caverns](./chapter_59.md)
+    - [Cavern to Dwarf Fort](./chapter_60.md)
     - Town Portals
     - Movement cleanup
     - Random Seeds
