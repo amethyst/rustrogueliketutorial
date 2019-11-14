@@ -31,6 +31,7 @@ mod door_placement;
 mod town;
 mod forest;
 mod limestone_cavern;
+mod area_ending_point;
 use forest::forest_builder;
 use limestone_cavern::*;
 use distant_exit::DistantExit;
@@ -62,6 +63,7 @@ use rooms_corridors_lines::StraightLineCorridors;
 use room_corridor_spawner::CorridorSpawner;
 use door_placement::DoorPlacement;
 use town::town_builder;
+use area_ending_point::*;
 
 pub struct BuilderMap {
     pub spawn_list : Vec<(usize, String)>,
@@ -305,6 +307,7 @@ pub fn level_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator, widt
         2 => forest_builder(new_depth, rng, width, height),
         3 => limestone_cavern_builder(new_depth, rng, width, height),
         4 => limestone_deep_cavern_builder(new_depth, rng, width, height),
+        5 => limestone_transition_builder(new_depth, rng, width, height),
         _ => random_builder(new_depth, rng, width, height)
     }
 }
