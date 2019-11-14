@@ -56,6 +56,7 @@ CALL :Stage chapter-57-ai
 CALL :Stage chapter-58-itemstats
 CALL :Stage chapter-59-caverns2
 CALL :Stage chapter-60-caverns3
+CALL :Stage chapter-61-townportal
 
 REM Publish or perish
 cd book\book\wasm

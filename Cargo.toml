@@ -72,7 +72,8 @@ members = [
     "chapter-57-ai",
     "chapter-58-itemstats",
     "chapter-59-caverns2",
-    "chapter-60-caverns3"
+    "chapter-60-caverns3",
+    "chapter-61-townportal"
     ]
 
 [profile.dev]
