@@ -45,7 +45,7 @@ extern crate lazy_static;
 
 rltk::add_wasm_support!();
 
-const SHOW_MAPGEN_VISUALIZER : bool = true;
+const SHOW_MAPGEN_VISUALIZER : bool = false;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum VendorMode { Buy, Sell }

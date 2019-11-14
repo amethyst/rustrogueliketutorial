@@ -254,7 +254,271 @@ So putting all of this together and running it - you have a dungeon pretty much 
 
 ## Populating our new level
 
-The level is basically empty, other than various drops such as rations! We limited the drops on the previous level, which is good - we want to start transitioning towards a more "monster" based level here. The fort apparently fell because of a nasty dragon (as opposed to the friendly type!), so more draconic minions make sense.
+The level is basically empty, other than various drops such as rations! We limited the drops on the previous level, which is good - we want to start transitioning towards a more "monster" based level here. The fort apparently fell because of a nasty dragon (as opposed to the friendly type!), so more draconic minions make sense. Hopefully, the player will be approaching level 3 or 4 by now, so we can throw some harder mobs at them without making the game impossible.
+
+In `spawns.json`, in the `spawn_table` section - let's add some placeholder spawns for dragon-like things:
+
+```json
+{ "name" : "Dragon Wyrmling", "weight" : 3, "min_depth" : 5, "max_depth" : 7 },
+{ "name" : "Lizardman", "weight" : 10, "min_depth" : 5, "max_depth" : 7 },
+{ "name" : "Giant Lizard", "weight" : 4, "min_depth" : 5, "max_depth" : 7 }
+```
+
+Remembering that this used to be a dwarven region, let's also add some things that a dwarf might leave behind:
+
+```json
+{ "name" : "Rock Golem", "weight" : 4, "min_depth" : 5, "max_depth" : 7 },
+{ "name" : "Stonefall Trap", "weight" : 4, "min_depth" : 5, "max_depth" : 7 },
+{ "name" : "Landmine", "weight" : 1, "min_depth" : 5, "max_depth" : 7 }
+```
+
+Dwarves are also known for their armor and weaponry, so a few placeholders for their gear sounds good:
+
+```json
+{ "name" : "Breastplate", "weight" : 7, "min_depth" : 5, "max_depth" : 7 },
+{ "name" : "War Axe", "weight" : 7, "min_depth" : 5, "max_depth" : 7 },
+{ "name" : "Dwarf-Steel Shirt", "weight" : 1, "min_depth" : 5, "max_depth" : 7 }
+```
+
+That's a good 9 new entities to create! We'll start by building them using the systems we already have, and in a future chapter we'll add some special effects to them. (The "Dwarf-Steel" used to be "mithril" - but the Tolkien Foundation used to be known for being a little lawyer-happy over that word. So Dwarf-Steel it is!)
+
+## Dragon-like creatures
+
+We'll start by giving them a new *faction* in `spawns.json`:
+
+```json
+{ "name" : "Wyrm", "responses": { "Default" : "attack", "Wyrm" : "ignore" }}
+```
+
+We'll also extrapolate a little and come up with a few things they may drop as loot (for `loot_tables`):
+
+```json
+{ "name" : "Wyrms",
+    "drops" : [
+        { "name" : "Dragon Scale", "weight" : 10 },
+        { "name" : "Meat", "weight" : 10 }
+    ]
+}
+```
+
+Now, let's get into the `mobs` section and make our baby dragons:
+
+```json
+{
+    "name" : "Dragon Wyrmling",
+    "renderable": {
+        "glyph" : "d",
+        "fg" : "#FF0000",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "vision_range" : 12,
+    "movement" : "random_waypoint",
+    "attributes" : {
+        "might" : 3,
+        "fitness" : 3
+    },
+    "skills" : {
+        "Melee" : 15,
+        "Defense" : 14
+    },
+    "natural" : {
+        "armor_class" : 15,
+        "attacks" : [
+            { "name" : "bite", "hit_bonus" : 4, "damage" : "1d10+2" }
+        ]   
+    },
+    "loot_table" : "Wyrms",
+    "faction" : "Wyrm",
+    "level" : 3,
+    "gold" : "3d6"
+}
+```
+
+Even without special abilities, that's a mighty foe! TODO
+
+We should definitely counteract the awesome nature of the young dragons by making the lizardmen and giant lizards rather weak in comparison (since there are likely to be many more of them):
+
+```json
+{
+    "name" : "Lizardman",
+    "renderable": {
+        "glyph" : "l",
+        "fg" : "#FF0000",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "vision_range" : 4,
+    "movement" : "random_waypoint",
+    "attributes" : {},
+    "faction" : "Wyrm",
+    "gold" : "1d12",
+    "level" : 2
+},
+
+{
+    "name" : "Giant Lizard",
+    "renderable": {
+        "glyph" : "l",
+        "fg" : "#FFFF00",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "vision_range" : 4,
+    "movement" : "random",
+    "attributes" : {},
+    "faction" : "Wyrm",
+    "level" : 2,
+    "loot_table" : "Animal"
+}
+```
+
+We also need to add "dragon scales" as a nicely rewarding commodity. In the items section of `spawns.json`:
+
+```json
+{
+    "name" : "Dragon Scale",
+    "renderable": {
+        "glyph" : "ß",
+        "fg" : "#FFD700",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "weight_lbs" : 2.0,
+    "base_value" : 75.0
+},
+```
+
+## Dwarven Spawns
+
+Since the dwarves are dead (presumably they dug too deep, again...), we just have some leftovers of their civilization to deal with. Golems, traps and landmines (oh my!). Lets make a new faction for the golems; they shouldn't like the dragons very much, but lets be nice to the player and have them be ignored:
+
+```json
+{ "name" : "Dwarven Remnant", "responses": { "Default" : "attack", "Player" : "ignore" }}
+```
+
+This lets us build a relatively formidable golem. It can be formidable, because it will be fighting the lizards:
+
+```json
+{
+    "name" : "Rock Golem",
+    "renderable": {
+        "glyph" : "g",
+        "fg" : "#AAAAAA",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "vision_range" : 6,
+    "movement" : "random_waypoint",
+    "attributes" : {},
+    "faction" : "Dwarven Remnant",
+    "level" : 3
+}
+```
+
+The stone-fall trap and landmines are like an extra-dangerous bear trap:
+
+```json
+{
+    "name" : "Stonefall Trap",
+    "renderable": {
+        "glyph" : "^",
+        "fg" : "#FF0000",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "hidden" : true,
+    "entry_trigger" : {
+        "effects" : {
+            "damage" : "12",
+            "single_activation" : "1"
+        }
+    }
+},
+
+{
+    "name" : "Landmine",
+    "renderable": {
+        "glyph" : "^",
+        "fg" : "#FF0000",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "hidden" : true,
+    "entry_trigger" : {
+        "effects" : {
+            "damage" : "18",
+            "single_activation" : "1"
+        }
+    }
+},
+```
+
+## Dwarf Loot
+
+```json
+{
+    "name" : "Breastplate",
+    "renderable": {
+        "glyph" : "[",
+        "fg" : "#00FF00",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "wearable" : {
+        "slot" : "Torso",
+        "armor_class" : 3.0
+    },
+    "weight_lbs" : 25.0,
+    "base_value" : 100.0,
+    "initiative_penalty" : 2.0,
+    "vendor_category" : "armor"
+},
+
+{
+    "name" : "Dwarf-Steel Shirt",
+    "renderable": {
+        "glyph" : "[",
+        "fg" : "#00FF00",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "wearable" : {
+        "slot" : "Torso",
+        "armor_class" : 3.0
+    },
+    "weight_lbs" : 5.0,
+    "base_value" : 500.0,
+    "initiative_penalty" : 0.0,
+    "vendor_category" : "armor"
+},
+```
+
+```json
+{
+    "name" : "War Axe",
+    "renderable": {
+        "glyph" : "¶",
+        "fg" : "#FF55FF",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "weapon" : {
+        "range" : "melee",
+        "attribute" : "might",
+        "base_damage" : "1d12",
+        "hit_bonus" : 0
+    },
+    "weight_lbs" : 4.0,
+    "base_value" : 100.0,
+    "initiative_penalty" : 2,
+    "vendor_category" : "weapon"
+},
+```
 
 ...
 
