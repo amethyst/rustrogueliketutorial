@@ -197,6 +197,7 @@ fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
     { 
         return; 
     }
+    if !map.visible_tiles[map.xy_idx(mouse_map_pos.0, mouse_map_pos.1)] { return; }
 
     let mut tip_boxes : Vec<Tooltip> = Vec::new();
     for (entity, name, position, _hidden) in (&entities, &names, &positions, !&hidden).join() {

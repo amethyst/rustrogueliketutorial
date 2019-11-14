@@ -272,6 +272,7 @@ fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
     { 
         return; 
     }
+    if !map.visible_tiles[map.xy_idx(mouse_map_pos.0, mouse_map_pos.1)] { return; }
     let mut tooltip : Vec<String> = Vec::new();
     for (name, position, _hidden) in (&names, &positions, !&hidden).join() {
         if position.x == mouse_map_pos.0 && position.y == mouse_map_pos.1 {
