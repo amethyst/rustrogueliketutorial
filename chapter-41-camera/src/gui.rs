@@ -42,6 +42,10 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     let mouse_pos = ctx.mouse_pos();
     ctx.set_bg(mouse_pos.0, mouse_pos.1, RGB::named(rltk::MAGENTA));
     draw_tooltips(ecs, ctx);
+
+    // Show player position
+    let ppos = ecs.fetch::<rltk::Point>();
+    ctx.print(0, 0, &format!("{},{}", ppos.x, ppos.y));
 }
 
 fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
@@ -257,7 +261,7 @@ pub fn ranged_target(gs : &mut State, ctx : &mut Rltk, range : i32) -> (ItemMenu
             if distance <= range as f32 {
                 let screen_x = idx.x - min_x;
                 let screen_y = idx.y - min_y;
-                if screen_x > min_x && screen_x < max_x && screen_y > min_y && screen_y < max_y {
+                if screen_x > 1 && screen_x < (max_x - min_x)-1 && screen_y > 1 && screen_y < (max_y - min_y)-1 {
                     ctx.set_bg(screen_x, screen_y, RGB::named(rltk::BLUE));
                     available_cells.push(idx);
                 }
