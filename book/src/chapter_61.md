@@ -536,7 +536,7 @@ I included this as an illustration as to why we put the safeguards in!
 
 ## Wrap-Up
 
-In this chapter, we started creating town portals - and wound up with a generic teleport system and a cleaned up movement system. That's a pretty good chapter!
+In this chapter, we started creating town portals - and wound up with a generic teleport system and a cleaned up movement system. This gives a lot more tactical options for the player, and enables "grab loot, return and sell it" play mechanics (as seen in *Diablo*). We're getting much closer to the game described in the design document!
 
 ...
 
