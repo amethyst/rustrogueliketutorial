@@ -63,4 +63,8 @@
     - [Deep caverns](./chapter_59.md)
     - [Cavern to Dwarf Fort](./chapter_60.md)
     - [Town Portals](./chapter_61.md)
+    - [Magic Items](./chapter_62.md)
+    - Magic Spells
+    - Fortress level
+    - Random Seeds
 - [Contributors](./contributors.md)
