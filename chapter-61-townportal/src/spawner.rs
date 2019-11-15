@@ -4,7 +4,8 @@ extern crate specs;
 use specs::prelude::*;
 use super::{Pools, Pool, Player, Renderable, Name, Position, Viewshed, Rect,  
     SerializeMe, random_table::RandomTable, HungerClock, HungerState, Map, TileType, raws::*,
-    Attribute, Attributes, Skills, Skill, LightSource, Initiative, Faction, EquipmentChanged };
+    Attribute, Attributes, Skills, Skill, LightSource, Initiative, Faction, EquipmentChanged,
+    OtherLevelPosition };
 use crate::specs::saveload::{MarkedBuilder, SimpleMarker};
 use std::collections::HashMap;
 use crate::{attr_bonus, player_hp_at_level, mana_at_level};
@@ -66,6 +67,7 @@ pub fn player(ecs : &mut World, player_x : i32, player_y : i32) -> Entity {
     spawn_named_entity(&RAWS.lock().unwrap(), ecs, "Stained Tunic", SpawnType::Equipped{by : player});
     spawn_named_entity(&RAWS.lock().unwrap(), ecs, "Torn Trousers", SpawnType::Equipped{by : player});
     spawn_named_entity(&RAWS.lock().unwrap(), ecs, "Old Boots", SpawnType::Equipped{by : player});
+    spawn_named_entity(&RAWS.lock().unwrap(), ecs, "Town Portal Scroll", SpawnType::Carried{by : player});
 
     player
 }
@@ -133,4 +135,26 @@ pub fn spawn_entity(ecs: &mut World, spawn : &(&usize, &String)) {
     }
 
     println!("WARNING: We don't know how to spawn [{}]!", spawn.1);
+}
+
+pub fn spawn_town_portal(ecs: &mut World) {
+    // Get current position & depth
+    let map = ecs.fetch::<Map>();
+    let player_depth = map.depth;
+    let player_pos = ecs.fetch::<rltk::Point>();
+    std::mem::drop(player_pos);
+    std::mem::drop(map);
+
+    // Find part of the town for the portal
+
+    // Spawn the portal itself
+    ecs.create_entity()
+        .with(OtherLevelPosition { x: 10, y: 10, depth: 1 })
+        .with(Renderable {
+            glyph: rltk::to_cp437('♥'),
+            fg: RGB::named(rltk::CYAN),
+            bg: RGB::named(rltk::BLACK),
+            render_order: 0
+        })
+        .build();
 }

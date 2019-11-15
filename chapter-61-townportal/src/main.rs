@@ -62,6 +62,7 @@ pub enum RunState {
     SaveGame,
     NextLevel,
     PreviousLevel,
+    TownPortal,
     ShowRemoveItem,
     GameOver,
     MagicMapReveal { row : i32 },
@@ -183,6 +184,7 @@ impl GameState for State {
                     match *self.ecs.fetch::<RunState>() {
                         RunState::AwaitingInput => newrunstate = RunState::AwaitingInput,
                         RunState::MagicMapReveal{ .. } => newrunstate = RunState::MagicMapReveal{ row: 0 },
+                        RunState::TownPortal => newrunstate = RunState::TownPortal,
                         _ => newrunstate = RunState::Ticking
                     }                
                 }
@@ -346,6 +348,20 @@ impl GameState for State {
                 self.mapgen_next_state = Some(RunState::PreRun);
                 newrunstate = RunState::MapGeneration;
             }
+            RunState::TownPortal => {
+                println!("Portal time");
+                // Spawn the portal
+                spawner::spawn_town_portal(&mut self.ecs);
+                println!("Portal spawned");
+
+                // Transition
+                let map_depth = self.ecs.fetch::<Map>().depth;
+                let destination_offset = 0 - (map_depth-1);
+                println!("Goto level: {}", destination_offset);
+                self.goto_level(destination_offset);
+                self.mapgen_next_state = Some(RunState::PreRun);
+                newrunstate = RunState::MapGeneration;
+            }
             RunState::MagicMapReveal{row} => {
                 let mut map = self.ecs.fetch_mut::<Map>();
                 for x in 0..map.width {
@@ -479,6 +495,7 @@ fn main() {
     gs.ecs.register::<Chasing>();
     gs.ecs.register::<EquipmentChanged>();
     gs.ecs.register::<Vendor>();
+    gs.ecs.register::<TownPortal>();
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
     raws::load_raws();

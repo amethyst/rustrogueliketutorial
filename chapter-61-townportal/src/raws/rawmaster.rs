@@ -239,6 +239,7 @@ pub fn spawn_named_item(raws: &RawMaster, ecs : &mut World, key : &str, pos : Sp
                     "area_of_effect" => { eb = eb.with(AreaOfEffect{ radius: effect.1.parse::<i32>().unwrap() }) }
                     "confusion" => { eb = eb.with(Confusion{ turns: effect.1.parse::<i32>().unwrap() }) }
                     "magic_mapping" => { eb = eb.with(MagicMapper{}) }
+                    "town_portal" => { eb = eb.with(TownPortal{}) }
                     "food" => { eb = eb.with(ProvidesFood{}) }
                     _ => {
                         println!("Warning: consumable effect {} not implemented.", effect_name);
