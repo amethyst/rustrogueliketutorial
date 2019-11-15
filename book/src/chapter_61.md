@@ -505,6 +505,39 @@ If you `cargo run` now, you have a working town portal!
 
 ![Screenshot](./c61-s2.gif)
 
+## Humorous Aside
+
+Let's see what happens when we remove the `player_only` and `SingleActivation` safeguards from a town portal. In `spawner.rs`:
+
+```rust
+ecs.create_entity()
+    .with(OtherLevelPosition { x: portal_x, y: portal_y, depth: 1 })
+    .with(Renderable {
+        glyph: rltk::to_cp437('♥'),
+        fg: RGB::named(rltk::CYAN),
+        bg: RGB::named(rltk::BLACK),
+        render_order: 0
+    })
+    .with(EntryTrigger{})
+    .with(TeleportTo{ x: player_x, y: player_y, depth: player_depth, player_only: false })
+    // .with(SingleActivation{})
+    .with(Name{ name : "Town Portal".to_string() })
+    .build();
+```
+
+Now `cargo run`, find a dangerous spot, and town portal home. Sit around for a while, until a few innocent townsfolk have fallen into the portal. Then follow the portal back, and the bewildered townspeople suffer horrible deaths!
+
+![Screenshot](./c61-s3.gif)
+
+I included this as an illustration as to why we put the safeguards in!
+
+*Make sure you remove these comment tags when you're done watching what happens!*
+
+
+## Wrap-Up
+
+In this chapter, we started creating town portals - and wound up with a generic teleport system and a cleaned up movement system. That's a pretty good chapter!
+
 ...
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-61-townportal)**
