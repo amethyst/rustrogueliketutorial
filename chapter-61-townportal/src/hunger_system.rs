@@ -9,14 +9,13 @@ impl<'a> System<'a> for HungerSystem {
                         Entities<'a>,
                         WriteStorage<'a, HungerClock>,
                         ReadExpect<'a, Entity>, // The player
-                        ReadExpect<'a, RunState>,
                         WriteStorage<'a, SufferDamage>,
                         WriteExpect<'a, GameLog>,
                         ReadStorage<'a, MyTurn>
                       );
 
     fn run(&mut self, data : Self::SystemData) {
-        let (entities, mut hunger_clock, player_entity, runstate, mut inflict_damage, mut log,
+        let (entities, mut hunger_clock, player_entity, mut inflict_damage, mut log,
             turns) = data;
 
         for (entity, mut clock, _myturn) in (&entities, &mut hunger_clock, &turns).join() {

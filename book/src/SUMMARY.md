@@ -66,6 +66,5 @@
     - Magic Items
     - Magic Spells
     - Fortress level
-    - Movement cleanup
     - Random Seeds
 - [Contributors](./contributors.md)

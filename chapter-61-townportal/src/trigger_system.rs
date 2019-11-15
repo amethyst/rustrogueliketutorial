@@ -2,15 +2,15 @@ extern crate specs;
 use specs::prelude::*;
 use super::{EntityMoved, Position, EntryTrigger, Hidden, Map, Name, gamelog::GameLog, 
     InflictsDamage, particle_system::ParticleBuilder, SufferDamage, SingleActivation,
-    TeleportTo};
+    TeleportTo, ApplyTeleport};
 
 pub struct TriggerSystem {}
 
 impl<'a> System<'a> for TriggerSystem {
     #[allow(clippy::type_complexity)]
-    type SystemData = ( WriteExpect<'a, Map>,
+    type SystemData = ( ReadExpect<'a, Map>,
                         WriteStorage<'a, EntityMoved>,
-                        WriteStorage<'a, Position>,
+                        ReadStorage<'a, Position>,
                         ReadStorage<'a, EntryTrigger>,
                         WriteStorage<'a, Hidden>,
                         ReadStorage<'a, Name>,
@@ -20,16 +20,19 @@ impl<'a> System<'a> for TriggerSystem {
                         WriteExpect<'a, ParticleBuilder>,
                         WriteStorage<'a, SufferDamage>,
                         ReadStorage<'a, SingleActivation>,
-                        ReadStorage<'a, TeleportTo>);
+                        ReadStorage<'a, TeleportTo>,
+                        WriteStorage<'a, ApplyTeleport>,
+                        ReadExpect<'a, Entity>);
 
     fn run(&mut self, data : Self::SystemData) {
-        let (mut map, mut entity_moved, mut position, entry_trigger, mut hidden, 
+        let (map, mut entity_moved, position, entry_trigger, mut hidden, 
             names, entities, mut log, inflicts_damage, mut particle_builder,
-            mut inflict_damage, single_activation, teleporters) = data;
+            mut inflict_damage, single_activation, teleporters, 
+            mut apply_teleport, player_entity) = data;
 
         // Iterate the entities that moved and their final position
         let mut remove_entities : Vec<Entity> = Vec::new();
-        for (entity, mut _entity_moved, mut pos) in (&entities, &mut entity_moved, &mut position).join() {
+        for (entity, mut _entity_moved, pos) in (&entities, &mut entity_moved, &position).join() {
             let idx = map.xy_idx(pos.x, pos.y);
             for entity_id in map.tile_content[idx].iter() {
                 if entity != *entity_id { // Do not bother to check yourself for being a trap!
@@ -54,7 +57,13 @@ impl<'a> System<'a> for TriggerSystem {
 
                             // If its a teleporter, then do that
                             if let Some(teleport) = teleporters.get(*entity_id) {
-                                // Do something
+                                if (teleport.player_only && entity == *player_entity) || !teleport.player_only {
+                                    apply_teleport.insert(entity, ApplyTeleport{
+                                        dest_x : teleport.x,
+                                        dest_y : teleport.y,
+                                        dest_depth : teleport.depth
+                                    }).expect("Unable to insert");
+                                }
                             }
 
                             // If it is single activation, it needs to be removed

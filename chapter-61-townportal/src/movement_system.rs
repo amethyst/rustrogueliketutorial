@@ -1,7 +1,7 @@
 extern crate specs;
 use specs::prelude::*;
 use super::{Map, Position, BlocksTile, ApplyMove, ApplyTeleport, OtherLevelPosition, EntityMoved,
-    Viewshed};
+    Viewshed, RunState};
 
 pub struct MovementSystem {}
 
@@ -16,12 +16,13 @@ impl<'a> System<'a> for MovementSystem {
                         WriteStorage<'a, OtherLevelPosition>,
                         WriteStorage<'a, EntityMoved>,
                         WriteStorage<'a, Viewshed>,
-                        ReadExpect<'a, Entity>);
+                        ReadExpect<'a, Entity>,
+                        WriteExpect<'a, RunState>);
 
     fn run(&mut self, data : Self::SystemData) {
         let (mut map, mut position, blockers, entities, mut apply_move, 
             mut apply_teleport, mut other_level, mut moved,
-            mut viewsheds, player_entity) = data;
+            mut viewsheds, player_entity, mut runstate) = data;
 
         // Apply teleports
         for (entity, teleport) in (&entities, &apply_teleport).join() {
@@ -29,8 +30,7 @@ impl<'a> System<'a> for MovementSystem {
                 apply_move.insert(entity, ApplyMove{ dest_idx: map.xy_idx(teleport.dest_x, teleport.dest_y) as i32 })
                     .expect("Unable to insert");
             } else if entity == *player_entity {
-                // It's the player - we have a mess
-                println!("Not implemented yet.");
+                *runstate = RunState::TeleportingToOtherLevel{ x: teleport.dest_x, y: teleport.dest_y, depth: teleport.dest_depth };
             } else if let Some(pos) = position.get(entity) {
                 let idx = map.xy_idx(pos.x, pos.y);
                 if blockers.get(entity).is_some() {

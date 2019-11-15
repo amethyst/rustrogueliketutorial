@@ -69,7 +69,8 @@ pub enum RunState {
     MagicMapReveal { row : i32 },
     MapGeneration,
     ShowCheatMenu,
-    ShowVendor { vendor: Entity, mode : VendorMode }
+    ShowVendor { vendor: Entity, mode : VendorMode },
+    TeleportingToOtherLevel { x: i32, y: i32, depth: i32 }
 }
 
 pub struct State {
@@ -106,6 +107,8 @@ impl State {
         chase.run_now(&self.ecs);
         let mut defaultmove = ai::DefaultMoveAI{};
         defaultmove.run_now(&self.ecs);
+        let mut moving = movement_system::MovementSystem{};
+        moving.run_now(&self.ecs);
         let mut triggers = trigger_system::TriggerSystem{};
         triggers.run_now(&self.ecs);
         let mut melee = MeleeCombatSystem{};
@@ -126,8 +129,6 @@ impl State {
         particles.run_now(&self.ecs);
         let mut lighting = lighting_system::LightingSystem{};
         lighting.run_now(&self.ecs);
-        let mut moving = movement_system::MovementSystem{};
-        moving.run_now(&self.ecs);
 
         self.ecs.maintain();
     }
@@ -188,6 +189,7 @@ impl GameState for State {
                         RunState::AwaitingInput => newrunstate = RunState::AwaitingInput,
                         RunState::MagicMapReveal{ .. } => newrunstate = RunState::MagicMapReveal{ row: 0 },
                         RunState::TownPortal => newrunstate = RunState::TownPortal,
+                        RunState::TeleportingToOtherLevel{ x, y, depth } => newrunstate = RunState::TeleportingToOtherLevel{ x, y, depth },
                         _ => newrunstate = RunState::Ticking
                     }                
                 }
@@ -359,6 +361,19 @@ impl GameState for State {
                 let map_depth = self.ecs.fetch::<Map>().depth;
                 let destination_offset = 0 - (map_depth-1);
                 self.goto_level(destination_offset);
+                self.mapgen_next_state = Some(RunState::PreRun);
+                newrunstate = RunState::MapGeneration;
+            }
+            RunState::TeleportingToOtherLevel{x, y, depth} => {
+                self.goto_level(depth-1);
+                let player_entity = self.ecs.fetch::<Entity>();
+                if let Some(pos) = self.ecs.write_storage::<Position>().get_mut(*player_entity) {
+                    pos.x = x;
+                    pos.y = y;
+                }
+                let mut ppos = self.ecs.fetch_mut::<rltk::Point>();
+                ppos.x = x;
+                ppos.y = y;
                 self.mapgen_next_state = Some(RunState::PreRun);
                 newrunstate = RunState::MapGeneration;
             }

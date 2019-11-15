@@ -195,6 +195,7 @@ pub fn spawn_town_portal(ecs: &mut World) {
         .with(EntryTrigger{})
         .with(TeleportTo{ x: player_x, y: player_y, depth: player_depth, player_only: true })
         .with(Name{ name : "Town Portal".to_string() })
+        .with(SingleActivation{})
         .build();
 }
 ```
@@ -350,11 +351,159 @@ You'll notice that this is almost exactly what we've been doing in other systems
 
 We can then update `ai/approach_system.rs`, `ai/chase_ai_system.rs`, `ai/default_move_system.rs`, and `ai/flee_ai_system.rs` to no longer calculate movement, but instead set an `ApplyMove` component to the entity they are considering. This greatly simplifies the systems, removing a lot of write access and several entire component accesses! The systems haven't changed their *logic* - just their functionality. Rather than copy/pasting them all here, you can [check the source](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-61-townportal) - otherwise this will be a chapter of record length!
 
+Finally, we need to add movement into `run_systems` in `main.rs`. Add it after `defaultmove` and before `triggers`:
+
+```rust
+defaultmove.run_now(&self.ecs);
+let mut moving = movement_system::MovementSystem{};
+moving.run_now(&self.ecs);
+let mut triggers = trigger_system::TriggerSystem{};
+```
+
 Once those changes are made, you can `cargo run` - and see that things behave as they did before.
 
 ### Making player teleports work
 
+Instead of just printing "Not Supported Yet!" when the player enters a teleporter, we should actually *teleport* them! The reason this was special-cased in `movement_system.rs` is that we've always handled level transitions in the main loop (because they touch a *lot* of game state). So to make this function, we're going to need another state in `main.rs`:
 
+```rust
+#[derive(PartialEq, Copy, Clone)]
+pub enum RunState { 
+    AwaitingInput, 
+    PreRun, 
+    Ticking, 
+    ShowInventory, 
+    ShowDropItem, 
+    ShowTargeting { range : i32, item : Entity},
+    MainMenu { menu_selection : gui::MainMenuSelection },
+    SaveGame,
+    NextLevel,
+    PreviousLevel,
+    TownPortal,
+    ShowRemoveItem,
+    GameOver,
+    MagicMapReveal { row : i32 },
+    MapGeneration,
+    ShowCheatMenu,
+    ShowVendor { vendor: Entity, mode : VendorMode },
+    TeleportingToOtherLevel { x: i32, y: i32, depth: i32 }
+}
+```
+
+Now we can open up `movement_system.rs` and make some simple changes to have the system send out a `RunState` change:
+
+```rust
+impl<'a> System<'a> for MovementSystem {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( WriteExpect<'a, Map>,
+                        WriteStorage<'a, Position>,
+                        ReadStorage<'a, BlocksTile>,
+                        Entities<'a>,
+                        WriteStorage<'a, ApplyMove>,
+                        WriteStorage<'a, ApplyTeleport>,
+                        WriteStorage<'a, OtherLevelPosition>,
+                        WriteStorage<'a, EntityMoved>,
+                        WriteStorage<'a, Viewshed>,
+                        ReadExpect<'a, Entity>,
+                        WriteExpect<'a, RunState>);
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (mut map, mut position, blockers, entities, mut apply_move, 
+            mut apply_teleport, mut other_level, mut moved,
+            mut viewsheds, player_entity, mut runstate) = data;
+
+        // Apply teleports
+        for (entity, teleport) in (&entities, &apply_teleport).join() {
+            if teleport.dest_depth == map.depth {
+                apply_move.insert(entity, ApplyMove{ dest_idx: map.xy_idx(teleport.dest_x, teleport.dest_y) as i32 })
+                    .expect("Unable to insert");
+            } else if entity == *player_entity {
+                *runstate = RunState::TeleportingToOtherLevel{ x: teleport.dest_x, y: teleport.dest_y, depth: teleport.dest_depth };
+                ...
+```
+
+Over in `main.rs`, lets modify the `Ticking` state to also accept `TeleportingToOtherLevel` as an exit condition:
+
+```rust
+RunState::Ticking => {
+    while newrunstate == RunState::Ticking {
+        self.run_systems();
+        self.ecs.maintain();
+        match *self.ecs.fetch::<RunState>() {
+            RunState::AwaitingInput => newrunstate = RunState::AwaitingInput,
+            RunState::MagicMapReveal{ .. } => newrunstate = RunState::MagicMapReveal{ row: 0 },
+            RunState::TownPortal => newrunstate = RunState::TownPortal,
+            RunState::TeleportingToOtherLevel{ x, y, depth } => newrunstate = RunState::TeleportingToOtherLevel{ x, y, depth },
+            _ => newrunstate = RunState::Ticking
+        }                
+    }
+}
+```
+
+Now in `trigger_system.rs` we need to make a few changes to actually call the teleport when triggered:
+
+```rust
+impl<'a> System<'a> for TriggerSystem {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( ReadExpect<'a, Map>,
+                        WriteStorage<'a, EntityMoved>,
+                        ReadStorage<'a, Position>,
+                        ReadStorage<'a, EntryTrigger>,
+                        WriteStorage<'a, Hidden>,
+                        ReadStorage<'a, Name>,
+                        Entities<'a>,
+                        WriteExpect<'a, GameLog>,
+                        ReadStorage<'a, InflictsDamage>,
+                        WriteExpect<'a, ParticleBuilder>,
+                        WriteStorage<'a, SufferDamage>,
+                        ReadStorage<'a, SingleActivation>,
+                        ReadStorage<'a, TeleportTo>,
+                        WriteStorage<'a, ApplyTeleport>,
+                        ReadExpect<'a, Entity>);
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (map, mut entity_moved, position, entry_trigger, mut hidden, 
+            names, entities, mut log, inflicts_damage, mut particle_builder,
+            mut inflict_damage, single_activation, teleporters, 
+            mut apply_teleport, player_entity) = data;
+
+        ...
+
+        // If its a teleporter, then do that
+        if let Some(teleport) = teleporters.get(*entity_id) {
+            if (teleport.player_only && entity == *player_entity) || !teleport.player_only {
+                apply_teleport.insert(entity, ApplyTeleport{
+                    dest_x : teleport.x,
+                    dest_y : teleport.y,
+                    dest_depth : teleport.depth
+                }).expect("Unable to insert");
+            }
+        }
+```
+
+With that in place, we need to finish up `main.rs` and add `TeleportingToOtherLevel` to the main loop:
+
+```rust
+RunState::TeleportingToOtherLevel{x, y, depth} => {
+    self.goto_level(depth-1);
+    let player_entity = self.ecs.fetch::<Entity>();
+    if let Some(pos) = self.ecs.write_storage::<Position>().get_mut(*player_entity) {
+        pos.x = x;
+        pos.y = y;
+    }
+    let mut ppos = self.ecs.fetch_mut::<rltk::Point>();
+    ppos.x = x;
+    ppos.y = y;
+    self.mapgen_next_state = Some(RunState::PreRun);
+    newrunstate = RunState::MapGeneration;
+}
+```
+
+So this sends the player to the specified level, updates their `Position` component, and updates the stored player position (overriding stair case finding).
+
+If you `cargo run` now, you have a working town portal!
+
+![Screenshot](./c61-s2.gif)
 
 ...
 

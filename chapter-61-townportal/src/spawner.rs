@@ -5,7 +5,7 @@ use specs::prelude::*;
 use super::{Pools, Pool, Player, Renderable, Name, Position, Viewshed, Rect,  
     SerializeMe, random_table::RandomTable, HungerClock, HungerState, Map, TileType, raws::*,
     Attribute, Attributes, Skills, Skill, LightSource, Initiative, Faction, EquipmentChanged,
-    OtherLevelPosition, MasterDungeonMap, EntryTrigger, TeleportTo };
+    OtherLevelPosition, MasterDungeonMap, EntryTrigger, TeleportTo, SingleActivation };
 use crate::specs::saveload::{MarkedBuilder, SimpleMarker};
 use std::collections::HashMap;
 use crate::{attr_bonus, player_hp_at_level, mana_at_level};
@@ -172,6 +172,7 @@ pub fn spawn_town_portal(ecs: &mut World) {
         })
         .with(EntryTrigger{})
         .with(TeleportTo{ x: player_x, y: player_y, depth: player_depth, player_only: true })
+        .with(SingleActivation{})
         .with(Name{ name : "Town Portal".to_string() })
         .build();
 }
