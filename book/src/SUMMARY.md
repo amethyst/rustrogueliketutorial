@@ -62,9 +62,5 @@
     - [Item Stats and Vendors](./chapter_58.md)
     - [Deep caverns](./chapter_59.md)
     - [Cavern to Dwarf Fort](./chapter_60.md)
-    - Town Portals
-    - Magic Items
-    - Magic Spells
-    - Fortress level
-    - Random Seeds
+    - [Town Portals](./chapter_61.md)
 - [Contributors](./contributors.md)
