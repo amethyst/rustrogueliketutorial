@@ -137,7 +137,26 @@ RunState::TownPortal => {
 }
 ```
 
-So this is relatively straight-forward: it calls the as-yet-unwritten `spawn_town_portal` function, retrieves the depth, and uses the same logic as `NextLevel` and `PreviousLevel` to switch to the town level (the offset calculated to result in a depth of 1). The rabbit hole naturally leads us to `spawner.rs`, and the `spawn_town_portal` function. Let's write it:
+So this is relatively straight-forward: it calls the as-yet-unwritten `spawn_town_portal` function, retrieves the depth, and uses the same logic as `NextLevel` and `PreviousLevel` to switch to the town level (the offset calculated to result in a depth of 1). 
+
+We also need to modify the `Ticking` handler to allow `TownPortal` to escape from the loop:
+
+```rust
+RunState::Ticking => {
+    while newrunstate == RunState::Ticking {
+        self.run_systems();
+        self.ecs.maintain();
+        match *self.ecs.fetch::<RunState>() {
+            RunState::AwaitingInput => newrunstate = RunState::AwaitingInput,
+            RunState::MagicMapReveal{ .. } => newrunstate = RunState::MagicMapReveal{ row: 0 },
+            RunState::TownPortal => newrunstate = RunState::TownPortal,
+            _ => newrunstate = RunState::Ticking
+        }                
+    }
+}
+```
+
+The rabbit hole naturally leads us to `spawner.rs`, and the `spawn_town_portal` function. Let's write it:
 
 ```rust
 pub fn spawn_town_portal(ecs: &mut World) {
@@ -219,6 +238,123 @@ Now we need to make the portal go *back* to your point-of-origin in the dungeon.
 * Teleporting could also happen across levels, in which case there are two possibilities:
     * The player is teleporting, and we need to adjust game state like other level transitions.
     * Another entity is teleporting, in which case we need to remove its `Position` component and add an `OtherLevelPosition` component so they are in-place when the player goes there.
+
+### Cleaning up movement in general
+
+We're seeing more and more places implement the same basic movement code: clear blocked, move, restore blocked. You can find this all over the place, and adding in teleporting is just going to make it more complicated (as will other systems as we make a bigger game). This makes it far too easy to forget to update something, and also convolutes lots of systems with mutable `position` and `map` access - when movement is the only reason they need write access.
+
+We've used *intent* based components for most other actions - movement should be no different. Open up `components.rs`, and we'll make some new components (and register them in `main.rs` and `saveload_system.rs`):
+
+```rust
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct ApplyMove {
+    pub dest_idx : i32
+}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct ApplyTeleport {
+    pub dest_x : i32,
+    pub dest_y : i32,
+    pub dest_depth : i32
+}
+```
+
+To handle these, let's make a new system file - `movement_system.rs`:
+
+```rust
+extern crate specs;
+use specs::prelude::*;
+use super::{Map, Position, BlocksTile, ApplyMove, ApplyTeleport, OtherLevelPosition, EntityMoved,
+    Viewshed};
+
+pub struct MovementSystem {}
+
+impl<'a> System<'a> for MovementSystem {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( WriteExpect<'a, Map>,
+                        WriteStorage<'a, Position>,
+                        ReadStorage<'a, BlocksTile>,
+                        Entities<'a>,
+                        WriteStorage<'a, ApplyMove>,
+                        WriteStorage<'a, ApplyTeleport>,
+                        WriteStorage<'a, OtherLevelPosition>,
+                        WriteStorage<'a, EntityMoved>,
+                        WriteStorage<'a, Viewshed>,
+                        ReadExpect<'a, Entity>);
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (mut map, mut position, blockers, entities, mut apply_move, 
+            mut apply_teleport, mut other_level, mut moved,
+            mut viewsheds, player_entity) = data;
+
+        // Apply teleports
+        for (entity, teleport) in (&entities, &apply_teleport).join() {
+            if teleport.dest_depth == map.depth {
+                apply_move.insert(entity, ApplyMove{ dest_idx: map.xy_idx(teleport.dest_x, teleport.dest_y) as i32 })
+                    .expect("Unable to insert");
+            } else if entity == *player_entity {
+                // It's the player - we have a mess
+                println!("Not implemented yet.");
+            } else if let Some(pos) = position.get(entity) {
+                let idx = map.xy_idx(pos.x, pos.y);
+                if blockers.get(entity).is_some() {
+                    map.blocked[idx] = false;
+                }
+                other_level.insert(entity, OtherLevelPosition{ 
+                    x: teleport.dest_x, 
+                    y: teleport.dest_y, 
+                    depth: teleport.dest_depth })
+                    .expect("Unable to insert");
+                position.remove(entity);
+            }
+        }
+        apply_teleport.clear();
+
+        // Apply broad movement
+        for (entity, movement, mut pos) in (&entities, &apply_move, &mut position).join() {
+            let start_idx = map.xy_idx(pos.x, pos.y);
+            let dest_idx = movement.dest_idx as usize;
+            let is_blocking = blockers.get(entity);
+            if is_blocking.is_some() {
+                map.blocked[start_idx] = false;
+                map.blocked[dest_idx] = true;
+            }
+            pos.x = movement.dest_idx % map.width;
+            pos.y = movement.dest_idx / map.width;
+            if let Some(vs) = viewsheds.get_mut(entity) {
+                vs.dirty = true;
+            }
+            moved.insert(entity, EntityMoved{}).expect("Unable to insert");
+        }
+        apply_move.clear();        
+    }
+}
+```
+
+This is a meaty system, but should be quite familiar to you - it doesn't do very much that we haven't done before, it just centralizes it in one place. Let's walk through it:
+
+1. We iterate all entities that are marked as teleporting.
+    1. If its a teleport on the current depth, we add an `apply_move` component to indicate that we're moving across the map.
+    2. If it isn't a local teleport:
+        1. If its the player, we give up for now (the code is later in this chapter).
+        2. If it *isn't* the player, we remove their `Position` component and add an `OtherLevelPosition` component to move the entity to the teleport destination.
+2. We remove all teleport intentions, since we've processed them.
+3. We iterate all entities with an `ApplyMove` component.
+    1. We obtain the start and destination indices for the move.
+    2. If the entity blocks the tile, we clear the blocking in the source tile, and set the blocking status in the destination tile.
+    3. We move the entity to the destination.
+    4. If the entity has a viewshed, we mark it as dirty.
+    5. We apply an `EntityMoved` component.
+
+You'll notice that this is almost exactly what we've been doing in other systems - but it is a little more conditional: an entity without a viewshed can move, an entity that doesn't block tiles won't.
+
+We can then update `ai/approach_system.rs`, `ai/chase_ai_system.rs`, `ai/default_move_system.rs`, and `ai/flee_ai_system.rs` to no longer calculate movement, but instead set an `ApplyMove` component to the entity they are considering. This greatly simplifies the systems, removing a lot of write access and several entire component accesses! The systems haven't changed their *logic* - just their functionality. Rather than copy/pasting them all here, you can [check the source](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-61-townportal) - otherwise this will be a chapter of record length!
+
+Once those changes are made, you can `cargo run` - and see that things behave as they did before.
+
+### Making player teleports work
+
+
 
 ...
 

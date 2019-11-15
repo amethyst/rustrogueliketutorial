@@ -1,6 +1,6 @@
 extern crate specs;
 use specs::prelude::*;
-use crate::{MyTurn, WantsToApproach, Position, Map, Viewshed, EntityMoved};
+use crate::{MyTurn, WantsToApproach, Position, Map, ApplyMove};
 
 pub struct ApproachAI {}
 
@@ -9,20 +9,19 @@ impl<'a> System<'a> for ApproachAI {
     type SystemData = ( 
         WriteStorage<'a, MyTurn>,
         WriteStorage<'a, WantsToApproach>,
-        WriteStorage<'a, Position>,
+        ReadStorage<'a, Position>,
         WriteExpect<'a, Map>,
-        WriteStorage<'a, Viewshed>,
-        WriteStorage<'a, EntityMoved>,
-        Entities<'a>
+        Entities<'a>,
+        WriteStorage<'a, ApplyMove>
     );
 
     fn run(&mut self, data : Self::SystemData) {
-        let (mut turns, mut want_approach, mut positions, mut map, 
-            mut viewsheds, mut entity_moved, entities) = data;
+        let (mut turns, mut want_approach, positions, mut map, 
+            entities, mut apply_move) = data;
             
         let mut turn_done : Vec<Entity> = Vec::new();
-        for (entity, mut pos, approach, mut viewshed, _myturn) in 
-            (&entities, &mut positions, &want_approach, &mut viewsheds, &turns).join() 
+        for (entity, pos, approach, _myturn) in 
+            (&entities, &positions, &want_approach, &turns).join() 
         {
             turn_done.push(entity);
             let path = rltk::a_star_search(
@@ -31,14 +30,7 @@ impl<'a> System<'a> for ApproachAI {
                 &mut *map
             );
             if path.success && path.steps.len()>1 {
-                let mut idx = map.xy_idx(pos.x, pos.y);
-                map.blocked[idx] = false;
-                pos.x = path.steps[1] % map.width;
-                pos.y = path.steps[1] / map.width;
-                entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
-                idx = map.xy_idx(pos.x, pos.y);
-                map.blocked[idx] = true;
-                viewshed.dirty = true;
+                apply_move.insert(entity, ApplyMove{ dest_idx: path.steps[1] }).expect("Unable to insert");
             }
         }
 

@@ -40,6 +40,7 @@ mod gamesystem;
 pub use gamesystem::*;
 mod lighting_system;
 mod ai;
+mod movement_system;
 #[macro_use]
 extern crate lazy_static;
 
@@ -125,6 +126,8 @@ impl State {
         particles.run_now(&self.ecs);
         let mut lighting = lighting_system::LightingSystem{};
         lighting.run_now(&self.ecs);
+        let mut moving = movement_system::MovementSystem{};
+        moving.run_now(&self.ecs);
 
         self.ecs.maintain();
     }
@@ -494,6 +497,8 @@ fn main() {
     gs.ecs.register::<Vendor>();
     gs.ecs.register::<TownPortal>();
     gs.ecs.register::<TeleportTo>();
+    gs.ecs.register::<ApplyMove>();
+    gs.ecs.register::<ApplyTeleport>();
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
     raws::load_raws();
