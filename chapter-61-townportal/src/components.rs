@@ -307,6 +307,14 @@ pub struct MagicMapper {}
 pub struct TownPortal {}
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct TeleportTo {
+    pub x: i32,
+    pub y: i32,
+    pub depth: i32,
+    pub player_only : bool
+}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Hidden {}
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]

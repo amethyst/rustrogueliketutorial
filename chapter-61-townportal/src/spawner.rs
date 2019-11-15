@@ -5,7 +5,7 @@ use specs::prelude::*;
 use super::{Pools, Pool, Player, Renderable, Name, Position, Viewshed, Rect,  
     SerializeMe, random_table::RandomTable, HungerClock, HungerState, Map, TileType, raws::*,
     Attribute, Attributes, Skills, Skill, LightSource, Initiative, Faction, EquipmentChanged,
-    OtherLevelPosition };
+    OtherLevelPosition, MasterDungeonMap, EntryTrigger, TeleportTo };
 use crate::specs::saveload::{MarkedBuilder, SimpleMarker};
 use std::collections::HashMap;
 use crate::{attr_bonus, player_hp_at_level, mana_at_level};
@@ -142,19 +142,36 @@ pub fn spawn_town_portal(ecs: &mut World) {
     let map = ecs.fetch::<Map>();
     let player_depth = map.depth;
     let player_pos = ecs.fetch::<rltk::Point>();
+    let player_x = player_pos.x;
+    let player_y = player_pos.y;
     std::mem::drop(player_pos);
     std::mem::drop(map);
 
     // Find part of the town for the portal
+    let dm = ecs.fetch::<MasterDungeonMap>();
+    let town_map = dm.get_map(1).unwrap();
+    let mut stairs_idx = 0;
+    for (idx, tt) in town_map.tiles.iter().enumerate() {
+        if *tt == TileType::DownStairs {
+            stairs_idx = idx;
+        }
+    }
+    let portal_x = (stairs_idx as i32 % town_map.width)-2;
+    let portal_y = stairs_idx as i32 / town_map.width;
+
+    std::mem::drop(dm);
 
     // Spawn the portal itself
     ecs.create_entity()
-        .with(OtherLevelPosition { x: 10, y: 10, depth: 1 })
+        .with(OtherLevelPosition { x: portal_x, y: portal_y, depth: 1 })
         .with(Renderable {
             glyph: rltk::to_cp437('♥'),
             fg: RGB::named(rltk::CYAN),
             bg: RGB::named(rltk::BLACK),
             render_order: 0
         })
+        .with(EntryTrigger{})
+        .with(TeleportTo{ x: player_x, y: player_y, depth: player_depth, player_only: true })
+        .with(Name{ name : "Town Portal".to_string() })
         .build();
 }

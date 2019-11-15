@@ -1,15 +1,16 @@
 extern crate specs;
 use specs::prelude::*;
 use super::{EntityMoved, Position, EntryTrigger, Hidden, Map, Name, gamelog::GameLog, 
-    InflictsDamage, particle_system::ParticleBuilder, SufferDamage, SingleActivation};
+    InflictsDamage, particle_system::ParticleBuilder, SufferDamage, SingleActivation,
+    TeleportTo};
 
 pub struct TriggerSystem {}
 
 impl<'a> System<'a> for TriggerSystem {
     #[allow(clippy::type_complexity)]
-    type SystemData = ( ReadExpect<'a, Map>,
+    type SystemData = ( WriteExpect<'a, Map>,
                         WriteStorage<'a, EntityMoved>,
-                        ReadStorage<'a, Position>,
+                        WriteStorage<'a, Position>,
                         ReadStorage<'a, EntryTrigger>,
                         WriteStorage<'a, Hidden>,
                         ReadStorage<'a, Name>,
@@ -18,16 +19,17 @@ impl<'a> System<'a> for TriggerSystem {
                         ReadStorage<'a, InflictsDamage>,
                         WriteExpect<'a, ParticleBuilder>,
                         WriteStorage<'a, SufferDamage>,
-                        ReadStorage<'a, SingleActivation>);
+                        ReadStorage<'a, SingleActivation>,
+                        ReadStorage<'a, TeleportTo>);
 
     fn run(&mut self, data : Self::SystemData) {
-        let (map, mut entity_moved, position, entry_trigger, mut hidden, 
+        let (mut map, mut entity_moved, mut position, entry_trigger, mut hidden, 
             names, entities, mut log, inflicts_damage, mut particle_builder,
-            mut inflict_damage, single_activation) = data;
+            mut inflict_damage, single_activation, teleporters) = data;
 
         // Iterate the entities that moved and their final position
         let mut remove_entities : Vec<Entity> = Vec::new();
-        for (entity, mut _entity_moved, pos) in (&entities, &mut entity_moved, &position).join() {
+        for (entity, mut _entity_moved, mut pos) in (&entities, &mut entity_moved, &mut position).join() {
             let idx = map.xy_idx(pos.x, pos.y);
             for entity_id in map.tile_content[idx].iter() {
                 if entity != *entity_id { // Do not bother to check yourself for being a trap!
@@ -48,6 +50,11 @@ impl<'a> System<'a> for TriggerSystem {
                             if let Some(damage) = damage {
                                 particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::ORANGE), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('‼'), 200.0);
                                 inflict_damage.insert(entity, SufferDamage{ amount: damage.damage, from_player: false }).expect("Unable to do damage");
+                            }
+
+                            // If its a teleporter, then do that
+                            if let Some(teleport) = teleporters.get(*entity_id) {
+                                // Do something
                             }
 
                             // If it is single activation, it needs to be removed

@@ -349,15 +349,12 @@ impl GameState for State {
                 newrunstate = RunState::MapGeneration;
             }
             RunState::TownPortal => {
-                println!("Portal time");
                 // Spawn the portal
                 spawner::spawn_town_portal(&mut self.ecs);
-                println!("Portal spawned");
 
                 // Transition
                 let map_depth = self.ecs.fetch::<Map>().depth;
                 let destination_offset = 0 - (map_depth-1);
-                println!("Goto level: {}", destination_offset);
                 self.goto_level(destination_offset);
                 self.mapgen_next_state = Some(RunState::PreRun);
                 newrunstate = RunState::MapGeneration;
@@ -496,6 +493,7 @@ fn main() {
     gs.ecs.register::<EquipmentChanged>();
     gs.ecs.register::<Vendor>();
     gs.ecs.register::<TownPortal>();
+    gs.ecs.register::<TeleportTo>();
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
     raws::load_raws();

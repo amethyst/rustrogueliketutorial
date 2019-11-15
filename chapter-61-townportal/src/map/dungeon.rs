@@ -97,6 +97,9 @@ fn transition_to_existing_map(ecs: &mut World, new_depth: i32, offset: i32) {
             if let Some(player_pos_comp) = player_pos_comp {
                 player_pos_comp.x = idx as i32 % w;
                 player_pos_comp.y = idx as i32 / w;
+                if new_depth == 1 {
+                    player_pos_comp.x -= 1;
+                }
             }
         }
     }

@@ -111,17 +111,114 @@ So that marks the effect. Now we need to make it function! Open up `inventory_sy
 ```rust
 // If its a town portal...
 if let Some(_townportal) = town_portal.get(useitem.item) {
-    used_item = true;
-    gamelog.entries.insert(0, "You are telported back to town!".to_string());
-    *runstate = RunState::TownPortal;
+    if map.depth == 1 {
+        gamelog.entries.insert(0, "You are already in town, so the scroll does nothing.".to_string());
+    } else {
+        used_item = true;
+        gamelog.entries.insert(0, "You are telported back to town!".to_string());
+        *runstate = RunState::TownPortal;
+    }
 }
 ```
 
 That leaves handling the state in `main.rs`:
 
 ```rust
+RunState::TownPortal => {
+    // Spawn the portal
+    spawner::spawn_town_portal(&mut self.ecs);
 
+    // Transition
+    let map_depth = self.ecs.fetch::<Map>().depth;
+    let destination_offset = 0 - (map_depth-1);
+    self.goto_level(destination_offset);
+    self.mapgen_next_state = Some(RunState::PreRun);
+    newrunstate = RunState::MapGeneration;
+}
 ```
+
+So this is relatively straight-forward: it calls the as-yet-unwritten `spawn_town_portal` function, retrieves the depth, and uses the same logic as `NextLevel` and `PreviousLevel` to switch to the town level (the offset calculated to result in a depth of 1). The rabbit hole naturally leads us to `spawner.rs`, and the `spawn_town_portal` function. Let's write it:
+
+```rust
+pub fn spawn_town_portal(ecs: &mut World) {
+    // Get current position & depth
+    let map = ecs.fetch::<Map>();
+    let player_depth = map.depth;
+    let player_pos = ecs.fetch::<rltk::Point>();
+    let player_x = player_pos.x;
+    let player_y = player_pos.y;
+    std::mem::drop(player_pos);
+    std::mem::drop(map);
+
+    // Find part of the town for the portal
+    let dm = ecs.fetch::<MasterDungeonMap>();
+    let town_map = dm.get_map(1).unwrap();
+    let mut stairs_idx = 0;
+    for (idx, tt) in town_map.tiles.iter().enumerate() {
+        if *tt == TileType::DownStairs {
+            stairs_idx = idx;
+        }
+    }
+    let portal_x = (stairs_idx as i32 % town_map.width)-2;
+    let portal_y = stairs_idx as i32 / town_map.width;
+
+    std::mem::drop(dm);
+
+    // Spawn the portal itself
+    ecs.create_entity()
+        .with(OtherLevelPosition { x: portal_x, y: portal_y, depth: 1 })
+        .with(Renderable {
+            glyph: rltk::to_cp437('♥'),
+            fg: RGB::named(rltk::CYAN),
+            bg: RGB::named(rltk::BLACK),
+            render_order: 0
+        })
+        .with(EntryTrigger{})
+        .with(TeleportTo{ x: player_x, y: player_y, depth: player_depth, player_only: true })
+        .with(Name{ name : "Town Portal".to_string() })
+        .build();
+}
+```
+
+This is a busy function, so we'll step through it:
+
+1. We retrieve the player's depth and position, and then drop access to the resources (to prevent the borrow from continuing).
+2. We look up the town map in the `MasterDungeonMap`, and find the spawn point. We move two tiles to the west, and store that as `portal_x` and `portal_y`. We then drop access to the dungeon map, again to avoid keeping the borrow.
+3. We create an entity for the portal. We give it an `OtherLevelPosition`, indicating that it is in the town - at the coordinates we calculated. We give it a `Renderable` (a cyan heart), a `Name` (so it shows up in tooltips). We also give it an `EntryTrigger` - so entering it will trigger an effect. Finally, we give it a `TeleportTo` component; we haven't written that yet, but you can see we're specifying destination coordinates (back to where the player started). There's also a `player_only` setting - if the teleporter works for everyone, town drunks might walk into the portal by mistake leading to the (hilarious) situation where they teleport into dungeons and die horribly. To avoid that, we'll make this teleporter only affect the player!
+
+Since we've used it, we better make `TeleportTo` in `components.rs` (and registered in `main.rs` and `saveload_system.rs`). It's pretty simple:
+
+```rust
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct TeleportTo {
+    pub x: i32,
+    pub y: i32,
+    pub depth: i32,
+    pub player_only : bool
+}
+```
+
+We'll worry about making teleporters work in a moment.
+
+To help test the systems, we'll start the player with a town portal scroll. In `spawner.rs`, we'll modify `player`:
+
+```rust
+spawn_named_entity(&RAWS.lock().unwrap(), ecs, "Town Portal Scroll", SpawnType::Carried{by : player});
+```
+
+If you `cargo run` now, you start with a `Town Portal Scroll`. Trying to use it in town gives you a "does nothing" message. Going to another level and then using it teleports you right back to town, with a portal present - exactly what we had in mind (but with no way back, yet):
+
+![Screenshot](./c61-s1.gif)
+
+## Implementing teleporters
+
+Now we need to make the portal go *back* to your point-of-origin in the dungeon. Since we've implemented triggers that can have `TeleportTo`, it's worth taking the time to make teleport triggers more general (so you could have teleport traps, for example - or inter-room teleporters, or even a portal to the final level). There's actually a lot to consider here:
+
+* Teleporters can affect anyone who enters the tile, *unless* you've flagged them as "player only".
+* Teleporting could happen across the current level, in which case it's like a regular move.
+* Teleporting could also happen across levels, in which case there are two possibilities:
+    * The player is teleporting, and we need to adjust game state like other level transitions.
+    * Another entity is teleporting, in which case we need to remove its `Position` component and add an `OtherLevelPosition` component so they are in-place when the player goes there.
 
 ...
 

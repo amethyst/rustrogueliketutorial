@@ -169,10 +169,14 @@ impl<'a> System<'a> for ItemUseSystem {
 
             // If its a town portal...
             if let Some(_townportal) = town_portal.get(useitem.item) {
-                // TODO: Can't use in the town!
-                used_item = true;
-                gamelog.entries.insert(0, "You are telported back to town!".to_string());
-                *runstate = RunState::TownPortal;
+                if map.depth == 1 {
+                    gamelog.entries.insert(0, "You are already in town, so the scroll does nothing.".to_string());
+                    used_item = false;
+                } else {
+                    used_item = true;
+                    gamelog.entries.insert(0, "You are telported back to town!".to_string());
+                    *runstate = RunState::TownPortal;
+                }
             }
 
             // If it heals, apply the healing
