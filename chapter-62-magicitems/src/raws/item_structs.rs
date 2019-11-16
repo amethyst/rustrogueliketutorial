@@ -11,7 +11,8 @@ pub struct Item {
     pub initiative_penalty : Option<f32>,
     pub weight_lbs : Option<f32>,
     pub base_value : Option<f32>,
-    pub vendor_category : Option<String>
+    pub vendor_category : Option<String>,
+    pub magic : Option<MagicItem>
 }
 
 #[derive(Deserialize, Debug)]
@@ -39,4 +40,10 @@ pub struct Weapon {
 pub struct Wearable {
     pub armor_class: f32,
     pub slot : String
+}
+
+#[derive(Deserialize, Debug)]
+pub struct MagicItem {
+    pub class: String,
+    pub naming: String
 }

@@ -179,6 +179,14 @@ pub struct Item {
     pub base_value : f32
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq, Hash)]
+pub enum MagicItemClass { Common, Rare, Legendary }
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct MagicItem {
+    pub class : MagicItemClass
+}
+
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Consumable {}
 

@@ -429,8 +429,11 @@ impl State {
             *player_entity_writer = player_entity;
         }
 
+        // Replace the world maps
+        self.ecs.insert(map::MasterDungeonMap::new());
+
         // Build a new map and place the player
-        self.generate_world_map(1, 0);                                          
+        self.generate_world_map(1, 0);
     }
 
     fn generate_world_map(&mut self, new_depth : i32, offset: i32) {
@@ -514,6 +517,7 @@ fn main() {
     gs.ecs.register::<TeleportTo>();
     gs.ecs.register::<ApplyMove>();
     gs.ecs.register::<ApplyTeleport>();
+    gs.ecs.register::<MagicItem>();
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
     raws::load_raws();

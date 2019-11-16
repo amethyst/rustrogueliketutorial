@@ -91,6 +91,34 @@ gs.ecs.insert(map::MasterDungeonMap::new());
 gs.ecs.insert(Map::new(1, 64, 64, "New Map"));
 ```
 
+We want to reset the `MasterDungeonMap` whenever we start a new game, so we'll add the same line to `game_over_cleanup`:
+
+```rust
+fn game_over_cleanup(&mut self) {
+    // Delete everything
+    let mut to_delete = Vec::new();
+    for e in self.ecs.entities().join() {
+        to_delete.push(e);
+    }
+    for del in to_delete.iter() {
+        self.ecs.delete_entity(*del).expect("Deletion failed");
+    }
+
+    // Spawn a new player
+    {
+        let player_entity = spawner::player(&mut self.ecs, 0, 0);
+        let mut player_entity_writer = self.ecs.write_resource::<Entity>();
+        *player_entity_writer = player_entity;
+    }
+
+    // Replace the world maps
+    self.ecs.insert(map::MasterDungeonMap::new());
+
+    // Build a new map and place the player
+    self.generate_world_map(1, 0);
+}
+```
+
 Now we'll simplify `generate_world_map` down to the basics:
 
 ```rust

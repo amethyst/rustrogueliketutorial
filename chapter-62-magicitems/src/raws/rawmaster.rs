@@ -271,6 +271,15 @@ pub fn spawn_named_item(raws: &RawMaster, ecs : &mut World, key : &str, pos : Sp
             eb = eb.with(Wearable{ slot, armor_class: wearable.armor_class });
         }
 
+        if let Some(magic) = &item_template.magic {
+            let class = match magic.class.as_str() {
+                "rare" => MagicItemClass::Rare,
+                "legendary" => MagicItemClass::Legendary,
+                _ => MagicItemClass::Common
+            };
+            eb = eb.with(MagicItem{ class });
+        }
+
         return Some(eb.build());
     }
     None

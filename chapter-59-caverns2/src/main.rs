@@ -398,6 +398,9 @@ impl State {
             *player_entity_writer = player_entity;
         }
 
+        // Replace the world maps
+        self.ecs.insert(map::MasterDungeonMap::new());
+
         // Build a new map and place the player
         self.generate_world_map(1, 0);                                          
     }
