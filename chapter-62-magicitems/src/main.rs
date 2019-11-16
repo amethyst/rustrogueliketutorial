@@ -119,6 +119,8 @@ impl State {
         pickup.run_now(&self.ecs);
         let mut itemuse = ItemUseSystem{};
         itemuse.run_now(&self.ecs);
+        let mut item_id = inventory_system::ItemIdentificationSystem{};
+        item_id.run_now(&self.ecs);
         let mut drop_items = ItemDropSystem{};
         drop_items.run_now(&self.ecs);
         let mut item_remove = ItemRemoveSystem{};
@@ -299,7 +301,12 @@ impl GameState for State {
                         let tag = result.2.unwrap();
                         let price = result.3.unwrap();
                         let mut pools = self.ecs.write_storage::<Pools>();
-                        let player_pools = pools.get_mut(*self.ecs.fetch::<Entity>()).unwrap();
+                        let player_entity = self.ecs.fetch::<Entity>();
+                        let mut identified = self.ecs.write_storage::<IdentifiedItem>();
+                        identified.insert(*player_entity, IdentifiedItem{ name : tag.clone() }).expect("Unable to insert");
+                        std::mem::drop(identified);
+                        let player_pools = pools.get_mut(*player_entity).unwrap();
+                        std::mem::drop(player_entity);
                         if player_pools.gold >= price {
                             player_pools.gold -= price;
                             std::mem::drop(pools);
@@ -518,6 +525,8 @@ fn main() {
     gs.ecs.register::<ApplyMove>();
     gs.ecs.register::<ApplyTeleport>();
     gs.ecs.register::<MagicItem>();
+    gs.ecs.register::<ObfuscatedName>();
+    gs.ecs.register::<IdentifiedItem>();
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
     raws::load_raws();

@@ -103,6 +103,16 @@ pub struct Name {
 }
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct ObfuscatedName {
+    pub name : String
+}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct IdentifiedItem {
+    pub name : String
+}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct BlocksTile {}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

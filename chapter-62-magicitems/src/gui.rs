@@ -5,7 +5,7 @@ use specs::prelude::*;
 use super::{Pools, gamelog::GameLog, Map, Name, Position, State, InBackpack, 
     Viewshed, RunState, Equipped, HungerClock, HungerState, rex_assets::RexAssets,
     Hidden, camera, Attributes, Attribute, Consumable, VendorMode, Item, Vendor,
-    MagicItem, MagicItemClass };
+    MagicItem, MagicItemClass, ObfuscatedName };
 
 pub fn get_item_color(ecs : &World, item : Entity) -> RGB {
     if let Some(magic) = ecs.read_storage::<MagicItem>().get(item) {
@@ -16,6 +16,26 @@ pub fn get_item_color(ecs : &World, item : Entity) -> RGB {
         }
     }
     RGB::from_f32(1.0, 1.0, 1.0)
+}
+
+pub fn get_item_display_name(ecs: &World, item : Entity) -> String {
+    if let Some(name) = ecs.read_storage::<Name>().get(item) {
+        if let Some(_) = ecs.read_storage::<MagicItem>().get(item) {
+            let dm = ecs.fetch::<crate::map::MasterDungeonMap>();
+            if dm.identified_items.contains(&name.name) {
+                name.name.clone()
+            } else if let Some(obfuscated) = ecs.read_storage::<ObfuscatedName>().get(item) {
+                obfuscated.name.clone()
+            } else {
+                "Unidentified magic item".to_string()
+            }
+        } else {
+            name.name.clone()
+        }
+
+    } else {
+        "Nameless item (bug)".to_string()
+    }
 }
 
 pub fn draw_hollow_box(
@@ -121,10 +141,9 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     let mut y = 13;
     let entities = ecs.entities();
     let equipped = ecs.read_storage::<Equipped>();
-    let name = ecs.read_storage::<Name>();
-    for (entity, equipped_by, item_name) in (&entities, &equipped, &name).join() {
+    for (entity, equipped_by) in (&entities, &equipped).join() {
         if equipped_by.owner == *player_entity {
-            ctx.print_color(50, y, get_item_color(ecs, entity), black, &item_name.name);
+            ctx.print_color(50, y, get_item_color(ecs, entity), black, &get_item_display_name(ecs, entity));
             y += 1;
         }
     }
@@ -135,10 +154,10 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     let consumables = ecs.read_storage::<Consumable>();
     let backpack = ecs.read_storage::<InBackpack>();
     let mut index = 1;
-    for (entity, carried_by, _consumable, item_name) in (&entities, &backpack, &consumables, &name).join() {
+    for (entity, carried_by, _consumable) in (&entities, &backpack, &consumables).join() {
         if carried_by.owner == *player_entity && index < 10 {
             ctx.print_color(50, y, yellow, black, &format!("↑{}", index));
-            ctx.print_color(53, y, get_item_color(ecs, entity), black, &item_name.name);
+            ctx.print_color(53, y, get_item_color(ecs, entity), black, &get_item_display_name(ecs, entity));
             y += 1;
             index += 1;
         }
@@ -321,12 +340,12 @@ pub fn show_inventory(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Opti
 
     let mut equippable : Vec<Entity> = Vec::new();
     let mut j = 0;
-    for (entity, _pack, name) in (&entities, &backpack, &names).join().filter(|item| item.1.owner == *player_entity ) {
+    for (entity, _pack) in (&entities, &backpack).join().filter(|item| item.1.owner == *player_entity ) {
         ctx.set(17, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437('('));
         ctx.set(18, y, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), 97+j as u8);
         ctx.set(19, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437(')'));
 
-        ctx.print_color(21, y, get_item_color(&gs.ecs, entity), RGB::from_f32(0.0, 0.0, 0.0), &name.name.to_string());
+        ctx.print_color(21, y, get_item_color(&gs.ecs, entity), RGB::from_f32(0.0, 0.0, 0.0), &get_item_display_name(&gs.ecs, entity));
         equippable.push(entity);
         y += 1;
         j += 1;
@@ -365,12 +384,12 @@ pub fn drop_item_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Opti
 
     let mut equippable : Vec<Entity> = Vec::new();
     let mut j = 0;
-    for (entity, _pack, name) in (&entities, &backpack, &names).join().filter(|item| item.1.owner == *player_entity ) {
+    for (entity, _pack) in (&entities, &backpack).join().filter(|item| item.1.owner == *player_entity ) {
         ctx.set(17, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437('('));
         ctx.set(18, y, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), 97+j as u8);
         ctx.set(19, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437(')'));
 
-        ctx.print_color(21, y, get_item_color(&gs.ecs, entity), RGB::from_f32(0.0, 0.0, 0.0), &name.name.to_string());
+        ctx.print_color(21, y, get_item_color(&gs.ecs, entity), RGB::from_f32(0.0, 0.0, 0.0), &get_item_display_name(&gs.ecs, entity));
         equippable.push(entity);
         y += 1;
         j += 1;
@@ -409,12 +428,12 @@ pub fn remove_item_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Op
 
     let mut equippable : Vec<Entity> = Vec::new();
     let mut j = 0;
-    for (entity, _pack, name) in (&entities, &backpack, &names).join().filter(|item| item.1.owner == *player_entity ) {
+    for (entity, _pack) in (&entities, &backpack).join().filter(|item| item.1.owner == *player_entity ) {
         ctx.set(17, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437('('));
         ctx.set(18, y, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), 97+j as u8);
         ctx.set(19, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437(')'));
 
-        ctx.print_color(21, y, get_item_color(&gs.ecs, entity), RGB::from_f32(0.0, 0.0, 0.0), &name.name.to_string());
+        ctx.print_color(21, y, get_item_color(&gs.ecs, entity), RGB::from_f32(0.0, 0.0, 0.0), &get_item_display_name(&gs.ecs, entity));
         equippable.push(entity);
         y += 1;
         j += 1;
@@ -652,12 +671,12 @@ fn vendor_sell_menu(gs : &mut State, ctx : &mut Rltk, _vendor : Entity, _mode : 
 
     let mut equippable : Vec<Entity> = Vec::new();
     let mut j = 0;
-    for (entity, _pack, name, item) in (&entities, &backpack, &names, &items).join().filter(|item| item.1.owner == *player_entity ) {
+    for (entity, _pack, item) in (&entities, &backpack, &items).join().filter(|item| item.1.owner == *player_entity ) {
         ctx.set(17, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437('('));
         ctx.set(18, y, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), 97+j as u8);
         ctx.set(19, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437(')'));
 
-        ctx.print_color(21, y, get_item_color(&gs.ecs, entity), RGB::from_f32(0.0, 0.0, 0.0), &name.name.to_string());
+        ctx.print_color(21, y, get_item_color(&gs.ecs, entity), RGB::from_f32(0.0, 0.0, 0.0), &get_item_display_name(&gs.ecs, entity));
         ctx.print(50, y, &format!("{:.1} gp", item.base_value * 0.8));
         equippable.push(entity);
         y += 1;

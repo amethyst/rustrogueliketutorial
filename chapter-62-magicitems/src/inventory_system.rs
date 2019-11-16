@@ -4,7 +4,7 @@ use super::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, Wan
     Consumable, ProvidesHealing, WantsToDropItem, InflictsDamage, Map, SufferDamage,
     AreaOfEffect, Confusion, Equippable, Equipped, WantsToRemoveItem, particle_system::ParticleBuilder,
     ProvidesFood, HungerClock, HungerState, MagicMapper, RunState, Pools, EquipmentChanged,
-    TownPortal};
+    TownPortal, IdentifiedItem, Item, ObfuscatedName};
 
 pub struct ItemCollectionSystem {}
 
@@ -64,7 +64,8 @@ impl<'a> System<'a> for ItemUseSystem {
                         ReadStorage<'a, MagicMapper>,
                         WriteExpect<'a, RunState>,
                         WriteStorage<'a, EquipmentChanged>,
-                        ReadStorage<'a, TownPortal>
+                        ReadStorage<'a, TownPortal>,
+                        WriteStorage<'a, IdentifiedItem>
                       );
 
     #[allow(clippy::cognitive_complexity)]
@@ -72,7 +73,8 @@ impl<'a> System<'a> for ItemUseSystem {
         let (player_entity, mut gamelog, map, entities, mut wants_use, names, 
             consumables, healing, inflict_damage, mut combat_stats, mut suffer_damage, 
             aoe, mut confused, equippable, mut equipped, mut backpack, mut particle_builder, positions,
-            provides_food, mut hunger_clocks, magic_mapper, mut runstate, mut dirty, town_portal) = data;
+            provides_food, mut hunger_clocks, magic_mapper, mut runstate, mut dirty, town_portal,
+            mut identified_item) = data;
 
         for (entity, useitem) in (&entities, &wants_use).join() {
             dirty.insert(entity, EquipmentChanged{}).expect("Unable to insert");
@@ -106,6 +108,12 @@ impl<'a> System<'a> for ItemUseSystem {
                         }
                     }
                 }
+            }
+
+            // Identify
+            if entity == *player_entity {
+                identified_item.insert(entity, IdentifiedItem{ name: names.get(useitem.item).unwrap().name.clone() })
+                    .expect("Unable to insert");
             }
 
             // If it is equippable, then we want to equip it - and unequip whatever else was in that slot
@@ -333,5 +341,39 @@ impl<'a> System<'a> for ItemRemoveSystem {
         }
 
         wants_remove.clear();
+    }
+}
+
+pub struct ItemIdentificationSystem {}
+
+impl<'a> System<'a> for ItemIdentificationSystem {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( 
+                        ReadStorage<'a, crate::components::Player>,
+                        WriteStorage<'a, IdentifiedItem>,
+                        WriteExpect<'a, crate::map::MasterDungeonMap>,
+                        ReadStorage<'a, Item>,
+                        ReadStorage<'a, Name>,
+                        WriteStorage<'a, ObfuscatedName>,
+                        Entities<'a>
+                      );
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (player, mut identified, mut dm, items, names, mut obfuscated_names, entities) = data;
+
+        for (_p, id) in (&player, &identified).join() {
+            if !dm.identified_items.contains(&id.name) && crate::raws::is_tag_magic(&id.name) {
+                dm.identified_items.insert(id.name.clone());
+
+                for (entity, _item, name) in (&entities, &items, &names).join() {
+                    if name.name == id.name {
+                        obfuscated_names.remove(entity);
+                    }                    
+                }
+            }
+        }
+
+        // Clean up
+        identified.clear();
     }
 }
