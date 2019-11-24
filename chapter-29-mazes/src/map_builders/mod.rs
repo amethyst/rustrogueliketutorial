@@ -36,6 +36,6 @@ pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
         6 => Box::new(DrunkardsWalkBuilder::winding_passages(new_depth)),
         7 => Box::new(MazeBuilder::new(new_depth)),
         _ => Box::new(SimpleMapBuilder::new(new_depth))
-    }    
+    }
 }
 

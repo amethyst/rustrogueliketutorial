@@ -1,4 +1,4 @@
-use super::{MapBuilder, Map, Rect, apply_room_to_map, 
+use super::{MapBuilder, Map, Rect, apply_room_to_map,
     apply_horizontal_tunnel, apply_vertical_tunnel, TileType,
     Position, spawner};
 use rltk::RandomNumberGenerator;

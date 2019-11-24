@@ -2,7 +2,7 @@ extern crate rltk;
 use rltk::{ RGB, RandomNumberGenerator };
 extern crate specs;
 use specs::prelude::*;
-use super::{Pools, Pool, Player, Renderable, Name, Position, Viewshed, Rect,  
+use super::{Pools, Pool, Player, Renderable, Name, Position, Viewshed, Rect,
     SerializeMe, random_table::RandomTable, HungerClock, HungerState, Map, TileType, raws::*,
     Attribute, Attributes, Skills, Skill, LightSource, Initiative, Faction, EquipmentChanged,
     OtherLevelPosition, MasterDungeonMap, EntryTrigger, TeleportTo, SingleActivation };
@@ -38,9 +38,9 @@ pub fn player(ecs : &mut World, player_x : i32, player_y : i32) -> Entity {
         })
         .with(skills)
         .with(Pools{
-            hit_points : Pool{ 
-                current: player_hp_at_level(11, 1), 
-                max: player_hp_at_level(11, 1) 
+            hit_points : Pool{
+                current: player_hp_at_level(11, 1),
+                max: player_hp_at_level(11, 1)
             },
             mana: Pool{
                 current: mana_at_level(11, 1),

@@ -113,8 +113,8 @@ impl BspDungeonBuilder {
                 if y < 1 { can_build = false; }
                 if can_build {
                     let idx = map.xy_idx(x, y);
-                    if map.tiles[idx] != TileType::Wall { 
-                        can_build = false; 
+                    if map.tiles[idx] != TileType::Wall {
+                        can_build = false;
                     }
                 }
             }

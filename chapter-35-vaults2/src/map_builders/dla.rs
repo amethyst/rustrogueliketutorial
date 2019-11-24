@@ -1,4 +1,4 @@
-use super::{MapBuilder, Map,  
+use super::{MapBuilder, Map,
     TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER,
     remove_unreachable_areas_returning_most_distant, generate_voronoi_spawn_regions,
     Symmetry, paint};
@@ -203,8 +203,8 @@ impl DLABuilder {
                     let mut digger_idx = self.map.xy_idx(digger_x, digger_y);
 
                     let mut path = rltk::line2d(
-                        rltk::LineAlg::Bresenham, 
-                        rltk::Point::new( digger_x, digger_y ), 
+                        rltk::LineAlg::Bresenham,
+                        rltk::Point::new( digger_x, digger_y ),
                         rltk::Point::new( self.starting_position.x, self.starting_position.y )
                     );
 
@@ -240,5 +240,5 @@ impl DLABuilder {
         for area in self.noise_areas.iter() {
             spawner::spawn_region(&self.map, &mut rng, area.1, self.depth, &mut self.spawn_list);
         }
-    }    
+    }
 }

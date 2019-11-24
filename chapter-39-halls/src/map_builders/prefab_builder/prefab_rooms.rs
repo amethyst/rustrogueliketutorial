@@ -19,11 +19,11 @@ pub const TOTALLY_NOT_A_TRAP : PrefabRoom = PrefabRoom{
 
 #[allow(dead_code)]
 const TOTALLY_NOT_A_TRAP_MAP : &str = "
-     
- ^^^ 
- ^!^ 
- ^^^ 
-     
+
+ ^^^
+ ^!^
+ ^^^
+
 ";
 
 #[allow(dead_code)]
@@ -37,12 +37,12 @@ pub const SILLY_SMILE : PrefabRoom = PrefabRoom{
 
 #[allow(dead_code)]
 const SILLY_SMILE_MAP : &str = "
-      
- ^  ^ 
-  ##  
-      
- #### 
-      
+
+ ^  ^
+  ##
+
+ ####
+
 ";
 
 #[allow(dead_code)]
@@ -56,10 +56,10 @@ pub const CHECKERBOARD : PrefabRoom = PrefabRoom{
 
 #[allow(dead_code)]
 const CHECKERBOARD_MAP : &str = "
-      
- #^#  
- g#%# 
- #!#  
- ^# # 
-      
+
+ #^#
+ g#%#
+ #!#
+ ^# #
+
 ";

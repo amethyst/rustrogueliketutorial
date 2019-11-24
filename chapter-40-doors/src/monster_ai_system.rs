@@ -1,6 +1,6 @@
 extern crate specs;
 use specs::prelude::*;
-use super::{Viewshed, Monster, Map, Position, WantsToMelee, RunState, 
+use super::{Viewshed, Monster, Map, Position, WantsToMelee, RunState,
     Confusion, particle_system::ParticleBuilder, EntityMoved};
 extern crate rltk;
 use rltk::{Point};
@@ -14,7 +14,7 @@ impl<'a> System<'a> for MonsterAI {
                         ReadExpect<'a, Entity>,
                         ReadExpect<'a, RunState>,
                         Entities<'a>,
-                        WriteStorage<'a, Viewshed>, 
+                        WriteStorage<'a, Viewshed>,
                         ReadStorage<'a, Monster>,
                         WriteStorage<'a, Position>,
                         WriteStorage<'a, WantsToMelee>,
@@ -23,7 +23,7 @@ impl<'a> System<'a> for MonsterAI {
                         WriteStorage<'a, EntityMoved>);
 
     fn run(&mut self, data : Self::SystemData) {
-        let (mut map, player_pos, player_entity, runstate, entities, mut viewshed, 
+        let (mut map, player_pos, player_entity, runstate, entities, mut viewshed,
             monster, mut position, mut wants_to_melee, mut confused, mut particle_builder,
             mut entity_moved) = data;
 
@@ -40,7 +40,7 @@ impl<'a> System<'a> for MonsterAI {
                 }
                 can_act = false;
 
-                particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA), 
+                particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::MAGENTA),
                     rltk::RGB::named(rltk::BLACK), rltk::to_cp437('?'), 200.0);
             }
 
@@ -52,8 +52,8 @@ impl<'a> System<'a> for MonsterAI {
                 else if viewshed.visible_tiles.contains(&*player_pos) {
                     // Path to the player
                     let path = rltk::a_star_search(
-                        map.xy_idx(pos.x, pos.y) as i32, 
-                        map.xy_idx(player_pos.x, player_pos.y) as i32, 
+                        map.xy_idx(pos.x, pos.y) as i32,
+                        map.xy_idx(player_pos.x, player_pos.y) as i32,
                         &mut *map
                     );
                     if path.success && path.steps.len()>1 {

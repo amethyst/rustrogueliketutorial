@@ -21,7 +21,7 @@ impl<'a> System<'a> for DamageSystem {
                          );
 
     fn run(&mut self, data : Self::SystemData) {
-        let (mut stats, mut damage, positions, mut map, entities, player, attributes, 
+        let (mut stats, mut damage, positions, mut map, entities, player, attributes,
             mut log, mut particles, player_pos) = data;
         let mut xp_gain = 0;
         let mut gold_gain = 0.0f32;
@@ -52,12 +52,12 @@ impl<'a> System<'a> for DamageSystem {
                 player_stats.level += 1;
                 log.entries.insert(0, format!("Congratulations, you are now level {}", player_stats.level));
                 player_stats.hit_points.max = player_hp_at_level(
-                    player_attributes.fitness.base + player_attributes.fitness.modifiers, 
+                    player_attributes.fitness.base + player_attributes.fitness.modifiers,
                     player_stats.level
                 );
                 player_stats.hit_points.current = player_stats.hit_points.max;
                 player_stats.mana.max = mana_at_level(
-                    player_attributes.intelligence.base + player_attributes.intelligence.modifiers, 
+                    player_attributes.intelligence.base + player_attributes.intelligence.modifiers,
                     player_stats.level
                 );
                 player_stats.mana.current = player_stats.mana.max;
@@ -65,10 +65,10 @@ impl<'a> System<'a> for DamageSystem {
                 for i in 0..10 {
                     if player_pos.y - i > 1 {
                         particles.request(
-                            player_pos.x, 
-                            player_pos.y - i, 
-                            rltk::RGB::named(rltk::GOLD), 
-                            rltk::RGB::named(rltk::BLACK), 
+                            player_pos.x,
+                            player_pos.y - i,
+                            rltk::RGB::named(rltk::GOLD),
+                            rltk::RGB::named(rltk::BLACK),
                             rltk::to_cp437('░'), 400.0
                         );
                     }
@@ -90,7 +90,7 @@ pub fn delete_the_dead(ecs : &mut World) {
         let entities = ecs.entities();
         let mut log = ecs.write_resource::<GameLog>();
         for (entity, stats) in (&entities, &combat_stats).join() {
-            if stats.hit_points.current < 1 { 
+            if stats.hit_points.current < 1 {
                 let player = players.get(entity);
                 match player {
                     None => {
@@ -119,7 +119,7 @@ pub fn delete_the_dead(ecs : &mut World) {
         let mut positions = ecs.write_storage::<Position>();
         let loot_tables = ecs.read_storage::<LootTable>();
         let mut rng = ecs.write_resource::<rltk::RandomNumberGenerator>();
-        for victim in dead.iter() {        
+        for victim in dead.iter() {
             let pos = positions.get(*victim);
             for (entity, equipped) in (&entities, &equipped).join() {
                 if equipped.owner == *victim {
@@ -147,7 +147,7 @@ pub fn delete_the_dead(ecs : &mut World) {
                 if let Some(tag) = drop_finder {
                     if let Some(pos) = pos {
                         to_spawn.push((tag, pos.clone()));
-                    }                    
+                    }
                 }
             }
         }
@@ -156,15 +156,15 @@ pub fn delete_the_dead(ecs : &mut World) {
             equipped.remove(drop.0);
             carried.remove(drop.0);
             positions.insert(drop.0, drop.1.clone()).expect("Unable to insert position");
-        }        
+        }
     }
 
     {
         for drop in to_spawn.iter() {
             crate::raws::spawn_named_item(
-                &crate::raws::RAWS.lock().unwrap(), 
-                ecs, 
-                &drop.0, 
+                &crate::raws::RAWS.lock().unwrap(),
+                ecs,
+                &drop.0,
                 crate::raws::SpawnType::AtPosition{x : drop.1.x, y: drop.1.y}
             );
         }
@@ -172,5 +172,5 @@ pub fn delete_the_dead(ecs : &mut World) {
 
     for victim in dead {
         ecs.delete_entity(victim).expect("Unable to delete");
-    }    
+    }
 }

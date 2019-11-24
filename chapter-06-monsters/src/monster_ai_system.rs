@@ -8,7 +8,7 @@ pub struct MonsterAI {}
 
 impl<'a> System<'a> for MonsterAI {
     type SystemData = ( ReadExpect<'a, Point>,
-                        ReadStorage<'a, Viewshed>, 
+                        ReadStorage<'a, Viewshed>,
                         ReadStorage<'a, Monster>,
                         ReadStorage<'a, Name>);
 

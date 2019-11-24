@@ -1,13 +1,13 @@
 extern crate specs;
 use specs::prelude::*;
-use crate::{MyTurn, Faction, Position, Map, raws::Reaction, Viewshed, WantsToFlee, 
+use crate::{MyTurn, Faction, Position, Map, raws::Reaction, Viewshed, WantsToFlee,
     WantsToApproach, Chasing};
 
 pub struct VisibleAI {}
 
 impl<'a> System<'a> for VisibleAI {
     #[allow(clippy::type_complexity)]
-    type SystemData = ( 
+    type SystemData = (
         ReadStorage<'a, MyTurn>,
         ReadStorage<'a, Faction>,
         ReadStorage<'a, Position>,
@@ -21,7 +21,7 @@ impl<'a> System<'a> for VisibleAI {
     );
 
     fn run(&mut self, data : Self::SystemData) {
-        let (turns, factions, positions, map, mut want_approach, mut want_flee, entities, player, 
+        let (turns, factions, positions, map, mut want_approach, mut want_flee, entities, player,
             viewsheds, mut chasing) = data;
 
         for (entity, _turn, my_faction, pos, viewshed) in (&entities, &turns, &factions, &positions, &viewsheds).join() {
@@ -63,7 +63,7 @@ fn evaluate(idx : usize, map : &Map, factions : &ReadStorage<Faction>, my_factio
     for other_entity in map.tile_content[idx].iter() {
         if let Some(faction) = factions.get(*other_entity) {
             reactions.push((
-                idx, 
+                idx,
                 crate::raws::faction_reaction(my_faction, &faction.name, &crate::raws::RAWS.lock().unwrap()),
                 *other_entity
             ));

@@ -41,7 +41,7 @@ pub fn render_camera(ecs: &World, ctx : &mut Rltk) {
                     ctx.set(x+1, y+1, fg, bg, glyph);
                 }
             } else if SHOW_BOUNDARIES {
-                ctx.set(x+1, y+1, RGB::named(rltk::GRAY), RGB::named(rltk::BLACK), rltk::to_cp437('·'));                
+                ctx.set(x+1, y+1, RGB::named(rltk::GRAY), RGB::named(rltk::BLACK), rltk::to_cp437('·'));
             }
             x += 1;
         }
@@ -58,7 +58,7 @@ pub fn render_camera(ecs: &World, ctx : &mut Rltk) {
     data.sort_by(|&a, &b| b.1.render_order.cmp(&a.1.render_order) );
     for (pos, render, _hidden) in data.iter() {
         let idx = map.xy_idx(pos.x, pos.y);
-        if map.visible_tiles[idx] { 
+        if map.visible_tiles[idx] {
             let entity_screen_x = pos.x - min_x;
             let entity_screen_y = pos.y - min_y;
             if entity_screen_x > 0 && entity_screen_x < map_width && entity_screen_y > 0 && entity_screen_y < map_height {
@@ -94,7 +94,7 @@ pub fn render_debug_map(map : &Map, ctx : &mut Rltk) {
                     ctx.set(x, y, fg, bg, glyph);
                 }
             } else if SHOW_BOUNDARIES {
-                ctx.set(x, y, RGB::named(rltk::GRAY), RGB::named(rltk::BLACK), rltk::to_cp437('·'));                
+                ctx.set(x, y, RGB::named(rltk::GRAY), RGB::named(rltk::BLACK), rltk::to_cp437('·'));
             }
             x += 1;
         }

@@ -20,7 +20,7 @@ impl<'a> System<'a> for MovementSystem {
                         WriteExpect<'a, RunState>);
 
     fn run(&mut self, data : Self::SystemData) {
-        let (mut map, mut position, blockers, entities, mut apply_move, 
+        let (mut map, mut position, blockers, entities, mut apply_move,
             mut apply_teleport, mut other_level, mut moved,
             mut viewsheds, player_entity, mut runstate) = data;
 
@@ -36,9 +36,9 @@ impl<'a> System<'a> for MovementSystem {
                 if blockers.get(entity).is_some() {
                     map.blocked[idx] = false;
                 }
-                other_level.insert(entity, OtherLevelPosition{ 
-                    x: teleport.dest_x, 
-                    y: teleport.dest_y, 
+                other_level.insert(entity, OtherLevelPosition{
+                    x: teleport.dest_x,
+                    y: teleport.dest_y,
                     depth: teleport.dest_depth })
                     .expect("Unable to insert");
                 position.remove(entity);
@@ -62,6 +62,6 @@ impl<'a> System<'a> for MovementSystem {
             }
             moved.insert(entity, EntityMoved{}).expect("Unable to insert");
         }
-        apply_move.clear();        
+        apply_move.clear();
     }
 }

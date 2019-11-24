@@ -2,7 +2,7 @@ extern crate rltk;
 use rltk::{ RGB, Rltk, Console, Point, VirtualKeyCode };
 extern crate specs;
 use specs::prelude::*;
-use super::{CombatStats, Player, gamelog::GameLog, Map, Name, Position, State, InBackpack, 
+use super::{CombatStats, Player, gamelog::GameLog, Map, Name, Position, State, InBackpack,
     Viewshed};
 
 pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
@@ -116,11 +116,11 @@ pub fn show_inventory(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Opti
         Some(key) => {
             match key {
                 VirtualKeyCode::Escape => { (ItemMenuResult::Cancel, None) }
-                _ => { 
+                _ => {
                     let selection = rltk::letter_to_option(key);
                     if selection > -1 && selection < count as i32 {
                         return (ItemMenuResult::Selected, Some(equippable[selection as usize]));
-                    }  
+                    }
                     (ItemMenuResult::NoResponse, None)
                 }
             }
@@ -160,11 +160,11 @@ pub fn drop_item_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Opti
         Some(key) => {
             match key {
                 VirtualKeyCode::Escape => { (ItemMenuResult::Cancel, None) }
-                _ => { 
+                _ => {
                     let selection = rltk::letter_to_option(key);
                     if selection > -1 && selection < count as i32 {
                         return (ItemMenuResult::Selected, Some(equippable[selection as usize]));
-                    }  
+                    }
                     (ItemMenuResult::NoResponse, None)
                 }
             }

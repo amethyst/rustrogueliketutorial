@@ -1,6 +1,6 @@
 extern crate specs;
 use specs::prelude::*;
-use super::{EntityMoved, Position, EntryTrigger, Hidden, Map, Name, gamelog::GameLog, 
+use super::{EntityMoved, Position, EntryTrigger, Hidden, Map, Name, gamelog::GameLog,
     InflictsDamage, particle_system::ParticleBuilder, SufferDamage, SingleActivation};
 
 pub struct TriggerSystem {}
@@ -21,7 +21,7 @@ impl<'a> System<'a> for TriggerSystem {
                         ReadStorage<'a, SingleActivation>);
 
     fn run(&mut self, data : Self::SystemData) {
-        let (map, mut entity_moved, position, entry_trigger, mut hidden, 
+        let (map, mut entity_moved, position, entry_trigger, mut hidden,
             names, entities, mut log, inflicts_damage, mut particle_builder,
             mut inflict_damage, single_activation) = data;
 
@@ -35,7 +35,7 @@ impl<'a> System<'a> for TriggerSystem {
                     match maybe_trigger {
                         None => {},
                         Some(_trigger) => {
-                            // We triggered it                            
+                            // We triggered it
                             let name = names.get(*entity_id);
                             if let Some(name) = name {
                                 log.entries.insert(0, format!("{} triggers!", &name.name));

@@ -26,7 +26,7 @@ lazy_static! {
 pub struct Raws {
     pub items : Vec<Item>,
     pub mobs : Vec<Mob>,
-    pub props : Vec<Prop>,    
+    pub props : Vec<Prop>,
     pub spawn_table : Vec<SpawnTableEntry>,
     pub loot_tables : Vec<LootTable>,
     pub faction_table : Vec<FactionInfo>

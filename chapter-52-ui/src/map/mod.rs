@@ -36,7 +36,7 @@ impl Map {
         !self.blocked[idx]
     }
 
-    pub fn populate_blocked(&mut self) {        
+    pub fn populate_blocked(&mut self) {
         for (i,tile) in self.tiles.iter_mut().enumerate() {
             self.blocked[i] = !tile_walkable(*tile);
         }

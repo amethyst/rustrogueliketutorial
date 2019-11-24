@@ -42,12 +42,12 @@ rltk::add_wasm_support!();
 const SHOW_MAPGEN_VISUALIZER : bool = true;
 
 #[derive(PartialEq, Copy, Clone)]
-pub enum RunState { AwaitingInput, 
-    PreRun, 
-    PlayerTurn, 
-    MonsterTurn, 
-    ShowInventory, 
-    ShowDropItem, 
+pub enum RunState { AwaitingInput,
+    PreRun,
+    PlayerTurn,
+    MonsterTurn,
+    ShowInventory,
+    ShowDropItem,
     ShowTargeting { range : i32, item : Entity},
     MainMenu { menu_selection : gui::MainMenuSelection },
     SaveGame,
@@ -105,7 +105,7 @@ impl GameState for State {
             newrunstate = *runstate;
         }
 
-        ctx.cls();        
+        ctx.cls();
         particle_system::cull_dead_particles(&mut self.ecs, ctx);
 
         match newrunstate {
@@ -124,16 +124,16 @@ impl GameState for State {
                     let idx = map.xy_idx(pos.x, pos.y);
                     if map.visible_tiles[idx] { ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph) }
                 }
-                gui::draw_ui(&self.ecs, ctx);                
+                gui::draw_ui(&self.ecs, ctx);
             }
         }
-        
+
         match newrunstate {
             RunState::MapGeneration => {
                 if !SHOW_MAPGEN_VISUALIZER {
                     newrunstate = self.mapgen_next_state.unwrap();
                 }
-                ctx.cls();                
+                ctx.cls();
                 draw_map(&self.mapgen_history[self.mapgen_index], ctx);
 
                 self.mapgen_timer += ctx.frame_time_ms;
@@ -160,7 +160,7 @@ impl GameState for State {
                 match *self.ecs.fetch::<RunState>() {
                     RunState::MagicMapReveal{ .. } => newrunstate = RunState::MagicMapReveal{ row: 0 },
                     _ => newrunstate = RunState::MonsterTurn
-                }                
+                }
             }
             RunState::MonsterTurn => {
                 self.run_systems();
@@ -316,7 +316,7 @@ impl State {
                 }
             }
 
-            if should_delete { 
+            if should_delete {
                 to_delete.push(entity);
             }
         }
@@ -368,7 +368,7 @@ impl State {
         }
 
         // Build a new map and place the player
-        self.generate_world_map(1);                                          
+        self.generate_world_map(1);
     }
 
     fn generate_world_map(&mut self, new_depth : i32) {
@@ -407,7 +407,7 @@ impl State {
         let vs = viewshed_components.get_mut(*player_entity);
         if let Some(vs) = vs {
             vs.dirty = true;
-        } 
+        }
     }
 }
 

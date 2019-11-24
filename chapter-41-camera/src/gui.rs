@@ -2,7 +2,7 @@ extern crate rltk;
 use rltk::{ RGB, Rltk, Console, Point, VirtualKeyCode };
 extern crate specs;
 use specs::prelude::*;
-use super::{CombatStats, Player, gamelog::GameLog, Map, Name, Position, State, InBackpack, 
+use super::{CombatStats, Player, gamelog::GameLog, Map, Name, Position, State, InBackpack,
     Viewshed, RunState, Equipped, HungerClock, HungerState, rex_assets::RexAssets,
     Hidden, camera };
 
@@ -59,9 +59,9 @@ fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
     let mut mouse_map_pos = mouse_pos;
     mouse_map_pos.0 += min_x;
     mouse_map_pos.1 += min_y;
-    if mouse_map_pos.0 >= map.width-1 || mouse_map_pos.1 >= map.height-1 || mouse_map_pos.0 < 1 || mouse_map_pos.1 < 1 
-    { 
-        return; 
+    if mouse_map_pos.0 >= map.width-1 || mouse_map_pos.1 >= map.height-1 || mouse_map_pos.0 < 1 || mouse_map_pos.1 < 1
+    {
+        return;
     }
     if !map.visible_tiles[map.xy_idx(mouse_map_pos.0, mouse_map_pos.1)] { return; }
     let mut tooltip : Vec<String> = Vec::new();
@@ -143,11 +143,11 @@ pub fn show_inventory(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Opti
         Some(key) => {
             match key {
                 VirtualKeyCode::Escape => { (ItemMenuResult::Cancel, None) }
-                _ => { 
+                _ => {
                     let selection = rltk::letter_to_option(key);
                     if selection > -1 && selection < count as i32 {
                         return (ItemMenuResult::Selected, Some(equippable[selection as usize]));
-                    }  
+                    }
                     (ItemMenuResult::NoResponse, None)
                 }
             }
@@ -187,11 +187,11 @@ pub fn drop_item_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Opti
         Some(key) => {
             match key {
                 VirtualKeyCode::Escape => { (ItemMenuResult::Cancel, None) }
-                _ => { 
+                _ => {
                     let selection = rltk::letter_to_option(key);
                     if selection > -1 && selection < count as i32 {
                         return (ItemMenuResult::Selected, Some(equippable[selection as usize]));
-                    }  
+                    }
                     (ItemMenuResult::NoResponse, None)
                 }
             }
@@ -231,11 +231,11 @@ pub fn remove_item_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Op
         Some(key) => {
             match key {
                 VirtualKeyCode::Escape => { (ItemMenuResult::Cancel, None) }
-                _ => { 
+                _ => {
                     let selection = rltk::letter_to_option(key);
                     if selection > -1 && selection < count as i32 {
                         return (ItemMenuResult::Selected, Some(equippable[selection as usize]));
-                    }  
+                    }
                     (ItemMenuResult::NoResponse, None)
                 }
             }
@@ -310,7 +310,7 @@ pub fn main_menu(gs : &mut State, ctx : &mut Rltk) -> MainMenuResult {
     ctx.print_color_centered(20, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Rust Roguelike Tutorial");
     ctx.print_color_centered(21, RGB::named(rltk::CYAN), RGB::named(rltk::BLACK), "by Herbert Wolverson");
     ctx.print_color_centered(22, RGB::named(rltk::GRAY), RGB::named(rltk::BLACK), "Use Up/Down Arrows and Enter");
-    
+
     let mut y = 24;
     if let RunState::MainMenu{ menu_selection : selection } = *runstate {
         if selection == MainMenuSelection::NewGame {

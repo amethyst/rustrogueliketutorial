@@ -92,8 +92,8 @@ impl TownBuilder {
         build_data.take_snapshot();
     }
 
-    fn town_walls(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap) 
-        -> (HashSet<usize>, i32) 
+    fn town_walls(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap)
+        -> (HashSet<usize>, i32)
     {
         let mut available_building_tiles : HashSet<usize> = HashSet::new();
         let wall_gap_y = rng.roll_dice(1, build_data.height - 8) + 5;
@@ -131,14 +131,14 @@ impl TownBuilder {
         (available_building_tiles, wall_gap_y)
     }
 
-    fn buildings(&mut self, 
-        rng: &mut rltk::RandomNumberGenerator, 
-        build_data : &mut BuilderMap, 
-        available_building_tiles : &mut HashSet<usize>) 
-    -> Vec<(i32, i32, i32, i32)> 
+    fn buildings(&mut self,
+        rng: &mut rltk::RandomNumberGenerator,
+        build_data : &mut BuilderMap,
+        available_building_tiles : &mut HashSet<usize>)
+    -> Vec<(i32, i32, i32, i32)>
     {
         let mut buildings : Vec<(i32, i32, i32, i32)> = Vec::new();
-        let mut n_buildings = 0;        
+        let mut n_buildings = 0;
         while n_buildings < 12 {
             let bx = rng.roll_dice(1, build_data.map.width - 32) + 30;
             let by = rng.roll_dice(1, build_data.map.height)-2;
@@ -195,11 +195,11 @@ impl TownBuilder {
         buildings
     }
 
-    fn add_doors(&mut self, 
-        rng: &mut rltk::RandomNumberGenerator, 
-        build_data : &mut BuilderMap, 
-        buildings: &mut Vec<(i32, i32, i32, i32)>, 
-        wall_gap_y : i32) 
+    fn add_doors(&mut self,
+        rng: &mut rltk::RandomNumberGenerator,
+        build_data : &mut BuilderMap,
+        buildings: &mut Vec<(i32, i32, i32, i32)>,
+        wall_gap_y : i32)
         -> Vec<usize>
     {
         let mut doors = Vec::new();
@@ -220,7 +220,7 @@ impl TownBuilder {
         doors
     }
 
-    fn add_paths(&mut self,         
+    fn add_paths(&mut self,
         build_data : &mut BuilderMap,
         doors : &[usize])
     {

@@ -9,7 +9,7 @@ impl<'a> System<'a> for BystanderAI {
     type SystemData = ( WriteExpect<'a, Map>,
                         ReadExpect<'a, RunState>,
                         Entities<'a>,
-                        WriteStorage<'a, Viewshed>, 
+                        WriteStorage<'a, Viewshed>,
                         ReadStorage<'a, Bystander>,
                         WriteStorage<'a, Position>,
                         WriteStorage<'a, EntityMoved>,
@@ -36,7 +36,7 @@ impl<'a> System<'a> for BystanderAI {
                         format!("{} says \"{}\"", name.unwrap().name, quip.available[quip_index])
                     );
                     quip.available.remove(quip_index);
-                }                
+                }
             }
 
             // Try to move randomly

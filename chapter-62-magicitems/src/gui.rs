@@ -2,7 +2,7 @@ extern crate rltk;
 use rltk::{ RGB, Rltk, Console, Point, VirtualKeyCode };
 extern crate specs;
 use specs::prelude::*;
-use super::{Pools, gamelog::GameLog, Map, Name, Position, State, InBackpack, 
+use super::{Pools, gamelog::GameLog, Map, Name, Position, State, InBackpack,
     Viewshed, RunState, Equipped, HungerClock, HungerState, rex_assets::RexAssets,
     Hidden, camera, Attributes, Attribute, Consumable, VendorMode, Item, Vendor,
     MagicItem, MagicItemClass, ObfuscatedName };
@@ -128,9 +128,9 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     draw_attribute("Intelligence:", &attr.intelligence, 7, ctx);
 
     // Initiative and weight
-    ctx.print_color(50, 9, white, black, 
-        &format!("{:.0} lbs ({} lbs max)", 
-            player_pools.total_weight, 
+    ctx.print_color(50, 9, white, black,
+        &format!("{:.0} lbs ({} lbs max)",
+            player_pools.total_weight,
             (attr.might.base + attr.might.modifiers) * 15
         )
     );
@@ -241,9 +241,9 @@ fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
     if mouse_pos.0 < 1 || mouse_pos.0 > 49 || mouse_pos.1 < 1 || mouse_pos.1 > 40 {
         return;
     }
-    if mouse_map_pos.0 >= map.width-1 || mouse_map_pos.1 >= map.height-1 || mouse_map_pos.0 < 1 || mouse_map_pos.1 < 1 
-    { 
-        return; 
+    if mouse_map_pos.0 >= map.width-1 || mouse_map_pos.1 >= map.height-1 || mouse_map_pos.0 < 1 || mouse_map_pos.1 < 1
+    {
+        return;
     }
     if !map.visible_tiles[map.xy_idx(mouse_map_pos.0, mouse_map_pos.1)] { return; }
 
@@ -356,11 +356,11 @@ pub fn show_inventory(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Opti
         Some(key) => {
             match key {
                 VirtualKeyCode::Escape => { (ItemMenuResult::Cancel, None) }
-                _ => { 
+                _ => {
                     let selection = rltk::letter_to_option(key);
                     if selection > -1 && selection < count as i32 {
                         return (ItemMenuResult::Selected, Some(equippable[selection as usize]));
-                    }  
+                    }
                     (ItemMenuResult::NoResponse, None)
                 }
             }
@@ -400,11 +400,11 @@ pub fn drop_item_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Opti
         Some(key) => {
             match key {
                 VirtualKeyCode::Escape => { (ItemMenuResult::Cancel, None) }
-                _ => { 
+                _ => {
                     let selection = rltk::letter_to_option(key);
                     if selection > -1 && selection < count as i32 {
                         return (ItemMenuResult::Selected, Some(equippable[selection as usize]));
-                    }  
+                    }
                     (ItemMenuResult::NoResponse, None)
                 }
             }
@@ -444,11 +444,11 @@ pub fn remove_item_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Op
         Some(key) => {
             match key {
                 VirtualKeyCode::Escape => { (ItemMenuResult::Cancel, None) }
-                _ => { 
+                _ => {
                     let selection = rltk::letter_to_option(key);
                     if selection > -1 && selection < count as i32 {
                         return (ItemMenuResult::Selected, Some(equippable[selection as usize]));
-                    }  
+                    }
                     (ItemMenuResult::NoResponse, None)
                 }
             }
@@ -523,7 +523,7 @@ pub fn main_menu(gs : &mut State, ctx : &mut Rltk) -> MainMenuResult {
     ctx.print_color_centered(20, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Rust Roguelike Tutorial");
     ctx.print_color_centered(21, RGB::named(rltk::CYAN), RGB::named(rltk::BLACK), "by Herbert Wolverson");
     ctx.print_color_centered(22, RGB::named(rltk::GRAY), RGB::named(rltk::BLACK), "Use Up/Down Arrows and Enter");
-    
+
     let mut y = 24;
     if let RunState::MainMenu{ menu_selection : selection } = *runstate {
         if selection == MainMenuSelection::NewGame {
@@ -689,7 +689,7 @@ fn vendor_sell_menu(gs : &mut State, ctx : &mut Rltk, _vendor : Entity, _mode : 
             match key {
                 VirtualKeyCode::Tab => { (VendorResult::BuyMode, None, None, None) }
                 VirtualKeyCode::Escape => { (VendorResult::Cancel, None, None, None) }
-                _ => { 
+                _ => {
                     let selection = rltk::letter_to_option(key);
                     if selection > -1 && selection < count as i32 {
                         return (VendorResult::Sell, Some(equippable[selection as usize]), None, None);
@@ -718,7 +718,7 @@ fn vendor_buy_menu(gs : &mut State, ctx : &mut Rltk, vendor : Entity, _mode : Ve
         ctx.set(17, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437('('));
         ctx.set(18, y, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), 97+j as u8);
         ctx.set(19, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437(')'));
-        
+
         ctx.print(21, y, &sale.0);
         ctx.print(50, y, &format!("{:.1} gp", sale.1 * 1.2));
         y += 1;
@@ -746,5 +746,5 @@ pub fn show_vendor_menu(gs : &mut State, ctx : &mut Rltk, vendor : Entity, mode 
     match mode {
         VendorMode::Buy => vendor_buy_menu(gs, ctx, vendor, mode),
         VendorMode::Sell => vendor_sell_menu(gs, ctx, vendor, mode)
-    }    
+    }
 }

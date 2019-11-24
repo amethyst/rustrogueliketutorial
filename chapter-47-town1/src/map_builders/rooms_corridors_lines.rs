@@ -47,8 +47,8 @@ impl StraightLineCorridors {
                 room_distance.sort_by(|a,b| a.1.partial_cmp(&b.1).unwrap() );
                 let dest_center = rooms[room_distance[0].0].center();
                 let line = rltk::line2d(
-                    rltk::LineAlg::Bresenham, 
-                    room_center_pt, 
+                    rltk::LineAlg::Bresenham,
+                    room_center_pt,
                     rltk::Point::new(dest_center.0, dest_center.1)
                 );
                 let mut corridor = Vec::new();

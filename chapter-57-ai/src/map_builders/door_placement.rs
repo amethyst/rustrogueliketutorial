@@ -59,7 +59,7 @@ impl DoorPlacement {
                     }
                 }
             }
-        } else {        
+        } else {
             // There are no corridors - scan for possible places
             let tiles = build_data.map.tiles.clone();
             for (i, tile) in tiles.iter().enumerate() {

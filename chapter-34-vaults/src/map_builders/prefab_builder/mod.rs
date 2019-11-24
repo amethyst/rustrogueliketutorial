@@ -7,7 +7,7 @@ pub mod prefab_sections;
 
 #[derive(PartialEq, Copy, Clone)]
 #[allow(dead_code)]
-pub enum PrefabMode { 
+pub enum PrefabMode {
     RexLevel{ template : &'static str },
     Constant{ level : prefab_levels::PrefabLevel },
     Sectional{ section : prefab_sections::PrefabSection }
@@ -104,7 +104,7 @@ impl PrefabBuilder {
             // Place the stairs
             self.map.tiles[exit_tile] = TileType::DownStairs;
             self.take_snapshot();
-        }        
+        }
     }
 
     fn char_to_map(&mut self, ch : char, idx: usize) {
@@ -189,7 +189,7 @@ impl PrefabBuilder {
         use prefab_sections::*;
 
         let string_vec = PrefabBuilder::read_ascii_to_vec(section.template);
-        
+
         // Place the new section
         let chunk_x;
         match section.placement.0 {
@@ -209,7 +209,7 @@ impl PrefabBuilder {
         let prev_builder = self.previous_builder.as_mut().unwrap();
         prev_builder.build_map();
         self.starting_position = prev_builder.get_starting_position();
-        self.map = prev_builder.get_map().clone();        
+        self.map = prev_builder.get_map().clone();
         for e in prev_builder.get_spawn_list().iter() {
             let idx = e.0;
             let x = idx as i32 % self.map.width;
@@ -220,8 +220,8 @@ impl PrefabBuilder {
                         (idx, e.1.to_string())
                     )
                 }
-        }        
-        self.take_snapshot();        
+        }
+        self.take_snapshot();
 
         let mut i = 0;
         for ty in 0..section.height {

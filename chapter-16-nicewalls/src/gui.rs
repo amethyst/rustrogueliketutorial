@@ -2,7 +2,7 @@ extern crate rltk;
 use rltk::{ RGB, Rltk, Console, Point, VirtualKeyCode };
 extern crate specs;
 use specs::prelude::*;
-use super::{CombatStats, Player, gamelog::GameLog, Map, Name, Position, State, InBackpack, 
+use super::{CombatStats, Player, gamelog::GameLog, Map, Name, Position, State, InBackpack,
     Viewshed, RunState, Equipped};
 
 pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
@@ -121,11 +121,11 @@ pub fn show_inventory(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Opti
         Some(key) => {
             match key {
                 VirtualKeyCode::Escape => { (ItemMenuResult::Cancel, None) }
-                _ => { 
+                _ => {
                     let selection = rltk::letter_to_option(key);
                     if selection > -1 && selection < count as i32 {
                         return (ItemMenuResult::Selected, Some(equippable[selection as usize]));
-                    }  
+                    }
                     (ItemMenuResult::NoResponse, None)
                 }
             }
@@ -165,11 +165,11 @@ pub fn drop_item_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Opti
         Some(key) => {
             match key {
                 VirtualKeyCode::Escape => { (ItemMenuResult::Cancel, None) }
-                _ => { 
+                _ => {
                     let selection = rltk::letter_to_option(key);
                     if selection > -1 && selection < count as i32 {
                         return (ItemMenuResult::Selected, Some(equippable[selection as usize]));
-                    }  
+                    }
                     (ItemMenuResult::NoResponse, None)
                 }
             }
@@ -209,11 +209,11 @@ pub fn remove_item_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Op
         Some(key) => {
             match key {
                 VirtualKeyCode::Escape => { (ItemMenuResult::Cancel, None) }
-                _ => { 
+                _ => {
                     let selection = rltk::letter_to_option(key);
                     if selection > -1 && selection < count as i32 {
                         return (ItemMenuResult::Selected, Some(equippable[selection as usize]));
-                    }  
+                    }
                     (ItemMenuResult::NoResponse, None)
                 }
             }
@@ -274,7 +274,7 @@ pub fn main_menu(gs : &mut State, ctx : &mut Rltk) -> MainMenuResult {
     let runstate = gs.ecs.fetch::<RunState>();
 
     ctx.print_color_centered(15, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Rust Roguelike Tutorial");
-    
+
     if let RunState::MainMenu{ menu_selection : selection } = *runstate {
         if selection == MainMenuSelection::NewGame {
             ctx.print_color_centered(24, RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK), "Begin New Game");

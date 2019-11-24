@@ -8,7 +8,7 @@ pub struct LightingSystem {}
 impl<'a> System<'a> for LightingSystem {
     #[allow(clippy::type_complexity)]
     type SystemData = ( WriteExpect<'a, Map>,
-                        ReadStorage<'a, Viewshed>, 
+                        ReadStorage<'a, Viewshed>,
                         ReadStorage<'a, Position>,
                         ReadStorage<'a, LightSource>);
 
@@ -30,7 +30,7 @@ impl<'a> System<'a> for LightingSystem {
             for t in viewshed.visible_tiles.iter() {
                 if t.x > 0 && t.x < map.width && t.y > 0 && t.y < map.height {
                     let idx = map.xy_idx(t.x, t.y);
-                    let distance = rltk::DistanceAlg::Pythagoras.distance2d(light_point, *t);                    
+                    let distance = rltk::DistanceAlg::Pythagoras.distance2d(light_point, *t);
                     let intensity = (range_f - distance) / range_f;
 
                     map.light[idx] = map.light[idx] + (light.color * intensity);

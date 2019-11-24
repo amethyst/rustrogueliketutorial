@@ -34,12 +34,12 @@ pub mod saveload_system;
 rltk::add_wasm_support!();
 
 #[derive(PartialEq, Copy, Clone)]
-pub enum RunState { AwaitingInput, 
-    PreRun, 
-    PlayerTurn, 
-    MonsterTurn, 
-    ShowInventory, 
-    ShowDropItem, 
+pub enum RunState { AwaitingInput,
+    PreRun,
+    PlayerTurn,
+    MonsterTurn,
+    ShowInventory,
+    ShowDropItem,
     ShowTargeting { range : i32, item : Entity},
     MainMenu { menu_selection : gui::MainMenuSelection },
     SaveGame
@@ -80,7 +80,7 @@ impl GameState for State {
             newrunstate = *runstate;
         }
 
-        ctx.cls();        
+        ctx.cls();
 
         match newrunstate {
             RunState::MainMenu{..} => {}
@@ -100,10 +100,10 @@ impl GameState for State {
                     }
 
                     gui::draw_ui(&self.ecs, ctx);
-                } 
+                }
             }
         }
-        
+
         match newrunstate {
             RunState::PreRun => {
                 self.run_systems();

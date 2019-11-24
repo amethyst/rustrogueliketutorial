@@ -1,6 +1,6 @@
 extern crate specs;
 use specs::prelude::*;
-use super::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, WantsToUseItem, 
+use super::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, WantsToUseItem,
     Consumable, ProvidesHealing, CombatStats, WantsToDropItem, InflictsDamage, Map, SufferDamage,
     AreaOfEffect, Confusion, Equippable, Equipped, WantsToRemoveItem, particle_system::ParticleBuilder,
     ProvidesFood, HungerClock, HungerState};
@@ -61,8 +61,8 @@ impl<'a> System<'a> for ItemUseSystem {
 
     #[allow(clippy::cognitive_complexity)]
     fn run(&mut self, data : Self::SystemData) {
-        let (player_entity, mut gamelog, map, entities, mut wants_use, names, 
-            consumables, healing, inflict_damage, mut combat_stats, mut suffer_damage, 
+        let (player_entity, mut gamelog, map, entities, mut wants_use, names,
+            consumables, healing, inflict_damage, mut combat_stats, mut suffer_damage,
             aoe, mut confused, equippable, mut equipped, mut backpack, mut particle_builder, positions,
             provides_food, mut hunger_clocks) = data;
 
@@ -165,8 +165,8 @@ impl<'a> System<'a> for ItemUseSystem {
                             let pos = positions.get(*target);
                             if let Some(pos) = pos {
                                 particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::GREEN), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('♥'), 200.0);
-                            }   
-                        }            
+                            }
+                        }
                     }
                 }
             }
@@ -278,7 +278,7 @@ pub struct ItemRemoveSystem {}
 
 impl<'a> System<'a> for ItemRemoveSystem {
     #[allow(clippy::type_complexity)]
-    type SystemData = ( 
+    type SystemData = (
                         Entities<'a>,
                         WriteStorage<'a, WantsToRemoveItem>,
                         WriteStorage<'a, Equipped>,

@@ -56,7 +56,7 @@ impl GameState for State {
             let runstate = self.ecs.fetch::<RunState>();
             newrunstate = *runstate;
         }
-        
+
         match newrunstate {
             RunState::PreRun => {
                 self.run_systems();

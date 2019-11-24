@@ -9,7 +9,7 @@ pub enum XStart { LEFT, CENTER, RIGHT }
 pub enum YStart { TOP, CENTER, BOTTOM }
 
 pub struct AreaStartingPosition {
-    x : XStart, 
+    x : XStart,
     y : YStart
 }
 

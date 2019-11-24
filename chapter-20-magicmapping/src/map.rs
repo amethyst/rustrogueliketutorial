@@ -71,7 +71,7 @@ impl Map {
         !self.blocked[idx]
     }
 
-    pub fn populate_blocked(&mut self) {        
+    pub fn populate_blocked(&mut self) {
         for (i,tile) in self.tiles.iter_mut().enumerate() {
             self.blocked[i] = *tile == TileType::Wall;
         }
@@ -245,7 +245,7 @@ pub fn draw_map(ecs: &World, ctx : &mut Rltk) {
                 }
             }
             if map.bloodstains.contains(&idx) { bg = RGB::from_f32(0.75, 0., 0.); }
-            if !map.visible_tiles[idx] { 
+            if !map.visible_tiles[idx] {
                 fg = fg.to_greyscale();
                 bg = RGB::from_f32(0., 0., 0.); // Don't show stains out of visual range
             }

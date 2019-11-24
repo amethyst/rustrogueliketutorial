@@ -1,6 +1,6 @@
 extern crate specs;
 use specs::prelude::*;
-use super::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, WantsToUseItem, 
+use super::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, WantsToUseItem,
     Consumable, ProvidesHealing, CombatStats, WantsToDropItem, InflictsDamage, Map, SufferDamage,
     AreaOfEffect, Confusion};
 
@@ -52,8 +52,8 @@ impl<'a> System<'a> for ItemUseSystem {
                       );
 
     fn run(&mut self, data : Self::SystemData) {
-        let (player_entity, mut gamelog, map, entities, mut wants_use, names, 
-            consumables, healing, inflict_damage, mut combat_stats, mut suffer_damage, 
+        let (player_entity, mut gamelog, map, entities, mut wants_use, names,
+            consumables, healing, inflict_damage, mut combat_stats, mut suffer_damage,
             aoe, mut confused) = data;
 
         for (entity, useitem) in (&entities, &wants_use).join() {
@@ -102,7 +102,7 @@ impl<'a> System<'a> for ItemUseSystem {
                                 gamelog.entries.insert(0, format!("You use the {}, healing {} hp.", names.get(useitem.item).unwrap().name, healer.heal_amount));
                             }
                             used_item = true;
-                        }                        
+                        }
                     }
                 }
             }

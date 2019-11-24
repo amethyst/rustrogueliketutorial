@@ -1,6 +1,6 @@
 extern crate specs;
 use specs::prelude::*;
-use super::{Viewshed, Herbivore, Carnivore, Item, Map, Position, WantsToMelee, RunState, 
+use super::{Viewshed, Herbivore, Carnivore, Item, Map, Position, WantsToMelee, RunState,
     Confusion, particle_system::ParticleBuilder, EntityMoved};
 extern crate rltk;
 use rltk::{Point};
@@ -13,7 +13,7 @@ impl<'a> System<'a> for AnimalAI {
                         ReadExpect<'a, Entity>,
                         ReadExpect<'a, RunState>,
                         Entities<'a>,
-                        WriteStorage<'a, Viewshed>, 
+                        WriteStorage<'a, Viewshed>,
                         ReadStorage<'a, Herbivore>,
                         ReadStorage<'a, Carnivore>,
                         ReadStorage<'a, Item>,
@@ -22,7 +22,7 @@ impl<'a> System<'a> for AnimalAI {
                         WriteStorage<'a, Position> );
 
     fn run(&mut self, data : Self::SystemData) {
-        let (mut map, player_entity, runstate, entities, mut viewshed, 
+        let (mut map, player_entity, runstate, entities, mut viewshed,
             herbivore, carnivore, item, mut wants_to_melee, mut entity_moved, mut position) = data;
 
         if *runstate != RunState::MonsterTurn { return; }

@@ -1,5 +1,5 @@
-use super::{MapBuilder, Map,  
-    TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER, 
+use super::{MapBuilder, Map,
+    TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER,
     remove_unreachable_areas_returning_most_distant, generate_voronoi_spawn_regions,
     paint, Symmetry};
 use rltk::RandomNumberGenerator;
@@ -168,7 +168,7 @@ impl DrunkardsWalkBuilder {
             spawn_list : Vec::new()
         }
     }
-    
+
     fn build(&mut self) {
         let mut rng = RandomNumberGenerator::new();
 
@@ -221,8 +221,8 @@ impl DrunkardsWalkBuilder {
 
                 drunk_life -= 1;
             }
-            if did_something { 
-                self.take_snapshot(); 
+            if did_something {
+                self.take_snapshot();
                 active_digger_count += 1;
             }
 
@@ -246,7 +246,7 @@ impl DrunkardsWalkBuilder {
 
         // Now we build a noise map for use in spawning entities later
         self.noise_areas = generate_voronoi_spawn_regions(&self.map, &mut rng);
-        
+
         // Spawn the entities
         for area in self.noise_areas.iter() {
             spawner::spawn_region(&self.map, &mut rng, area.1, self.depth, &mut self.spawn_list);

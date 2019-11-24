@@ -115,11 +115,11 @@ pub fn show_inventory(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Opti
         Some(key) => {
             match key {
                 VirtualKeyCode::Escape => { (ItemMenuResult::Cancel, None) }
-                _ => { 
+                _ => {
                     let selection = rltk::letter_to_option(key);
                     if selection > -1 && selection < count as i32 {
                         return (ItemMenuResult::Selected, Some(equippable[selection as usize]));
-                    }  
+                    }
                     (ItemMenuResult::NoResponse, None)
                 }
             }
@@ -159,11 +159,11 @@ pub fn drop_item_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Opti
         Some(key) => {
             match key {
                 VirtualKeyCode::Escape => { (ItemMenuResult::Cancel, None) }
-                _ => { 
+                _ => {
                     let selection = rltk::letter_to_option(key);
                     if selection > -1 && selection < count as i32 {
                         return (ItemMenuResult::Selected, Some(equippable[selection as usize]));
-                    }  
+                    }
                     (ItemMenuResult::NoResponse, None)
                 }
             }
