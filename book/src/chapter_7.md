@@ -214,8 +214,6 @@ impl State {
 }
 ```
 
-We didn't specify any dependencies, we're relying upon Specs to figure out if it can run concurrently with anything. We do however add it to the dependency list for `MonsterAI` - the AI relies on its results, so it has to be done.
-
 If you `cargo run` now, monsters no longer end up on top of each other - but they do end up on top of the player. We should fix that. We can make the monster only yell when it is adjacent to the player. In `monster_ai_system.rs`, add this above the visibility test:
 
 ```rust
