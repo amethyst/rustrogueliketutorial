@@ -92,10 +92,10 @@ fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
             let left_x = mouse_pos.0 +3;
             let mut y = mouse_pos.1;
             for s in tooltip.iter() {
-                ctx.print_color(left_x, y, RGB::named(rltk::WHITE), RGB::named(rltk::GREY), &s.to_string());
+                ctx.print_color(left_x + 1, y, RGB::named(rltk::WHITE), RGB::named(rltk::GREY), &s.to_string());
                 let padding = (width - s.len() as i32)-1;
                 for i in 0..padding {
-                    ctx.print_color(left_x + s.len() as i32 + i, y, RGB::named(rltk::WHITE), RGB::named(rltk::GREY), &" ".to_string());
+                    ctx.print_color(arrow_pos.x + 1 + i, y, RGB::named(rltk::WHITE), RGB::named(rltk::GREY), &" ".to_string());
                 }
                 y += 1;
             }
