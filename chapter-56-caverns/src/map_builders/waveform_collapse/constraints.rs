@@ -171,13 +171,12 @@ pub fn patterns_to_constraints(patterns: Vec<Vec<TileType>>, chunk_size : i32) -
             } else {
                 // Evaluate compatibilty by direction
                 for (direction, exit_list) in c.exits.iter_mut().enumerate() {
-                    let opposite;
-                    match direction {
-                        0 => opposite = 1, // Our North, Their South
-                        1 => opposite = 0, // Our South, Their North
-                        2 => opposite = 3, // Our West, Their East
-                        _ => opposite = 2 // Our East, Their West
-                    }
+                    let opposite = match direction {
+                        0 => 1, // Our North, Their South
+                        1 => 0, // Our South, Their North
+                        2 => 3, // Our West, Their East
+                        _ => 2 // Our East, Their West
+                    };
 
                     let mut it_fits = false;
                     let mut has_any = false;
