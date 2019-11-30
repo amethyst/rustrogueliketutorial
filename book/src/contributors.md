@@ -35,6 +35,9 @@ I'd also like to take a moment to thank everyone who has sent me kind words, con
 * Crocodylus Pontifex (great name!)
 * Enrique Garcia
 * Pat LaBine
+* Brian Bucklew
+* Knightdave
+* Oskar Edgren
 
 
 ---
