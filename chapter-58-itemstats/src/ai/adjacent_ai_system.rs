@@ -6,7 +6,7 @@ pub struct AdjacentAI {}
 
 impl<'a> System<'a> for AdjacentAI {
     #[allow(clippy::type_complexity)]
-    type SystemData = ( 
+    type SystemData = (
         WriteStorage<'a, MyTurn>,
         ReadStorage<'a, Faction>,
         ReadStorage<'a, Position>,
@@ -59,7 +59,7 @@ fn evaluate(idx : usize, map : &Map, factions : &ReadStorage<Faction>, my_factio
     for other_entity in map.tile_content[idx].iter() {
         if let Some(faction) = factions.get(*other_entity) {
             reactions.push((
-                *other_entity, 
+                *other_entity,
                 crate::raws::faction_reaction(my_faction, &faction.name, &crate::raws::RAWS.lock().unwrap())
             ));
         }

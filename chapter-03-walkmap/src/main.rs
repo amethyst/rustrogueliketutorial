@@ -18,7 +18,7 @@ struct Renderable {
     fg: RGB,
     bg: RGB,
 }
- 
+
 #[derive(Component, Debug)]
 struct Player {}
 

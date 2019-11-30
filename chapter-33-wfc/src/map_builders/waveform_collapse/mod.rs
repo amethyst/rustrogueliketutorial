@@ -86,7 +86,7 @@ impl WaveformCollapseBuilder {
     pub fn test_map(new_depth: i32) -> WaveformCollapseBuilder {
         WaveformCollapseBuilder::new(new_depth, WaveformMode::TestMap, None)
     }
-    
+
     /// Derives a map from a pre-existing map builder.
     /// # Arguments
     /// * new_depth - the new map depth
@@ -117,7 +117,7 @@ impl WaveformCollapseBuilder {
         let patterns = build_patterns(&self.map, CHUNK_SIZE, true, true);
         let constraints = patterns_to_constraints(patterns, CHUNK_SIZE);
         self.render_tile_gallery(&constraints, CHUNK_SIZE);
-                
+
         self.map = Map::new(self.depth);
         loop {
             let mut solver = Solver::new(constraints.clone(), CHUNK_SIZE, &self.map);

@@ -31,7 +31,7 @@ use inventory_system::{ ItemCollectionSystem, ItemUseSystem, ItemDropSystem };
 rltk::add_wasm_support!();
 
 #[derive(PartialEq, Copy, Clone)]
-pub enum RunState { AwaitingInput, PreRun, PlayerTurn, MonsterTurn, ShowInventory, ShowDropItem, 
+pub enum RunState { AwaitingInput, PreRun, PlayerTurn, MonsterTurn, ShowInventory, ShowDropItem,
     ShowTargeting { range : i32, item : Entity} }
 
 
@@ -64,7 +64,7 @@ impl State {
 
 impl GameState for State {
     fn tick(&mut self, ctx : &mut Rltk) {
-        ctx.cls();        
+        ctx.cls();
 
         draw_map(&self.ecs, ctx);
 
@@ -88,7 +88,7 @@ impl GameState for State {
             let runstate = self.ecs.fetch::<RunState>();
             newrunstate = *runstate;
         }
-        
+
         match newrunstate {
             RunState::PreRun => {
                 self.run_systems();

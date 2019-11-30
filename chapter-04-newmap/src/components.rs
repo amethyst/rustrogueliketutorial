@@ -13,6 +13,6 @@ pub struct Renderable {
     pub fg: RGB,
     pub bg: RGB,
 }
- 
+
 #[derive(Component, Debug)]
 pub struct Player {}

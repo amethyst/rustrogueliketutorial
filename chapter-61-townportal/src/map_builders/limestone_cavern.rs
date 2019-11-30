@@ -1,4 +1,4 @@
-use super::{BuilderChain, DrunkardsWalkBuilder, XStart, YStart, AreaStartingPosition, 
+use super::{BuilderChain, DrunkardsWalkBuilder, XStart, YStart, AreaStartingPosition,
     CullUnreachable, VoronoiSpawning, MetaMapBuilder, BuilderMap, TileType, DistantExit,
     DLABuilder, PrefabBuilder, CellularAutomataBuilder, AreaEndingPosition,
     BspDungeonBuilder, RoomSorter, RoomSort, NearestCorridors, RoomExploder, RoomDrawer,
@@ -109,7 +109,7 @@ impl CaveTransition {
     fn build(&mut self, rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
         build_data.map.depth = 5;
         build_data.take_snapshot();
-        
+
         // Build a BSP-based dungeon
         let mut builder = BuilderChain::new(5, build_data.width, build_data.height, "New Map");
         builder.start_with(BspDungeonBuilder::new());

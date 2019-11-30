@@ -35,12 +35,12 @@ pub mod random_table;
 rltk::add_wasm_support!();
 
 #[derive(PartialEq, Copy, Clone)]
-pub enum RunState { AwaitingInput, 
-    PreRun, 
-    PlayerTurn, 
-    MonsterTurn, 
-    ShowInventory, 
-    ShowDropItem, 
+pub enum RunState { AwaitingInput,
+    PreRun,
+    PlayerTurn,
+    MonsterTurn,
+    ShowInventory,
+    ShowDropItem,
     ShowTargeting { range : i32, item : Entity},
     MainMenu { menu_selection : gui::MainMenuSelection },
     SaveGame,
@@ -82,7 +82,7 @@ impl GameState for State {
             newrunstate = *runstate;
         }
 
-        ctx.cls();        
+        ctx.cls();
 
         match newrunstate {
             RunState::MainMenu{..} => {}
@@ -102,10 +102,10 @@ impl GameState for State {
                     }
 
                     gui::draw_ui(&self.ecs, ctx);
-                } 
+                }
             }
         }
-        
+
         match newrunstate {
             RunState::PreRun => {
                 self.run_systems();
@@ -191,7 +191,7 @@ impl GameState for State {
                 newrunstate = RunState::MainMenu{ menu_selection : gui::MainMenuSelection::LoadGame };
             }
             RunState::NextLevel => {
-                self.goto_next_level();                
+                self.goto_next_level();
                 newrunstate = RunState::PreRun;
             }
         }
@@ -229,7 +229,7 @@ impl State {
                 }
             }
 
-            if should_delete { 
+            if should_delete {
                 to_delete.push(entity);
             }
         }
@@ -276,7 +276,7 @@ impl State {
         let vs = viewshed_components.get_mut(*player_entity);
         if let Some(vs) = vs {
             vs.dirty = true;
-        }        
+        }
 
         // Notify the player and give them some health
         let mut gamelog = self.ecs.fetch_mut::<gamelog::GameLog>();

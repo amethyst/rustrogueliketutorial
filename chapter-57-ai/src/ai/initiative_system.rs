@@ -17,7 +17,7 @@ impl<'a> System<'a> for InitiativeSystem {
                         ReadExpect<'a, rltk::Point>);
 
     fn run(&mut self, data : Self::SystemData) {
-        let (mut initiatives, positions, mut turns, entities, mut rng, attributes, 
+        let (mut initiatives, positions, mut turns, entities, mut rng, attributes,
             mut runstate, player, player_pos) = data;
 
         if *runstate != RunState::Ticking { return; }

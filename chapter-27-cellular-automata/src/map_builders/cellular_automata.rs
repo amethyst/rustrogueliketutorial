@@ -1,4 +1,4 @@
-use super::{MapBuilder, Map,  
+use super::{MapBuilder, Map,
     TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER};
 use rltk::RandomNumberGenerator;
 use specs::prelude::*;
@@ -66,7 +66,7 @@ impl CellularAutomataBuilder {
             for x in 1..self.map.width-1 {
                 let roll = rng.roll_dice(1, 100);
                 let idx = self.map.xy_idx(x, y);
-                if roll > 55 { self.map.tiles[idx] = TileType::Floor } 
+                if roll > 55 { self.map.tiles[idx] = TileType::Floor }
                 else { self.map.tiles[idx] = TileType::Wall }
             }
         }

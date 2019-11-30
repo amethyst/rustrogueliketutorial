@@ -4,7 +4,7 @@ extern crate specs;
 use specs::prelude::*;
 use std::cmp::{max, min};
 use super::{Position, Player, Viewshed, State, Map, RunState, Attributes, WantsToMelee, Item,
-    gamelog::GameLog, WantsToPickupItem, TileType, Monster, HungerClock, HungerState, 
+    gamelog::GameLog, WantsToPickupItem, TileType, Monster, HungerClock, HungerState,
     EntityMoved, Door, BlocksTile, BlocksVisibility, Renderable, Bystander, Vendor, Pools};
 
 pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
@@ -102,7 +102,7 @@ fn get_item(ecs: &mut World) {
     let entities = ecs.entities();
     let items = ecs.read_storage::<Item>();
     let positions = ecs.read_storage::<Position>();
-    let mut gamelog = ecs.fetch_mut::<GameLog>();    
+    let mut gamelog = ecs.fetch_mut::<GameLog>();
 
     let mut target_item : Option<Entity> = None;
     for (item_entity, _item, position) in (&entities, &items, &positions).join() {

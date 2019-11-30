@@ -51,12 +51,12 @@ const SHOW_MAPGEN_VISUALIZER : bool = true;
 pub enum VendorMode { Buy, Sell }
 
 #[derive(PartialEq, Copy, Clone)]
-pub enum RunState { 
-    AwaitingInput, 
-    PreRun, 
-    Ticking, 
-    ShowInventory, 
-    ShowDropItem, 
+pub enum RunState {
+    AwaitingInput,
+    PreRun,
+    Ticking,
+    ShowInventory,
+    ShowDropItem,
     ShowTargeting { range : i32, item : Entity},
     MainMenu { menu_selection : gui::MainMenuSelection },
     SaveGame,
@@ -137,7 +137,7 @@ impl GameState for State {
             newrunstate = *runstate;
         }
 
-        ctx.cls();        
+        ctx.cls();
         particle_system::cull_dead_particles(&mut self.ecs, ctx);
 
         match newrunstate {
@@ -145,10 +145,10 @@ impl GameState for State {
             RunState::GameOver{..} => {}
             _ => {
                 camera::render_camera(&self.ecs, ctx);
-                gui::draw_ui(&self.ecs, ctx);                
+                gui::draw_ui(&self.ecs, ctx);
             }
         }
-        
+
         match newrunstate {
             RunState::MapGeneration => {
                 if !SHOW_MAPGEN_VISUALIZER {
@@ -184,7 +184,7 @@ impl GameState for State {
                         RunState::AwaitingInput => newrunstate = RunState::AwaitingInput,
                         RunState::MagicMapReveal{ .. } => newrunstate = RunState::MagicMapReveal{ row: 0 },
                         _ => newrunstate = RunState::Ticking
-                    }                
+                    }
                 }
             }
             RunState::ShowInventory => {
@@ -402,7 +402,7 @@ impl State {
         self.ecs.insert(map::MasterDungeonMap::new());
 
         // Build a new map and place the player
-        self.generate_world_map(1, 0);                                          
+        self.generate_world_map(1, 0);
     }
 
     fn generate_world_map(&mut self, new_depth : i32, offset: i32) {

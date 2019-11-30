@@ -1,4 +1,4 @@
-use super::{MapBuilder, Map,  
+use super::{MapBuilder, Map,
     TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER,
     remove_unreachable_areas_returning_most_distant, generate_voronoi_spawn_regions};
 use rltk::RandomNumberGenerator;
@@ -195,8 +195,8 @@ impl DLABuilder {
                     let mut digger_idx = self.map.xy_idx(digger_x, digger_y);
 
                     let mut path = rltk::line2d(
-                        rltk::LineAlg::Bresenham, 
-                        rltk::Point::new( digger_x, digger_y ), 
+                        rltk::LineAlg::Bresenham,
+                        rltk::Point::new( digger_x, digger_y ),
                         rltk::Point::new( self.starting_position.x, self.starting_position.y )
                     );
 
@@ -235,7 +235,7 @@ impl DLABuilder {
             DLASymmetry::Horizontal => {
                 let center_x = self.map.width / 2;
                 if x == center_x {
-                    self.apply_paint(x, y);                    
+                    self.apply_paint(x, y);
                 } else {
                     let dist_x = i32::abs(center_x - x);
                     self.apply_paint(center_x + dist_x, y);

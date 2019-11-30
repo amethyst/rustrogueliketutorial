@@ -13,7 +13,7 @@ impl<'a> System<'a> for MonsterAI {
                         ReadExpect<'a, Entity>,
                         ReadExpect<'a, RunState>,
                         Entities<'a>,
-                        WriteStorage<'a, Viewshed>, 
+                        WriteStorage<'a, Viewshed>,
                         ReadStorage<'a, Monster>,
                         WriteStorage<'a, Position>,
                         WriteStorage<'a, WantsToMelee>);
@@ -31,8 +31,8 @@ impl<'a> System<'a> for MonsterAI {
             else if viewshed.visible_tiles.contains(&*player_pos) {
                 // Path to the player
                 let path = rltk::a_star_search(
-                    map.xy_idx(pos.x, pos.y) as i32, 
-                    map.xy_idx(player_pos.x, player_pos.y) as i32, 
+                    map.xy_idx(pos.x, pos.y) as i32,
+                    map.xy_idx(player_pos.x, player_pos.y) as i32,
                     &mut *map
                 );
                 if path.success && path.steps.len()>1 {

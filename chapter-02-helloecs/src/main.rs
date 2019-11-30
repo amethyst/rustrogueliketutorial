@@ -21,7 +21,7 @@ struct Renderable {
 
 #[derive(Component)]
 struct LeftMover {}
- 
+
 #[derive(Component, Debug)]
 struct Player {}
 
@@ -72,7 +72,7 @@ impl GameState for State {
 struct LeftWalker {}
 
 impl<'a> System<'a> for LeftWalker {
-    type SystemData = (ReadStorage<'a, LeftMover>, 
+    type SystemData = (ReadStorage<'a, LeftMover>,
                         WriteStorage<'a, Position>);
 
     fn run(&mut self, (lefty, mut pos) : Self::SystemData) {

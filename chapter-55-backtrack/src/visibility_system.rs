@@ -10,7 +10,7 @@ impl<'a> System<'a> for VisibilitySystem {
     #[allow(clippy::type_complexity)]
     type SystemData = ( WriteExpect<'a, Map>,
                         Entities<'a>,
-                        WriteStorage<'a, Viewshed>, 
+                        WriteStorage<'a, Viewshed>,
                         ReadStorage<'a, Position>,
                         ReadStorage<'a, Player>,
                         WriteStorage<'a, Hidden>,
@@ -20,7 +20,7 @@ impl<'a> System<'a> for VisibilitySystem {
                         ReadStorage<'a, BlocksVisibility>);
 
     fn run(&mut self, data : Self::SystemData) {
-        let (mut map, entities, mut viewshed, pos, player, 
+        let (mut map, entities, mut viewshed, pos, player,
             mut hidden, mut rng, mut log, names, blocks_visibility) = data;
 
         map.view_blocked.clear();

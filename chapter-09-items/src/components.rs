@@ -17,7 +17,7 @@ pub struct Renderable {
     pub bg: RGB,
     pub render_order : i32
 }
- 
+
 #[derive(Component, Debug)]
 pub struct Player {}
 

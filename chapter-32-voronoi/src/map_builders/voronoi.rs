@@ -1,4 +1,4 @@
-use super::{MapBuilder, Map,  
+use super::{MapBuilder, Map,
     TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER,
     remove_unreachable_areas_returning_most_distant, generate_voronoi_spawn_regions};
 use rltk::RandomNumberGenerator;
@@ -114,22 +114,22 @@ impl VoronoiCellBuilder {
 
             for (seed, pos) in voronoi_seeds.iter().enumerate() {
                 let distance;
-                match self.distance_algorithm {           
+                match self.distance_algorithm {
                     DistanceAlgorithm::Pythagoras => {
                         distance = rltk::DistanceAlg::PythagorasSquared.distance2d(
-                            rltk::Point::new(x, y), 
+                            rltk::Point::new(x, y),
                             pos.1
                         );
                     }
                     DistanceAlgorithm::Manhattan => {
                         distance = rltk::DistanceAlg::Manhattan.distance2d(
-                            rltk::Point::new(x, y), 
+                            rltk::Point::new(x, y),
                             pos.1
                         );
                     }
                     DistanceAlgorithm::Chebyshev => {
                         distance = rltk::DistanceAlg::Chebyshev.distance2d(
-                            rltk::Point::new(x, y), 
+                            rltk::Point::new(x, y),
                             pos.1
                         );
                     }
@@ -157,7 +157,7 @@ impl VoronoiCellBuilder {
                 }
             }
             self.take_snapshot();
-        }        
+        }
 
         // Find a starting point; start at the middle and walk left until we find an open tile
         self.starting_position = Position{ x: self.map.width / 2, y : self.map.height / 2 };
@@ -176,7 +176,7 @@ impl VoronoiCellBuilder {
         self.map.tiles[exit_tile] = TileType::DownStairs;
         self.take_snapshot();
 
-        // Now we build a noise map for use in spawning entities later        
+        // Now we build a noise map for use in spawning entities later
         self.noise_areas = generate_voronoi_spawn_regions(&self.map, &mut rng);
-    }    
+    }
 }

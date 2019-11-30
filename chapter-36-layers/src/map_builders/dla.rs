@@ -136,8 +136,8 @@ impl DLABuilder {
                     let mut digger_idx = build_data.map.xy_idx(digger_x, digger_y);
 
                     let mut path = rltk::line2d(
-                        rltk::LineAlg::Bresenham, 
-                        rltk::Point::new( digger_x, digger_y ), 
+                        rltk::LineAlg::Bresenham,
+                        rltk::Point::new( digger_x, digger_y ),
                         rltk::Point::new( starting_position.x, starting_position.y )
                     );
 
@@ -157,5 +157,5 @@ impl DLABuilder {
 
             floor_tile_count = build_data.map.tiles.iter().filter(|a| **a == TileType::Floor).count();
         }
-    }    
+    }
 }

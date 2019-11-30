@@ -123,7 +123,7 @@ pub fn patterns_to_constraints(patterns: Vec<Vec<TileType>>, chunk_size : i32) -
 
         let mut n_exits = 0;
         for x in 0..chunk_size {
-            // Check for north-bound exits            
+            // Check for north-bound exits
             let north_idx = tile_idx_in_chunk(chunk_size, x, 0);
             if new_chunk.pattern[north_idx] == TileType::Floor {
                 new_chunk.exits[0][x as usize] = true;
@@ -192,7 +192,7 @@ pub fn patterns_to_constraints(patterns: Vec<Vec<TileType>>, chunk_size : i32) -
                         c.compatible_with[direction].push(j);
                     }
                     if !has_any {
-                        // There's no exits on this side, let's match only if 
+                        // There's no exits on this side, let's match only if
                         // the other edge also has no exits
                         let matching_exit_count = potential.exits[opposite].iter().filter(|a| !**a).count();
                         if matching_exit_count == 0 {

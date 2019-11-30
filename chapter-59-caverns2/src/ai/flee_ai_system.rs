@@ -6,7 +6,7 @@ pub struct FleeAI {}
 
 impl<'a> System<'a> for FleeAI {
     #[allow(clippy::type_complexity)]
-    type SystemData = ( 
+    type SystemData = (
         WriteStorage<'a, MyTurn>,
         WriteStorage<'a, WantsToFlee>,
         WriteStorage<'a, Position>,
@@ -17,12 +17,12 @@ impl<'a> System<'a> for FleeAI {
     );
 
     fn run(&mut self, data : Self::SystemData) {
-        let (mut turns, mut want_flee, mut positions, mut map, 
+        let (mut turns, mut want_flee, mut positions, mut map,
             mut viewsheds, mut entity_moved, entities) = data;
-            
+
         let mut turn_done : Vec<Entity> = Vec::new();
-        for (entity, mut pos, flee, mut viewshed, _myturn) in 
-            (&entities, &mut positions, &want_flee, &mut viewsheds, &turns).join() 
+        for (entity, mut pos, flee, mut viewshed, _myturn) in
+            (&entities, &mut positions, &want_flee, &mut viewsheds, &turns).join()
         {
             turn_done.push(entity);
             let my_idx = map.xy_idx(pos.x, pos.y);
@@ -36,7 +36,7 @@ impl<'a> System<'a> for FleeAI {
                         viewshed.dirty = true;
                         pos.x = flee_target % map.width;
                         pos.y = flee_target / map.width;
-                        entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");                        
+                        entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
                     }
                 }
         }

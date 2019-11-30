@@ -13,7 +13,7 @@ pub const WFC_POPULATED : PrefabLevel = PrefabLevel{
 };
 
 #[allow(dead_code)]
-const LEVEL_MAP : &str = 
+const LEVEL_MAP : &str =
 "
 ################################################################################
 #          ########################################################    #########

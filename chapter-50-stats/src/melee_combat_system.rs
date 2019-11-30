@@ -22,7 +22,7 @@ impl<'a> System<'a> for MeleeCombatSystem {
                       );
 
     fn run(&mut self, data : Self::SystemData) {
-        let (entities, mut log, mut wants_melee, names, attributes, skills, mut inflict_damage, 
+        let (entities, mut log, mut wants_melee, names, attributes, skills, mut inflict_damage,
             mut particle_builder, positions, hunger_clock, pools, mut rng) = data;
 
         for (entity, wants_melee, name, attacker_attributes, attacker_skills, attacker_pools) in (&entities, &wants_melee, &names, &attributes, &skills, &pools).join() {
@@ -60,7 +60,7 @@ impl<'a> System<'a> for MeleeCombatSystem {
                     let skill_damage_bonus = skill_bonus(Skill::Melee, &*attacker_skills);
                     let weapon_damage_bonus = 0;
 
-                    let damage = i32::max(0, base_damage + attr_damage_bonus + skill_hit_bonus + 
+                    let damage = i32::max(0, base_damage + attr_damage_bonus + skill_hit_bonus +
                         skill_damage_bonus + weapon_damage_bonus);
                     inflict_damage.insert(wants_melee.target, SufferDamage{ amount: damage }).expect("Unable to insert damage component");
                     log.entries.insert(0, format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));

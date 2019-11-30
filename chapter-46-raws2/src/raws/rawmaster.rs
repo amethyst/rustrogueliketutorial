@@ -56,7 +56,7 @@ impl RawMaster {
                 println!("WARNING - Spawn tables references unspecified entity {}", spawn.name);
             }
         }
-    }    
+    }
 }
 
 fn spawn_position(pos : SpawnType, new_entity : EntityBuilder) -> EntityBuilder {
@@ -73,7 +73,7 @@ fn spawn_position(pos : SpawnType, new_entity : EntityBuilder) -> EntityBuilder 
 }
 
 fn get_renderable_component(renderable : &super::item_structs::Renderable) -> crate::components::Renderable {
-    crate::components::Renderable{  
+    crate::components::Renderable{
         glyph: rltk::to_cp437(renderable.glyph.chars().next().unwrap()),
         fg : rltk::RGB::from_hex(&renderable.fg).expect("Invalid RGB"),
         bg : rltk::RGB::from_hex(&renderable.bg).expect("Invalid RGB"),
@@ -104,8 +104,8 @@ pub fn spawn_named_item(raws: &RawMaster, new_entity : EntityBuilder, key : &str
             for effect in consumable.effects.iter() {
                 let effect_name = effect.0.as_str();
                 match effect_name {
-                    "provides_healing" => { 
-                        eb = eb.with(ProvidesHealing{ heal_amount: effect.1.parse::<i32>().unwrap() }) 
+                    "provides_healing" => {
+                        eb = eb.with(ProvidesHealing{ heal_amount: effect.1.parse::<i32>().unwrap() })
                     }
                     "ranged" => { eb = eb.with(Ranged{ range: effect.1.parse::<i32>().unwrap() }) },
                     "damage" => { eb = eb.with(InflictsDamage{ damage : effect.1.parse::<i32>().unwrap() }) }
@@ -206,7 +206,7 @@ pub fn spawn_named_prop(raws: &RawMaster, new_entity : EntityBuilder, key : &str
                 }
             }
         }
-        
+
 
         return Some(eb.build());
     }
@@ -232,7 +232,7 @@ pub fn get_spawn_table_for_depth(raws: &RawMaster, depth: i32) -> RandomTable {
         .iter()
         .filter(|a| depth >= a.min_depth && depth <= a.max_depth)
         .collect();
-    
+
     let mut rt = RandomTable::new();
     for e in available_options.iter() {
         let mut weight = e.weight;

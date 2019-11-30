@@ -103,7 +103,7 @@ impl DrunkardsWalkBuilder {
             },
         })
     }
-    
+
     fn build(&mut self, rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
         // Set a central starting point
         let starting_position = Position{ x: build_data.map.width / 2, y: build_data.map.height / 2 };
@@ -153,8 +153,8 @@ impl DrunkardsWalkBuilder {
 
                 drunk_life -= 1;
             }
-            if did_something { 
-                build_data.take_snapshot(); 
+            if did_something {
+                build_data.take_snapshot();
             }
 
             digger_count += 1;
