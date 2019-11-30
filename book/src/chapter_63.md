@@ -27,7 +27,80 @@ So, we're not asking for much! Fortunately, this is well within what we can mana
 
 ## Inventory System: Quick Clean Up
 
-Before we get too far in, we should take a moment to break up the inventory system into a module. We'll retain exactly the functionality it already has (for now), but it's a monster - and monsters are generally better handled in chunks!
+Before we get too far in, we should take a moment to break up the inventory system into a module. We'll retain exactly the functionality it already has (for now), but it's a monster - and monsters are generally better handled in chunks! Make a new folder, `src/inventory_system` and move `inventory_system.rs` into it - and rename it `mod.rs`. That converts it into a multi-file module. (Those steps are actually enough to get you a runnable setup - this is a good illustration of how modules work in Rust; a file named `inventory_system.rs` *is* a module, and so is `inventory_system/mod.rs`).
+
+Now open up `inventory_system/mod.rs`, and you'll see that it has a bunch of systems in it:
+
+* `ItemCollectionSystem`
+* `ItemUseSystem`
+* `ItemDropSystem`
+* `ItemRemoveSystem`
+* `ItemIdentificationSystem`
+
+We're going to make a new file for each of these, cut the systems code out of `mod.rs` and paste it into its own file. We'll need to copy the `use` part of `mod.rs` to the top of these files, and then trim out what we aren't using. At the end, we'll add `mod X`, `use X::SystemName` lines in `mod.rs` to tell the compiler that the module is sharing these systems. This would be a *huge* chapter if I pasted in each of these changes, and since the largest - `ItemUseSystem` is going to change drastically, that would be a rather large waste of space. Instead, we'll go through the first - and you can [check the source code](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-63-effects/src/inventory_system/) to see the rest.
+
+For example, we make a new file `inventory_system/collection_system.rs`:
+
+```rust
+use specs::prelude::*;
+use super::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, EquipmentChanged };
+
+pub struct ItemCollectionSystem {}
+
+impl<'a> System<'a> for ItemCollectionSystem {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( ReadExpect<'a, Entity>,
+                        WriteExpect<'a, GameLog>,
+                        WriteStorage<'a, WantsToPickupItem>,
+                        WriteStorage<'a, Position>,
+                        ReadStorage<'a, Name>,
+                        WriteStorage<'a, InBackpack>,
+                        WriteStorage<'a, EquipmentChanged>
+                      );
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (player_entity, mut gamelog, mut wants_pickup, mut positions, names,
+            mut backpack, mut dirty) = data;
+
+        for pickup in wants_pickup.join() {
+            positions.remove(pickup.item);
+            backpack.insert(pickup.item, InBackpack{ owner: pickup.collected_by }).expect("Unable to insert backpack entry");
+            dirty.insert(pickup.collected_by, EquipmentChanged{}).expect("Unable to insert");
+
+            if pickup.collected_by == *player_entity {
+                gamelog.entries.insert(0, format!("You pick up the {}.", names.get(pickup.item).unwrap().name));
+            }
+        }
+
+        wants_pickup.clear();
+    }
+}
+```
+
+This is *exactly* the code from the original system, which is why we aren't repeating all of them here. The only difference is that we've gone through the `use super::` list at the top and trimmed out what we aren't using. You can do the same for `inventory_system/drop_system.rs`, `inventory_system/identification_system.rs`, `inventory_system/remove_system.rs` and `use_system.rs`. Then you tie them together into `inventory_system/mod.rs`:
+
+```rust
+use super::{WantsToPickupItem, Name, InBackpack, Position, gamelog, WantsToUseItem,
+    Consumable, ProvidesHealing, WantsToDropItem, InflictsDamage, Map, SufferDamage,
+    AreaOfEffect, Confusion, Equippable, Equipped, WantsToRemoveItem, particle_system,
+    ProvidesFood, HungerClock, HungerState, MagicMapper, RunState, Pools, EquipmentChanged,
+    TownPortal, IdentifiedItem, Item, ObfuscatedName};
+
+mod collection_system;
+pub use collection_system::ItemCollectionSystem;
+mod use_system;
+pub use use_system::ItemUseSystem;
+mod drop_system;
+pub use drop_system::ItemDropSystem;
+mod remove_system;
+pub use remove_system::ItemRemoveSystem;
+mod identification_system;
+pub use identification_system::ItemIdentificationSystem;
+```
+
+We've tweaked a couple of `use` paths to make the other components happy, and then added a pair of `mod` (to use the file) and `pub use` (to share it with the rest of the project).
+
+If all went well, `cargo run` will give you the exact same game we had before! It should even compile a bit faster.
 
 ...
 
