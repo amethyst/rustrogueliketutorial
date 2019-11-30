@@ -12,13 +12,13 @@ use constraints::*;
 mod solver;
 use solver::*;
 
-/// Modes supported by Waveform Collapse algorithm. 
+/// Modes supported by Wave Function Collapse algorithm. 
 /// TestMap loads the baked-in map, made in Rex.
 /// Derived takes a builder, runs it, and then runs the algorithm on that map.
 #[derive(PartialEq, Copy, Clone)]
 pub enum WaveformMode { TestMap, Derived }
 
-/// Provides a map builder using the Waveform Collapse algorithm.
+/// Provides a map builder using the Wave Function Collapse algorithm.
 pub struct WaveformCollapseBuilder {
     map : Map,
     starting_position : Position,
@@ -80,7 +80,7 @@ impl WaveformCollapseBuilder {
         }
     }
 
-    /// Creates a Waveform Collapse builder using the baked-in WFC test map.
+    /// Creates a Wave Function Collapse builder using the baked-in WFC test map.
     /// # Arguments
     /// * new_depth - the new map depth
     pub fn test_map(new_depth: i32) -> WaveformCollapseBuilder {

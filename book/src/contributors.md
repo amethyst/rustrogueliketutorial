@@ -22,7 +22,7 @@ The following people have contributed to this project:
 * [Zirael07](https://github.com/Zireael07) found numerous typos and missing bits of code.
 * [Tyler Vipond](https://github.com/tylervipond) found a bunch of issues in chapter 7.
 * [JP Moresmau](https://github.com/JPMoresmau) found a problem with the order in which systems were running, allowing you to run through mobs.
-* [toyboot4e](https://github.com/toyboot4e) found some typos and code improvements in the Waveform Collapse system.
+* [toyboot4e](https://github.com/toyboot4e) found some typos and code improvements in the Wave Function Collapse system.
 
 ## Supporters
 

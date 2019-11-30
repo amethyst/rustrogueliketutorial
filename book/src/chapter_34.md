@@ -20,7 +20,7 @@ The first category is special and should be used sparingly (otherwise, your play
 
 ## Some Clean Up
 
-In the [Waveform Collapse chapter](./chapter_33.md), we loaded a pre-made level - without any entities (those are added later). It's not really very nice to hide a map loader inside WFC - since that isn't it's primary purpose - so we'll start by removing it:
+In the [Wave Function Collapse chapter](./chapter_33.md), we loaded a pre-made level - without any entities (those are added later). It's not really very nice to hide a map loader inside WFC - since that isn't it's primary purpose - so we'll start by removing it:
 
 We'll start by deleting the file `map_builders/waveform_collapse/image_loader.rs`. We'll be building a better one in a moment.
 
@@ -39,7 +39,7 @@ use constraints::*;
 mod solver;
 use solver::*;
 
-/// Provides a map builder using the Waveform Collapse algorithm.
+/// Provides a map builder using the Wave Function Collapse algorithm.
 pub struct WaveformCollapseBuilder {
     map : Map,
     starting_position : Position,
@@ -237,7 +237,7 @@ fn load_rex_map(&mut self, path: &str) {
 }
 ```
 
-That's pretty straightforward, more or less a direct port of the one form the Waveform Collapse chapter. Now lets start making our `build` function:
+That's pretty straightforward, more or less a direct port of the one form the Wave Function Collapse chapter. Now lets start making our `build` function:
 
 ```rust
 fn build(&mut self) {
@@ -763,7 +763,7 @@ const RIGHT_FORT : &str = "
 
 So we have `RIGHT_FORT` as a string, describing a fortification we might encounter. We've built a structure, `PrefabSection` which includes placement hints, and a constant for our actual fort (`UNDERGROUND_FORT`) specifying that we'd like to be at the right of the map, at the top (the vertical doesn't really matter in this example, because it is the full size of the map).
 
-Level *sections* are different from builders we've made before, because they take a *completed* map - and *replace* part of it. We've done something similar with Waveform Collapse, so we'll adopt a similar pattern. We'll start by modifying our `PrefabBuilder` to know about the new type of map decoration:
+Level *sections* are different from builders we've made before, because they take a *completed* map - and *replace* part of it. We've done something similar with Wave Function Collapse, so we'll adopt a similar pattern. We'll start by modifying our `PrefabBuilder` to know about the new type of map decoration:
 
 ```rust
 #[derive(PartialEq, Copy, Clone)]

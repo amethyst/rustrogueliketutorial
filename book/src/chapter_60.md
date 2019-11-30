@@ -145,7 +145,7 @@ impl CaveTransition {
 
 So there's all the usual boilerplate to make a builder, and then we get to the `build` function. Lets walk through it:
 
-1. We start by resetting the level's depth. There's a bug in the Waveform Collapse that made that necessary (it'll be fixed in a revision to this chapter).
+1. We start by resetting the level's depth. There's a bug in the Wave Function Collapse that made that necessary (it'll be fixed in a revision to this chapter).
 2. Then we make a new builder! It's set to generate a pretty normal BSP-based dungeon with short, direct corridors and then erode the rooms.
 3. We run the builder, and *copy* its history onto the end of our history - so we can see the steps it took, as well.
 4. We copy the entire right half of the BSP map onto the map we're actually building.

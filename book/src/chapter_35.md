@@ -633,7 +633,7 @@ We now have a decent interface for creating our meta-builder!
 
 ## It's Turtles (Or Meta-Builders) All The Way Down
 
-The last few chapters have all created *meta builders* - they aren't really *builders* in that they don't create an entirely new map, they modify the results of another algorithm. The really interesting thing here is that you can keep chaining them together to achieve the results you want. For example, lets make a map by starting with a Cellular Automata map, feeding it through Waveform Collapse, possibly adding a castle wall, and then searching for vaults!
+The last few chapters have all created *meta builders* - they aren't really *builders* in that they don't create an entirely new map, they modify the results of another algorithm. The really interesting thing here is that you can keep chaining them together to achieve the results you want. For example, lets make a map by starting with a Cellular Automata map, feeding it through Wave Function Collapse, possibly adding a castle wall, and then searching for vaults!
 
 The syntax for this is currently quite ugly (that will be a future chapter topic). In `map_builders/mod.rs`:
 

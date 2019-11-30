@@ -887,7 +887,7 @@ pub fn random_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator) -> 
 }
 ```
 
-This is relatively straightforward. We randomly pick either a *room* or a *shape* builder, as defined above. There's a 1 in 3 chance we'll then run `Waveform Collapse` on it, and a 1 in 20 chance that we'll add a sectional to it. Finally, we try to spawn any vaults we might want to use.
+This is relatively straightforward. We randomly pick either a *room* or a *shape* builder, as defined above. There's a 1 in 3 chance we'll then run `Wave Function Collapse` on it, and a 1 in 20 chance that we'll add a sectional to it. Finally, we try to spawn any vaults we might want to use.
 
 So how does our total combinatorial explosion look? Pretty good at this point:
 
@@ -896,7 +896,7 @@ So how does our total combinatorial explosion look? Pretty good at this point:
 84 possible shape builders =
 572 builder combinations.
 
-We might run Waveform Collapse, giving another 2 options:
+We might run Wave Function Collapse, giving another 2 options:
 *2 = 1,144
 
 We might add a sectional:

@@ -10,7 +10,7 @@ use constraints::*;
 mod solver;
 use solver::*;
 
-/// Provides a map builder using the Waveform Collapse algorithm.
+/// Provides a map builder using the Wave Function Collapse algorithm.
 pub struct WaveformCollapseBuilder {
     map : Map,
     starting_position : Position,

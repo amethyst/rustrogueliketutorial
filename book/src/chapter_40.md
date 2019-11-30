@@ -452,7 +452,7 @@ If speed becomes a concern, this would be easy to speed up (make a quick `HashSe
 
 ## Addendum: Fixing WFC
 
-In our `random_builder`, we've made a mistake! Waveform Collapse changes the nature of maps, and should adjust spawn, entry and exit points. Here's the *correct* code:
+In our `random_builder`, we've made a mistake! Wave Function Collapse changes the nature of maps, and should adjust spawn, entry and exit points. Here's the *correct* code:
 
 ```rust
 if rng.roll_dice(1, 3)==1 {

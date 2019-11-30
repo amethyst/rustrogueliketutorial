@@ -10,7 +10,7 @@
 
 ---
 
-The last few chapters have introduced an important concept in procedural generation: chained builders. We're happily building a map, calling Waveform Collapse to mutate the map, calling our `PrefabBuilder` to change it again, and so on. This chapter will formalize this process a bit, expand upon it, and leave you with a framework that lets you *clearly* build new maps by chaining concepts together.
+The last few chapters have introduced an important concept in procedural generation: chained builders. We're happily building a map, calling Wave Function Collapse to mutate the map, calling our `PrefabBuilder` to change it again, and so on. This chapter will formalize this process a bit, expand upon it, and leave you with a framework that lets you *clearly* build new maps by chaining concepts together.
 
 ## A builder-based interface
 
@@ -1710,9 +1710,9 @@ impl VoronoiCellBuilder {
 }
 ```
 
-## Updating Waveform Collapse
+## Updating Wave Function Collapse
 
-Waveform Collapse is a slightly different one to port, because it already had a concept of a "previous builder". That's gone now (chaining is automatic), so there's a bit more to update. Waveform Collapse is a meta-builder, so it implements that trait, rather than the initial map builder. Overall, these changes make it a *lot* more simple! The changes all take place in `waveform_collapse/mod.rs`:
+Wave Function Collapse is a slightly different one to port, because it already had a concept of a "previous builder". That's gone now (chaining is automatic), so there's a bit more to update. Wave Function Collapse is a meta-builder, so it implements that trait, rather than the initial map builder. Overall, these changes make it a *lot* more simple! The changes all take place in `waveform_collapse/mod.rs`:
 
 ```rust
 use super::{MetaMapBuilder, BuilderMap, Map, TileType};
@@ -1724,7 +1724,7 @@ use constraints::*;
 mod solver;
 use solver::*;
 
-/// Provides a map builder using the Waveform Collapse algorithm.
+/// Provides a map builder using the Wave Function Collapse algorithm.
 pub struct WaveformCollapseBuilder {}
 
 impl MetaMapBuilder for WaveformCollapseBuilder {
