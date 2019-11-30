@@ -562,9 +562,197 @@ So if you `cargo run` now, you'll be able to identify items by using or buying t
 
 ## Obfuscating Potions
 
+We can use a very similar setup for potions, but we need to think about how they are named. Typically, potions combine some adjectives with the word potion: "viscous black potion", "swirling green potion", etc. Fortunately, we've now built a lot of the infrastructure framework - so it's a matter of plugging the details in.
+
+We'll start by opening `spawns.json`, and annotating our health potion with the naming convention "potion":
+
+```json
+"items" : [
+    {
+        "name" : "Health Potion",
+        "renderable": {
+            "glyph" : "!",
+            "fg" : "#FF00FF",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "consumable" : {
+            "effects" : { "provides_healing" : "8" }
+        },
+        "weight_lbs" : 0.5,
+        "base_value" : 50.0,
+        "vendor_category" : "alchemy",
+        "magic" : { "class" : "common", "naming" : "potion" }
+    },
+    ...
+```
+
+Then, in `raws/rawmaster.rs` we'll repeat the `get_scroll_tags` functionality - but for potions. We want to retrieve all items with a "potion" naming scheme - we'll need it to generate potion names. Here's the new function:
+
+```rust
+pub fn get_potion_tags() -> Vec<String> {
+    let raws = &super::RAWS.lock().unwrap();
+    let mut result = Vec::new();
+
+    for item in raws.raws.items.iter() {
+        if let Some(magic) = &item.magic {
+            if &magic.naming == "potion" {
+                result.push(item.name.clone());
+            }
+        }
+    }
+
+    result
+}
+```
+
+Now we'll revisit `map/dungeon.rs` and visit the `MasterDungeonMap`. We need to add a structure for storing potion names (and add it to the constructor). It'll be just like the scroll mapping:
+
+```rust
+#[derive(Default, Serialize, Deserialize, Clone)]
+pub struct MasterDungeonMap {
+    maps : HashMap<i32, Map>,
+    pub identified_items : HashSet<String>,
+    pub scroll_mappings : HashMap<String, String>,
+    pub potion_mappings : HashMap<String, String>
+}
+
+impl MasterDungeonMap {
+    pub fn new() -> MasterDungeonMap {
+        let mut dm = MasterDungeonMap{ 
+            maps: HashMap::new() ,
+            identified_items : HashSet::new(),
+            scroll_mappings : HashMap::new(),
+            potion_mappings : HashMap::new()
+        };
+        ...
+```
+
+Now, underneath the `make_scroll_name` function we're going to define some arrays of string constants. These represent the available descriptors for potions; you can (and should!) add/edit these to fit the game you want to make:
+
+```rust
+const POTION_COLORS: &[&str] = &["Red", "Orange", "Yellow", "Green", "Brown", "Indigo", "Violet"];
+const POTION_ADJECTIVES : &[&str] = &["Swirling", "Effervescent", "Slimey", "Oiley", "Viscous", "Smelly", "Glowing"];
+```
+
+We'll also need a function to combine these to make names, including duplicate checking (to ensure that we never have two potion types with the same name):
+
+```rust
+fn make_potion_name(rng: &mut rltk::RandomNumberGenerator, used_names : &mut HashSet<String>) -> String {
+    loop {
+        let mut name : String = POTION_ADJECTIVES[rng.roll_dice(1, POTION_ADJECTIVES.len() as i32) as usize -1].to_string();
+        name += " ";
+        name += POTION_COLORS[rng.roll_dice(1, POTION_COLORS.len() as i32) as usize -1];
+        name += " Potion";
+
+        if !used_names.contains(&name) {
+            used_names.insert(name.clone());
+            return name;
+        }
+    }
+}
+```
+
+Then in the `MasterDungeonMap` constructor, we repeat the scroll logic - but with our new naming scheme, and `HashSet` to avoid duplicated names:
+
+```rust
+let mut used_potion_names : HashSet<String> = HashSet::new();
+for potion_tag in crate::raws::get_potion_tags().iter() {
+    let masked_name = make_potion_name(&mut rng, &mut used_potion_names);
+    dm.potion_mappings.insert(potion_tag.to_string(), masked_name);
+}
+```
+
+That gives us a nice random set of names; in the test I just ran, `Health Potion`'s obfuscated name was `Slimey Violet Potion`. Doesn't sound delicious!
+
+The last thing we need to do is to add an `ObfuscatedName` component to potion spawns. In `raws/rawmaster.rs`, we already did this for scrolls - so we duplicate the functionality for potions:
+
+```rust
+let scroll_names = dm.scroll_mappings.clone();
+let potion_names = dm.potion_mappings.clone();
+...
+if !identified.contains(&item_template.name) {
+    match magic.naming.as_str() {
+        "scroll" => {
+            eb = eb.with(ObfuscatedName{ name : scroll_names[&item_template.name].clone() });
+        }
+        "potion" => {
+            eb = eb.with(ObfuscatedName{ name: potion_names[&item_template.name].clone() });
+        }
+        _ => {}
+    }
+}
+```
+
+We've done all the remaining hard work! So now if you `cargo run`, walk around and find a potion, you will find it has an obfuscated name:
+
+![Screenshot](./c62-s4.jpg)
+
 ## Other magic items
 
-## Curses
+We should also support other magical items, without a special naming scheme. Let's open up `spawns.json` and define a magical *Longsword +1* and give it a generic name in the naming scheme:
+
+```json
+{
+    "name" : "Longsword +1",
+    "renderable": {
+        "glyph" : "/",
+        "fg" : "#FFAAFF",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "weapon" : {
+        "range" : "melee",
+        "attribute" : "might",
+        "base_damage" : "1d8+1",
+        "hit_bonus" : 1
+    },
+    "weight_lbs" : 2.0,
+    "base_value" : 100.0,
+    "initiative_penalty" : 1,
+    "vendor_category" : "weapon",
+    "magic" : { "class" : "common", "naming" : "Unidentified Longsword" }
+},
+```
+
+See how we've adjusted the stats to reflect its magical status? It hits more frequently, does more damage, weighs less, is worth more gold and has less of an initiative penalty. That'd be a good find! We should also add it to the spawn table; we'll give it a stupidly high likelihood of appearing for now, so we can test it:
+
+```json
+{ "name" : "Longsword +1", "weight" : 100, "min_depth" : 3, "max_depth" : 100 },
+```
+
+We aren't generating any new names, so there's no need to build a naming system into `dungeon.rs` (unless you want to - it's always good to make your own game, rather than mine!) - so we'll jump straight into `spawn_named_items` in `raws/rawmaster.rs` and extend the magical item code to include the specified name if no name is provided:
+
+```rust
+if !identified.contains(&item_template.name) {
+    match magic.naming.as_str() {
+        "scroll" => {
+            eb = eb.with(ObfuscatedName{ name : scroll_names[&item_template.name].clone() });
+        }
+        "potion" => {
+            eb = eb.with(ObfuscatedName{ name: potion_names[&item_template.name].clone() });
+        }
+        _ => {
+            eb = eb.with(ObfuscatedName{ name : magic.naming.clone() });
+        }
+    }
+}
+```
+
+If you `cargo run` now, and rush to level 3 (I use the cheats, `backslash` is your friend) you are *highly* likely to find a magical longsword:
+
+![Screenshot](./c62-s5.gif)
+
+## Clean Up
+
+We should change the magical longsword's spawn weight back down to something reasonable, and make common longswords more frequent. In `spawns.json`:
+
+```json
+{ "name" : "Longsword", "weight" : 2, "min_depth" : 3, "max_depth" : 100 },
+{ "name" : "Longsword +1", "weight" : 1, "min_depth" : 3, "max_depth" : 100 },
+```
+
+Also, if you've given the character any free items in `spawner.rs`, go ahead and remove them (unless you want them to be ubiquitous)!
 
 ...
 

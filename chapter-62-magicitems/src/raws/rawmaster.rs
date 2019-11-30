@@ -183,6 +183,21 @@ pub fn get_scroll_tags() -> Vec<String> {
     result
 }
 
+pub fn get_potion_tags() -> Vec<String> {
+    let raws = &super::RAWS.lock().unwrap();
+    let mut result = Vec::new();
+
+    for item in raws.raws.items.iter() {
+        if let Some(magic) = &item.magic {
+            if &magic.naming == "potion" {
+                result.push(item.name.clone());
+            }
+        }
+    }
+
+    result
+}
+
 pub fn is_tag_magic(tag : &str) -> bool {
     let raws = &super::RAWS.lock().unwrap();
     if raws.item_index.contains_key(tag) {
@@ -235,6 +250,7 @@ pub fn spawn_named_item(raws: &RawMaster, ecs : &mut World, key : &str, pos : Sp
 
         let dm = ecs.fetch::<crate::map::MasterDungeonMap>();
         let scroll_names = dm.scroll_mappings.clone();
+        let potion_names = dm.potion_mappings.clone();
         let identified = dm.identified_items.clone();
         std::mem::drop(dm);
         let mut eb = ecs.create_entity().marked::<SimpleMarker<SerializeMe>>();
@@ -309,12 +325,16 @@ pub fn spawn_named_item(raws: &RawMaster, ecs : &mut World, key : &str, pos : Sp
             eb = eb.with(MagicItem{ class });
 
             if !identified.contains(&item_template.name) {
-                #[allow(clippy::single_match)] // To stop Clippy whining until we add more
                 match magic.naming.as_str() {
                     "scroll" => {
                         eb = eb.with(ObfuscatedName{ name : scroll_names[&item_template.name].clone() });
                     }
-                    _ => {}
+                    "potion" => {
+                        eb = eb.with(ObfuscatedName{ name: potion_names[&item_template.name].clone() });
+                    }
+                    _ => {
+                        eb = eb.with(ObfuscatedName{ name : magic.naming.clone() });
+                    }
                 }
             }
         }

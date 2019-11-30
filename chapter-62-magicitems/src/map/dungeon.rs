@@ -10,7 +10,8 @@ use rltk::Point;
 pub struct MasterDungeonMap {
     maps : HashMap<i32, Map>,
     pub identified_items : HashSet<String>,
-    pub scroll_mappings : HashMap<String, String>
+    pub scroll_mappings : HashMap<String, String>,
+    pub potion_mappings : HashMap<String, String>
 }
 
 impl MasterDungeonMap {
@@ -18,13 +19,20 @@ impl MasterDungeonMap {
         let mut dm = MasterDungeonMap{ 
             maps: HashMap::new() ,
             identified_items : HashSet::new(),
-            scroll_mappings : HashMap::new()
+            scroll_mappings : HashMap::new(),
+            potion_mappings : HashMap::new()
         };
 
         let mut rng = rltk::RandomNumberGenerator::new();
         for scroll_tag in crate::raws::get_scroll_tags().iter() {
             let masked_name = make_scroll_name(&mut rng);
             dm.scroll_mappings.insert(scroll_tag.to_string(), masked_name);
+        }
+
+        let mut used_potion_names : HashSet<String> = HashSet::new();
+        for potion_tag in crate::raws::get_potion_tags().iter() {
+            let masked_name = make_potion_name(&mut rng, &mut used_potion_names);
+            dm.potion_mappings.insert(potion_tag.to_string(), masked_name);
         }
 
         dm
@@ -86,6 +94,23 @@ fn make_scroll_name(rng: &mut rltk::RandomNumberGenerator) -> String {
     }
 
     name
+}
+
+const POTION_COLORS: &[&str] = &["Red", "Orange", "Yellow", "Green", "Brown", "Indigo", "Violet"];
+const POTION_ADJECTIVES : &[&str] = &["Swirling", "Effervescent", "Slimey", "Oiley", "Viscous", "Smelly", "Glowing"];
+
+fn make_potion_name(rng: &mut rltk::RandomNumberGenerator, used_names : &mut HashSet<String>) -> String {
+    loop {
+        let mut name : String = POTION_ADJECTIVES[rng.roll_dice(1, POTION_ADJECTIVES.len() as i32) as usize -1].to_string();
+        name += " ";
+        name += POTION_COLORS[rng.roll_dice(1, POTION_COLORS.len() as i32) as usize -1];
+        name += " Potion";
+
+        if !used_names.contains(&name) {
+            used_names.insert(name.clone());
+            return name;
+        }
+    }
 }
 
 fn transition_to_new_map(ecs : &mut World, new_depth: i32) -> Vec<Map> {
