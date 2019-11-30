@@ -33,7 +33,7 @@ impl WaveformCollapseBuilder {
         let patterns = build_patterns(&build_data.map, CHUNK_SIZE, true, true);
         let constraints = patterns_to_constraints(patterns, CHUNK_SIZE);
         self.render_tile_gallery(&constraints, CHUNK_SIZE, build_data);
-        
+
         let old_map = build_data.map.clone();
 
         build_data.map = Map::new(build_data.map.depth, build_data.width, build_data.height, &build_data.map.name);

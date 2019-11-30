@@ -6,7 +6,7 @@ pub struct DefaultMoveAI {}
 
 impl<'a> System<'a> for DefaultMoveAI {
     #[allow(clippy::type_complexity)]
-    type SystemData = ( 
+    type SystemData = (
         WriteStorage<'a, MyTurn>,
         WriteStorage<'a, MoveMode>,
         WriteStorage<'a, Position>,
@@ -18,15 +18,15 @@ impl<'a> System<'a> for DefaultMoveAI {
     );
 
     fn run(&mut self, data : Self::SystemData) {
-        let (mut turns, mut move_mode, mut positions, mut map, 
+        let (mut turns, mut move_mode, mut positions, mut map,
             mut viewsheds, mut entity_moved, mut rng, entities) = data;
-            
+
         let mut turn_done : Vec<Entity> = Vec::new();
-        for (entity, mut pos, mut mode, mut viewshed, _myturn) in 
-            (&entities, &mut positions, &mut move_mode, &mut viewsheds, &turns).join() 
+        for (entity, mut pos, mut mode, mut viewshed, _myturn) in
+            (&entities, &mut positions, &mut move_mode, &mut viewsheds, &turns).join()
         {
             turn_done.push(entity);
-            
+
             match &mut mode.mode {
                 Movement::Static => {},
 
@@ -81,12 +81,12 @@ impl<'a> System<'a> for DefaultMoveAI {
                         let idx = map.xy_idx(target_x, target_y);
                         if tile_walkable(map.tiles[idx]) {
                             let path = rltk::a_star_search(
-                                map.xy_idx(pos.x, pos.y) as i32, 
-                                map.xy_idx(target_x, target_y) as i32, 
+                                map.xy_idx(pos.x, pos.y) as i32,
+                                map.xy_idx(target_x, target_y) as i32,
                                 &mut *map
                             );
                             if path.success && path.steps.len()>1 {
-                                mode.mode = Movement::RandomWaypoint{ 
+                                mode.mode = Movement::RandomWaypoint{
                                     path: Some(path.steps)
                                 };
                             }

@@ -9,7 +9,7 @@ pub enum XEnd { LEFT, CENTER, RIGHT }
 pub enum YEnd{ TOP, CENTER, BOTTOM }
 
 pub struct AreaEndingPosition {
-    x : XEnd, 
+    x : XEnd,
     y : YEnd
 }
 

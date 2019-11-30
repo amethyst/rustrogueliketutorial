@@ -1,4 +1,4 @@
-use super::{MapBuilder, Map,  
+use super::{MapBuilder, Map,
     TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER,
     remove_unreachable_areas_returning_most_distant, generate_voronoi_spawn_regions};
 use rltk::RandomNumberGenerator;
@@ -238,7 +238,7 @@ impl<'a> Grid<'a> {
 
             if i % 50 == 0 {
                 self.copy_to_map(&mut generator.map);
-                generator.take_snapshot();    
+                generator.take_snapshot();
             }
             i += 1;
         }

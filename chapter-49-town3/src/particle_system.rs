@@ -13,11 +13,11 @@ pub fn cull_dead_particles(ecs : &mut World, ctx : &Rltk) {
             if particle.lifetime_ms < 0.0 {
                 dead_particles.push(entity);
             }
-        }                    
+        }
     }
     for dead in dead_particles.iter() {
         ecs.delete_entity(*dead).expect("Particle will not die");
-    } 
+    }
 }
 
 struct ParticleRequest {
@@ -52,7 +52,7 @@ pub struct ParticleSpawnSystem {}
 
 impl<'a> System<'a> for ParticleSpawnSystem {
     #[allow(clippy::type_complexity)]
-    type SystemData = ( 
+    type SystemData = (
                         Entities<'a>,
                         WriteStorage<'a, Position>,
                         WriteStorage<'a, Renderable>,

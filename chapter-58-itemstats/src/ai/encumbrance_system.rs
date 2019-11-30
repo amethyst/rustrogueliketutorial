@@ -7,7 +7,7 @@ pub struct EncumbranceSystem {}
 
 impl<'a> System<'a> for EncumbranceSystem {
     #[allow(clippy::type_complexity)]
-    type SystemData = ( 
+    type SystemData = (
         WriteStorage<'a, EquipmentChanged>,
         Entities<'a>,
         ReadStorage<'a, Item>,
@@ -20,7 +20,7 @@ impl<'a> System<'a> for EncumbranceSystem {
     );
 
     fn run(&mut self, data : Self::SystemData) {
-        let (mut equip_dirty, entities, items, backpacks, wielded, 
+        let (mut equip_dirty, entities, items, backpacks, wielded,
             mut pools, attributes, player, mut gamelog) = data;
 
         if equip_dirty.is_empty() { return; }

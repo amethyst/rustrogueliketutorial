@@ -9,7 +9,7 @@ pub struct VisibilitySystem {}
 impl<'a> System<'a> for VisibilitySystem {
     type SystemData = ( WriteExpect<'a, Map>,
                         Entities<'a>,
-                        WriteStorage<'a, Viewshed>, 
+                        WriteStorage<'a, Viewshed>,
                         ReadStorage<'a, Position>,
                         ReadStorage<'a, Player>);
 

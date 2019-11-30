@@ -48,10 +48,10 @@ pub struct RawMaster {
 impl RawMaster {
     pub fn empty() -> RawMaster {
         RawMaster {
-            raws : Raws{ 
-                items: Vec::new(), 
-                mobs: Vec::new(), 
-                props: Vec::new(), 
+            raws : Raws{
+                items: Vec::new(),
+                mobs: Vec::new(),
+                props: Vec::new(),
                 spawn_table: Vec::new(),
                 loot_tables: Vec::new(),
                 faction_table : Vec::new(),
@@ -114,7 +114,7 @@ impl RawMaster {
             }
             self.faction_index.insert(faction.name.clone(), reactions);
         }
-    }    
+    }
 }
 
 #[inline(always)]
@@ -223,7 +223,7 @@ fn spawn_position<'a>(pos : SpawnType, new_entity : EntityBuilder<'a>, tag : &st
 }
 
 fn get_renderable_component(renderable : &super::item_structs::Renderable) -> crate::components::Renderable {
-    crate::components::Renderable{  
+    crate::components::Renderable{
         glyph: rltk::to_cp437(renderable.glyph.chars().next().unwrap()),
         fg : rltk::RGB::from_hex(&renderable.fg).expect("Invalid RGB"),
         bg : rltk::RGB::from_hex(&renderable.bg).expect("Invalid RGB"),
@@ -233,11 +233,11 @@ fn get_renderable_component(renderable : &super::item_structs::Renderable) -> cr
 
 pub fn string_to_slot(slot : &str) -> EquipmentSlot {
     match slot {
-        "Shield" => EquipmentSlot::Shield, 
+        "Shield" => EquipmentSlot::Shield,
         "Head" => EquipmentSlot::Head,
-        "Torso" => EquipmentSlot::Torso, 
-        "Legs" => EquipmentSlot::Legs, 
-        "Feet" => EquipmentSlot::Feet, 
+        "Torso" => EquipmentSlot::Torso,
+        "Legs" => EquipmentSlot::Legs,
+        "Feet" => EquipmentSlot::Feet,
         "Hands" => EquipmentSlot::Hands,
         "Melee" => EquipmentSlot::Melee,
         _ => { println!("Warning: unknown equipment slot type [{}])", slot); EquipmentSlot::Melee }
@@ -268,7 +268,7 @@ pub fn spawn_named_item(raws: &RawMaster, ecs : &mut World, key : &str, pos : Sp
         eb = eb.with(crate::components::Item{
             initiative_penalty : item_template.initiative_penalty.unwrap_or(0.0),
             weight_lbs : item_template.weight_lbs.unwrap_or(0.0),
-            base_value : item_template.base_value.unwrap_or(0.0)            
+            base_value : item_template.base_value.unwrap_or(0.0)
         });
 
         if let Some(consumable) = &item_template.consumable {
@@ -276,8 +276,8 @@ pub fn spawn_named_item(raws: &RawMaster, ecs : &mut World, key : &str, pos : Sp
             for effect in consumable.effects.iter() {
                 let effect_name = effect.0.as_str();
                 match effect_name {
-                    "provides_healing" => { 
-                        eb = eb.with(ProvidesHealing{ heal_amount: effect.1.parse::<i32>().unwrap() }) 
+                    "provides_healing" => {
+                        eb = eb.with(ProvidesHealing{ heal_amount: effect.1.parse::<i32>().unwrap() })
                     }
                     "ranged" => { eb = eb.with(Ranged{ range: effect.1.parse::<i32>().unwrap() }) },
                     "damage" => { eb = eb.with(InflictsDamage{ damage : effect.1.parse::<i32>().unwrap() }) }
@@ -387,18 +387,18 @@ pub fn spawn_named_mob(raws: &RawMaster, ecs : &mut World, key : &str, pos : Spa
             quickness: Attribute{ base: 11, modifiers: 0, bonus: attr_bonus(11) },
             intelligence: Attribute{ base: 11, modifiers: 0, bonus: attr_bonus(11) },
         };
-        if let Some(might) = mob_template.attributes.might { 
-            attr.might = Attribute{ base: might, modifiers: 0, bonus: attr_bonus(might) }; 
+        if let Some(might) = mob_template.attributes.might {
+            attr.might = Attribute{ base: might, modifiers: 0, bonus: attr_bonus(might) };
         }
-        if let Some(fitness) = mob_template.attributes.fitness { 
-            attr.fitness = Attribute{ base: fitness, modifiers: 0, bonus: attr_bonus(fitness) }; 
+        if let Some(fitness) = mob_template.attributes.fitness {
+            attr.fitness = Attribute{ base: fitness, modifiers: 0, bonus: attr_bonus(fitness) };
             mob_fitness = fitness;
         }
-        if let Some(quickness) = mob_template.attributes.quickness { 
-            attr.quickness = Attribute{ base: quickness, modifiers: 0, bonus: attr_bonus(quickness) }; 
+        if let Some(quickness) = mob_template.attributes.quickness {
+            attr.quickness = Attribute{ base: quickness, modifiers: 0, bonus: attr_bonus(quickness) };
         }
-        if let Some(intelligence) = mob_template.attributes.intelligence { 
-            attr.intelligence = Attribute{ base: intelligence, modifiers: 0, bonus: attr_bonus(intelligence) }; 
+        if let Some(intelligence) = mob_template.attributes.intelligence {
+            attr.intelligence = Attribute{ base: intelligence, modifiers: 0, bonus: attr_bonus(intelligence) };
             mob_int = intelligence;
         }
         eb = eb.with(attr);
@@ -414,8 +414,8 @@ pub fn spawn_named_mob(raws: &RawMaster, ecs : &mut World, key : &str, pos : Spa
             mana: Pool{current: mob_mana, max: mob_mana},
             total_weight : 0.0,
             total_initiative_penalty : 0.0,
-            gold : if let Some(gold) = &mob_template.gold {    
-                    let mut rng = rltk::RandomNumberGenerator::new();                
+            gold : if let Some(gold) = &mob_template.gold {
+                    let mut rng = rltk::RandomNumberGenerator::new();
                     let (n, d, b) = parse_dice_string(&gold);
                     (rng.roll_dice(n, d) + b) as f32
                 } else {
@@ -440,7 +440,7 @@ pub fn spawn_named_mob(raws: &RawMaster, ecs : &mut World, key : &str, pos : Spa
                 }
             }
         }
-        eb = eb.with(skills);        
+        eb = eb.with(skills);
 
         eb = eb.with(Viewshed{ visible_tiles : Vec::new(), range: mob_template.vision_range, dirty: true });
 
@@ -539,7 +539,7 @@ pub fn spawn_named_prop(raws: &RawMaster, ecs : &mut World, key : &str, pos : Sp
             eb = eb.with(LightSource{ range: light.range, color : rltk::RGB::from_hex(&light.color).expect("Bad color") });
             eb = eb.with(Viewshed{ range: light.range, dirty: true, visible_tiles: Vec::new() });
         }
-        
+
 
         return Some(eb.build());
     }
@@ -565,7 +565,7 @@ pub fn get_spawn_table_for_depth(raws: &RawMaster, depth: i32) -> RandomTable {
         .iter()
         .filter(|a| depth >= a.min_depth && depth <= a.max_depth)
         .collect();
-    
+
     let mut rt = RandomTable::new();
     for e in available_options.iter() {
         let mut weight = e.weight;

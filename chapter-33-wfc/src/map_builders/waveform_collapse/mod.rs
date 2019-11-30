@@ -12,7 +12,11 @@ use constraints::*;
 mod solver;
 use solver::*;
 
+<<<<<<< HEAD
 /// Modes supported by Wave Function Collapse algorithm. 
+=======
+/// Modes supported by Waveform Collapse algorithm.
+>>>>>>> e692996e63031167f42182fc4d2ee7a6bd660d97
 /// TestMap loads the baked-in map, made in Rex.
 /// Derived takes a builder, runs it, and then runs the algorithm on that map.
 #[derive(PartialEq, Copy, Clone)]
@@ -86,7 +90,7 @@ impl WaveformCollapseBuilder {
     pub fn test_map(new_depth: i32) -> WaveformCollapseBuilder {
         WaveformCollapseBuilder::new(new_depth, WaveformMode::TestMap, None)
     }
-    
+
     /// Derives a map from a pre-existing map builder.
     /// # Arguments
     /// * new_depth - the new map depth
@@ -117,7 +121,7 @@ impl WaveformCollapseBuilder {
         let patterns = build_patterns(&self.map, CHUNK_SIZE, true, true);
         let constraints = patterns_to_constraints(patterns, CHUNK_SIZE);
         self.render_tile_gallery(&constraints, CHUNK_SIZE);
-                
+
         self.map = Map::new(self.depth);
         loop {
             let mut solver = Solver::new(constraints.clone(), CHUNK_SIZE, &self.map);

@@ -57,7 +57,7 @@ impl RawMaster {
                 println!("WARNING - Spawn tables references unspecified entity {}", spawn.name);
             }
         }
-    }    
+    }
 }
 
 fn spawn_position(pos : SpawnType, new_entity : EntityBuilder) -> EntityBuilder {
@@ -74,7 +74,7 @@ fn spawn_position(pos : SpawnType, new_entity : EntityBuilder) -> EntityBuilder 
 }
 
 fn get_renderable_component(renderable : &super::item_structs::Renderable) -> crate::components::Renderable {
-    crate::components::Renderable{  
+    crate::components::Renderable{
         glyph: rltk::to_cp437(renderable.glyph.chars().next().unwrap()),
         fg : rltk::RGB::from_hex(&renderable.fg).expect("Invalid RGB"),
         bg : rltk::RGB::from_hex(&renderable.bg).expect("Invalid RGB"),
@@ -105,8 +105,8 @@ pub fn spawn_named_item(raws: &RawMaster, new_entity : EntityBuilder, key : &str
             for effect in consumable.effects.iter() {
                 let effect_name = effect.0.as_str();
                 match effect_name {
-                    "provides_healing" => { 
-                        eb = eb.with(ProvidesHealing{ heal_amount: effect.1.parse::<i32>().unwrap() }) 
+                    "provides_healing" => {
+                        eb = eb.with(ProvidesHealing{ heal_amount: effect.1.parse::<i32>().unwrap() })
                     }
                     "ranged" => { eb = eb.with(Ranged{ range: effect.1.parse::<i32>().unwrap() }) },
                     "damage" => { eb = eb.with(InflictsDamage{ damage : effect.1.parse::<i32>().unwrap() }) }
@@ -177,18 +177,18 @@ pub fn spawn_named_mob(raws: &RawMaster, new_entity : EntityBuilder, key : &str,
             quickness: Attribute{ base: 11, modifiers: 0, bonus: attr_bonus(11) },
             intelligence: Attribute{ base: 11, modifiers: 0, bonus: attr_bonus(11) },
         };
-        if let Some(might) = mob_template.attributes.might { 
-            attr.might = Attribute{ base: might, modifiers: 0, bonus: attr_bonus(might) }; 
+        if let Some(might) = mob_template.attributes.might {
+            attr.might = Attribute{ base: might, modifiers: 0, bonus: attr_bonus(might) };
         }
-        if let Some(fitness) = mob_template.attributes.fitness { 
-            attr.fitness = Attribute{ base: fitness, modifiers: 0, bonus: attr_bonus(fitness) }; 
+        if let Some(fitness) = mob_template.attributes.fitness {
+            attr.fitness = Attribute{ base: fitness, modifiers: 0, bonus: attr_bonus(fitness) };
             mob_fitness = fitness;
         }
-        if let Some(quickness) = mob_template.attributes.quickness { 
-            attr.quickness = Attribute{ base: quickness, modifiers: 0, bonus: attr_bonus(quickness) }; 
+        if let Some(quickness) = mob_template.attributes.quickness {
+            attr.quickness = Attribute{ base: quickness, modifiers: 0, bonus: attr_bonus(quickness) };
         }
-        if let Some(intelligence) = mob_template.attributes.intelligence { 
-            attr.intelligence = Attribute{ base: intelligence, modifiers: 0, bonus: attr_bonus(intelligence) }; 
+        if let Some(intelligence) = mob_template.attributes.intelligence {
+            attr.intelligence = Attribute{ base: intelligence, modifiers: 0, bonus: attr_bonus(intelligence) };
             mob_int = intelligence;
         }
         eb = eb.with(attr);
@@ -219,7 +219,7 @@ pub fn spawn_named_mob(raws: &RawMaster, new_entity : EntityBuilder, key : &str,
                 }
             }
         }
-        eb = eb.with(skills);        
+        eb = eb.with(skills);
 
         eb = eb.with(Viewshed{ visible_tiles : Vec::new(), range: mob_template.vision_range, dirty: true });
 
@@ -266,7 +266,7 @@ pub fn spawn_named_prop(raws: &RawMaster, new_entity : EntityBuilder, key : &str
                 }
             }
         }
-        
+
 
         return Some(eb.build());
     }
@@ -292,7 +292,7 @@ pub fn get_spawn_table_for_depth(raws: &RawMaster, depth: i32) -> RandomTable {
         .iter()
         .filter(|a| depth >= a.min_depth && depth <= a.max_depth)
         .collect();
-    
+
     let mut rt = RandomTable::new();
     for e in available_options.iter() {
         let mut weight = e.weight;

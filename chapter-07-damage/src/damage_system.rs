@@ -28,7 +28,7 @@ pub fn delete_the_dead(ecs : &mut World) {
         let players = ecs.read_storage::<Player>();
         let entities = ecs.entities();
         for (entity, stats) in (&entities, &combat_stats).join() {
-            if stats.hp < 1 { 
+            if stats.hp < 1 {
                 let player = players.get(entity);
                 match player {
                     None => dead.push(entity),
@@ -40,5 +40,5 @@ pub fn delete_the_dead(ecs : &mut World) {
 
     for victim in dead {
         ecs.delete_entity(victim).expect("Unable to delete");
-    }    
+    }
 }

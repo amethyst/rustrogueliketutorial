@@ -40,12 +40,12 @@ pub mod map_builders;
 rltk::add_wasm_support!();
 
 #[derive(PartialEq, Copy, Clone)]
-pub enum RunState { AwaitingInput, 
-    PreRun, 
-    PlayerTurn, 
-    MonsterTurn, 
-    ShowInventory, 
-    ShowDropItem, 
+pub enum RunState { AwaitingInput,
+    PreRun,
+    PlayerTurn,
+    MonsterTurn,
+    ShowInventory,
+    ShowDropItem,
     ShowTargeting { range : i32, item : Entity},
     MainMenu { menu_selection : gui::MainMenuSelection },
     SaveGame,
@@ -98,7 +98,7 @@ impl GameState for State {
             newrunstate = *runstate;
         }
 
-        ctx.cls();        
+        ctx.cls();
         particle_system::cull_dead_particles(&mut self.ecs, ctx);
 
         match newrunstate {
@@ -117,10 +117,10 @@ impl GameState for State {
                     let idx = map.xy_idx(pos.x, pos.y);
                     if map.visible_tiles[idx] { ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph) }
                 }
-                gui::draw_ui(&self.ecs, ctx);                
+                gui::draw_ui(&self.ecs, ctx);
             }
         }
-        
+
         match newrunstate {
             RunState::PreRun => {
                 self.run_systems();
@@ -136,7 +136,7 @@ impl GameState for State {
                 match *self.ecs.fetch::<RunState>() {
                     RunState::MagicMapReveal{ .. } => newrunstate = RunState::MagicMapReveal{ row: 0 },
                     _ => newrunstate = RunState::MonsterTurn
-                }                
+                }
             }
             RunState::MonsterTurn => {
                 self.run_systems();
@@ -232,7 +232,7 @@ impl GameState for State {
                 newrunstate = RunState::MainMenu{ menu_selection : gui::MainMenuSelection::LoadGame };
             }
             RunState::NextLevel => {
-                self.goto_next_level();                
+                self.goto_next_level();
                 newrunstate = RunState::PreRun;
             }
             RunState::MagicMapReveal{row} => {
@@ -290,7 +290,7 @@ impl State {
                 }
             }
 
-            if should_delete { 
+            if should_delete {
                 to_delete.push(entity);
             }
         }
@@ -340,7 +340,7 @@ impl State {
         let vs = viewshed_components.get_mut(*player_entity);
         if let Some(vs) = vs {
             vs.dirty = true;
-        }        
+        }
 
         // Notify the player and give them some health
         let mut gamelog = self.ecs.fetch_mut::<gamelog::GameLog>();
@@ -394,7 +394,7 @@ impl State {
         let vs = viewshed_components.get_mut(player_entity);
         if let Some(vs) = vs {
             vs.dirty = true;
-        }                                               
+        }
     }
 }
 

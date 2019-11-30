@@ -1,4 +1,4 @@
-use super::{BuilderChain, CellularAutomataBuilder, XStart, YStart, AreaStartingPosition, 
+use super::{BuilderChain, CellularAutomataBuilder, XStart, YStart, AreaStartingPosition,
     CullUnreachable, VoronoiSpawning, MetaMapBuilder, BuilderMap, TileType};
 use rltk::RandomNumberGenerator;
 use crate::map;

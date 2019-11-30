@@ -1,6 +1,6 @@
 extern crate specs;
 use specs::prelude::*;
-use super::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, WantsToUseItem, 
+use super::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, WantsToUseItem,
     Consumable, ProvidesHealing, WantsToDropItem, InflictsDamage, Map, SufferDamage,
     AreaOfEffect, Confusion, Equippable, Equipped, WantsToRemoveItem, particle_system::ParticleBuilder,
     ProvidesFood, HungerClock, HungerState, MagicMapper, RunState, Pools, EquipmentChanged,
@@ -20,7 +20,7 @@ impl<'a> System<'a> for ItemCollectionSystem {
                       );
 
     fn run(&mut self, data : Self::SystemData) {
-        let (player_entity, mut gamelog, mut wants_pickup, mut positions, names, 
+        let (player_entity, mut gamelog, mut wants_pickup, mut positions, names,
             mut backpack, mut dirty) = data;
 
         for pickup in wants_pickup.join() {
@@ -69,8 +69,8 @@ impl<'a> System<'a> for ItemUseSystem {
 
     #[allow(clippy::cognitive_complexity)]
     fn run(&mut self, data : Self::SystemData) {
-        let (player_entity, mut gamelog, map, entities, mut wants_use, names, 
-            consumables, healing, inflict_damage, mut combat_stats, mut suffer_damage, 
+        let (player_entity, mut gamelog, map, entities, mut wants_use, names,
+            consumables, healing, inflict_damage, mut combat_stats, mut suffer_damage,
             aoe, mut confused, equippable, mut equipped, mut backpack, mut particle_builder, positions,
             provides_food, mut hunger_clocks, magic_mapper, mut runstate, mut dirty, town_portal) = data;
 
@@ -197,8 +197,8 @@ impl<'a> System<'a> for ItemUseSystem {
                             let pos = positions.get(*target);
                             if let Some(pos) = pos {
                                 particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::GREEN), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('♥'), 200.0);
-                            }   
-                        }            
+                            }
+                        }
                     }
                 }
             }
@@ -210,8 +210,8 @@ impl<'a> System<'a> for ItemUseSystem {
                 Some(damage) => {
                     used_item = false;
                     for mob in targets.iter() {
-                        suffer_damage.insert(*mob, 
-                            SufferDamage{ 
+                        suffer_damage.insert(*mob,
+                            SufferDamage{
                                 amount : damage.damage,
                                 from_player : true
                             }).expect("Unable to insert");
@@ -290,7 +290,7 @@ impl<'a> System<'a> for ItemDropSystem {
                       );
 
     fn run(&mut self, data : Self::SystemData) {
-        let (player_entity, mut gamelog, entities, mut wants_drop, names, mut positions, 
+        let (player_entity, mut gamelog, entities, mut wants_drop, names, mut positions,
             mut backpack, mut dirty) = data;
 
         for (entity, to_drop) in (&entities, &wants_drop).join() {
@@ -317,7 +317,7 @@ pub struct ItemRemoveSystem {}
 
 impl<'a> System<'a> for ItemRemoveSystem {
     #[allow(clippy::type_complexity)]
-    type SystemData = ( 
+    type SystemData = (
                         Entities<'a>,
                         WriteStorage<'a, WantsToRemoveItem>,
                         WriteStorage<'a, Equipped>,

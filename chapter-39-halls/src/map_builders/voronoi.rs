@@ -66,22 +66,22 @@ impl VoronoiCellBuilder {
 
             for (seed, pos) in voronoi_seeds.iter().enumerate() {
                 let distance;
-                match self.distance_algorithm {           
+                match self.distance_algorithm {
                     DistanceAlgorithm::Pythagoras => {
                         distance = rltk::DistanceAlg::PythagorasSquared.distance2d(
-                            rltk::Point::new(x, y), 
+                            rltk::Point::new(x, y),
                             pos.1
                         );
                     }
                     DistanceAlgorithm::Manhattan => {
                         distance = rltk::DistanceAlg::Manhattan.distance2d(
-                            rltk::Point::new(x, y), 
+                            rltk::Point::new(x, y),
                             pos.1
                         );
                     }
                     DistanceAlgorithm::Chebyshev => {
                         distance = rltk::DistanceAlg::Chebyshev.distance2d(
-                            rltk::Point::new(x, y), 
+                            rltk::Point::new(x, y),
                             pos.1
                         );
                     }
@@ -110,5 +110,5 @@ impl VoronoiCellBuilder {
             }
             build_data.take_snapshot();
         }
-    }    
+    }
 }

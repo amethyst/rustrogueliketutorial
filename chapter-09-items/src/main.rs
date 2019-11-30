@@ -62,7 +62,7 @@ impl State {
 
 impl GameState for State {
     fn tick(&mut self, ctx : &mut Rltk) {
-        ctx.cls();        
+        ctx.cls();
 
         draw_map(&self.ecs, ctx);
 
@@ -86,7 +86,7 @@ impl GameState for State {
             let runstate = self.ecs.fetch::<RunState>();
             newrunstate = *runstate;
         }
-        
+
         match newrunstate {
             RunState::PreRun => {
                 self.run_systems();

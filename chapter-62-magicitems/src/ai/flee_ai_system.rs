@@ -6,7 +6,7 @@ pub struct FleeAI {}
 
 impl<'a> System<'a> for FleeAI {
     #[allow(clippy::type_complexity)]
-    type SystemData = ( 
+    type SystemData = (
         WriteStorage<'a, MyTurn>,
         WriteStorage<'a, WantsToFlee>,
         WriteStorage<'a, Position>,
@@ -16,12 +16,12 @@ impl<'a> System<'a> for FleeAI {
     );
 
     fn run(&mut self, data : Self::SystemData) {
-        let (mut turns, mut want_flee, positions, mut map, 
+        let (mut turns, mut want_flee, positions, mut map,
             entities, mut apply_move) = data;
-            
+
         let mut turn_done : Vec<Entity> = Vec::new();
-        for (entity, pos, flee, _myturn) in 
-            (&entities, &positions, &want_flee, &turns).join() 
+        for (entity, pos, flee, _myturn) in
+            (&entities, &positions, &want_flee, &turns).join()
         {
             turn_done.push(entity);
             let my_idx = map.xy_idx(pos.x, pos.y);

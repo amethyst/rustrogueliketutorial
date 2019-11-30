@@ -4,8 +4,8 @@ extern crate specs;
 use specs::prelude::*;
 use std::cmp::{max, min};
 use super::{Position, Player, Viewshed, State, Map, RunState, Attributes, WantsToMelee, Item,
-    gamelog::GameLog, WantsToPickupItem, TileType, HungerClock, HungerState, 
-    EntityMoved, Door, BlocksTile, BlocksVisibility, Renderable, Pools, Faction, 
+    gamelog::GameLog, WantsToPickupItem, TileType, HungerClock, HungerState,
+    EntityMoved, Door, BlocksTile, BlocksVisibility, Renderable, Pools, Faction,
     raws::Reaction};
 
 pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) -> RunState {
@@ -34,8 +34,8 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) -> RunState 
             if combat_stats.get(*potential_target).is_some() {
                 if let Some(faction) = factions.get(*potential_target) {
                     let reaction = crate::raws::faction_reaction(
-                        &faction.name, 
-                        "Player", 
+                        &faction.name,
+                        "Player",
                         &crate::raws::RAWS.lock().unwrap()
                     );
                     if reaction != Reaction::Attack { hostile = false; }
@@ -87,7 +87,7 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) -> RunState 
                 TileType::DownStairs => result = RunState::NextLevel,
                 TileType::UpStairs => result = RunState::PreviousLevel,
                 _ => {}
-            } 
+            }
         }
     }
 
@@ -134,7 +134,7 @@ fn get_item(ecs: &mut World) {
     let entities = ecs.entities();
     let items = ecs.read_storage::<Item>();
     let positions = ecs.read_storage::<Position>();
-    let mut gamelog = ecs.fetch_mut::<GameLog>();    
+    let mut gamelog = ecs.fetch_mut::<GameLog>();
 
     let mut target_item : Option<Entity> = None;
     for (item_entity, _item, position) in (&entities, &items, &positions).join() {
@@ -167,14 +167,14 @@ fn skip_turn(ecs: &mut World) -> RunState {
             let faction = factions.get(*entity_id);
             match faction {
                 None => {}
-                Some(faction) => { 
+                Some(faction) => {
                     let reaction = crate::raws::faction_reaction(
-                        &faction.name, 
-                        "Player",                     
+                        &faction.name,
+                        "Player",
                         &crate::raws::RAWS.lock().unwrap()
                     );
                     if reaction == Reaction::Attack {
-                        can_heal = false; 
+                        can_heal = false;
                     }
                 }
             }
@@ -217,7 +217,7 @@ fn use_consumable_hotkey(gs: &mut State, key: i32) -> bool {
     if (key as usize) < carried_consumables.len() {
         let mut intent = gs.ecs.write_storage::<WantsToUseItem>();
         intent.insert(
-            *player_entity, 
+            *player_entity,
             WantsToUseItem{ item: carried_consumables[key as usize], target: None }
         ).expect("Unable to insert intent");
         return true;

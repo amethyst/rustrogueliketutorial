@@ -8,7 +8,7 @@ use std::collections::HashSet;
 
 #[derive(PartialEq, Copy, Clone)]
 #[allow(dead_code)]
-pub enum PrefabMode { 
+pub enum PrefabMode {
     RexLevel{ template : &'static str },
     Constant{ level : prefab_levels::PrefabLevel },
     Sectional{ section : prefab_sections::PrefabSection },
@@ -159,7 +159,7 @@ impl PrefabBuilder {
             // Place the stairs
             self.map.tiles[exit_tile] = TileType::DownStairs;
             self.take_snapshot();
-        }        
+        }
     }
 
     fn char_to_map(&mut self, ch : char, idx: usize) {
@@ -239,7 +239,7 @@ impl PrefabBuilder {
         }
     }
 
-    fn apply_previous_iteration<F>(&mut self, mut filter: F) 
+    fn apply_previous_iteration<F>(&mut self, mut filter: F)
         where F : FnMut(i32, i32, &(usize, String)) -> bool
     {
         // Build the map
@@ -257,8 +257,8 @@ impl PrefabBuilder {
                     (idx, e.1.to_string())
                 )
             }
-        }        
-        self.take_snapshot(); 
+        }
+        self.take_snapshot();
     }
 
     #[allow(dead_code)]
@@ -266,7 +266,7 @@ impl PrefabBuilder {
         use prefab_sections::*;
 
         let string_vec = PrefabBuilder::read_ascii_to_vec(section.template);
-        
+
         // Place the new section
         let chunk_x;
         match section.placement.0 {
@@ -285,7 +285,7 @@ impl PrefabBuilder {
         // Build the map
         self.apply_previous_iteration(|x,y,_e| {
             x < chunk_x || x > (chunk_x + section.width as i32) || y < chunk_y || y > (chunk_y + section.height as i32)
-        });       
+        });
 
         let mut i = 0;
         for ty in 0..section.height {
@@ -339,9 +339,9 @@ impl PrefabBuilder {
                 let y = (idx / self.map.width as usize) as i32;
 
                 // Check that we won't overflow the map
-                if x > 1 
+                if x > 1
                     && (x+vault.width as i32) < self.map.width-2
-                    && y > 1 
+                    && y > 1
                     && (y+vault.height as i32) < self.map.height-2
                 {
 

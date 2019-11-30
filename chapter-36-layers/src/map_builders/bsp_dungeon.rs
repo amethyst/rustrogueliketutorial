@@ -1,4 +1,4 @@
-use super::{InitialMapBuilder, BuilderMap, Map, Rect, apply_room_to_map, 
+use super::{InitialMapBuilder, BuilderMap, Map, Rect, apply_room_to_map,
     TileType, draw_corridor};
 use rltk::RandomNumberGenerator;
 
@@ -113,8 +113,8 @@ impl BspDungeonBuilder {
                 if y < 1 { can_build = false; }
                 if can_build {
                     let idx = map.xy_idx(x, y);
-                    if map.tiles[idx] != TileType::Wall { 
-                        can_build = false; 
+                    if map.tiles[idx] != TileType::Wall {
+                        can_build = false;
                     }
                 }
             }

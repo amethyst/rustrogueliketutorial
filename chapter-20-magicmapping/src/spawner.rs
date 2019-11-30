@@ -2,7 +2,7 @@ extern crate rltk;
 use rltk::{ RGB, RandomNumberGenerator };
 extern crate specs;
 use specs::prelude::*;
-use super::{CombatStats, Player, Renderable, Name, Position, Viewshed, Monster, BlocksTile, Rect, Item, 
+use super::{CombatStats, Player, Renderable, Name, Position, Viewshed, Monster, BlocksTile, Rect, Item,
     Consumable, Ranged, ProvidesHealing, map::MAPWIDTH, InflictsDamage, AreaOfEffect, Confusion, SerializeMe,
     random_table::RandomTable, EquipmentSlot, Equippable, MeleePowerBonus, DefenseBonus, HungerClock,
     HungerState, ProvidesFood, MagicMapper };

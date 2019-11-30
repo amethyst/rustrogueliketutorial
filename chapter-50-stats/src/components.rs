@@ -21,7 +21,7 @@ pub struct Renderable {
     pub bg: RGB,
     pub render_order : i32
 }
- 
+
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Player {}
 
@@ -132,8 +132,8 @@ pub struct ProvidesHealing {
 pub struct BlocksVisibility {}
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
-pub struct Door { 
-    pub open: bool 
+pub struct Door {
+    pub open: bool
 }
 
 // See wrapper below for serialization

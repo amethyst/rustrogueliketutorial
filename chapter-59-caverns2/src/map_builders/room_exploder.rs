@@ -52,7 +52,7 @@ impl RoomExploder {
 
                         drunk_life -= 1;
                     }
-                    if did_something { 
+                    if did_something {
                         build_data.take_snapshot();
 
                         for t in build_data.map.tiles.iter_mut() {

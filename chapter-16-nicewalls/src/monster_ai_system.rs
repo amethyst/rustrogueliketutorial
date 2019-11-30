@@ -13,14 +13,14 @@ impl<'a> System<'a> for MonsterAI {
                         ReadExpect<'a, Entity>,
                         ReadExpect<'a, RunState>,
                         Entities<'a>,
-                        WriteStorage<'a, Viewshed>, 
+                        WriteStorage<'a, Viewshed>,
                         ReadStorage<'a, Monster>,
                         WriteStorage<'a, Position>,
                         WriteStorage<'a, WantsToMelee>,
                         WriteStorage<'a, Confusion>);
 
     fn run(&mut self, data : Self::SystemData) {
-        let (mut map, player_pos, player_entity, runstate, entities, mut viewshed, 
+        let (mut map, player_pos, player_entity, runstate, entities, mut viewshed,
             monster, mut position, mut wants_to_melee, mut confused) = data;
 
         if *runstate != RunState::MonsterTurn { return; }
@@ -34,7 +34,7 @@ impl<'a> System<'a> for MonsterAI {
                 if i_am_confused.turns < 1 {
                     confused.remove(entity);
                 }
-                can_act = false;                
+                can_act = false;
             }
 
             if can_act {
@@ -45,8 +45,8 @@ impl<'a> System<'a> for MonsterAI {
                 else if viewshed.visible_tiles.contains(&*player_pos) {
                     // Path to the player
                     let path = rltk::a_star_search(
-                        map.xy_idx(pos.x, pos.y) as i32, 
-                        map.xy_idx(player_pos.x, player_pos.y) as i32, 
+                        map.xy_idx(pos.x, pos.y) as i32,
+                        map.xy_idx(player_pos.x, player_pos.y) as i32,
                         &mut *map
                     );
                     if path.success && path.steps.len()>1 {

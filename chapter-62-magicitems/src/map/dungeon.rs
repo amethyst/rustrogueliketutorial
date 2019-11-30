@@ -16,7 +16,7 @@ pub struct MasterDungeonMap {
 
 impl MasterDungeonMap {
     pub fn new() -> MasterDungeonMap {
-        let mut dm = MasterDungeonMap{ 
+        let mut dm = MasterDungeonMap{
             maps: HashMap::new() ,
             identified_items : HashSet::new(),
             scroll_mappings : HashMap::new(),
@@ -120,7 +120,7 @@ fn transition_to_new_map(ecs : &mut World, new_depth: i32) -> Vec<Map> {
     if new_depth > 1 {
         if let Some(pos) = &builder.build_data.starting_position {
             let up_idx = builder.build_data.map.xy_idx(pos.x, pos.y);
-            builder.build_data.map.tiles[up_idx] = TileType::UpStairs;            
+            builder.build_data.map.tiles[up_idx] = TileType::UpStairs;
         }
     }
     let mapgen_history = builder.build_data.history.clone();
@@ -145,7 +145,7 @@ fn transition_to_new_map(ecs : &mut World, new_depth: i32) -> Vec<Map> {
     if let Some(player_pos_comp) = player_pos_comp {
         player_pos_comp.x = player_x;
         player_pos_comp.y = player_y;
-    }    
+    }
 
     // Mark the player's visibility as dirty
     let mut viewshed_components = ecs.write_storage::<Viewshed>();
@@ -165,7 +165,7 @@ fn transition_to_existing_map(ecs: &mut World, new_depth: i32, offset: i32) {
     let dungeon_master = ecs.read_resource::<MasterDungeonMap>();
     let map = dungeon_master.get_map(new_depth).unwrap();
     let mut worldmap_resource = ecs.write_resource::<Map>();
-    let player_entity = ecs.fetch::<Entity>();    
+    let player_entity = ecs.fetch::<Entity>();
 
     // Find the down stairs and place the player
     let w = map.width;

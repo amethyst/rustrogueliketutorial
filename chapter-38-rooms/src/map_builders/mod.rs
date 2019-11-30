@@ -127,7 +127,7 @@ pub trait InitialMapBuilder {
     fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap);
 }
 
-pub trait MetaMapBuilder {    
+pub trait MetaMapBuilder {
     fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap);
 }
 

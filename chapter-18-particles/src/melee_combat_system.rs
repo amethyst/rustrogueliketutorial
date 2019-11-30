@@ -21,7 +21,7 @@ impl<'a> System<'a> for MeleeCombatSystem {
                       );
 
     fn run(&mut self, data : Self::SystemData) {
-        let (entities, mut log, mut wants_melee, names, combat_stats, mut inflict_damage, 
+        let (entities, mut log, mut wants_melee, names, combat_stats, mut inflict_damage,
             melee_power_bonuses, defense_bonuses, equipped, mut particle_builder, positions) = data;
 
         for (entity, wants_melee, name, stats) in (&entities, &wants_melee, &names, &combat_stats).join() {
@@ -55,7 +55,7 @@ impl<'a> System<'a> for MeleeCombatSystem {
                         log.entries.insert(0, format!("{} is unable to hurt {}", &name.name, &target_name.name));
                     } else {
                         log.entries.insert(0, format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));
-                        inflict_damage.insert(wants_melee.target, SufferDamage{ amount: damage }).expect("Unable to do damage");                        
+                        inflict_damage.insert(wants_melee.target, SufferDamage{ amount: damage }).expect("Unable to do damage");
                     }
                 }
             }

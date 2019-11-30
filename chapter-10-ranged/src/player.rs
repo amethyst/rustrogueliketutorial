@@ -44,7 +44,7 @@ fn get_item(ecs: &mut World) {
     let entities = ecs.entities();
     let items = ecs.read_storage::<Item>();
     let positions = ecs.read_storage::<Position>();
-    let mut gamelog = ecs.fetch_mut::<GameLog>();    
+    let mut gamelog = ecs.fetch_mut::<GameLog>();
 
     let mut target_item : Option<Entity> = None;
     for (item_entity, _item, position) in (&entities, &items, &positions).join() {

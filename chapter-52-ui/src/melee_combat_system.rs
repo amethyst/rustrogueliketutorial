@@ -1,7 +1,7 @@
 extern crate specs;
 use specs::prelude::*;
 use super::{Attributes, Skills, WantsToMelee, Name, SufferDamage, gamelog::GameLog,
-    particle_system::ParticleBuilder, Position, HungerClock, HungerState, Pools, skill_bonus, 
+    particle_system::ParticleBuilder, Position, HungerClock, HungerState, Pools, skill_bonus,
     Skill, Equipped, MeleeWeapon, EquipmentSlot, WeaponAttribute, Wearable, NaturalAttackDefense};
 
 pub struct MeleeCombatSystem {}
@@ -27,7 +27,7 @@ impl<'a> System<'a> for MeleeCombatSystem {
                       );
 
     fn run(&mut self, data : Self::SystemData) {
-        let (entities, mut log, mut wants_melee, names, attributes, skills, mut inflict_damage, 
+        let (entities, mut log, mut wants_melee, names, attributes, skills, mut inflict_damage,
             mut particle_builder, positions, hunger_clock, pools, mut rng,
             equipped_items, meleeweapons, wearables, natural) = data;
 
@@ -44,7 +44,7 @@ impl<'a> System<'a> for MeleeCombatSystem {
                     hit_bonus : 0,
                     damage_n_dice : 1,
                     damage_die_type : 4,
-                    damage_bonus : 0                    
+                    damage_bonus : 0
                 };
 
                 if let Some(nat) = natural.get(entity) {
@@ -64,8 +64,8 @@ impl<'a> System<'a> for MeleeCombatSystem {
                 }
 
                 let natural_roll = rng.roll_dice(1, 20);
-                let attribute_hit_bonus = if weapon_info.attribute == WeaponAttribute::Might 
-                    { attacker_attributes.might.bonus } 
+                let attribute_hit_bonus = if weapon_info.attribute == WeaponAttribute::Might
+                    { attacker_attributes.might.bonus }
                     else { attacker_attributes.quickness.bonus};
                 let skill_hit_bonus = skill_bonus(Skill::Melee, &*attacker_skills);
                 let weapon_hit_bonus = weapon_info.hit_bonus;
@@ -101,7 +101,7 @@ impl<'a> System<'a> for MeleeCombatSystem {
                     let skill_damage_bonus = skill_bonus(Skill::Melee, &*attacker_skills);
                     let weapon_damage_bonus = weapon_info.damage_bonus;
 
-                    let damage = i32::max(0, base_damage + attr_damage_bonus + skill_hit_bonus + 
+                    let damage = i32::max(0, base_damage + attr_damage_bonus + skill_hit_bonus +
                         skill_damage_bonus + weapon_damage_bonus);
                     inflict_damage.insert(wants_melee.target, SufferDamage{ amount: damage }).expect("Unable to insert damage component");
                     log.entries.insert(0, format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));

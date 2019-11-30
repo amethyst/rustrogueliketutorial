@@ -5,7 +5,7 @@ pub struct HungerSystem {}
 
 impl<'a> System<'a> for HungerSystem {
     #[allow(clippy::type_complexity)]
-    type SystemData = ( 
+    type SystemData = (
                         Entities<'a>,
                         WriteStorage<'a, HungerClock>,
                         ReadExpect<'a, Entity>, // The player
@@ -49,7 +49,7 @@ impl<'a> System<'a> for HungerSystem {
                         if entity == *player_entity {
                             log.entries.insert(0, "Your hunger pangs are getting painful! You suffer 1 hp damage.".to_string());
                         }
-                        inflict_damage.insert(entity, SufferDamage{ amount: 1, from_player: false }).expect("Unable to do damage");  
+                        inflict_damage.insert(entity, SufferDamage{ amount: 1, from_player: false }).expect("Unable to do damage");
                     }
                 }
             }
