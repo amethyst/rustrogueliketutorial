@@ -64,6 +64,7 @@
     - [Cavern to Dwarf Fort](./chapter_60.md)
     - [Town Portals](./chapter_61.md)
     - [Magic Items](./chapter_62.md)
+    - The Great Effects System
     - Magic Spells
     - Fortress level
     - Random Seeds
