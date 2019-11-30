@@ -12,11 +12,7 @@ use constraints::*;
 mod solver;
 use solver::*;
 
-<<<<<<< HEAD
 /// Modes supported by Wave Function Collapse algorithm. 
-=======
-/// Modes supported by Waveform Collapse algorithm.
->>>>>>> e692996e63031167f42182fc4d2ee7a6bd660d97
 /// TestMap loads the baked-in map, made in Rex.
 /// Derived takes a builder, runs it, and then runs the algorithm on that map.
 #[derive(PartialEq, Copy, Clone)]

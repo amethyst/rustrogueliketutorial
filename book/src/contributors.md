@@ -24,6 +24,7 @@ The following people have contributed to this project:
 * [JP Moresmau](https://github.com/JPMoresmau) found a problem with the order in which systems were running, allowing you to run through mobs.
 * [toyboot4e](https://github.com/toyboot4e) found some typos and code improvements in the Wave Function Collapse system.
 * [Sebastian N. Kaupe](https://github.com/snkaupe) fixed an issue with tool-tip whitespace.
+* [adamnemecek](https://github.com/adamnemecek) helped out with some whitespace issues.
 
 
 ## Supporters
