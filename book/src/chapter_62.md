@@ -330,7 +330,7 @@ Now, we return to `gui.rs` and make a new function to obtain an item's display n
 ```rust
 pub fn get_item_display_name(ecs: &World, item : Entity) -> String {
     if let Some(name) = ecs.read_storage::<Name>().get(item) {
-        if let Some(_) = ecs.read_storage::<MagicItem>().get(item) {
+        if ecs.read_storage::<MagicItem>().get(item).is_some() {
             let dm = ecs.fetch::<crate::map::MasterDungeonMap>();
             if dm.identified_items.contains(&name.name) {
                 name.name.clone()
@@ -753,6 +753,49 @@ We should change the magical longsword's spawn weight back down to something rea
 ```
 
 Also, if you've given the character any free items in `spawner.rs`, go ahead and remove them (unless you want them to be ubiquitous)!
+
+## Tool-tips
+
+We've still got one issue to handle. If you mouse-over an item, it displays its actual name - rather than its obfuscated name. Open up `gui.rs`, and we'll fix that. Fortunately, it's pretty easy now that we've built the name framework! We can remove names altogether from the ECS structures, and just pass the entity and ECS to the `get_item_display_name` to obtain a name for the entity:
+
+```rust
+fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
+    use rltk::to_cp437;
+
+    let (min_x, _max_x, min_y, _max_y) = camera::get_screen_bounds(ecs, ctx);
+    let map = ecs.fetch::<Map>();
+    let positions = ecs.read_storage::<Position>();
+    let hidden = ecs.read_storage::<Hidden>();
+    let attributes = ecs.read_storage::<Attributes>();
+    let pools = ecs.read_storage::<Pools>();
+    let entities = ecs.entities();
+
+    let mouse_pos = ctx.mouse_pos();
+    let mut mouse_map_pos = mouse_pos;
+    mouse_map_pos.0 += min_x - 1;
+    mouse_map_pos.1 += min_y - 1;
+    if mouse_pos.0 < 1 || mouse_pos.0 > 49 || mouse_pos.1 < 1 || mouse_pos.1 > 40 {
+        return;
+    }
+    if mouse_map_pos.0 >= map.width-1 || mouse_map_pos.1 >= map.height-1 || mouse_map_pos.0 < 1 || mouse_map_pos.1 < 1 
+    { 
+        return; 
+    }
+    if !map.visible_tiles[map.xy_idx(mouse_map_pos.0, mouse_map_pos.1)] { return; }
+
+    let mut tip_boxes : Vec<Tooltip> = Vec::new();
+    for (entity, position, _hidden) in (&entities, &positions, !&hidden).join() {
+        if position.x == mouse_map_pos.0 && position.y == mouse_map_pos.1 {
+            let mut tip = Tooltip::new();
+            tip.add(get_item_display_name(ecs, entity));
+...
+```
+
+If you mouse-over things now, you'll see the obfuscated name. You *could* even use this to obfuscate NPC names if you feel like integrating spies into your game!
+
+## Wrap-Up
+
+This gets us the basics of the item identification mini-game. We've not touched cursed items, yet - that's for a future chapter (after we clear up some issues with our item systems; more on that in the next chapter).
 
 ...
 

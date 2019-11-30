@@ -20,7 +20,7 @@ pub fn get_item_color(ecs : &World, item : Entity) -> RGB {
 
 pub fn get_item_display_name(ecs: &World, item : Entity) -> String {
     if let Some(name) = ecs.read_storage::<Name>().get(item) {
-        if let Some(_) = ecs.read_storage::<MagicItem>().get(item) {
+        if ecs.read_storage::<MagicItem>().get(item).is_some() {
             let dm = ecs.fetch::<crate::map::MasterDungeonMap>();
             if dm.identified_items.contains(&name.name) {
                 name.name.clone()
@@ -227,7 +227,6 @@ fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
 
     let (min_x, _max_x, min_y, _max_y) = camera::get_screen_bounds(ecs, ctx);
     let map = ecs.fetch::<Map>();
-    let names = ecs.read_storage::<Name>();
     let positions = ecs.read_storage::<Position>();
     let hidden = ecs.read_storage::<Hidden>();
     let attributes = ecs.read_storage::<Attributes>();
@@ -248,10 +247,10 @@ fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
     if !map.visible_tiles[map.xy_idx(mouse_map_pos.0, mouse_map_pos.1)] { return; }
 
     let mut tip_boxes : Vec<Tooltip> = Vec::new();
-    for (entity, name, position, _hidden) in (&entities, &names, &positions, !&hidden).join() {
+    for (entity, position, _hidden) in (&entities, &positions, !&hidden).join() {
         if position.x == mouse_map_pos.0 && position.y == mouse_map_pos.1 {
             let mut tip = Tooltip::new();
-            tip.add(name.name.to_string());
+            tip.add(get_item_display_name(ecs, entity));
 
             // Comment on attributes
             let attr = attributes.get(entity);
