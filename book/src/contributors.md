@@ -18,9 +18,9 @@ The following people have contributed to this project:
 * [Tommi Jalkanen](https://github.com/Koura) helped me remove some Dispatcher code that I'd accidentally left in place. He also found an issue with bounds checking on movement, for which I am eternally grateful!
 * [Gabriel Martinez](https://github.com/mystal) helped me fix the Vi keys.
 * [Dominic D](https://github.com/DominicD) found some issues with chapter 7.
-* [FlorentKI](https://github.com/FlorentKl) found some dispatch code that hadn't been properly deleted.
+* [FlorentKI](https://github.com/FlorentKl) found some dispatch code that hadn't been properly deleted, and helped fix up some code issues with dog-leg corridors.
 * [Zirael07](https://github.com/Zireael07) found numerous typos and missing bits of code.
-* [Tyler Vipond](https://github.com/tylervipond) found a duplicate code issue in chapter 7.
+* [Tyler Vipond](https://github.com/tylervipond) found a bunch of issues in chapter 7.
 * [JP Moresmau](https://github.com/JPMoresmau) found a problem with the order in which systems were running, allowing you to run through mobs.
 
 ## Supporters

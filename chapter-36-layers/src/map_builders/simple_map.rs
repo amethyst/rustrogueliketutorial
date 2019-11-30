@@ -40,7 +40,7 @@ impl SimpleMapBuilder {
                 if !rooms.is_empty() {
                     let (new_x, new_y) = new_room.center();
                     let (prev_x, prev_y) = rooms[rooms.len()-1].center();
-                    if rng.range(0,1) == 1 {
+                    if rng.range(0,2) == 1 {
                         apply_horizontal_tunnel(&mut build_data.map, prev_x, new_x, prev_y);
                         apply_vertical_tunnel(&mut build_data.map, prev_y, new_y, new_x);
                     } else {

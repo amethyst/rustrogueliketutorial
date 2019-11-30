@@ -118,7 +118,7 @@ impl Map {
                 if !map.rooms.is_empty() {
                     let (new_x, new_y) = new_room.center();
                     let (prev_x, prev_y) = map.rooms[map.rooms.len()-1].center();
-                    if rng.range(0,1) == 1 {
+                    if rng.range(0,2) == 1 {
                         map.apply_horizontal_tunnel(prev_x, new_x, prev_y);
                         map.apply_vertical_tunnel(prev_y, new_y, new_x);
                     } else {

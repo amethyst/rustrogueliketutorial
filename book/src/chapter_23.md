@@ -169,7 +169,7 @@ impl SimpleMapBuilder {
                 if !map.rooms.is_empty() {
                     let (new_x, new_y) = new_room.center();
                     let (prev_x, prev_y) = map.rooms[map.rooms.len()-1].center();
-                    if rng.range(0,1) == 1 {
+                    if rng.range(0,2) == 1 {
                         apply_horizontal_tunnel(map, prev_x, new_x, prev_y);
                         apply_vertical_tunnel(map, prev_y, new_y, new_x);
                     } else {
@@ -494,7 +494,7 @@ fn rooms_and_corridors(&mut self) {
             if !self.map.rooms.is_empty() {
                 let (new_x, new_y) = new_room.center();
                 let (prev_x, prev_y) = self.map.rooms[self.map.rooms.len()-1].center();
-                if rng.range(0,1) == 1 {
+                if rng.range(0,2) == 1 {
                     apply_horizontal_tunnel(&mut self.map, prev_x, new_x, prev_y);
                     apply_vertical_tunnel(&mut self.map, prev_y, new_y, new_x);
                 } else {
@@ -629,7 +629,7 @@ fn rooms_and_corridors(&mut self) {
             if !self.rooms.is_empty() {
                 let (new_x, new_y) = new_room.center();
                 let (prev_x, prev_y) = self.rooms[self.rooms.len()-1].center();
-                if rng.range(0,1) == 1 {
+                if rng.range(0,2) == 1 {
                     apply_horizontal_tunnel(&mut self.map, prev_x, new_x, prev_y);
                     apply_vertical_tunnel(&mut self.map, prev_y, new_y, new_x);
                 } else {

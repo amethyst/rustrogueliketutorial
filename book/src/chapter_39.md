@@ -341,7 +341,7 @@ for (i,room) in rooms.iter().enumerate() {
     if i > 0 {
         let (new_x, new_y) = room.center();
         let (prev_x, prev_y) = rooms[rooms.len()-1].center();
-        if rng.range(0,1) == 1 {
+        if rng.range(0,2) == 1 {
             let mut c1 = apply_horizontal_tunnel(&mut build_data.map, prev_x, new_x, prev_y);
             let mut c2 = apply_vertical_tunnel(&mut build_data.map, prev_y, new_y, new_x);
             c1.append(&mut c2);
