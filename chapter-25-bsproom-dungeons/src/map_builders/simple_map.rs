@@ -64,7 +64,7 @@ impl SimpleMapBuilder {
 
         let mut rng = RandomNumberGenerator::new();
 
-        for _i in 0..MAX_ROOMS {
+        for i in 0..MAX_ROOMS {
             let w = rng.range(MIN_SIZE, MAX_SIZE);
             let h = rng.range(MIN_SIZE, MAX_SIZE);
             let x = rng.roll_dice(1, self.map.width - w - 1) - 1;
