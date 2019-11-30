@@ -475,7 +475,7 @@ We'll start by extending `builder` in `mod.rs` to call a hypothetical function w
 ```rust
 let patterns = build_patterns(&self.map, CHUNK_SIZE, true, true);
 self.render_tile_gallery(&patterns, CHUNK_SIZE);
-let constraints = patterns_to_constaints(patterns, CHUNK_SIZE);
+let constraints = patterns_to_constraints(patterns, CHUNK_SIZE);
 ```
 
 This gives us the signature of a new method, `patterns_to_constraints` to add to `constraints.rs`. We're also going to need a new type and a helper function. We'll use these in other places, so we're going to add a new file to the `waveform_collapse` folder - `common.rs`.
@@ -501,7 +501,7 @@ We're defining `MapChunk` to be a structure, containing the actual pattern, a st
 Now we'll write `patterns_to_constraints` in `constraints.rs`:
 
 ```rust
-pub fn patterns_to_constaints(patterns: Vec<Vec<TileType>>, chunk_size : i32) -> Vec<MapChunk> {
+pub fn patterns_to_constraints(patterns: Vec<Vec<TileType>>, chunk_size : i32) -> Vec<MapChunk> {
     // Move into the new constraints object
     let mut constraints : Vec<MapChunk> = Vec::new();
     for p in patterns {
@@ -637,7 +637,7 @@ That's quite a complicated algorithm, so we don't really want to *trust* that I 
 
 ```rust
 let patterns = build_patterns(&self.map, CHUNK_SIZE, true, true);
-let constraints = patterns_to_constaints(patterns, CHUNK_SIZE);
+let constraints = patterns_to_constraints(patterns, CHUNK_SIZE);
 self.render_tile_gallery(&constraints, CHUNK_SIZE);
 ```
 
@@ -733,7 +733,7 @@ Let's extend our `build` function to call a hypothetical solver:
 
 ```rust
 let patterns = build_patterns(&self.map, CHUNK_SIZE, true, true);
-let constraints = patterns_to_constaints(patterns, CHUNK_SIZE);
+let constraints = patterns_to_constraints(patterns, CHUNK_SIZE);
 self.render_tile_gallery(&constraints, CHUNK_SIZE);
         
 self.map = Map::new(self.depth);

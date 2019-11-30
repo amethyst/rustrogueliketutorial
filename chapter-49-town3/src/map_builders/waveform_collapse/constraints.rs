@@ -105,7 +105,7 @@ pub fn render_pattern_to_map(map : &mut Map, chunk: &MapChunk, chunk_size: i32, 
     }
 }
 
-pub fn patterns_to_constaints(patterns: Vec<Vec<TileType>>, chunk_size : i32) -> Vec<MapChunk> {
+pub fn patterns_to_constraints(patterns: Vec<Vec<TileType>>, chunk_size : i32) -> Vec<MapChunk> {
     // Move into the new constraints object
     let mut constraints : Vec<MapChunk> = Vec::new();
     for p in patterns {
