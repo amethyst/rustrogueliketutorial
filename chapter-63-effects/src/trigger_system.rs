@@ -2,7 +2,7 @@ extern crate specs;
 use specs::prelude::*;
 use super::{EntityMoved, Position, EntryTrigger, Hidden, Map, Name, gamelog::GameLog,
     InflictsDamage, particle_system::ParticleBuilder, SufferDamage, SingleActivation,
-    TeleportTo, ApplyTeleport};
+    TeleportTo, ApplyTeleport, effects::*};
 
 pub struct TriggerSystem {}
 
@@ -18,7 +18,6 @@ impl<'a> System<'a> for TriggerSystem {
                         WriteExpect<'a, GameLog>,
                         ReadStorage<'a, InflictsDamage>,
                         WriteExpect<'a, ParticleBuilder>,
-                        WriteStorage<'a, SufferDamage>,
                         ReadStorage<'a, SingleActivation>,
                         ReadStorage<'a, TeleportTo>,
                         WriteStorage<'a, ApplyTeleport>,
@@ -27,7 +26,7 @@ impl<'a> System<'a> for TriggerSystem {
     fn run(&mut self, data : Self::SystemData) {
         let (map, mut entity_moved, position, entry_trigger, mut hidden,
             names, entities, mut log, inflicts_damage, mut particle_builder,
-            mut inflict_damage, single_activation, teleporters,
+            single_activation, teleporters,
             mut apply_teleport, player_entity) = data;
 
         // Iterate the entities that moved and their final position
@@ -52,7 +51,11 @@ impl<'a> System<'a> for TriggerSystem {
                             let damage = inflicts_damage.get(*entity_id);
                             if let Some(damage) = damage {
                                 particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::ORANGE), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('‼'), 200.0);
-                                inflict_damage.insert(entity, SufferDamage{ amount: damage.damage, from_player: false }).expect("Unable to do damage");
+                                add_effect(
+                                    None,
+                                    EffectType::Damage{ amount: damage.damage },
+                                    Targets::Single{ target: entity }
+                                );
                             }
 
                             // If its a teleporter, then do that

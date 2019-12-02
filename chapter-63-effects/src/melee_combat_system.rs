@@ -1,8 +1,9 @@
 extern crate specs;
 use specs::prelude::*;
-use super::{Attributes, Skills, WantsToMelee, Name, SufferDamage, gamelog::GameLog,
+use super::{Attributes, Skills, WantsToMelee, Name, gamelog::GameLog,
     particle_system::ParticleBuilder, Position, HungerClock, HungerState, Pools, skill_bonus,
-    Skill, Equipped, MeleeWeapon, EquipmentSlot, WeaponAttribute, Wearable, NaturalAttackDefense};
+    Skill, Equipped, MeleeWeapon, EquipmentSlot, WeaponAttribute, Wearable, NaturalAttackDefense,
+    effects::*};
 
 pub struct MeleeCombatSystem {}
 
@@ -14,23 +15,18 @@ impl<'a> System<'a> for MeleeCombatSystem {
                         ReadStorage<'a, Name>,
                         ReadStorage<'a, Attributes>,
                         ReadStorage<'a, Skills>,
-                        WriteStorage<'a, SufferDamage>,
-                        WriteExpect<'a, ParticleBuilder>,
-                        ReadStorage<'a, Position>,
                         ReadStorage<'a, HungerClock>,
                         ReadStorage<'a, Pools>,
                         WriteExpect<'a, rltk::RandomNumberGenerator>,
                         ReadStorage<'a, Equipped>,
                         ReadStorage<'a, MeleeWeapon>,
                         ReadStorage<'a, Wearable>,
-                        ReadStorage<'a, NaturalAttackDefense>,
-                        ReadExpect<'a, Entity>
+                        ReadStorage<'a, NaturalAttackDefense>
                       );
 
     fn run(&mut self, data : Self::SystemData) {
-        let (entities, mut log, mut wants_melee, names, attributes, skills, mut inflict_damage,
-            mut particle_builder, positions, hunger_clock, pools, mut rng,
-            equipped_items, meleeweapons, wearables, natural, player_entity) = data;
+        let (entities, mut log, mut wants_melee, names, attributes, skills,
+            hunger_clock, pools, mut rng, equipped_items, meleeweapons, wearables, natural) = data;
 
         for (entity, wants_melee, name, attacker_attributes, attacker_skills, attacker_pools) in (&entities, &wants_melee, &names, &attributes, &skills, &pools).join() {
             // Are the attacker and defender alive? Only attack if they are
@@ -104,28 +100,28 @@ impl<'a> System<'a> for MeleeCombatSystem {
 
                     let damage = i32::max(0, base_damage + attr_damage_bonus + skill_hit_bonus +
                         skill_damage_bonus + weapon_damage_bonus);
-                    inflict_damage.insert(wants_melee.target,
-                        SufferDamage{
-                            amount: damage,
-                            from_player: entity == *player_entity
-                        }
-                    ).expect("Unable to insert damage component");
-                    log.entries.insert(0, format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));
-                    if let Some(pos) = positions.get(wants_melee.target) {
-                        particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::ORANGE), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('‼'), 200.0);
-                    }
+                    add_effect(
+                        Some(entity),
+                        EffectType::Damage{ amount: damage },
+                        Targets::Single{ target: wants_melee.target }
+                    );
+                    log.entries.insert(0, format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));                    
                 } else  if natural_roll == 1 {
                     // Natural 1 miss
                     log.entries.insert(0, format!("{} considers attacking {}, but misjudges the timing.", name.name, target_name.name));
-                    if let Some(pos) = positions.get(wants_melee.target) {
-                        particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::BLUE), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('‼'), 200.0);
-                    }
+                    add_effect(
+                        None,
+                        EffectType::Particle{ glyph: rltk::to_cp437('‼'), fg: rltk::RGB::named(rltk::BLUE), bg : rltk::RGB::named(rltk::BLACK), lifespan: 200.0 },
+                        Targets::Single{ target: wants_melee.target }
+                    );
                 } else {
                     // Miss
                     log.entries.insert(0, format!("{} attacks {}, but can't connect.", name.name, target_name.name));
-                    if let Some(pos) = positions.get(wants_melee.target) {
-                        particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::CYAN), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('‼'), 200.0);
-                    }
+                    add_effect(
+                        None,
+                        EffectType::Particle{ glyph: rltk::to_cp437('‼'), fg: rltk::RGB::named(rltk::CYAN), bg : rltk::RGB::named(rltk::BLACK), lifespan: 200.0 },
+                        Targets::Single{ target: wants_melee.target }
+                    );
                 }
             }
         }

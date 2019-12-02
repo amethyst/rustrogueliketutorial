@@ -102,6 +102,514 @@ We've tweaked a couple of `use` paths to make the other components happy, and th
 
 If all went well, `cargo run` will give you the exact same game we had before! It should even compile a bit faster.
 
+## A new effects module
+
+We'll start with the basics. Make a new folder, `src/effects` and place a single file in it called `mod.rs`. As you've seen before, this creates a basic module named *effects*. Now for the fun part; we need to be able to *add* effects from anywhere, including within a system: so passing in the `World` isn't available. However, *spawning* effects will need full `World` access! So, we're going to make a queueing system. Calls in *enqueue* an effect, and a later scan of the *queue* causes effects to fire. This is basically a *message passing system*, and you'll often find something similar codified into big game engines. So here's a very simple `effects/mod.rs` (also add `pub mod effects;` to the `use` list in `main.rs` to include it in your compilation and make it available to other modules):
+
+```rust
+use std::sync::Mutex;
+use specs::prelude::*;
+use std::collections::VecDeque;
+
+lazy_static! {
+    pub static ref EFFECT_QUEUE : Mutex<VecDeque<EffectSpawner>> = Mutex::new(VecDeque::new());
+}
+
+pub enum EffectType { 
+    Damage { amount : i32 }
+}
+
+pub enum Targets {
+    Single { target : Entity },
+    Area { target: Vec<Entity> }
+}
+
+pub struct EffectSpawner {
+    pub creator : Option<Entity>,
+    pub effect_type : EffectType,
+    pub targets : Targets
+}
+
+pub fn add_effect(creator : Option<Entity>, effect_type: EffectType, targets : Targets) {
+    EFFECT_QUEUE
+        .lock()
+        .unwrap()
+        .push_back(EffectSpawner{
+            creator,
+            effect_type,
+            targets
+        });
+}
+```
+
+If you are using an IDE, it will complain that none of this is used. That's ok, we're building basic functionality first! The `VecDeque` is new; it's a *queue* (actually a double-ended queue) with a vector behind it for performance. It lets you add to either end, and `pop` results off of it. See [the documentation](https://doc.rust-lang.org/std/collections/struct.VecDeque.html) to learn more about it.
+
+## Enqueueing Damage
+
+Let's start with a relatively simple one. Currently, whenever an entity is damaged we assign it a `SufferDamage` component. That works ok, but has the problem we discussed earlier - there can only be one source of damage at a time. We want to concurrently murder our player in many ways (only slightly kidding)! So we'll extend the base to permit inserting damage. We'll change `EffectType` to have a `Damage` type:
+
+```rust
+pub enum EffectType { 
+    Damage { amount : i32 }
+}
+```
+
+Notice that we're not storing the victim or the originator - those are covered in the *source* and *target* parts of the message. Now we search our code to see where we use `SufferDamage` components. The most important users are the hunger system, melee system, item use system and trigger system: they can all cause damage to occur. Open up `melee_combat_system.rs` and find the following line (it's line 106 in my source code):
+
+```rust
+inflict_damage.insert(wants_melee.target,
+    SufferDamage{
+        amount: damage,
+        from_player: entity == *player_entity
+    }
+).expect("Unable to insert damage component");
+```
+
+We can replace this with a call to insert into the queue:
+
+```rust
+add_effect(
+    Some(entity),
+    EffectType::Damage{ amount: damage },
+    Targets::Single{ target: wants_melee.target }
+);
+```
+
+We can also remove all references to `inflict_damage` from the system, since we aren't using it anymore.
+
+We should do the same for `trigger_system.rs`. We can replace the following line:
+
+```rust
+ inflict_damage.insert(entity, SufferDamage{ amount: damage.damage, from_player: false }).expect("Unable to do damage");
+```
+
+With:
+
+```rust
+add_effect(
+    None,
+    EffectType::Damage{ amount: damage.damage },
+    Targets::Single{ target: entity }
+);
+```
+
+Once again, we can also get rid of all references to `SufferDamage`.
+
+We'll ignore `item_use_system` for a minute (we'll get to it in a moment, I promise).
+
+## Applying Damage
+
+So now if you hit something, you are adding damage to the queue (and nothing else happens). The next step is to read the effects queue and do something with it. We're going to adopt a *dispatcher* model for this: read the queue, and *dispatch* commands to the relevant places. We'll start with the skeleton; in `effects/mod.rs` we add the following function:
+
+```rust
+pub fn run_effects_queue(ecs : &mut World) {
+    loop {
+        let effect : Option<EffectSpawner> = EFFECT_QUEUE.lock().unwrap().pop_front();
+        if let Some(effect) = effect {
+            // target_applicator(ecs, &effect); // Uncomment when we write this!
+        } else {
+            break;        
+        }
+    }
+}
+```
+
+This is very minimal! It acquires a lock just long enough to pop the first message from the queue, and if it has a value - does something with it. It then repeats the lock/pop cycle until the queue is completely empty. This is a useful pattern: the lock is only held for *just* long enough to read the queue, so if any systems inside want to add to the queue you won't experience a "deadlock" (two systems perpetually waiting for queue access).
+
+It doesn't do anything with the data, yet - but this shows you how to drain the queue one message at a time. We're taking in the `World`, because we expect to be modifying it. We should add a call to use this function; in `main.rs` find `run_systems` and add it next to the damage system:
+
+```rust
+effects::run_effects_queue(&mut self.ecs);
+let mut damage = DamageSystem{};
+damage.run_now(&self.ecs);
+```
+
+Now that we're draining the queue, lets do something with it. In `effects/mod.rs`, we'll add in the commented-out function `target_applicator`. The idea is to take the `TargetType`, and extend it into calls that handle it (the function has a high "fan out" - meaning we'll call it a lot, and it will call many other functions). There's a few different ways we can affect a target, so here's several related functions:
+
+```rust
+fn target_applicator(ecs : &mut World, effect : &EffectSpawner) {
+    match &effect.targets {
+        Targets::Tile{tile_idx} => affect_tile(ecs, effect, *tile_idx),
+        Targets::Tiles{tiles} => tiles.iter().for_each(|tile_idx| affect_tile(ecs, effect, *tile_idx)),
+        Targets::Single{target} => affect_entity(ecs, effect, *target),
+        Targets::TargetList{targets} => targets.iter().for_each(|entity| affect_entity(ecs, effect, *entity)),
+    }
+}
+
+fn tile_effect_hits_entities(effect: &EffectType) -> bool {
+    match effect {
+        EffectType::Damage{..} => true
+    }
+}
+
+fn affect_tile(ecs: &mut World, effect: &EffectSpawner, tile_idx : i32) {
+    if tile_effect_hits_entities(&effect.effect_type) {
+        let content = ecs.fetch::<Map>().tile_content[tile_idx as usize].clone();
+        content.iter().for_each(|entity| affect_entity(ecs, effect, *entity));
+    }
+    // TODO: Run the effect
+}
+
+fn affect_entity(ecs: &mut World, effect: &EffectSpawner, target: Entity) {
+    // TODO: Run the effect
+}
+```
+
+There's a lot to unwrap here, but it gives a *very* generic mechanism for handling effect targeting. Let's step through it:
+
+1. `target_applicator` is called.
+2. It matches on the `targets` field of the effect:
+    1. If it is a `Tile` target type, it calls `Targets::tile` with the index of the target tile.
+        1. `affect_tile` calls another function, `tile_effect_hits_entities` which looks at the requested effect type and determines if it should be applied to entities inside the tile. Right now, we only have `Damage` - which makes sense to pass on to entities, so it currently always returns true.
+        2. If it does affect entities in the tile, then it retrieves the tile content from the map - and calls `affect_entity` on each entity in the tile. We'll look at that in a moment.
+        3. If there is something to do with the tile, it happens here. Right now, it's a `TODO` comment.
+    2. If it is a `Tiles` target type, it iterates through *all* of the tiles in the list, calling `affect_tile` on each of them in turn - just like a single tile (above), but covering each of them.
+    3. If it is a `Single` entity target, it calls `affect_entity` for that target.
+    4. If it a `TargetList` (a list of target entities), it calls `affect_entity` for each of those target entities in turn.
+
+So this framework lets us have an effect that can hit a tile (and optionally everyone in it), a set of tiles (again, optionally including the contents), a single entity, or a list of entities. You can describe pretty much any targeting mechanism with that!
+
+Next, in the `run_effects_queue` function, uncomment the caller (so our hard work actually runs!):
+
+```rust
+pub fn run_effects_queue(ecs : &mut World) {
+    loop {
+        let effect : Option<EffectSpawner> = EFFECT_QUEUE.lock().unwrap().pop_front();
+        if let Some(effect) = effect {
+            target_applicator(ecs, &effect);
+        } else {
+            break;        
+        }
+    }
+}
+```
+
+Going back to the `Damage` type we are implementing, we need to implement it! We'll make a new file, `effects/damage.rs` and put code to apply damage into it. Damage is a one-shot, non-persistent thing - so we'll handle it immediately. Here's the bare-bones:
+
+```rust
+use specs::prelude::*;
+use super::*;
+use crate::components::Pools;
+
+pub fn inflict_damage(ecs: &mut World, damage: &EffectSpawner, target: Entity) {
+    let mut pools = ecs.write_storage::<Pools>();
+    if let Some(pool) = pools.get_mut(target) {
+        if !pool.god_mode {
+            if let EffectType::Damage{amount} = damage.effect_type {
+                pool.hit_points.current -= amount;
+            }
+        }
+    }
+}
+```
+
+Notice that we're not handling blood stains, experience points or anything of the like! We are, however, applying the damage. If you `cargo run` now, you can engage in melee (and not gain any benefits to doing so).
+
+### Blood for the blood god!
+
+Our previous version spawned bloodstains whenever we inflicted damage. It would have been easy enough to include this in the `inflict_damage` function above, but we may have a use for bloodstains elsewhere! We also need to verify that our effects message queue really is smart enough to handle insertions during events. So we're going to make bloodstains an effect. We'll add it into the `EffectType` enum in `effects/mod.rs`:
+
+```rust
+pub enum EffectType { 
+    Damage { amount : i32 },
+    Bloodstain
+}
+```
+
+Bloodstains have no effect on entities in the (now messy) tile, so we'll update `tile_effect_hits_entities` to have a default of not doing anything (this way we can keep adding cosmetic effects without having to remember to add it each time):
+
+```rust
+fn tile_effect_hits_entities(effect: &EffectType) -> bool {
+    match effect {
+        EffectType::Damage{..} => true,
+        _ => false
+    }
+}
+```
+
+Likewise, `affect_entity` can ignore the event - and other cosmetic events:
+
+```rust
+fn affect_entity(ecs: &mut World, effect: &EffectSpawner, target: Entity) {
+    match &effect.effect_type {
+        EffectType::Damage{..} => damage::inflict_damage(ecs, effect, target),
+        _ => {}
+    }
+}
+```
+
+We *do* want it to affect a tile, so we'll update `affect_tile` to call a bloodstain function.
+
+```rust
+fn affect_tile(ecs: &mut World, effect: &EffectSpawner, tile_idx : i32) {
+    if tile_effect_hits_entities(&effect.effect_type) {
+        let content = ecs.fetch::<Map>().tile_content[tile_idx as usize].clone();
+        content.iter().for_each(|entity| affect_entity(ecs, effect, *entity));
+    }
+    
+    match &effect.effect_type {
+        EffectType::Bloodstain => damage::bloodstain(ecs, tile_idx),
+        _ => {}
+    }
+}
+```
+
+Now, in `effects/damage.rs` we'll write the bloodstain code:
+
+```rust
+pub fn bloodstain(ecs: &mut World, tile_idx : i32) {
+    let mut map = ecs.fetch_mut::<Map>();
+    map.bloodstains.insert(tile_idx as usize);
+}
+```
+
+We'll also update `inflict_damage` to spawn a bloodstain:
+
+```rust
+pub fn inflict_damage(ecs: &mut World, damage: &EffectSpawner, target: Entity) {
+    let mut pools = ecs.write_storage::<Pools>();
+    if let Some(pool) = pools.get_mut(target) {
+        if !pool.god_mode {
+            if let EffectType::Damage{amount} = damage.effect_type {
+                pool.hit_points.current -= amount;
+                if let Some(tile_idx) = entity_position(ecs, target) {
+                    add_effect(None, EffectType::Bloodstain, Targets::Tile{tile_idx});
+                }
+            }
+        }
+    }
+}
+```
+
+The relevant code asks a mystery function, `entity_position` for data - if it returns a value, it inserts an effect of the `Bloodstain` type with the tile index. So what is this function? We're going to be targeting a lot, so we should make some helper functions to make the process easier for the caller. Make a new file, `effects/targeting.rs` and place the following into it:
+
+```rust
+use specs::prelude::*;
+use crate::components::Position;
+use crate::map::Map;
+
+pub fn entity_position(ecs: &World, target: Entity) -> Option<i32> {
+    if let Some(pos) = ecs.read_storage::<Position>().get(target) {
+        let map = ecs.fetch::<Map>();
+        return Some(map.xy_idx(pos.x, pos.y) as i32);
+    }
+    None
+}
+```
+
+Now in `effects/mods.rs` add a couple of lines to expose the targeting helpers to consumers of the effects module:
+
+```rust
+mod targeting;
+pub use targeting::*;
+```
+
+So what does this do? It follows a pattern we've used a lot: it checks to see if the entity *has* a position. If it does, then it obtains the tile index from the global map and returns it - otherwise, it returns `None`.
+
+If you `cargo run` now, and attack an innocent rodent you will see blood! We've proven that the events system doesn't deadlock, and we've added an easy way to add bloodstains. You can call that event from anywhere, and blood shall rain!
+
+### Particulate Matter
+
+You've probably noticed that when an entity takes damage, we spawn a particle. Particles are something else we can use a *lot*, so it makes sense to have them as an event type also. Whenever we've applied damage so far, we've flashed an orange indicator over the victim. We might as well codify that in the damage system (and leave it open for improvement in a later chapter). It's likely that we'll want to launch particles for other purposes, too - so we'll come up with another quite generic setup.
+
+We'll start in `effects/mod.rs` and extend `EffectType` to include particles:
+
+```rust
+pub enum EffectType { 
+    Damage { amount : i32 },
+    Bloodstain,
+    Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 }
+}
+```
+
+You'll notice that once again, we aren't specifying *where* the particle goes; we'll leave that to the targeting system. Now we'll make a function to actually spawn particles. In the name of clarity, we'll put it in its own file; in a new file `effects/particles.rs` add the following:
+
+```rust
+use specs::prelude::*;
+use super::*;
+use crate::particle_system::ParticleBuilder;
+use crate::map::Map;
+
+pub fn particle_to_tile(ecs: &mut World, tile_idx : i32, effect: &EffectSpawner) {
+    if let EffectType::Particle{ glyph, fg, bg, lifespan } = effect.effect_type {
+        let map = ecs.fetch::<Map>();
+        let mut particle_builder = ecs.fetch_mut::<ParticleBuilder>();
+        particle_builder.request(
+            tile_idx % map.width, 
+            tile_idx / map.width, 
+            fg, 
+            bg, 
+            glyph, 
+            lifespan
+        );
+    }
+}
+```
+
+This is basically the same as our other calls to `ParticleBuilder`, but using the contents of the message to define what to build. Now we'll go back to `effects/mod.rs` and add a `mod particles;` to the using list at the top. Then we'll extend the `affect_tile` to call it:
+
+```rust
+fn affect_tile(ecs: &mut World, effect: &EffectSpawner, tile_idx : i32) {
+    if tile_effect_hits_entities(&effect.effect_type) {
+        let content = ecs.fetch::<Map>().tile_content[tile_idx as usize].clone();
+        content.iter().for_each(|entity| affect_entity(ecs, effect, *entity));
+    }
+    
+    match &effect.effect_type {
+        EffectType::Bloodstain => damage::bloodstain(ecs, tile_idx),
+        EffectType::Particle{..} => particles::particle_to_tile(ecs, tile_idx, &effect),
+        _ => {}
+    }
+}
+```
+
+It would also be really handy to be able to attach a particle to an entity, even if it doesn't actually have much effect. There's been a few cases where we've retrieved a `Position` component just to place an effect, so this could let us simplify the code a bit! So we extend `affect_entity` like this:
+
+```rust
+fn affect_entity(ecs: &mut World, effect: &EffectSpawner, target: Entity) {
+    match &effect.effect_type {
+        EffectType::Damage{..} => damage::inflict_damage(ecs, effect, target),
+        EffectType::Bloodstain{..} => if let Some(pos) = entity_position(ecs, target) { damage::bloodstain(ecs, pos) },
+        EffectType::Particle{..} => if let Some(pos) = entity_position(ecs, target) { particles::particle_to_tile(ecs, pos, &effect) },
+        _ => {}
+    }
+}
+```
+
+So now we can open up `effects/damage.rs` and both clean-up the bloodstain code and apply a damage particle:
+
+```rust
+pub fn inflict_damage(ecs: &mut World, damage: &EffectSpawner, target: Entity) {
+    let mut pools = ecs.write_storage::<Pools>();
+    if let Some(pool) = pools.get_mut(target) {
+        if !pool.god_mode {
+            if let EffectType::Damage{amount} = damage.effect_type {
+                pool.hit_points.current -= amount;
+                add_effect(None, EffectType::Bloodstain, Targets::Single{target});
+                add_effect(None, 
+                    EffectType::Particle{ 
+                        glyph: rltk::to_cp437('‼'),
+                        fg : rltk::RGB::named(rltk::ORANGE),
+                        bg : rltk::RGB::named(rltk::BLACK),
+                        lifespan: 200.0
+                    }, 
+                    Targets::Single{target}
+                );
+            }
+        }
+    }
+}
+```
+
+Now open up `melee_combat_system.rs`. We can simplify it a bit by removing the particle call on damage, and replace the other calls to `ParticleBuilder` with effect calls. This lets us get rid of the whole reference to the particle system, positions AND the player entity! *This* is the kind of improvement I wanted: systems are simplifying down to what they *should* focus on! See [the source](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-63-effects/src/melee_combat_system.rs) for the changes; they are too long to include in the body text here.
+
+If you `cargo run` now, you'll see particles if you damage something - and bloodstains should still work.
+
+### Experience Points
+
+So we're missing some important stuff, still: when you kill a monster, it should drop loot/cash, give experience points and so on. Rather than pollute the "damage" function with too much extraneous stuff (on the principle of a function doing one thing well), lets add a new `EffectType` - `EntityDeath`:
+
+```rust
+pub enum EffectType { 
+    Damage { amount : i32 },
+    Bloodstain,
+    Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
+    EntityDeath
+}
+```
+
+Now in `inflict_damage`, we'll emit this event if the entity died:
+
+```rust
+if pool.hit_points.current < 1 {
+    add_effect(damage.creator, EffectType::EntityDeath, Targets::Single{target});
+}
+```
+
+We'll also make a new function; this is the same as the code in `damage_system` (we'll be removing most of the system when we've taken care of item usage):
+
+```rust
+pub fn death(ecs: &mut World, effect: &EffectSpawner, target : Entity) {
+    let mut xp_gain = 0;
+    let mut gold_gain = 0.0f32;
+
+    let mut pools = ecs.write_storage::<Pools>();
+    let attributes = ecs.read_storage::<Attributes>();
+    let mut map = ecs.fetch_mut::<Map>();
+
+    if let Some(pos) = entity_position(ecs, target) {
+        map.blocked[pos as usize] = false;
+    }
+
+    if let Some(source) = effect.creator {
+        if ecs.read_storage::<Player>().get(source).is_some() {
+            if let Some(stats) = pools.get(target) {
+                xp_gain += stats.level * 100;
+                gold_gain += stats.gold;
+            }
+
+            if xp_gain != 0 || gold_gain != 0.0 {
+                let mut log = ecs.fetch_mut::<GameLog>();
+                let mut player_stats = pools.get_mut(source).unwrap();
+                let player_attributes = attributes.get(source).unwrap();
+                player_stats.xp += xp_gain;
+                player_stats.gold += gold_gain;
+                if player_stats.xp >= player_stats.level * 1000 {
+                    // We've gone up a level!
+                    player_stats.level += 1;
+                    log.entries.insert(0, format!("Congratulations, you are now level {}", player_stats.level));
+                    player_stats.hit_points.max = player_hp_at_level(
+                        player_attributes.fitness.base + player_attributes.fitness.modifiers,
+                        player_stats.level
+                    );
+                    player_stats.hit_points.current = player_stats.hit_points.max;
+                    player_stats.mana.max = mana_at_level(
+                        player_attributes.intelligence.base + player_attributes.intelligence.modifiers,
+                        player_stats.level
+                    );
+                    player_stats.mana.current = player_stats.mana.max;
+    
+                    let player_pos = ecs.fetch::<rltk::Point>();
+                    for i in 0..10 {
+                        if player_pos.y - i > 1 {
+                            add_effect(None, 
+                                EffectType::Particle{ 
+                                    glyph: rltk::to_cp437('░'),
+                                    fg : rltk::RGB::named(rltk::GOLD),
+                                    bg : rltk::RGB::named(rltk::BLACK),
+                                    lifespan: 400.0
+                                }, 
+                                Targets::Tile{ tile_idx : map.xy_idx(player_pos.x, player_pos.y - i) as i32 }
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+Lastly, we add the effect to `affect_entity`:
+
+```rust
+fn affect_entity(ecs: &mut World, effect: &EffectSpawner, target: Entity) {
+    match &effect.effect_type {
+        EffectType::Damage{..} => damage::inflict_damage(ecs, effect, target),
+        EffectType::EntityDeath => damage::death(ecs, effect, target),
+        EffectType::Bloodstain{..} => if let Some(pos) = entity_position(ecs, target) { damage::bloodstain(ecs, pos) },
+        EffectType::Particle{..} => if let Some(pos) = entity_position(ecs, target) { particles::particle_to_tile(ecs, pos, &effect) },        
+        _ => {}
+    }
+}
+```
+
+So now if you `cargo run` the project, we're back to where we were - but with a much more flexible system for particles, damage (which now stacks!) and killing things in general.
+
+## Item effects
+
+Now that we have the basics of an effects system (and have cleaned up damage), it's time to really think about how items (and triggers) should work. We want them to be generic enough that you can put together entities Lego-style and build something interesting. We also want to stop defining effects in multiple places; currently we list trigger effects in one system, item effects in another - if we add spells, we'll have yet another place to debug!
+
 ...
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-63-effects)**

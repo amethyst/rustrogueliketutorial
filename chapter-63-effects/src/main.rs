@@ -41,6 +41,7 @@ pub use gamesystem::*;
 mod lighting_system;
 mod ai;
 mod movement_system;
+pub mod effects;
 #[macro_use]
 extern crate lazy_static;
 
@@ -113,6 +114,7 @@ impl State {
         triggers.run_now(&self.ecs);
         let mut melee = MeleeCombatSystem{};
         melee.run_now(&self.ecs);
+        effects::run_effects_queue(&mut self.ecs);
         let mut damage = DamageSystem{};
         damage.run_now(&self.ecs);
         let mut pickup = ItemCollectionSystem{};
