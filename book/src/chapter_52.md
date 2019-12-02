@@ -616,10 +616,7 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
                 _ => None
             };
         if let Some(key) = key {
-            if use_consumable_hotkey(gs, key-1) {
-                println!("Returning PlayerTurn");
-                return RunState::PlayerTurn;
-            }
+            return use_consumable_hotkey(gs, key-1);
         }
     }
     ...
@@ -628,7 +625,7 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
 This should be pretty easy to understand: if *shift* is pressed and a key is down (so `ctx.key.is_some()` returns true), then we `match` on the number keycodes and set `key` to the matching number (or leave it as `None` if some other key is called). After that, if there is `Some` key pressed, we call `use_consumable_hotkey`; if it returns true, we return the new run-state `RunState::PlayerTurn` to indicate that we did something. Otherwise, we let input run as normal. That leaves writing the new function, `use_consumable_hotkey`:
 
 ```rust
-fn use_consumable_hotkey(gs: &mut State, key: i32) -> bool {
+fn use_consumable_hotkey(gs: &mut State, key: i32) -> RunState {
     use super::{Consumable, InBackpack, WantsToUseItem};
 
     let consumables = gs.ecs.read_storage::<Consumable>();
@@ -643,14 +640,18 @@ fn use_consumable_hotkey(gs: &mut State, key: i32) -> bool {
     }
 
     if (key as usize) < carried_consumables.len() {
+        use crate::components::Ranged;
+        if let Some(ranged) = gs.ecs.read_storage::<Ranged>().get(carried_consumables[key as usize]) {
+            return RunState::ShowTargeting{ range: ranged.range, item: carried_consumables[key as usize] };
+        }
         let mut intent = gs.ecs.write_storage::<WantsToUseItem>();
         intent.insert(
-            *player_entity, 
+            *player_entity,
             WantsToUseItem{ item: carried_consumables[key as usize], target: None }
         ).expect("Unable to insert intent");
-        return true;
+        return RunState::PlayerTurn;
     }
-    false
+    RunState::PlayerTurn
 }
 ```
 
@@ -660,8 +661,9 @@ Let's step through this:
 2. We obtain access to a few things from the ECS; we've done this often enough you should have this down by now!
 3. We iterate carried consumables, *exactly* like we did for rendering the GUI - but without the name. We store these in a `carried_consumables` vector, storing the *entity* of the item.
 4. We check that the requested keypress falls inside the range of the vector; if it doesn't, we ignore the key-press and return false.
-5. If it does, then we insert a `WantsToUseItem` component, just like we did for the inventory handler a while back. It *belongs* to the `player_entity` - the *player* is *using the item*. The `item` to use is the `Entity` from the `carried_consumables` list.
-6. We return true, making the game go to the `PlayerTurn` run-state.
+5. We check to see if the item requires ranged targeting; if it does, we return a `ShowTargeting` run state, just as if we'd used it through the menu.
+6. If it does, then we insert a `WantsToUseItem` component, just like we did for the inventory handler a while back. It *belongs* to the `player_entity` - the *player* is *using the item*. The `item` to use is the `Entity` from the `carried_consumables` list.
+7. We return `PlayerTurn`, making the game go to the `PlayerTurn` run-state.
 
 The rest will happen automatically: we've already written handlers for `WantsToUseItem`, this just provides another way to indicate what the player wants to do.
 
