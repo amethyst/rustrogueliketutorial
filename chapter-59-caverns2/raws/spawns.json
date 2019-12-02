@@ -114,6 +114,7 @@
         },
         "consumable" : {
             "effects" : { 
+                "ranged" : "6"
                 "confusion" : "4"
             }
         },
