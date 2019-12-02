@@ -87,7 +87,7 @@ fn affect_entity(ecs: &mut World, effect: &EffectSpawner, target: Entity) {
         EffectType::Damage{..} => damage::inflict_damage(ecs, effect, target),
         EffectType::EntityDeath => damage::death(ecs, effect, target),
         EffectType::Bloodstain{..} => if let Some(pos) = entity_position(ecs, target) { damage::bloodstain(ecs, pos) },
-        EffectType::Particle{..} => if let Some(pos) = entity_position(ecs, target) { particles::particle_to_tile(ecs, pos, &effect) },        
+        EffectType::Particle{..} => if let Some(pos) = entity_position(ecs, target) { particles::particle_to_tile(ecs, pos, &effect) },
         _ => {}
     }
 }

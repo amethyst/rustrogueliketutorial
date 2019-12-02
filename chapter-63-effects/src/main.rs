@@ -119,6 +119,8 @@ impl State {
         damage.run_now(&self.ecs);
         let mut pickup = ItemCollectionSystem{};
         pickup.run_now(&self.ecs);
+        let mut itemequip = inventory_system::ItemEquipOnUse{};
+        itemequip.run_now(&self.ecs);
         let mut itemuse = ItemUseSystem{};
         itemuse.run_now(&self.ecs);
         let mut item_id = inventory_system::ItemIdentificationSystem{};

@@ -610,6 +610,87 @@ So now if you `cargo run` the project, we're back to where we were - but with a 
 
 Now that we have the basics of an effects system (and have cleaned up damage), it's time to really think about how items (and triggers) should work. We want them to be generic enough that you can put together entities Lego-style and build something interesting. We also want to stop defining effects in multiple places; currently we list trigger effects in one system, item effects in another - if we add spells, we'll have yet another place to debug!
 
+We'll start by taking a look at the item usage system (`inventory_system/use_system.rs`). It's HUGE, and does far too much in one place. It handles targeting, identification, equipment switching, firing off effects for using an item and destruction of consumables! That was good for building a toy game to test with, but it doesn't scale to a "real" game.
+
+For part of this - and in the spirit of using an ECS - we'll make some *more systems*, and have them do one thing well.
+
+### Moving Equipment Around
+
+Equipping (and swapping) items is currently in the item usage system because it fits there from a user interface perspective: you "use" a sword, and the logical way to use it is to hold it (and put away whatever you had in your hand). Having it be part of the item usage system makes the system overly confusing, though - the system simply does too much (and targeting really isn't an issue, since you are using it on yourself).
+
+So we'll make a new system in the file `inventory_system/use_equip.rs` and move the functionality over to it. This leads to a compact new system:
+
+```rust
+use specs::prelude::*;
+use super::{Name, InBackpack, gamelog::GameLog, WantsToUseItem, Equippable, Equipped};
+
+pub struct ItemEquipOnUse {}
+
+impl<'a> System<'a> for ItemEquipOnUse {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( ReadExpect<'a, Entity>,
+                        WriteExpect<'a, GameLog>,
+                        Entities<'a>,
+                        WriteStorage<'a, WantsToUseItem>,
+                        ReadStorage<'a, Name>,
+                        ReadStorage<'a, Equippable>,
+                        WriteStorage<'a, Equipped>,
+                        WriteStorage<'a, InBackpack>,
+                      );
+
+    #[allow(clippy::cognitive_complexity)]
+    fn run(&mut self, data : Self::SystemData) {
+        let (player_entity, mut gamelog, entities, mut wants_use, names, equippable, mut equipped, mut backpack) = data;
+
+        let mut remove_use : Vec<Entity> = Vec::new();
+        for (target, useitem) in (&entities, &wants_use).join() {
+            // If it is equippable, then we want to equip it - and unequip whatever else was in that slot
+            if let Some(can_equip) = equippable.get(useitem.item) {
+                let target_slot = can_equip.slot;
+
+                // Remove any items the target has in the item's slot
+                let mut to_unequip : Vec<Entity> = Vec::new();
+                for (item_entity, already_equipped, name) in (&entities, &equipped, &names).join() {
+                    if already_equipped.owner == target && already_equipped.slot == target_slot {
+                        to_unequip.push(item_entity);
+                        if target == *player_entity {
+                            gamelog.entries.insert(0, format!("You unequip {}.", name.name));
+                        }
+                    }
+                }
+                for item in to_unequip.iter() {
+                    equipped.remove(*item);
+                    backpack.insert(*item, InBackpack{ owner: target }).expect("Unable to insert backpack entry");
+                }
+
+                // Wield the item
+                equipped.insert(useitem.item, Equipped{ owner: target, slot: target_slot }).expect("Unable to insert equipped component");
+                backpack.remove(useitem.item);
+                if target == *player_entity {
+                    gamelog.entries.insert(0, format!("You equip {}.", names.get(useitem.item).unwrap().name));
+                }
+
+                // Done with item
+                remove_use.push(target);
+            }
+        }
+
+        remove_use.iter().for_each(|e| { wants_use.remove(*e).expect("Unable to remove"); });
+    }
+}
+```
+
+Now go into `use_system.rs` and delete the same block. Finally, pop over to `main.rs` and add the system into `run_systems` (just before the current use system call):
+
+```rust
+let mut itemequip = inventory_system::ItemEquipOnUse{};
+itemequip.run_now(&self.ecs);
+...
+let mut itemuse = ItemUseSystem{};
+```
+
+Go ahead and `cargo run` and switch some equipment around to make sure it still works. That's good progress - we can remove three complete component storages from our `use_system`!
+
 ...
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-63-effects)**

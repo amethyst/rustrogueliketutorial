@@ -22,9 +22,6 @@ impl<'a> System<'a> for ItemUseSystem {
                         WriteStorage<'a, SufferDamage>,
                         ReadStorage<'a, AreaOfEffect>,
                         WriteStorage<'a, Confusion>,
-                        ReadStorage<'a, Equippable>,
-                        WriteStorage<'a, Equipped>,
-                        WriteStorage<'a, InBackpack>,
                         WriteExpect<'a, ParticleBuilder>,
                         ReadStorage<'a, Position>,
                         ReadStorage<'a, ProvidesFood>,
@@ -40,7 +37,7 @@ impl<'a> System<'a> for ItemUseSystem {
     fn run(&mut self, data : Self::SystemData) {
         let (player_entity, mut gamelog, map, entities, mut wants_use, names,
             consumables, healing, inflict_damage, mut combat_stats, mut suffer_damage,
-            aoe, mut confused, equippable, mut equipped, mut backpack, mut particle_builder, positions,
+            aoe, mut confused, mut particle_builder, positions,
             provides_food, mut hunger_clocks, magic_mapper, mut runstate, mut dirty, town_portal,
             mut identified_item) = data;
 
@@ -82,38 +79,6 @@ impl<'a> System<'a> for ItemUseSystem {
             if entity == *player_entity {
                 identified_item.insert(entity, IdentifiedItem{ name: names.get(useitem.item).unwrap().name.clone() })
                     .expect("Unable to insert");
-            }
-
-            // If it is equippable, then we want to equip it - and unequip whatever else was in that slot
-            let item_equippable = equippable.get(useitem.item);
-            match item_equippable {
-                None => {}
-                Some(can_equip) => {
-                    let target_slot = can_equip.slot;
-                    let target = targets[0];
-
-                    // Remove any items the target has in the item's slot
-                    let mut to_unequip : Vec<Entity> = Vec::new();
-                    for (item_entity, already_equipped, name) in (&entities, &equipped, &names).join() {
-                        if already_equipped.owner == target && already_equipped.slot == target_slot {
-                            to_unequip.push(item_entity);
-                            if target == *player_entity {
-                                gamelog.entries.insert(0, format!("You unequip {}.", name.name));
-                            }
-                        }
-                    }
-                    for item in to_unequip.iter() {
-                        equipped.remove(*item);
-                        backpack.insert(*item, InBackpack{ owner: target }).expect("Unable to insert backpack entry");
-                    }
-
-                    // Wield the item
-                    equipped.insert(useitem.item, Equipped{ owner: target, slot: target_slot }).expect("Unable to insert equipped component");
-                    backpack.remove(useitem.item);
-                    if target == *player_entity {
-                        gamelog.entries.insert(0, format!("You equip {}.", names.get(useitem.item).unwrap().name));
-                    }
-                }
             }
 
             // It it is edible, eat it!
