@@ -159,7 +159,7 @@ fn skip_turn(ecs: &mut World) -> RunState {
     RunState::PlayerTurn
 }
 
-fn use_consumable_hotkey(gs: &mut State, key: i32) -> bool {
+fn use_consumable_hotkey(gs: &mut State, key: i32) -> RunState {
     use super::{Consumable, InBackpack, WantsToUseItem};
 
     let consumables = gs.ecs.read_storage::<Consumable>();
@@ -174,14 +174,18 @@ fn use_consumable_hotkey(gs: &mut State, key: i32) -> bool {
     }
 
     if (key as usize) < carried_consumables.len() {
+        use crate::components::Ranged;
+        if let Some(ranged) = gs.ecs.read_storage::<Ranged>().get(carried_consumables[key as usize]) {
+            return RunState::ShowTargeting{ range: ranged.range, item: carried_consumables[key as usize] };
+        }
         let mut intent = gs.ecs.write_storage::<WantsToUseItem>();
         intent.insert(
             *player_entity,
             WantsToUseItem{ item: carried_consumables[key as usize], target: None }
         ).expect("Unable to insert intent");
-        return true;
+        return RunState::PlayerTurn;
     }
-    false
+    RunState::PlayerTurn
 }
 
 pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
@@ -200,12 +204,9 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
                 VirtualKeyCode::Key9 => Some(9),
                 _ => None
             };
-        if let Some(key) = key {
-            if use_consumable_hotkey(gs, key-1) {
-                println!("Returning PlayerTurn");
-                return RunState::PlayerTurn;
+            if let Some(key) = key {
+                return use_consumable_hotkey(gs, key-1);
             }
-        }
     }
 
     // Player movement
