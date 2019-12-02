@@ -1,8 +1,6 @@
 use super::{WantsToPickupItem, Name, InBackpack, Position, gamelog, WantsToUseItem,
-    Consumable, ProvidesHealing, WantsToDropItem, InflictsDamage, Map, SufferDamage,
-    AreaOfEffect, Confusion, Equippable, Equipped, WantsToRemoveItem, particle_system,
-    ProvidesFood, HungerClock, HungerState, MagicMapper, RunState, Pools, EquipmentChanged,
-    TownPortal, IdentifiedItem, Item, ObfuscatedName};
+    WantsToDropItem, Map, AreaOfEffect, Equippable, Equipped, WantsToRemoveItem, EquipmentChanged,
+    IdentifiedItem, Item, ObfuscatedName };
 
 mod collection_system;
 pub use collection_system::ItemCollectionSystem;

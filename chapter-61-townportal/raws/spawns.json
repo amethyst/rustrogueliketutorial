@@ -132,8 +132,6 @@
         },
         "consumable" : {
             "effects" : { 
-                "ranged" : "6",
-                "damage" : "20",
                 "confusion" : "4"
             }
         },
