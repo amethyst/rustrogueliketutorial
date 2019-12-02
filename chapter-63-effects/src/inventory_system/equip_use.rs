@@ -1,5 +1,5 @@
 use specs::prelude::*;
-use super::{Name, InBackpack, gamelog::GameLog, WantsToUseItem, Equippable, Equipped};
+use super::{Name, InBackpack, gamelog::GameLog, WantsToUseItem, Equippable, Equipped, EquipmentChanged};
 
 pub struct ItemEquipOnUse {}
 
@@ -13,11 +13,13 @@ impl<'a> System<'a> for ItemEquipOnUse {
                         ReadStorage<'a, Equippable>,
                         WriteStorage<'a, Equipped>,
                         WriteStorage<'a, InBackpack>,
+                        WriteStorage<'a, EquipmentChanged>
                       );
 
     #[allow(clippy::cognitive_complexity)]
     fn run(&mut self, data : Self::SystemData) {
-        let (player_entity, mut gamelog, entities, mut wants_use, names, equippable, mut equipped, mut backpack) = data;
+        let (player_entity, mut gamelog, entities, mut wants_use, names, equippable, 
+            mut equipped, mut backpack, mut dirty) = data;
 
         let mut remove_use : Vec<Entity> = Vec::new();
         for (target, useitem) in (&entities, &wants_use).join() {
@@ -52,6 +54,9 @@ impl<'a> System<'a> for ItemEquipOnUse {
             }
         }
 
-        remove_use.iter().for_each(|e| { wants_use.remove(*e).expect("Unable to remove"); });
+        remove_use.iter().for_each(|e| { 
+            dirty.insert(*e, EquipmentChanged{}).expect("Unable to insert");
+            wants_use.remove(*e).expect("Unable to remove"); 
+        });
     }
 }

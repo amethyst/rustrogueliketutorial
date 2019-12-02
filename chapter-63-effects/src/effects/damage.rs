@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use super::*;
-use crate::components::{Pools, Player, Attributes};
+use crate::components::{Pools, Player, Attributes, Confusion};
 use crate::map::Map;
 use crate::gamesystem::{player_hp_at_level, mana_at_level};
 use crate::gamelog::GameLog;
@@ -41,10 +41,11 @@ pub fn death(ecs: &mut World, effect: &EffectSpawner, target : Entity) {
 
     let mut pools = ecs.write_storage::<Pools>();
     let attributes = ecs.read_storage::<Attributes>();
-    let mut map = ecs.fetch_mut::<Map>();
 
     if let Some(pos) = entity_position(ecs, target) {
-        map.blocked[pos as usize] = false;
+        let mut map_mut = ecs.fetch_mut::<Map>();
+        map_mut.blocked[pos as usize] = false;
+        std::mem::drop(map_mut);
     }
 
     if let Some(source) = effect.creator {
@@ -76,6 +77,7 @@ pub fn death(ecs: &mut World, effect: &EffectSpawner, target : Entity) {
                     player_stats.mana.current = player_stats.mana.max;
     
                     let player_pos = ecs.fetch::<rltk::Point>();
+                    let map = ecs.fetch::<Map>();
                     for i in 0..10 {
                         if player_pos.y - i > 1 {
                             add_effect(None, 
@@ -92,5 +94,29 @@ pub fn death(ecs: &mut World, effect: &EffectSpawner, target : Entity) {
                 }
             }
         }
+    }
+}
+
+pub fn heal_damage(ecs: &mut World, heal: &EffectSpawner, target: Entity) {
+    let mut pools = ecs.write_storage::<Pools>();
+    if let Some(pool) = pools.get_mut(target) {
+        if let EffectType::Healing{amount} = heal.effect_type {
+            pool.hit_points.current = i32::min(pool.hit_points.max, pool.hit_points.current + amount);
+            add_effect(None, 
+                EffectType::Particle{ 
+                    glyph: rltk::to_cp437('‼'),
+                    fg : rltk::RGB::named(rltk::GREEN),
+                    bg : rltk::RGB::named(rltk::BLACK),
+                    lifespan: 200.0
+                }, 
+                Targets::Single{target}
+            );
+        }
+    }
+}
+
+pub fn add_confusion(ecs: &mut World, effect: &EffectSpawner, target: Entity) {
+    if let EffectType::Confusion{turns} = &effect.effect_type {
+        ecs.write_storage::<Confusion>().insert(target, Confusion{ turns: *turns }).expect("Unable to insert status");
     }
 }
