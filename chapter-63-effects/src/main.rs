@@ -114,7 +114,6 @@ impl State {
         triggers.run_now(&self.ecs);
         let mut melee = MeleeCombatSystem{};
         melee.run_now(&self.ecs);
-        effects::run_effects_queue(&mut self.ecs);
         let mut damage = DamageSystem{};
         damage.run_now(&self.ecs);
         let mut pickup = ItemCollectionSystem{};
@@ -135,6 +134,7 @@ impl State {
         particles.run_now(&self.ecs);
         let mut lighting = lighting_system::LightingSystem{};
         lighting.run_now(&self.ecs);
+        effects::run_effects_queue(&mut self.ecs);
 
         self.ecs.maintain();
     }

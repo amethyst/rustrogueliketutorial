@@ -55,7 +55,6 @@ pub fn run_effects_queue(ecs : &mut World) {
     loop {
         let effect : Option<EffectSpawner> = EFFECT_QUEUE.lock().unwrap().pop_front();
         if let Some(effect) = effect {
-            println!("{:?}", effect);
             target_applicator(ecs, &effect);
         } else {
             break;        
@@ -65,10 +64,8 @@ pub fn run_effects_queue(ecs : &mut World) {
 
 fn target_applicator(ecs : &mut World, effect : &EffectSpawner) {
     if let EffectType::ItemUse{item} = effect.effect_type {
-        println!("Item trigger");
         triggers::item_trigger(effect.creator, item, &effect.targets, ecs);
     } else {
-        println!("Targets trigger");
         match &effect.targets {
             Targets::Tile{tile_idx} => affect_tile(ecs, effect, *tile_idx),
             Targets::Tiles{tiles} => tiles.iter().for_each(|tile_idx| affect_tile(ecs, effect, *tile_idx)),
@@ -89,7 +86,6 @@ fn tile_effect_hits_entities(effect: &EffectType) -> bool {
 }
 
 fn affect_tile(ecs: &mut World, effect: &EffectSpawner, tile_idx : i32) {
-    println!("Affecting Tile");
     if tile_effect_hits_entities(&effect.effect_type) {
         let content = ecs.fetch::<Map>().tile_content[tile_idx as usize].clone();
         content.iter().for_each(|entity| affect_entity(ecs, effect, *entity));
@@ -103,7 +99,6 @@ fn affect_tile(ecs: &mut World, effect: &EffectSpawner, tile_idx : i32) {
 }
 
 fn affect_entity(ecs: &mut World, effect: &EffectSpawner, target: Entity) {
-    println!("Affecting Entity");
     match &effect.effect_type {
         EffectType::Damage{..} => damage::inflict_damage(ecs, effect, target),
         EffectType::EntityDeath => damage::death(ecs, effect, target),

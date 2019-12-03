@@ -217,12 +217,14 @@ pub fn run_effects_queue(ecs : &mut World) {
 
 This is very minimal! It acquires a lock just long enough to pop the first message from the queue, and if it has a value - does something with it. It then repeats the lock/pop cycle until the queue is completely empty. This is a useful pattern: the lock is only held for *just* long enough to read the queue, so if any systems inside want to add to the queue you won't experience a "deadlock" (two systems perpetually waiting for queue access).
 
-It doesn't do anything with the data, yet - but this shows you how to drain the queue one message at a time. We're taking in the `World`, because we expect to be modifying it. We should add a call to use this function; in `main.rs` find `run_systems` and add it next to the damage system:
+It doesn't do anything with the data, yet - but this shows you how to drain the queue one message at a time. We're taking in the `World`, because we expect to be modifying it. We should add a call to use this function; in `main.rs` find `run_systems` and add it at the very end:
 
 ```rust
+lighting.run_now(&self.ecs);
+...
 effects::run_effects_queue(&mut self.ecs);
-let mut damage = DamageSystem{};
-damage.run_now(&self.ecs);
+...
+self.ecs.maintain();
 ```
 
 Now that we're draining the queue, lets do something with it. In `effects/mod.rs`, we'll add in the commented-out function `target_applicator`. The idea is to take the `TargetType`, and extend it into calls that handle it (the function has a high "fan out" - meaning we'll call it a lot, and it will call many other functions). There's a few different ways we can affect a target, so here's several related functions:
@@ -696,6 +698,400 @@ let mut itemuse = ItemUseSystem{};
 ```
 
 Go ahead and `cargo run` and switch some equipment around to make sure it still works. That's good progress - we can remove three complete component storages from our `use_system`!
+
+### Item effects
+
+Now that we've cleaned up inventory management into its own system, it's time to really cut to the meat of this change: item usage with effects. The goal is to have a system that understands items, but can "fan out" into generic code that we can reuse for every other effect use. We'll start in `effects/mod.rs` by adding an effect type for "I want to use an item":
+
+```rust
+#[derive(Debug)]
+pub enum EffectType { 
+    Damage { amount : i32 },
+    Bloodstain,
+    Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
+    EntityDeath,
+    ItemUse { item: Entity },
+}
+```
+
+We want these to work a little differently than regular effects (consumable use has to be handled, and targeting passes through to the actual effects rather than directly from the item). We'll add it into `target_applicator`:
+
+```rust
+fn target_applicator(ecs : &mut World, effect : &EffectSpawner) {
+    if let EffectType::ItemUse{item} = effect.effect_type {
+        triggers::item_trigger(effect.creator, item, &effect.targets, ecs);
+    } else {
+        match &effect.targets {
+            Targets::Tile{tile_idx} => affect_tile(ecs, effect, *tile_idx),
+            Targets::Tiles{tiles} => tiles.iter().for_each(|tile_idx| affect_tile(ecs, effect, *tile_idx)),
+            Targets::Single{target} => affect_entity(ecs, effect, *target),
+            Targets::TargetList{targets} => targets.iter().for_each(|entity| affect_entity(ecs, effect, *entity)),
+        }
+    }
+}
+```
+
+This "short circuits" the calling tree, so it handles items once (the items can then emit other events into the queue, so it all gets handled). Since we've called it, now we have to write `triggers:item_trigger`! Make a new file, `effects/triggers.rs` (and in `mod.rs` add a `mod triggers;`):
+
+```rust
+pub fn item_trigger(creator : Option<Entity>, item: Entity, targets : &Targets, ecs: &mut World) {
+    // Use the item via the generic system
+    event_trigger(creator, item, targets, ecs);
+
+    // If it was a consumable, then it gets deleted
+    if ecs.read_storage::<Consumable>().get(item).is_some() {
+        ecs.entities().delete(item).expect("Delete Failed");
+    }
+}
+```
+
+This function is the reason we have to handle items differently: it calls `event_trigger` (a local, private function) to spawn all the item's effects - and then if the item is a consumable it deletes it. Let's make a skeletal `event_trigger` function:
+
+```rust
+fn event_trigger(creator : Option<Entity>, entity: Entity, targets : &Targets, ecs: &mut World) {
+    let mut gamelog = ecs.fetch_mut::<GameLog>();
+}
+```
+
+So this doesn't do anything - but the game can now compile and you can see that when you use an item it is correctly deleted. It provides enough of a placeholder to allow us to fix up the inventory system!
+
+#### Use System Cleanup
+
+ The `inventory_system/use_system.rs` file was the root cause of this cleanup, and we now have enough of a framework to make it into a reasonably small, lean system! We just need it to mark your equipment as having changed, build the appropriate `Targets` list, and add a usage event. Here's the entire new system:
+
+ ```rust
+ use specs::prelude::*;
+use super::{Name, WantsToUseItem,Map, AreaOfEffect, EquipmentChanged, IdentifiedItem};
+use crate::effects::*;
+
+pub struct ItemUseSystem {}
+
+impl<'a> System<'a> for ItemUseSystem {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( ReadExpect<'a, Entity>,
+                        WriteExpect<'a, Map>,
+                        Entities<'a>,
+                        WriteStorage<'a, WantsToUseItem>,
+                        ReadStorage<'a, Name>,
+                        ReadStorage<'a, AreaOfEffect>,
+                        WriteStorage<'a, EquipmentChanged>,
+                        WriteStorage<'a, IdentifiedItem>
+                      );
+
+    #[allow(clippy::cognitive_complexity)]
+    fn run(&mut self, data : Self::SystemData) {
+        let (player_entity, map, entities, mut wants_use, names,
+            aoe, mut dirty, mut identified_item) = data;
+
+        for (entity, useitem) in (&entities, &wants_use).join() {
+            dirty.insert(entity, EquipmentChanged{}).expect("Unable to insert");
+
+            // Identify
+            if entity == *player_entity {
+                identified_item.insert(entity, IdentifiedItem{ name: names.get(useitem.item).unwrap().name.clone() })
+                    .expect("Unable to insert");
+            }
+
+            // Call the effects system
+            add_effect(
+                Some(entity),
+                EffectType::ItemUse{ item : useitem.item },
+                match useitem.target {
+                    None => Targets::Single{ target: *player_entity },
+                    Some(target) => {
+                        if let Some(aoe) = aoe.get(useitem.item) {
+                            Targets::Tiles{ tiles: aoe_tiles(&*map, target, aoe.radius) }
+                        } else {
+                            Targets::Tile{ tile_idx : map.xy_idx(target.x, target.y) as i32 }
+                        }
+                    }
+                }
+            );
+
+        }
+
+        wants_use.clear();
+    }
+}
+ ```
+
+That's a big improvement! MUCH smaller, and quite easy to follow.
+
+Now we need to work through the various item-related events and make them function.
+
+#### Feeding Time
+
+We'll start with food. Any item with a `ProvidesFood` component tag sets the eater's hunger clock back to `Well Fed`. We'll start by adding an event type for this:
+
+```rust
+#[derive(Debug)]
+pub enum EffectType { 
+    Damage { amount : i32 },
+    Bloodstain,
+    Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
+    EntityDeath,
+    ItemUse { item: Entity },
+    WellFed,
+}
+```
+
+Now, we'll make a new file - `effects/hunger.rs` and put the meat of handling this into it (don't forget to add `mod hunger;` in `effects/mod.rs`!):
+
+```rust
+use specs::prelude::*;
+use super::*;
+use crate::components::{HungerClock, HungerState};
+
+pub fn well_fed(ecs: &mut World, _damage: &EffectSpawner, target: Entity) {
+    if let Some(hc) = ecs.write_storage::<HungerClock>().get_mut(target) {
+        hc.state = HungerState::WellFed;
+        hc.duration = 20;
+    }
+}
+```
+
+Very simple, and straight out of the original code. We need food to affect entities rather than just locations (in case you make something like a vending machine that hands out food over an area!):
+
+
+```rust
+fn tile_effect_hits_entities(effect: &EffectType) -> bool {
+    match effect {
+        EffectType::Damage{..} => true,
+        EffectType::WellFed => true,
+        _ => false
+    }
+}
+```
+
+We also need to call the function:
+
+```rust
+fn affect_entity(ecs: &mut World, effect: &EffectSpawner, target: Entity) {
+    match &effect.effect_type {
+        EffectType::Damage{..} => damage::inflict_damage(ecs, effect, target),
+        EffectType::EntityDeath => damage::death(ecs, effect, target),
+        EffectType::Bloodstain{..} => if let Some(pos) = entity_position(ecs, target) { damage::bloodstain(ecs, pos) },
+        EffectType::Particle{..} => if let Some(pos) = entity_position(ecs, target) { particles::particle_to_tile(ecs, pos, &effect) },
+        EffectType::WellFed => hunger::well_fed(ecs, effect, target),
+        _ => {}
+    }
+}
+```
+
+Finally, we need to add it into the `event_trigger` function in `effects/triggers.rs`:
+
+```rust
+fn event_trigger(creator : Option<Entity>, entity: Entity, targets : &Targets, ecs: &mut World) {
+    let mut gamelog = ecs.fetch_mut::<GameLog>();
+
+    // Providing food
+    if ecs.read_storage::<ProvidesFood>().get(entity).is_some() {
+        add_effect(creator, EffectType::WellFed, targets.clone());
+        let names = ecs.read_storage::<Name>();
+        gamelog.entries.insert(0, format!("You eat the {}.", names.get(entity).unwrap().name));
+    }
+}
+```
+
+If you `cargo run` now, you can eat your rations and be well fed once more.
+
+#### Magic Mapping
+
+Magic Mapping is a bit of a special case, because of the need to switch back to the user interface for an update. It's also pretty simple, so we'll handle it entirely inside `event_trigger`:
+
+```rust
+// Magic mapper
+if ecs.read_storage::<MagicMapper>().get(entity).is_some() {
+    let mut runstate = ecs.fetch_mut::<RunState>();
+    gamelog.entries.insert(0, "The map is revealed to you!".to_string());
+    *runstate = RunState::MagicMapReveal{ row : 0};
+}
+```
+
+Just like the code in the old item usage system: it sets the run-state to `MagicMapReveal` and plays a log message. You can `cargo run` and magic mapping will work now.
+
+#### Town Portals
+
+Town Portals are also a bit of a special case, so we'll also handle them in `event_trigger`:
+
+```rust
+// Town Portal
+if ecs.read_storage::<TownPortal>().get(entity).is_some() {
+    let map = ecs.fetch::<Map>();
+    if map.depth == 1 {
+        gamelog.entries.insert(0, "You are already in town, so the scroll does nothing.".to_string());
+    } else {
+        gamelog.entries.insert(0, "You are telported back to town!".to_string());
+        let mut runstate = ecs.fetch_mut::<RunState>();
+        *runstate = RunState::TownPortal;
+    }
+}
+```
+
+Once again, this is basically the old code - relocated.
+
+#### Healing
+
+Healing is a more generic effect, and it's likely that we'll use it in multiple places. It's easy to imagine a prop with an entry-trigger that heals you (a magical restoration zone, a cybernetic repair shop - your imagination is the limit!), or items that heal on use (such as potions). So we'll add `Healing` into the effect types in `mod.rs`:
+
+```rust
+#[derive(Debug)]
+pub enum EffectType { 
+    Damage { amount : i32 },
+    Bloodstain,
+    Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
+    EntityDeath,
+    ItemUse { item: Entity },
+    WellFed,
+    Healing { amount : i32 },
+    Confusion { turns : i32 }
+}
+```
+
+Healing affects entities and not tiles, so we'll mark that:
+
+```rust
+fn tile_effect_hits_entities(effect: &EffectType) -> bool {
+    match effect {
+        EffectType::Damage{..} => true,
+        EffectType::WellFed => true,
+        EffectType::Healing{..} => true,
+        _ => false
+    }
+}
+```
+
+Since healing is basically reversed damage, we'll add a function to handle healing into our `effects/damage.rs` file:
+
+```rust
+pub fn heal_damage(ecs: &mut World, heal: &EffectSpawner, target: Entity) {
+    let mut pools = ecs.write_storage::<Pools>();
+    if let Some(pool) = pools.get_mut(target) {
+        if let EffectType::Healing{amount} = heal.effect_type {
+            pool.hit_points.current = i32::min(pool.hit_points.max, pool.hit_points.current + amount);
+            add_effect(None, 
+                EffectType::Particle{ 
+                    glyph: rltk::to_cp437('‼'),
+                    fg : rltk::RGB::named(rltk::GREEN),
+                    bg : rltk::RGB::named(rltk::BLACK),
+                    lifespan: 200.0
+                }, 
+                Targets::Single{target}
+            );
+        }
+    }
+}
+```
+
+This is similar to the old healing code, but we've added in a green particle to show that the entity was healed. Now we need to teach `affect_entity` in `mod.rs` to apply healing:
+
+```rust
+fn affect_entity(ecs: &mut World, effect: &EffectSpawner, target: Entity) {
+    match &effect.effect_type {
+        EffectType::Damage{..} => damage::inflict_damage(ecs, effect, target),
+        EffectType::EntityDeath => damage::death(ecs, effect, target),
+        EffectType::Bloodstain{..} => if let Some(pos) = entity_position(ecs, target) { damage::bloodstain(ecs, pos) },
+        EffectType::Particle{..} => if let Some(pos) = entity_position(ecs, target) { particles::particle_to_tile(ecs, pos, &effect) },
+        EffectType::WellFed => hunger::well_fed(ecs, effect, target),
+        EffectType::Healing{..} => damage::heal_damage(ecs, effect, target),
+        _ => {}
+    }
+}
+```
+
+Finally, we add support for `ProvidesHealing` tags in the `event_trigger` function:
+
+```rust
+// Healing
+if let Some(heal) = ecs.read_storage::<ProvidesHealing>().get(entity) {
+    add_effect(creator, EffectType::Healing{amount: heal.heal_amount}, targets.clone());
+}
+```
+
+If you `cargo run` now, your potions of healing now work.
+
+#### Damage
+
+We've already written the majority of what we need to handle damage, so we can just add it into `event_trigger`:
+
+```rust
+// Damage
+if let Some(damage) = ecs.read_storage::<InflictsDamage>().get(entity) {
+    add_effect(creator, EffectType::Damage{ amount: damage.damage }, targets.clone());
+}
+```
+
+Since we've already covered area of effect and similar via targeting, and the damage code comes from the melee revamp - this will make magic missile, fireball and similar work.
+
+#### Confusion
+
+Confusion needs to be handled in a similar manner to hunger. We add an event type:
+
+```rust
+#[derive(Debug)]
+pub enum EffectType { 
+    Damage { amount : i32 },
+    Bloodstain,
+    Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
+    EntityDeath,
+    ItemUse { item: Entity },
+    WellFed,
+    Healing { amount : i32 },
+    Confusion { turns : i32 }
+}
+```
+
+Mark it as affecting entities:
+
+```rust
+fn tile_effect_hits_entities(effect: &EffectType) -> bool {
+    match effect {
+        EffectType::Damage{..} => true,
+        EffectType::WellFed => true,
+        EffectType::Healing{..} => true,
+        EffectType::Confusion{..} => true,
+        _ => false
+    }
+}
+```
+
+Add a method to the `damage.rs` file:
+
+```rust
+pub fn add_confusion(ecs: &mut World, effect: &EffectSpawner, target: Entity) {
+    if let EffectType::Confusion{turns} = &effect.effect_type {
+        ecs.write_storage::<Confusion>().insert(target, Confusion{ turns: *turns }).expect("Unable to insert status");
+    }
+}
+```
+
+Include it in `affect_entity`:
+
+```rust
+fn affect_entity(ecs: &mut World, effect: &EffectSpawner, target: Entity) {
+    match &effect.effect_type {
+        EffectType::Damage{..} => damage::inflict_damage(ecs, effect, target),
+        EffectType::EntityDeath => damage::death(ecs, effect, target),
+        EffectType::Bloodstain{..} => if let Some(pos) = entity_position(ecs, target) { damage::bloodstain(ecs, pos) },
+        EffectType::Particle{..} => if let Some(pos) = entity_position(ecs, target) { particles::particle_to_tile(ecs, pos, &effect) },
+        EffectType::WellFed => hunger::well_fed(ecs, effect, target),
+        EffectType::Healing{..} => damage::heal_damage(ecs, effect, target),
+        EffectType::Confusion{..} => damage::add_confusion(ecs, effect, target),
+        _ => {}
+    }
+}
+```
+
+And lastly, support it in `event_trigger`:
+
+```rust
+// Confusion
+    if let Some(confusion) = ecs.read_storage::<Confusion>().get(entity) {
+        add_effect(creator, EffectType::Confusion{ turns : confusion.turns }, targets.clone());
+    }
+```
+
+That's enough to get confusion effects working.
 
 ...
 
