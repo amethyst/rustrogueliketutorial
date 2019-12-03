@@ -1093,6 +1093,317 @@ And lastly, support it in `event_trigger`:
 
 That's enough to get confusion effects working.
 
+### Triggers
+
+Now that we've got a working system for items (it's really flexible; you can mix and match tags as you want and all the effects fire), we need to do the same for triggers. We'll start by giving them an entry point into the effects API, just like we did for items. In `effects/mod.rs` we'll further extend the item effects enum:
+
+```rust
+#[derive(Debug)]
+pub enum EffectType { 
+    Damage { amount : i32 },
+    Bloodstain,
+    Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
+    EntityDeath,
+    ItemUse { item: Entity },
+    WellFed,
+    Healing { amount : i32 },
+    Confusion { turns : i32 },
+    TriggerFire { trigger: Entity }
+}
+```
+
+We'll also special-case its activation:
+
+```rust
+fn target_applicator(ecs : &mut World, effect : &EffectSpawner) {
+    if let EffectType::ItemUse{item} = effect.effect_type {
+        triggers::item_trigger(effect.creator, item, &effect.targets, ecs);
+    } else if let EffectType::TriggerFire{trigger} = effect.effect_type {
+        triggers::trigger(effect.creator, trigger, &effect.targets, ecs);
+    } else {
+        match &effect.targets {
+            Targets::Tile{tile_idx} => affect_tile(ecs, effect, *tile_idx),
+            Targets::Tiles{tiles} => tiles.iter().for_each(|tile_idx| affect_tile(ecs, effect, *tile_idx)),
+            Targets::Single{target} => affect_entity(ecs, effect, *target),
+            Targets::TargetList{targets} => targets.iter().for_each(|entity| affect_entity(ecs, effect, *entity)),
+        }
+    }
+}
+```
+
+Now in `effects/triggers.rs` we need to add `trigger` as a public function:
+
+```rust
+pub fn trigger(creator : Option<Entity>, trigger: Entity, targets : &Targets, ecs: &mut World) {
+    // The triggering item is no longer hidden
+    ecs.write_storage::<Hidden>().remove(trigger);
+
+    // Use the item via the generic system
+    event_trigger(creator, trigger, targets, ecs);
+
+    // If it was a single activation, then it gets deleted
+    if ecs.read_storage::<SingleActivation>().get(trigger).is_some() {
+        ecs.entities().delete(trigger).expect("Delete Failed");
+    }
+}
+```
+
+Now that we have a framework in place, we can get into `trigger_system.rs`. Just like the item effects, it can be simplified greatly; we really just need to check that an activation happened - and call the events system:
+
+```rust
+extern crate specs;
+use specs::prelude::*;
+use super::{EntityMoved, Position, EntryTrigger, Map, Name, gamelog::GameLog,
+    effects::*, AreaOfEffect};
+
+pub struct TriggerSystem {}
+
+impl<'a> System<'a> for TriggerSystem {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( ReadExpect<'a, Map>,
+                        WriteStorage<'a, EntityMoved>,
+                        ReadStorage<'a, Position>,
+                        ReadStorage<'a, EntryTrigger>,
+                        ReadStorage<'a, Name>,
+                        Entities<'a>,
+                        WriteExpect<'a, GameLog>,
+                        ReadStorage<'a, AreaOfEffect>);
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (map, mut entity_moved, position, entry_trigger, 
+            names, entities, mut log, area_of_effect) = data;
+
+        // Iterate the entities that moved and their final position
+        for (entity, mut _entity_moved, pos) in (&entities, &mut entity_moved, &position).join() {
+            let idx = map.xy_idx(pos.x, pos.y);
+            for entity_id in map.tile_content[idx].iter() {
+                if entity != *entity_id { // Do not bother to check yourself for being a trap!
+                    let maybe_trigger = entry_trigger.get(*entity_id);
+                    match maybe_trigger {
+                        None => {},
+                        Some(_trigger) => {
+                            // We triggered it
+                            let name = names.get(*entity_id);
+                            if let Some(name) = name {
+                                log.entries.insert(0, format!("{} triggers!", &name.name));
+                            }
+
+                            // Call the effects system
+                            add_effect(
+                                Some(entity),
+                                EffectType::TriggerFire{ trigger : *entity_id },
+                                if let Some(aoe) = area_of_effect.get(*entity_id) {
+                                    Targets::Tiles{
+                                        tiles : aoe_tiles(&*map, rltk::Point::new(pos.x, pos.y), aoe.radius)
+                                    }
+                                } else {
+                                    Targets::Tile{ tile_idx: idx as i32 }
+                                }
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+There's only one trigger we haven't already implemented as an effect: teleportation. Let's add that as an effect type in `effects/mod.rs`:
+
+```rust
+#[derive(Debug)]
+pub enum EffectType { 
+    Damage { amount : i32 },
+    Bloodstain,
+    Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
+    EntityDeath,
+    ItemUse { item: Entity },
+    WellFed,
+    Healing { amount : i32 },
+    Confusion { turns : i32 },
+    TriggerFire { trigger: Entity },
+    TeleportTo { x:i32, y:i32, depth: i32, player_only : bool }
+}
+```
+
+It affects entities, so we'll mark that fact:
+
+```rust
+fn tile_effect_hits_entities(effect: &EffectType) -> bool {
+    match effect {
+        EffectType::Damage{..} => true,
+        EffectType::WellFed => true,
+        EffectType::Healing{..} => true,
+        EffectType::Confusion{..} => true,
+        EffectType::TeleportTo{..} => true,
+        _ => false
+    }
+}
+```
+
+And `affect_entity` should call it:
+
+```rust
+fn affect_entity(ecs: &mut World, effect: &EffectSpawner, target: Entity) {
+    match &effect.effect_type {
+        EffectType::Damage{..} => damage::inflict_damage(ecs, effect, target),
+        EffectType::EntityDeath => damage::death(ecs, effect, target),
+        EffectType::Bloodstain{..} => if let Some(pos) = entity_position(ecs, target) { damage::bloodstain(ecs, pos) },
+        EffectType::Particle{..} => if let Some(pos) = entity_position(ecs, target) { particles::particle_to_tile(ecs, pos, &effect) },
+        EffectType::WellFed => hunger::well_fed(ecs, effect, target),
+        EffectType::Healing{..} => damage::heal_damage(ecs, effect, target),
+        EffectType::Confusion{..} => damage::add_confusion(ecs, effect, target),
+        EffectType::TeleportTo{..} => movement::apply_teleport(ecs, effect, target),
+        _ => {}
+    }
+}
+```
+
+We also need to add it to `event_trigger` in `effects/triggers.rs`:
+
+```rust
+// Teleport
+if let Some(teleport) = ecs.read_storage::<TeleportTo>().get(entity) {
+    add_effect(
+        creator, 
+        EffectType::TeleportTo{ 
+            x : teleport.x, 
+            y : teleport.y, 
+            depth: teleport.depth, 
+            player_only: teleport.player_only 
+        }, 
+        targets.clone()
+    );
+}
+```
+
+Finally, we'll implement it. Make a new file, `effects/movement.rs` and paste the following into it:
+
+```rust
+use specs::prelude::*;
+use super::*;
+use crate::components::{ApplyTeleport};
+
+pub fn apply_teleport(ecs: &mut World, destination: &EffectSpawner, target: Entity) {
+    let player_entity = ecs.fetch::<Entity>();
+    if let EffectType::TeleportTo{x, y, depth, player_only} = &destination.effect_type {
+        if !player_only || target == *player_entity {
+            let mut apply_teleport = ecs.write_storage::<ApplyTeleport>();
+            apply_teleport.insert(target, ApplyTeleport{
+                dest_x : *x,
+                dest_y : *y,
+                dest_depth : *depth
+            }).expect("Unable to insert");
+        }
+    }
+}
+```
+
+Now `cargo run` the project, and go forth and try some triggers. Town portal and traps being the obvious ones. You should be able to use portals and suffer trap damage, just as before.
+
+### Limiting single use to when it *did something*
+
+You may have noticed that we're taking your Town Portal scroll away, even if it didn't activate. We're taking away a teleporter even if it didn't actually fire (because it's player only). That needs fixing! We'll modify `event_trigger` to return `bool` - `true` if it did something, `false` if it didn't. Here's a version that does just that:
+
+```rust
+fn event_trigger(creator : Option<Entity>, entity: Entity, targets : &Targets, ecs: &mut World) -> bool {
+    let mut did_something = false;
+    let mut gamelog = ecs.fetch_mut::<GameLog>();
+
+    // Providing food
+    if ecs.read_storage::<ProvidesFood>().get(entity).is_some() {
+        add_effect(creator, EffectType::WellFed, targets.clone());
+        let names = ecs.read_storage::<Name>();
+        gamelog.entries.insert(0, format!("You eat the {}.", names.get(entity).unwrap().name));
+        did_something = true;
+    }
+
+    // Magic mapper
+    if ecs.read_storage::<MagicMapper>().get(entity).is_some() {
+        let mut runstate = ecs.fetch_mut::<RunState>();
+        gamelog.entries.insert(0, "The map is revealed to you!".to_string());
+        *runstate = RunState::MagicMapReveal{ row : 0};
+        did_something = true;
+    }
+
+    // Town Portal
+    if ecs.read_storage::<TownPortal>().get(entity).is_some() {
+        let map = ecs.fetch::<Map>();
+        if map.depth == 1 {
+            gamelog.entries.insert(0, "You are already in town, so the scroll does nothing.".to_string());
+        } else {
+            gamelog.entries.insert(0, "You are telported back to town!".to_string());
+            let mut runstate = ecs.fetch_mut::<RunState>();
+            *runstate = RunState::TownPortal;
+            did_something = true;
+        }
+    }
+
+    // Healing
+    if let Some(heal) = ecs.read_storage::<ProvidesHealing>().get(entity) {
+        add_effect(creator, EffectType::Healing{amount: heal.heal_amount}, targets.clone());
+        did_something = true;
+    }
+
+    // Damage
+    if let Some(damage) = ecs.read_storage::<InflictsDamage>().get(entity) {
+        add_effect(creator, EffectType::Damage{ amount: damage.damage }, targets.clone());
+        did_something = true;
+    }
+
+    // Confusion
+    if let Some(confusion) = ecs.read_storage::<Confusion>().get(entity) {
+        add_effect(creator, EffectType::Confusion{ turns : confusion.turns }, targets.clone());
+        did_something = true;
+    }
+
+    // Teleport
+    if let Some(teleport) = ecs.read_storage::<TeleportTo>().get(entity) {
+        add_effect(
+            creator, 
+            EffectType::TeleportTo{ 
+                x : teleport.x, 
+                y : teleport.y, 
+                depth: teleport.depth, 
+                player_only: teleport.player_only 
+            }, 
+            targets.clone()
+        );
+        did_something = true;
+    }
+
+    did_something
+}
+```
+
+Now we need to modify our entry-points to only delete an item that was actually used:
+
+```rust
+pub fn item_trigger(creator : Option<Entity>, item: Entity, targets : &Targets, ecs: &mut World) {
+    // Use the item via the generic system
+    let did_something = event_trigger(creator, item, targets, ecs);
+
+    // If it was a consumable, then it gets deleted
+    if did_something && ecs.read_storage::<Consumable>().get(item).is_some() {
+        ecs.entities().delete(item).expect("Delete Failed");
+    }
+}
+
+pub fn trigger(creator : Option<Entity>, trigger: Entity, targets : &Targets, ecs: &mut World) {
+    // The triggering item is no longer hidden
+    ecs.write_storage::<Hidden>().remove(trigger);
+
+    // Use the item via the generic system
+    let did_something = event_trigger(creator, trigger, targets, ecs);
+
+    // If it was a single activation, then it gets deleted
+    if did_something && ecs.read_storage::<SingleActivation>().get(trigger).is_some() {
+        ecs.entities().delete(trigger).expect("Delete Failed");
+    }
+}
+```
+
 ...
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-63-effects)**
