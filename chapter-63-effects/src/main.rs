@@ -21,7 +21,6 @@ use map_indexing_system::MapIndexingSystem;
 mod melee_combat_system;
 use melee_combat_system::MeleeCombatSystem;
 mod damage_system;
-use damage_system::DamageSystem;
 mod gui;
 mod gamelog;
 mod spawner;
@@ -114,8 +113,6 @@ impl State {
         triggers.run_now(&self.ecs);
         let mut melee = MeleeCombatSystem{};
         melee.run_now(&self.ecs);
-        let mut damage = DamageSystem{};
-        damage.run_now(&self.ecs);
         let mut pickup = ItemCollectionSystem{};
         pickup.run_now(&self.ecs);
         let mut itemequip = inventory_system::ItemEquipOnUse{};
@@ -477,7 +474,6 @@ fn main() {
     gs.ecs.register::<Name>();
     gs.ecs.register::<BlocksTile>();
     gs.ecs.register::<WantsToMelee>();
-    gs.ecs.register::<SufferDamage>();
     gs.ecs.register::<Item>();
     gs.ecs.register::<ProvidesHealing>();
     gs.ecs.register::<InflictsDamage>();

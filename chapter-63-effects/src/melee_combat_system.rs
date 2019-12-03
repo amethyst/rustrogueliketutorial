@@ -1,7 +1,7 @@
 extern crate specs;
 use specs::prelude::*;
 use super::{Attributes, Skills, WantsToMelee, Name, gamelog::GameLog,
-    particle_system::ParticleBuilder, Position, HungerClock, HungerState, Pools, skill_bonus,
+    HungerClock, HungerState, Pools, skill_bonus,
     Skill, Equipped, MeleeWeapon, EquipmentSlot, WeaponAttribute, Wearable, NaturalAttackDefense,
     effects::*};
 

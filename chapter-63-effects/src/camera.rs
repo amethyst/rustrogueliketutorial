@@ -30,22 +30,18 @@ pub fn render_camera(ecs: &World, ctx : &mut Rltk) {
     let map_width = map.width-1;
     let map_height = map.height-1;
 
-    let mut y = 0;
-    for ty in min_y .. max_y {
-        let mut x = 0;
-        for tx in min_x .. max_x {
+    for (y,ty) in (min_y .. max_y).enumerate() {
+        for (x,tx) in (min_x .. max_x).enumerate() {
             if tx > 0 && tx < map_width && ty > 0 && ty < map_height {
                 let idx = map.xy_idx(tx, ty);
                 if map.revealed_tiles[idx] {
                     let (glyph, fg, bg) = tile_glyph(idx, &*map);
-                    ctx.set(x+1, y+1, fg, bg, glyph);
+                    ctx.set(x as i32+1, y as i32+1, fg, bg, glyph);
                 }
             } else if SHOW_BOUNDARIES {
-                ctx.set(x+1, y+1, RGB::named(rltk::GRAY), RGB::named(rltk::BLACK), rltk::to_cp437('·'));
+                ctx.set(x as i32+1, y as i32+1, RGB::named(rltk::GRAY), RGB::named(rltk::BLACK), rltk::to_cp437('·'));
             }
-            x += 1;
         }
-        y += 1;
     }
 
     // Render entities
@@ -83,21 +79,17 @@ pub fn render_debug_map(map : &Map, ctx : &mut Rltk) {
     let map_width = map.width-1;
     let map_height = map.height-1;
 
-    let mut y = 0;
-    for ty in min_y .. max_y {
-        let mut x = 0;
-        for tx in min_x .. max_x {
+    for (y,ty) in (min_y .. max_y).enumerate() {
+        for (x,tx) in (min_x .. max_x).enumerate() {
             if tx > 0 && tx < map_width && ty > 0 && ty < map_height {
                 let idx = map.xy_idx(tx, ty);
                 if map.revealed_tiles[idx] {
                     let (glyph, fg, bg) = tile_glyph(idx, &*map);
-                    ctx.set(x, y, fg, bg, glyph);
+                    ctx.set(x as i32, y as i32, fg, bg, glyph);
                 }
             } else if SHOW_BOUNDARIES {
-                ctx.set(x, y, RGB::named(rltk::GRAY), RGB::named(rltk::BLACK), rltk::to_cp437('·'));
+                ctx.set(x as i32, y as i32, RGB::named(rltk::GRAY), RGB::named(rltk::BLACK), rltk::to_cp437('·'));
             }
-            x += 1;
         }
-        y += 1;
     }
 }

@@ -1404,6 +1404,28 @@ pub fn trigger(creator : Option<Entity>, trigger: Entity, targets : &Targets, ec
 }
 ```
 
+## Cleaning Up
+
+Now that we've got this system in place, we can clean up all manner of other systems. The first thing we can do is delete the `SufferDamage` component from `components.rs` (and remove it from `main.rs` and `saveload_system.rs`). Removing this causes the compiler to find a few places we're inflicting damage without using the effects system!
+
+In `hunger_system.rs`, we can replace the `SufferDamage` code with:
+
+```rust
+HungerState::Starving => {
+    // Inflict damage from hunger
+    if entity == *player_entity {
+        log.entries.insert(0, "Your hunger pangs are getting painful! You suffer 1 hp damage.".to_string());
+    }
+    add_effect(
+        None,
+        EffectType::Damage{ amount: 1},
+        Targets::Single{ target: entity }
+    );
+}
+```
+
+We can also open `damage_system.rs` and remove the actual `DamageSystem` (but keep `delete_the_dead`). We also need to remove it from `run_systems` in `main.rs`.
+
 ...
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-63-effects)**

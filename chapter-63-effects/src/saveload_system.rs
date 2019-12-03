@@ -47,7 +47,7 @@ pub fn save_game(ecs : &mut World) {
         let writer = File::create("./savegame.json").unwrap();
         let mut serializer = serde_json::Serializer::new(writer);
         serialize_individually!(ecs, serializer, data, Position, Renderable, Player, Viewshed,
-            Name, BlocksTile, SufferDamage, WantsToMelee, Item, Consumable, Ranged, InflictsDamage,
+            Name, BlocksTile, WantsToMelee, Item, Consumable, Ranged, InflictsDamage,
             AreaOfEffect, Confusion, ProvidesHealing, InBackpack, WantsToPickupItem, WantsToUseItem,
             WantsToDropItem, SerializationHelper, Equippable, Equipped, MeleeWeapon, Wearable,
             WantsToRemoveItem, ParticleLifetime, HungerClock, ProvidesFood, MagicMapper, Hidden,
@@ -102,7 +102,7 @@ pub fn load_game(ecs: &mut World) {
         let mut d = (&mut ecs.entities(), &mut ecs.write_storage::<SimpleMarker<SerializeMe>>(), &mut SimpleMarkerAllocator::<SerializeMe>::new());
 
         deserialize_individually!(ecs, de, d, Position, Renderable, Player, Viewshed,
-            Name, BlocksTile, SufferDamage, WantsToMelee, Item, Consumable, Ranged, InflictsDamage,
+            Name, BlocksTile, WantsToMelee, Item, Consumable, Ranged, InflictsDamage,
             AreaOfEffect, Confusion, ProvidesHealing, InBackpack, WantsToPickupItem, WantsToUseItem,
             WantsToDropItem, SerializationHelper, Equippable, Equipped, MeleeWeapon, Wearable,
             WantsToRemoveItem, ParticleLifetime, HungerClock, ProvidesFood, MagicMapper, Hidden,
