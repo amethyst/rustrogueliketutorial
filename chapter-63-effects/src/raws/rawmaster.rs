@@ -244,6 +244,46 @@ pub fn string_to_slot(slot : &str) -> EquipmentSlot {
     }
 }
 
+fn parse_particle_line(n : &str) -> SpawnParticleLine {
+    let tokens : Vec<_> = n.split(';').collect();
+    SpawnParticleLine{
+        glyph : rltk::to_cp437(tokens[0].chars().next().unwrap()),
+        color : rltk::RGB::from_hex(tokens[1]).expect("Bad RGB"),
+        lifetime_ms : tokens[2].parse::<f32>().unwrap()
+    }
+}
+
+fn parse_particle(n : &str) -> SpawnParticleBurst {
+    let tokens : Vec<_> = n.split(';').collect();
+    SpawnParticleBurst{
+        glyph : rltk::to_cp437(tokens[0].chars().next().unwrap()),
+        color : rltk::RGB::from_hex(tokens[1]).expect("Bad RGB"),
+        lifetime_ms : tokens[2].parse::<f32>().unwrap()
+    }
+}
+
+macro_rules! apply_effects {
+    ( $effects:expr, $eb:expr ) => {
+        for effect in $effects.iter() {
+        let effect_name = effect.0.as_str();
+            match effect_name {
+                "provides_healing" => $eb = $eb.with(ProvidesHealing{ heal_amount: effect.1.parse::<i32>().unwrap() }),
+                "ranged" => $eb = $eb.with(Ranged{ range: effect.1.parse::<i32>().unwrap() }),
+                "damage" => $eb = $eb.with(InflictsDamage{ damage : effect.1.parse::<i32>().unwrap() }),
+                "area_of_effect" => $eb = $eb.with(AreaOfEffect{ radius: effect.1.parse::<i32>().unwrap() }),
+                "confusion" => $eb = $eb.with(Confusion{ turns: effect.1.parse::<i32>().unwrap() }),
+                "magic_mapping" => $eb = $eb.with(MagicMapper{}),
+                "town_portal" => $eb = $eb.with(TownPortal{}),
+                "food" => $eb = $eb.with(ProvidesFood{}),
+                "single_activation" => $eb = $eb.with(SingleActivation{}),
+                "particle_line" => $eb = $eb.with(parse_particle_line(&effect.1)),
+                "particle" => $eb = $eb.with(parse_particle(&effect.1)),
+                _ => println!("Warning: consumable effect {} not implemented.", effect_name)
+            }
+        }
+    };
+}
+
 pub fn spawn_named_item(raws: &RawMaster, ecs : &mut World, key : &str, pos : SpawnType) -> Option<Entity> {
     if raws.item_index.contains_key(key) {
         let item_template = &raws.raws.items[raws.item_index[key]];
@@ -273,24 +313,7 @@ pub fn spawn_named_item(raws: &RawMaster, ecs : &mut World, key : &str, pos : Sp
 
         if let Some(consumable) = &item_template.consumable {
             eb = eb.with(crate::components::Consumable{});
-            for effect in consumable.effects.iter() {
-                let effect_name = effect.0.as_str();
-                match effect_name {
-                    "provides_healing" => {
-                        eb = eb.with(ProvidesHealing{ heal_amount: effect.1.parse::<i32>().unwrap() })
-                    }
-                    "ranged" => { eb = eb.with(Ranged{ range: effect.1.parse::<i32>().unwrap() }) },
-                    "damage" => { eb = eb.with(InflictsDamage{ damage : effect.1.parse::<i32>().unwrap() }) }
-                    "area_of_effect" => { eb = eb.with(AreaOfEffect{ radius: effect.1.parse::<i32>().unwrap() }) }
-                    "confusion" => { eb = eb.with(Confusion{ turns: effect.1.parse::<i32>().unwrap() }) }
-                    "magic_mapping" => { eb = eb.with(MagicMapper{}) }
-                    "town_portal" => { eb = eb.with(TownPortal{}) }
-                    "food" => { eb = eb.with(ProvidesFood{}) }
-                    _ => {
-                        println!("Warning: consumable effect {} not implemented.", effect_name);
-                    }
-                }
-            }
+            apply_effects!(consumable.effects, eb);
         }
 
         if let Some(weapon) = &item_template.weapon {
@@ -527,13 +550,7 @@ pub fn spawn_named_prop(raws: &RawMaster, ecs : &mut World, key : &str, pos : Sp
         }
         if let Some(entry_trigger) = &prop_template.entry_trigger {
             eb = eb.with(EntryTrigger{});
-            for effect in entry_trigger.effects.iter() {
-                match effect.0.as_str() {
-                    "damage" => { eb = eb.with(InflictsDamage{ damage : effect.1.parse::<i32>().unwrap() }) }
-                    "single_activation" => { eb = eb.with(SingleActivation{}) }
-                    _ => {}
-                }
-            }
+            apply_effects!(entry_trigger.effects, eb);
         }
         if let Some(light) = &prop_template.light {
             eb = eb.with(LightSource{ range: light.range, color : rltk::RGB::from_hex(&light.color).expect("Bad color") });

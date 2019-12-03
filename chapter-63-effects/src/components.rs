@@ -312,6 +312,20 @@ pub struct ParticleLifetime {
     pub lifetime_ms : f32
 }
 
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct SpawnParticleLine {
+    pub glyph : u8,
+    pub color : RGB,
+    pub lifetime_ms : f32
+}
+
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct SpawnParticleBurst {
+    pub glyph : u8,
+    pub color : RGB,
+    pub lifetime_ms : f32
+}
+
 #[derive(Serialize, Deserialize, Copy, Clone, PartialEq)]
 pub enum HungerState { WellFed, Normal, Hungry, Starving }
 

@@ -217,14 +217,14 @@ pub fn run_effects_queue(ecs : &mut World) {
 
 This is very minimal! It acquires a lock just long enough to pop the first message from the queue, and if it has a value - does something with it. It then repeats the lock/pop cycle until the queue is completely empty. This is a useful pattern: the lock is only held for *just* long enough to read the queue, so if any systems inside want to add to the queue you won't experience a "deadlock" (two systems perpetually waiting for queue access).
 
-It doesn't do anything with the data, yet - but this shows you how to drain the queue one message at a time. We're taking in the `World`, because we expect to be modifying it. We should add a call to use this function; in `main.rs` find `run_systems` and add it at the very end:
+It doesn't do anything with the data, yet - but this shows you how to drain the queue one message at a time. We're taking in the `World`, because we expect to be modifying it. We should add a call to use this function; in `main.rs` find `run_systems` and add it almost at the very end (with particles and lighting after it):
 
 ```rust
-lighting.run_now(&self.ecs);
-...
 effects::run_effects_queue(&mut self.ecs);
-...
-self.ecs.maintain();
+let mut particles = particle_system::ParticleSpawnSystem{};
+particles.run_now(&self.ecs);
+let mut lighting = lighting_system::LightingSystem{};
+lighting.run_now(&self.ecs);
 ```
 
 Now that we're draining the queue, lets do something with it. In `effects/mod.rs`, we'll add in the commented-out function `target_applicator`. The idea is to take the `TargetType`, and extend it into calls that handle it (the function has a high "fan out" - meaning we'll call it a lot, and it will call many other functions). There's a few different ways we can affect a target, so here's several related functions:
@@ -1205,6 +1205,9 @@ impl<'a> System<'a> for TriggerSystem {
                 }
             }
         }
+
+        // Remove all entity movement markers
+        entity_moved.clear();
     }
 }
 ```
@@ -1425,6 +1428,337 @@ HungerState::Starving => {
 ```
 
 We can also open `damage_system.rs` and remove the actual `DamageSystem` (but keep `delete_the_dead`). We also need to remove it from `run_systems` in `main.rs`.
+
+## Common spawning code
+
+In `raws/rawmaster.rs`, we're still parsing the possible effects of items repeatedly. Unfortunately, passing `EntityBuilder` objects (the `eb`) around causes some lifetime issues that make the Rust compiler reject what looks like perfectly valid code. So we'll work around that with a *macro*. Before `spawn_named_item`:
+
+```rust
+macro_rules! apply_effects {
+    ( $effects:expr, $eb:expr ) => {
+        for effect in $effects.iter() {
+        let effect_name = effect.0.as_str();
+            match effect_name {
+                "provides_healing" => $eb = $eb.with(ProvidesHealing{ heal_amount: effect.1.parse::<i32>().unwrap() }),
+                "ranged" => $eb = $eb.with(Ranged{ range: effect.1.parse::<i32>().unwrap() }),
+                "damage" => $eb = $eb.with(InflictsDamage{ damage : effect.1.parse::<i32>().unwrap() }),
+                "area_of_effect" => $eb = $eb.with(AreaOfEffect{ radius: effect.1.parse::<i32>().unwrap() }),
+                "confusion" => $eb = $eb.with(Confusion{ turns: effect.1.parse::<i32>().unwrap() }),
+                "magic_mapping" => $eb = $eb.with(MagicMapper{}),
+                "town_portal" => $eb = $eb.with(TownPortal{}),
+                "food" => $eb = $eb.with(ProvidesFood{}),
+                "single_activation" => $eb = $eb.with(SingleActivation{}),
+                _ => println!("Warning: consumable effect {} not implemented.", effect_name)
+            }
+        }
+    };
+}
+```
+
+So this is just like a function, but it follows the rather convoluted macro syntax. Basically, we define the macro to expect `effects` and `eb` as *expressions* - that is, we don't really care what they are, we'll do text-substitution (before compiling) to insert them into the emitted code. (Macros are basically copy/pasted into your code at the call site, but with the expressions substituted). Digging down into `spawn_named_item`, you'll see that in the consumables section we are using this code. We can now replace it with:
+
+```rust
+if let Some(consumable) = &item_template.consumable {
+    eb = eb.with(crate::components::Consumable{});
+    apply_effects!(consumable.effects, eb);
+}
+```
+
+If we go down to `spawn_named_prop`, you'll see we're doing basically the same thing:
+
+```rust
+for effect in entry_trigger.effects.iter() {
+    match effect.0.as_str() {
+        "damage" => { eb = eb.with(InflictsDamage{ damage : effect.1.parse::<i32>().unwrap() }) }
+        "single_activation" => { eb = eb.with(SingleActivation{}) }
+        _ => {}
+    }
+}
+```
+
+We can now replace that with another call to the macro:
+
+```rust
+if let Some(entry_trigger) = &prop_template.entry_trigger {
+    eb = eb.with(EntryTrigger{});
+    apply_effects!(entry_trigger.effects, eb);
+}
+```
+
+We'll undoubtedly add more later - for weapons "proccing", spells firing, and items that aren't consumed on use. Making this change has meant that the same definition JSON works for both entry triggers and for consumable effects - so any effect that can work with one can work with the other.
+
+### Some examples of how this helps
+
+Let's add a new prop to the temple: an altar that heals you. Open up `map_builders/town.rs` and find the `build_temple` function. Add an `Altar` to the list of props:
+
+```rust
+fn build_temple(&mut self,
+    building: &(i32, i32, i32, i32),
+    build_data : &mut BuilderMap,
+    rng: &mut rltk::RandomNumberGenerator)
+{
+    // Place items
+    let mut to_place : Vec<&str> = vec!["Priest", "Altar", "Parishioner", "Parishioner", "Chair", "Chair", "Candle", "Candle"];
+    self.random_building_spawn(building, build_data, rng, &mut to_place, 0);
+}
+```
+
+Now in `spawns.json`, we add the `Altar` to the props list:
+
+```json
+{
+    "name" : "Altar",
+    "renderable": {
+        "glyph" : "╫",
+        "fg" : "#55FF55",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "hidden" : false,
+    "entry_trigger" : {
+        "effects" : {
+            "provides_healing" : "100"
+        }
+    }
+},
+```
+
+You can `cargo run` the project now, lose some hit points and go to the temple for a free heal. We implemented it with no additional code, because we're sharing the effect properties from other items. From now on, as we add effects - we can implement them anywhere quite readily.
+
+## Restoring visual effects to Magic Missile and Fireball
+
+A side-effect of our refactor is that you no longer get a fiery effect when you cast fireball (just damage indicators). You also don't get a pretty line when you zap with magic missile, or a marker when you confuse someone. This is deliberate - the previous area-of-effect code showed a fireball effect for *any* AoE attack! We can make a more flexible system by supporting effects as part of the item definition.
+
+Let's start by decorating the two scrolls in `spawns.json` with what we want them to do:
+
+```json
+{
+    "name" : "Magic Missile Scroll",
+    "renderable": {
+        "glyph" : ")",
+        "fg" : "#00FFFF",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "consumable" : {
+        "effects" : { 
+            "ranged" : "6",
+            "damage" : "20",
+            "particle_line" : "*;#00FFFF;200.0"
+        }
+    },
+    "weight_lbs" : 0.5,
+    "base_value" : 50.0,
+    "vendor_category" : "alchemy",
+    "magic" : { "class" : "common", "naming" : "scroll" }
+},
+
+{
+    "name" : "Fireball Scroll",
+    "renderable": {
+        "glyph" : ")",
+        "fg" : "#FFA500",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "consumable" : {
+        "effects" : { 
+            "ranged" : "6",
+            "damage" : "20",
+            "area_of_effect" : "3",
+            "particle" : "*;#FFA500;200.0"
+        }
+    },
+    "weight_lbs" : 0.5,
+    "base_value" : 100.0,
+    "vendor_category" : "alchemy",
+    "magic" : { "class" : "common", "naming" : "scroll" }
+},
+```
+
+We've added two new entries - `particle` and `particle_line`. They both take a rather cryptic string (because we're passing parameters as strings). It's a semi-colon delimited list. The first parameter is the glyph, the second the color in RGB format, and the last the lifetime.
+
+Now we need a couple of new components (in `components.rs`, and registered in `main.rs` and `saveload_system.rs`) to store this information:
+
+```rust
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct SpawnParticleLine {
+    pub glyph : u8,
+    pub color : RGB,
+    pub lifetime_ms : f32
+}
+
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct SpawnParticleBurst {
+    pub glyph : u8,
+    pub color : RGB,
+    pub lifetime_ms : f32
+}
+```
+
+Now in `raws/rawmaster.rs` we need to parse this as an effect and attach the new components:
+
+```rust
+fn parse_particle_line(n : &str) -> SpawnParticleLine {
+    let tokens : Vec<_> = n.split(';').collect();
+    SpawnParticleLine{
+        glyph : rltk::to_cp437(tokens[0].chars().next().unwrap()),
+        color : rltk::RGB::from_hex(tokens[1]).expect("Bad RGB"),
+        lifetime_ms : tokens[2].parse::<f32>().unwrap()
+    }
+}
+
+fn parse_particle(n : &str) -> SpawnParticleBurst {
+    let tokens : Vec<_> = n.split(';').collect();
+    SpawnParticleBurst{
+        glyph : rltk::to_cp437(tokens[0].chars().next().unwrap()),
+        color : rltk::RGB::from_hex(tokens[1]).expect("Bad RGB"),
+        lifetime_ms : tokens[2].parse::<f32>().unwrap()
+    }
+}
+
+macro_rules! apply_effects {
+    ( $effects:expr, $eb:expr ) => {
+        for effect in $effects.iter() {
+        let effect_name = effect.0.as_str();
+            match effect_name {
+                "provides_healing" => $eb = $eb.with(ProvidesHealing{ heal_amount: effect.1.parse::<i32>().unwrap() }),
+                "ranged" => $eb = $eb.with(Ranged{ range: effect.1.parse::<i32>().unwrap() }),
+                "damage" => $eb = $eb.with(InflictsDamage{ damage : effect.1.parse::<i32>().unwrap() }),
+                "area_of_effect" => $eb = $eb.with(AreaOfEffect{ radius: effect.1.parse::<i32>().unwrap() }),
+                "confusion" => $eb = $eb.with(Confusion{ turns: effect.1.parse::<i32>().unwrap() }),
+                "magic_mapping" => $eb = $eb.with(MagicMapper{}),
+                "town_portal" => $eb = $eb.with(TownPortal{}),
+                "food" => $eb = $eb.with(ProvidesFood{}),
+                "single_activation" => $eb = $eb.with(SingleActivation{}),
+                "particle_line" => $eb = $eb.with(parse_particle_line(&effect.1)),
+                "particle" => $eb = $eb.with(parse_particle(&effect.1)),
+                _ => println!("Warning: consumable effect {} not implemented.", effect_name)
+            }
+        }
+    };
+}
+```
+
+Implementing the particle burst is as simple as going into `effects/triggers.rs` and adding the following at the beginning of the `event_trigger` function (so it fires before damage, making the damage indicators still appear):
+
+```rust
+fn event_trigger(creator : Option<Entity>, entity: Entity, targets : &Targets, ecs: &mut World) -> bool {
+    let mut did_something = false;
+    let mut gamelog = ecs.fetch_mut::<GameLog>();
+
+    // Simple particle spawn
+    if let Some(part) = ecs.read_storage::<SpawnParticleBurst>().get(entity) {
+        add_effect(
+            creator, 
+            EffectType::Particle{
+                glyph : part.glyph,
+                fg : part.color,
+                bg : rltk::RGB::named(rltk::BLACK),
+                lifespan : part.lifetime_ms
+            }, 
+            targets.clone()
+        );
+    }
+    ...
+```
+
+Line particle spawns are more difficult, but not too bad. One issue is that we don't actually know where the item is! We'll rectify that; in `effects/targeting.rs` we add a new function:
+
+```rust
+pub fn find_item_position(ecs: &World, target: Entity) -> Option<i32> {
+    let positions = ecs.read_storage::<Position>();
+    let map = ecs.fetch::<Map>();
+
+    // Easy - it has a position
+    if let Some(pos) = positions.get(target) {
+        return Some(map.xy_idx(pos.x, pos.y) as i32);
+    }
+
+    // Maybe it is carried?
+    if let Some(carried) = ecs.read_storage::<InBackpack>().get(target) {
+        if let Some(pos) = positions.get(carried.owner) {
+            return Some(map.xy_idx(pos.x, pos.y) as i32);
+        }
+    }
+
+    // Maybe it is equipped?
+    if let Some(equipped) = ecs.read_storage::<Equipped>().get(target) {
+        if let Some(pos) = positions.get(equipped.owner) {
+            return Some(map.xy_idx(pos.x, pos.y) as i32);
+        }
+    }
+
+    // No idea - give up
+    None
+}
+```
+
+This function first checks to see if the item has a position (because it's on the ground). If it does, it returns it. Then it looks to see if it is in a backpack; if it is, it tries to return the position of the backpack owner. Repeat for equipped items. If it still doesn't know, it returns `None`.
+
+We can add the following into our `event_trigger` function to handle line spawning for each targeting case:
+
+```rust
+// Line particle spawn
+if let Some(part) = ecs.read_storage::<SpawnParticleLine>().get(entity) {
+    if let Some(start_pos) = targeting::find_item_position(ecs, entity) {
+        match targets {
+            Targets::Tile{tile_idx} => spawn_line_particles(ecs, start_pos, *tile_idx, part),
+            Targets::Tiles{tiles} => tiles.iter().for_each(|tile_idx| spawn_line_particles(ecs, start_pos, *tile_idx, part)),
+            Targets::Single{ target } => {
+                if let Some(end_pos) = entity_position(ecs, *target) {
+                    spawn_line_particles(ecs, start_pos, end_pos, part);
+                }
+            }
+            Targets::TargetList{ targets } => {
+                targets.iter().for_each(|target| {
+                    if let Some(end_pos) = entity_position(ecs, *target) {
+                        spawn_line_particles(ecs, start_pos, end_pos, part);
+                    }
+                });
+            }
+        }
+    }
+}
+```
+
+Each case calls `spawn_line_particles`, so lets write that too:
+
+```rust
+fn spawn_line_particles(ecs:&World, start: i32, end: i32, part: &SpawnParticleLine) {
+    let map = ecs.fetch::<Map>();
+    let start_pt = rltk::Point::new(start % map.width, end / map.width);
+    let end_pt = rltk::Point::new(end % map.width, end / map.width);
+    let line = rltk::line2d(rltk::LineAlg::Bresenham, start_pt, end_pt);
+    for pt in line.iter() {
+        add_effect(
+            None, 
+            EffectType::Particle{
+                glyph : part.glyph,
+                fg : part.color,
+                bg : rltk::RGB::named(rltk::BLACK),
+                lifespan : part.lifetime_ms
+            }, 
+            Targets::Tile{ tile_idx : map.xy_idx(pt.x, pt.y) as i32}
+        );
+    }
+}
+```
+
+This is quite simple: it plots a line between start and end, and places a particle on each tile.
+
+You can now `cargo run` and enjoy the effects of fireball and magic missile.
+
+## Wrap-Up
+
+This has been a big chapter of changes that don't do a lot on the surface. We've gained a lot, however:
+
+* The Inventory System is now easy to follow.
+* The generic effects system can now apply *any* effect to an item or trigger, and can be readily extended with new items without running into `Specs` limitations.
+* There's a lot less distribution of responsibility: systems no longer need to remember to show a particle for damage, or even need to know about how particles work - they just request them. Systems can often not worry about position, and apply positional effects (including AoE) in a consistent manner.
+* We've now got a flexible enough system to let us build big, cohesive effects - without worrying too much about the details.
+
+This chapter has been a good example of the limitations of an ECS - and how to use that to your advantage. By using components as flags, we can easily *compose* effects - a potion that heals you and confuses you is as simple as combining two tags. However, `Specs` doesn't really play well with systems that read a ton of data storages at once - so we worked around it by adding messaging on top of the system. This is pretty common: even Amethyst, the ECS-based engine, also implements a message-passing system for this purpose.
 
 ...
 

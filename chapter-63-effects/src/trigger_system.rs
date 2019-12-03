@@ -52,5 +52,8 @@ impl<'a> System<'a> for TriggerSystem {
                 }
             }
         }
+
+        // Remove all entity movement markers
+        entity_moved.clear();
     }
 }
