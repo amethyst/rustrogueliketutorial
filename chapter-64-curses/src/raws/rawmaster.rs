@@ -360,6 +360,10 @@ pub fn spawn_named_item(raws: &RawMaster, ecs : &mut World, key : &str, pos : Sp
                     }
                 }
             }
+
+            if let Some(cursed) = magic.cursed {
+                if cursed { eb = eb.with(CursedItem{}); }
+            }
         }
 
         return Some(eb.build());

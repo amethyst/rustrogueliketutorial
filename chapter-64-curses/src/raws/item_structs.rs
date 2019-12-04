@@ -45,5 +45,6 @@ pub struct Wearable {
 #[derive(Deserialize, Debug)]
 pub struct MagicItem {
     pub class: String,
-    pub naming: String
+    pub naming: String,
+    pub cursed: Option<bool>
 }

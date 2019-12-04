@@ -192,6 +192,9 @@ pub struct MagicItem {
 }
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct CursedItem {}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Consumable {}
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
