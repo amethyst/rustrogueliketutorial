@@ -1,5 +1,6 @@
 use specs::prelude::*;
-use super::{Name, InBackpack, gamelog::GameLog, WantsToUseItem, Equippable, Equipped, EquipmentChanged};
+use super::{Name, InBackpack, gamelog::GameLog, WantsToUseItem, Equippable, Equipped, EquipmentChanged,
+    IdentifiedItem};
 
 pub struct ItemEquipOnUse {}
 
@@ -13,19 +14,26 @@ impl<'a> System<'a> for ItemEquipOnUse {
                         ReadStorage<'a, Equippable>,
                         WriteStorage<'a, Equipped>,
                         WriteStorage<'a, InBackpack>,
-                        WriteStorage<'a, EquipmentChanged>
+                        WriteStorage<'a, EquipmentChanged>,
+                        WriteStorage<'a, IdentifiedItem>
                       );
 
     #[allow(clippy::cognitive_complexity)]
     fn run(&mut self, data : Self::SystemData) {
         let (player_entity, mut gamelog, entities, mut wants_use, names, equippable, 
-            mut equipped, mut backpack, mut dirty) = data;
+            mut equipped, mut backpack, mut dirty, mut identified_item) = data;
 
         let mut remove_use : Vec<Entity> = Vec::new();
         for (target, useitem) in (&entities, &wants_use).join() {
             // If it is equippable, then we want to equip it - and unequip whatever else was in that slot
             if let Some(can_equip) = equippable.get(useitem.item) {
                 let target_slot = can_equip.slot;
+
+                // Identify the item
+                if target == *player_entity {
+                    identified_item.insert(target, IdentifiedItem{ name: names.get(useitem.item).unwrap().name.clone() })
+                        .expect("Unable to insert");
+                }
 
                 // Remove any items the target has in the item's slot
                 let mut to_unequip : Vec<Entity> = Vec::new();
