@@ -1,5 +1,6 @@
 use specs::prelude::*;
-use super::{Name, InBackpack, Position, gamelog::GameLog, WantsToDropItem, EquipmentChanged};
+use super::{Name, InBackpack, Position, gamelog::GameLog, WantsToDropItem, EquipmentChanged,
+    MagicItem, ObfuscatedName, MasterDungeonMap};
 
 pub struct ItemDropSystem {}
 
@@ -12,12 +13,15 @@ impl<'a> System<'a> for ItemDropSystem {
                         ReadStorage<'a, Name>,
                         WriteStorage<'a, Position>,
                         WriteStorage<'a, InBackpack>,
-                        WriteStorage<'a, EquipmentChanged>
+                        WriteStorage<'a, EquipmentChanged>,
+                        ReadStorage<'a, MagicItem>,
+                        ReadStorage<'a, ObfuscatedName>,
+                        ReadExpect<'a, MasterDungeonMap>
                       );
 
     fn run(&mut self, data : Self::SystemData) {
         let (player_entity, mut gamelog, entities, mut wants_drop, names, mut positions,
-            mut backpack, mut dirty) = data;
+            mut backpack, mut dirty, magic_items, obfuscated_names, dm) = data;
 
         for (entity, to_drop) in (&entities, &wants_drop).join() {
             let mut dropper_pos : Position = Position{x:0, y:0};
@@ -31,7 +35,13 @@ impl<'a> System<'a> for ItemDropSystem {
             dirty.insert(entity, EquipmentChanged{}).expect("Unable to insert");
 
             if entity == *player_entity {
-                gamelog.entries.insert(0, format!("You drop up the {}.", names.get(to_drop.item).unwrap().name));
+                gamelog.entries.insert(
+                    0, 
+                    format!(
+                        "You pick up the {}.", 
+                        super::obfuscate_name(to_drop.item, &names, &magic_items, &obfuscated_names, &dm)
+                    )
+                );
             }
         }
 

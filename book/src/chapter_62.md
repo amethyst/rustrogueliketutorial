@@ -756,7 +756,7 @@ Also, if you've given the character any free items in `spawner.rs`, go ahead and
 
 ## Tool-tips
 
-We've still got one issue to handle. If you mouse-over an item, it displays its actual name - rather than its obfuscated name. Open up `gui.rs`, and we'll fix that. Fortunately, it's pretty easy now that we've built the name framework! We can remove names altogether from the ECS structures, and just pass the entity and ECS to the `get_item_display_name` to obtain a name for the entity:
+We've still got an issue to handle. If you mouse-over an item, it displays its actual name - rather than its obfuscated name. Open up `gui.rs`, and we'll fix that. Fortunately, it's pretty easy now that we've built the name framework! We can remove names altogether from the ECS structures, and just pass the entity and ECS to the `get_item_display_name` to obtain a name for the entity:
 
 ```rust
 fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
@@ -792,6 +792,137 @@ fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
 ```
 
 If you mouse-over things now, you'll see the obfuscated name. You *could* even use this to obfuscate NPC names if you feel like integrating spies into your game!
+
+## Information leakage via the log
+
+There's another glaring problem: if you watch the log while you pickup or drop an item, it shows the item's real name! The issues all occur in `inventory_system.rs`, so we'll take our "outside the ECS" function from `gui.rs` and adapt it to work *inside* systems. Here's the function:
+
+```rust
+fn obfuscate_name(
+    item: Entity, 
+    names: &ReadStorage::<Name>, 
+    magic_items : &ReadStorage::<MagicItem>,
+    obfuscated_names : &ReadStorage::<ObfuscatedName>,
+    dm : &MasterDungeonMap,
+) -> String 
+{
+    if let Some(name) = names.get(item) {
+        if magic_items.get(item).is_some() {
+            if dm.identified_items.contains(&name.name) {
+                name.name.clone()
+            } else if let Some(obfuscated) = obfuscated_names.get(item) {
+                obfuscated.name.clone()
+            } else {
+                "Unidentified magic item".to_string()
+            }
+        } else {
+            name.name.clone()
+        }
+
+    } else {
+        "Nameless item (bug)".to_string()
+    }
+}
+```
+
+Then we can change the `ItemCollectionSystem` to use it. There's a fair number of additional systems involved:
+
+```rust
+pub struct ItemCollectionSystem {}
+
+impl<'a> System<'a> for ItemCollectionSystem {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( ReadExpect<'a, Entity>,
+                        WriteExpect<'a, GameLog>,
+                        WriteStorage<'a, WantsToPickupItem>,
+                        WriteStorage<'a, Position>,
+                        ReadStorage<'a, Name>,
+                        WriteStorage<'a, InBackpack>,
+                        WriteStorage<'a, EquipmentChanged>,
+                        ReadStorage<'a, MagicItem>,
+                        ReadStorage<'a, ObfuscatedName>,
+                        ReadExpect<'a, MasterDungeonMap>
+                      );
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (player_entity, mut gamelog, mut wants_pickup, mut positions, names,
+            mut backpack, mut dirty, magic_items, obfuscated_names, dm) = data;
+
+        for pickup in wants_pickup.join() {
+            positions.remove(pickup.item);
+            backpack.insert(pickup.item, InBackpack{ owner: pickup.collected_by }).expect("Unable to insert backpack entry");
+            dirty.insert(pickup.collected_by, EquipmentChanged{}).expect("Unable to insert");
+
+            if pickup.collected_by == *player_entity {
+                gamelog.entries.insert(
+                    0, 
+                    format!(
+                        "You pick up the {}.", 
+                        obfuscate_name(pickup.item, &names, &magic_items, &obfuscated_names, &dm)
+                    )
+                );
+            }
+        }
+
+        wants_pickup.clear();
+    }
+}
+```
+
+Likewise, we need to adjust the item dropping system:
+
+```rust
+pub struct ItemDropSystem {}
+
+impl<'a> System<'a> for ItemDropSystem {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( ReadExpect<'a, Entity>,
+                        WriteExpect<'a, GameLog>,
+                        Entities<'a>,
+                        WriteStorage<'a, WantsToDropItem>,
+                        ReadStorage<'a, Name>,
+                        WriteStorage<'a, Position>,
+                        WriteStorage<'a, InBackpack>,
+                        WriteStorage<'a, EquipmentChanged>,
+                        ReadStorage<'a, MagicItem>,
+                        ReadStorage<'a, ObfuscatedName>,
+                        ReadExpect<'a, MasterDungeonMap>
+                      );
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (player_entity, mut gamelog, entities, mut wants_drop, names, mut positions,
+            mut backpack, mut dirty, magic_items, obfuscated_names, dm) = data;
+
+        for (entity, to_drop) in (&entities, &wants_drop).join() {
+            let mut dropper_pos : Position = Position{x:0, y:0};
+            {
+                let dropped_pos = positions.get(entity).unwrap();
+                dropper_pos.x = dropped_pos.x;
+                dropper_pos.y = dropped_pos.y;
+            }
+            positions.insert(to_drop.item, Position{ x : dropper_pos.x, y : dropper_pos.y }).expect("Unable to insert position");
+            backpack.remove(to_drop.item);
+            dirty.insert(entity, EquipmentChanged{}).expect("Unable to insert");
+
+            if entity == *player_entity {
+                gamelog.entries.insert(
+                    0, 
+                    format!(
+                        "You drop up the {}.", 
+                        obfuscate_name(to_drop.item, &names, &magic_items, &obfuscated_names, &dm)
+                    )
+                );
+            }
+        }
+
+        wants_drop.clear();
+    }
+}
+```
+
+## Fixing item colors
+
+Another issue is that we've color coded various magical items. A sharp-eyed player could know that a "scroll of blah" is actually a fireball scroll because of the color! The solution is to go through `spawns.json` and make sure that items have the same color.
 
 ## Wrap-Up
 

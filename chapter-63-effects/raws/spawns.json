@@ -89,7 +89,7 @@
         "name" : "Magic Missile Scroll",
         "renderable": {
             "glyph" : ")",
-            "fg" : "#00FFFF",
+            "fg" : "#FFAAAA",
             "bg" : "#000000",
             "order" : 2
         },
@@ -110,7 +110,7 @@
         "name" : "Fireball Scroll",
         "renderable": {
             "glyph" : ")",
-            "fg" : "#FFA500",
+            "fg" : "#FFAAAA",
             "bg" : "#000000",
             "order" : 2
         },

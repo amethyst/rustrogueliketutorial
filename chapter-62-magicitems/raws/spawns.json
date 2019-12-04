@@ -89,7 +89,7 @@
         "name" : "Magic Missile Scroll",
         "renderable": {
             "glyph" : ")",
-            "fg" : "#00FFFF",
+            "fg" : "#FFAAAA",
             "bg" : "#000000",
             "order" : 2
         },
@@ -109,7 +109,7 @@
         "name" : "Fireball Scroll",
         "renderable": {
             "glyph" : ")",
-            "fg" : "#FFA500",
+            "fg" : "#FFAAAA",
             "bg" : "#000000",
             "order" : 2
         },
@@ -169,7 +169,7 @@
         "name" : "Town Portal Scroll",
         "renderable": {
             "glyph" : ")",
-            "fg" : "#AAAAFF",
+            "fg" : "#FFAAAA",
             "bg" : "#000000",
             "order" : 2
         },
