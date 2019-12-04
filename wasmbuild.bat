@@ -59,6 +59,7 @@ CALL :Stage chapter-60-caverns3
 CALL :Stage chapter-61-townportal
 CALL :Stage chapter-62-magicitems
 CALL :Stage chapter-63-effects
+CALL :Stage chapter-64-curses
 
 REM Publish or perish
 cd book\book\wasm

@@ -65,7 +65,21 @@
     - [Town Portals](./chapter_61.md)
     - [Magic Items](./chapter_62.md)
     - [Effects](./chapter_63.md)
+    - [Cursed Items](./chapter_64.md)
     - Magic Spells
-    - Fortress level
+    - Monster Abilities
+    - Fortress level/Dragon
     - Random Seeds
+    - Levelling Up
+    - Systems Cleanup
+    - Mushrooms Everywhere
+    - Components Cleanup
+    - Throwing things
+    - Ranged Weaponry / Better Targeting
+    - Dark Elves
+    - Citadel
+    - Abyss
+    - Win Condition
+    - Morgue Files
+    - Fixing the title and death screens
 - [Contributors](./contributors.md)
