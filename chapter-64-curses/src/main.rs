@@ -303,6 +303,7 @@ impl GameState for State {
                             let mut dm = self.ecs.fetch_mut::<MasterDungeonMap>();
                             dm.identified_items.insert(name.name.clone());
                         }
+                        newrunstate = RunState::Ticking;
                     }
                 }
             }
