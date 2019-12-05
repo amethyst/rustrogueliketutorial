@@ -68,6 +68,7 @@
     - [Cursed Items](./chapter_64.md)
     - Magic Spells
     - Monster Abilities
+    - Durations and timed effects
     - Fortress level/Dragon
     - Random Seeds
     - Levelling Up

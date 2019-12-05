@@ -198,6 +198,9 @@ pub struct CursedItem {}
 pub struct Consumable {}
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct ProvidesRemoveCurse {}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Ranged {
     pub range : i32
 }

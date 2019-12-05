@@ -254,6 +254,233 @@ impl<'a> System<'a> for ItemEquipOnUse {
 
 We've moved identification down beneath the item scanning, and added a `can_use` bool; if the switch would result in unequipping a cursed item, we cancel the job.
 
+## Removing Curses
+
+Now that the player can accidentally curse themselves, it would be a good idea to give them a way to recover from their mistake! Let's add the traditional *Scroll of Remove Curse*. In `spawns.json`, we'll start out by defining what we want:
+
+```json
+{
+    "name" : "Remove Curse Scroll",
+    "renderable": {
+        "glyph" : ")",
+        "fg" : "#FFAAAA",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "consumable" : {
+        "effects" : {
+            "remove_curse" : ""
+        }
+    },
+    "weight_lbs" : 0.5,
+    "base_value" : 50.0,
+    "vendor_category" : "alchemy",
+    "magic" : { "class" : "common", "naming" : "scroll" }
+},
+```
+
+We should also allow it to spawn:
+
+```json
+{ "name" : "Remove Curse Scroll", "weight" : 4, "min_depth" : 0, "max_depth" : 100 },
+```
+
+The only new thing there is the effect: `remove_curse`. We'll handle it like other effects, so we start by making a new component to represent "this X triggers curse removal". In `components.rs` (and registered in `main.rs` and `saveload_system.rs`):
+
+```rust
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct ProvidesRemoveCurse {}
+```
+
+Now in `raws/rawmaster.rs`, we'll add it to the effects spawn list (so it remains a generic ability; you could have a shrine that removes curses for example):
+
+```rust
+macro_rules! apply_effects {
+    ( $effects:expr, $eb:expr ) => {
+        for effect in $effects.iter() {
+        let effect_name = effect.0.as_str();
+            match effect_name {
+                "provides_healing" => $eb = $eb.with(ProvidesHealing{ heal_amount: effect.1.parse::<i32>().unwrap() }),
+                "ranged" => $eb = $eb.with(Ranged{ range: effect.1.parse::<i32>().unwrap() }),
+                "damage" => $eb = $eb.with(InflictsDamage{ damage : effect.1.parse::<i32>().unwrap() }),
+                "area_of_effect" => $eb = $eb.with(AreaOfEffect{ radius: effect.1.parse::<i32>().unwrap() }),
+                "confusion" => $eb = $eb.with(Confusion{ turns: effect.1.parse::<i32>().unwrap() }),
+                "magic_mapping" => $eb = $eb.with(MagicMapper{}),
+                "town_portal" => $eb = $eb.with(TownPortal{}),
+                "food" => $eb = $eb.with(ProvidesFood{}),
+                "single_activation" => $eb = $eb.with(SingleActivation{}),
+                "particle_line" => $eb = $eb.with(parse_particle_line(&effect.1)),
+                "particle" => $eb = $eb.with(parse_particle(&effect.1)),
+                "remove_curse" => $eb = $eb.with(ProvidesRemoveCurse{}),
+                _ => println!("Warning: consumable effect {} not implemented.", effect_name)
+            }
+        }
+    };
+}
+```
+
+Now that we have remove curse items correctly tagged, all the remains is to make them function! When you use the scroll, it should show you all the items that you *know* are cursed, and let you pick one to de-fang. This will require a new `RunState`, so we'll add that in `main.rs` and add a place-holder to the run-loop so the program compiles:
+
+```rust
+#[derive(PartialEq, Copy, Clone)]
+pub enum RunState {
+    AwaitingInput,
+    PreRun,
+    Ticking,
+    ShowInventory,
+    ShowDropItem,
+    ShowTargeting { range : i32, item : Entity},
+    MainMenu { menu_selection : gui::MainMenuSelection },
+    SaveGame,
+    NextLevel,
+    PreviousLevel,
+    TownPortal,
+    ShowRemoveItem,
+    GameOver,
+    MagicMapReveal { row : i32 },
+    MapGeneration,
+    ShowCheatMenu,
+    ShowVendor { vendor: Entity, mode : VendorMode },
+    TeleportingToOtherLevel { x: i32, y: i32, depth: i32 },
+    ShowRemoveCurse
+}
+...
+RunState::ShowRemoveCurse => {}
+```
+
+We'll also add it to the `Ticking` escape clauses:
+
+```rust
+RunState::Ticking => {
+    while newrunstate == RunState::Ticking {
+        self.run_systems();
+        self.ecs.maintain();
+        match *self.ecs.fetch::<RunState>() {
+            RunState::AwaitingInput => newrunstate = RunState::AwaitingInput,
+            RunState::MagicMapReveal{ .. } => newrunstate = RunState::MagicMapReveal{ row: 0 },
+            RunState::TownPortal => newrunstate = RunState::TownPortal,
+            RunState::TeleportingToOtherLevel{ x, y, depth } => newrunstate = RunState::TeleportingToOtherLevel{ x, y, depth },
+            RunState::ShowRemoveCurse => newrunstate = RunState::ShowRemoveCurse,
+            _ => newrunstate = RunState::Ticking
+        }
+    }
+}
+```
+
+Now we'll open up `effects/triggers.rs` and support the run-state transition (I put it after magic mapping):
+
+```rust
+// Remove Curse
+if ecs.read_storage::<ProvidesRemoveCurse>().get(entity).is_some() {
+    let mut runstate = ecs.fetch_mut::<RunState>();
+    *runstate = RunState::ShowRemoveCurse;
+    did_something = true;
+}
+```
+
+So now we have to go into `gui.rs` and make another item list system. We'll use the item drop/remove systems as a template, but replace the selection list with an iterator that removes non-cursed items and items that are cursed but you don't know it yet:
+
+```rust
+pub fn remove_curse_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
+    let player_entity = gs.ecs.fetch::<Entity>();
+    let equipped = gs.ecs.read_storage::<Equipped>();
+    let backpack = gs.ecs.read_storage::<InBackpack>();
+    let entities = gs.ecs.entities();
+    let items = gs.ecs.read_storage::<Item>();
+    let cursed = gs.ecs.read_storage::<CursedItem>();
+    let names = gs.ecs.read_storage::<Name>();
+    let dm = gs.ecs.fetch::<MasterDungeonMap>();
+
+    let build_cursed_iterator = || {
+        (&entities, &items, &cursed).join().filter(|(item_entity,_item,_cursed)| {
+            let mut keep = false;
+            if let Some(bp) = backpack.get(*item_entity) {
+                if bp.owner == *player_entity {
+                    if let Some(name) = names.get(*item_entity) {
+                        if dm.identified_items.contains(&name.name) {
+                            keep = true;
+                        }
+                    }
+                }
+            }
+            // It's equipped, so we know it's cursed
+            if let Some(equip) = equipped.get(*item_entity) {
+                if equip.owner == *player_entity {
+                    keep = true;
+                }
+            }
+            keep
+        })
+    };
+
+    let count = build_cursed_iterator().count();
+
+    let mut y = (25 - (count / 2)) as i32;
+    ctx.draw_box(15, y-2, 31, (count+3) as i32, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK));
+    ctx.print_color(18, y-2, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Remove Curse From Which Item?");
+    ctx.print_color(18, y+ count as i32+1, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "ESCAPE to cancel");
+
+    let mut equippable : Vec<Entity> = Vec::new();
+    for (j, (entity, _item, _cursed)) in build_cursed_iterator().enumerate() {
+        ctx.set(17, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437('('));
+        ctx.set(18, y, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), 97+j as u8);
+        ctx.set(19, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437(')'));
+
+        ctx.print_color(21, y, get_item_color(&gs.ecs, entity), RGB::from_f32(0.0, 0.0, 0.0), &get_item_display_name(&gs.ecs, entity));
+        equippable.push(entity);
+        y += 1;
+    }
+
+    match ctx.key {
+        None => (ItemMenuResult::NoResponse, None),
+        Some(key) => {
+            match key {
+                VirtualKeyCode::Escape => { (ItemMenuResult::Cancel, None) }
+                _ => {
+                    let selection = rltk::letter_to_option(key);
+                    if selection > -1 && selection < count as i32 {
+                        return (ItemMenuResult::Selected, Some(equippable[selection as usize]));
+                    }
+                    (ItemMenuResult::NoResponse, None)
+                }
+            }
+        }
+    }
+}
+```
+
+Then in `main.rs`, we just need to finish the logic:
+
+```rust
+RunState::ShowRemoveCurse => {
+    let result = gui::remove_curse_menu(self, ctx);
+    match result.0 {
+        gui::ItemMenuResult::Cancel => newrunstate = RunState::AwaitingInput,
+        gui::ItemMenuResult::NoResponse => {}
+        gui::ItemMenuResult::Selected => {
+            let item_entity = result.1.unwrap();
+            self.ecs.write_storage::<IdentifiedItem>().insert(
+                item_entity, 
+                IdentifiedItem{ 
+                    name : self.ecs.read_storage::<Name>().get(item_entity).unwrap().name.clone()
+                }
+            ).expect("Unable to insert component");
+            newrunstate = RunState::Ticking;
+        }
+    }
+}
+```
+
+You can now `cargo run`, find a cursed sword (they are *everywhere*), equip it, and use a *Remove Curse* scroll to free yourself from its grip.
+
+## Identification Items
+
+## Stat Modifying Items
+
+## Weapons that "proc" an effect
+
+## Fixing cursed sword weighting before we forget
+
 ...
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-64-curses)**

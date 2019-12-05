@@ -70,7 +70,8 @@ pub enum RunState {
     MapGeneration,
     ShowCheatMenu,
     ShowVendor { vendor: Entity, mode : VendorMode },
-    TeleportingToOtherLevel { x: i32, y: i32, depth: i32 }
+    TeleportingToOtherLevel { x: i32, y: i32, depth: i32 },
+    ShowRemoveCurse
 }
 
 pub struct State {
@@ -193,6 +194,7 @@ impl GameState for State {
                         RunState::MagicMapReveal{ .. } => newrunstate = RunState::MagicMapReveal{ row: 0 },
                         RunState::TownPortal => newrunstate = RunState::TownPortal,
                         RunState::TeleportingToOtherLevel{ x, y, depth } => newrunstate = RunState::TeleportingToOtherLevel{ x, y, depth },
+                        RunState::ShowRemoveCurse => newrunstate = RunState::ShowRemoveCurse,
                         _ => newrunstate = RunState::Ticking
                     }
                 }
@@ -271,6 +273,23 @@ impl GameState for State {
                         let item_entity = result.1.unwrap();
                         let mut intent = self.ecs.write_storage::<WantsToRemoveItem>();
                         intent.insert(*self.ecs.fetch::<Entity>(), WantsToRemoveItem{ item: item_entity }).expect("Unable to insert intent");
+                        newrunstate = RunState::Ticking;
+                    }
+                }
+            }
+            RunState::ShowRemoveCurse => {
+                let result = gui::remove_curse_menu(self, ctx);
+                match result.0 {
+                    gui::ItemMenuResult::Cancel => newrunstate = RunState::AwaitingInput,
+                    gui::ItemMenuResult::NoResponse => {}
+                    gui::ItemMenuResult::Selected => {
+                        let item_entity = result.1.unwrap();
+                        self.ecs.write_storage::<IdentifiedItem>().insert(
+                            item_entity, 
+                            IdentifiedItem{ 
+                                name : self.ecs.read_storage::<Name>().get(item_entity).unwrap().name.clone()
+                            }
+                        ).expect("Unable to insert component");
                         newrunstate = RunState::Ticking;
                     }
                 }
@@ -530,6 +549,7 @@ fn main() {
     gs.ecs.register::<SpawnParticleBurst>();
     gs.ecs.register::<SpawnParticleLine>();
     gs.ecs.register::<CursedItem>();
+    gs.ecs.register::<ProvidesRemoveCurse>();
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
     raws::load_raws();

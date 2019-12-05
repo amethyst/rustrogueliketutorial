@@ -278,6 +278,7 @@ macro_rules! apply_effects {
                 "single_activation" => $eb = $eb.with(SingleActivation{}),
                 "particle_line" => $eb = $eb.with(parse_particle_line(&effect.1)),
                 "particle" => $eb = $eb.with(parse_particle(&effect.1)),
+                "remove_curse" => $eb = $eb.with(ProvidesRemoveCurse{}),
                 _ => println!("Warning: consumable effect {} not implemented.", effect_name)
             }
         }
