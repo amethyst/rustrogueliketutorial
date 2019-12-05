@@ -201,6 +201,9 @@ pub struct Consumable {}
 pub struct ProvidesRemoveCurse {}
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct ProvidesIdentification {}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Ranged {
     pub range : i32
 }

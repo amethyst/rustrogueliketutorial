@@ -89,6 +89,13 @@ fn event_trigger(creator : Option<Entity>, entity: Entity, targets : &Targets, e
         did_something = true;
     }
 
+    // Identify Item
+    if ecs.read_storage::<ProvidesIdentification>().get(entity).is_some() {
+        let mut runstate = ecs.fetch_mut::<RunState>();
+        *runstate = RunState::ShowIdentify;
+        did_something = true;
+    }
+
     // Town Portal
     if ecs.read_storage::<TownPortal>().get(entity).is_some() {
         let map = ecs.fetch::<Map>();

@@ -459,12 +459,7 @@ RunState::ShowRemoveCurse => {
         gui::ItemMenuResult::NoResponse => {}
         gui::ItemMenuResult::Selected => {
             let item_entity = result.1.unwrap();
-            self.ecs.write_storage::<IdentifiedItem>().insert(
-                item_entity, 
-                IdentifiedItem{ 
-                    name : self.ecs.read_storage::<Name>().get(item_entity).unwrap().name.clone()
-                }
-            ).expect("Unable to insert component");
+            self.ecs.write_storage::<CursedItem>().remove(item_entity);
             newrunstate = RunState::Ticking;
         }
     }
@@ -473,13 +468,230 @@ RunState::ShowRemoveCurse => {
 
 You can now `cargo run`, find a cursed sword (they are *everywhere*), equip it, and use a *Remove Curse* scroll to free yourself from its grip.
 
+TODO: Screenshot
+
 ## Identification Items
+
+It would also be helpful if you could find a humble *Identification Scroll* and use it to identify magical items before you try them! This is almost exactly the same process as remove curse. Let's start by building the item in `spawns.json`:
+
+```json
+{
+    "name" : "Identify Scroll",
+    "renderable": {
+        "glyph" : ")",
+        "fg" : "#FFAAAA",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "consumable" : {
+        "effects" : {
+            "identify" : ""
+        }
+    },
+    "weight_lbs" : 0.5,
+    "base_value" : 50.0,
+    "vendor_category" : "alchemy",
+    "magic" : { "class" : "common", "naming" : "scroll" }
+},
+```
+
+Once again, we need a new component to represent the power. In `components.rs` (and registered in `main.rs` and `saveload_system.rs`):
+
+```rust
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct ProvidesIdentification {}
+```
+
+Just like before, we then need to add it as an effect in `raws/rawmaster.rs`:
+
+```rust
+macro_rules! apply_effects {
+    ( $effects:expr, $eb:expr ) => {
+        for effect in $effects.iter() {
+        let effect_name = effect.0.as_str();
+            match effect_name {
+                "provides_healing" => $eb = $eb.with(ProvidesHealing{ heal_amount: effect.1.parse::<i32>().unwrap() }),
+                "ranged" => $eb = $eb.with(Ranged{ range: effect.1.parse::<i32>().unwrap() }),
+                "damage" => $eb = $eb.with(InflictsDamage{ damage : effect.1.parse::<i32>().unwrap() }),
+                "area_of_effect" => $eb = $eb.with(AreaOfEffect{ radius: effect.1.parse::<i32>().unwrap() }),
+                "confusion" => $eb = $eb.with(Confusion{ turns: effect.1.parse::<i32>().unwrap() }),
+                "magic_mapping" => $eb = $eb.with(MagicMapper{}),
+                "town_portal" => $eb = $eb.with(TownPortal{}),
+                "food" => $eb = $eb.with(ProvidesFood{}),
+                "single_activation" => $eb = $eb.with(SingleActivation{}),
+                "particle_line" => $eb = $eb.with(parse_particle_line(&effect.1)),
+                "particle" => $eb = $eb.with(parse_particle(&effect.1)),
+                "remove_curse" => $eb = $eb.with(ProvidesRemoveCurse{}),
+                "identify" => $eb = $eb.with(ProvidesIdentification{}),
+                _ => println!("Warning: consumable effect {} not implemented.", effect_name)
+            }
+        }
+    };
+}
+```
+
+Next, we'll handle it in the `effects/triggers.rs` file:
+
+```rust
+// Identify Item
+if ecs.read_storage::<ProvidesIdentification>().get(entity).is_some() {
+    let mut runstate = ecs.fetch_mut::<RunState>();
+    *runstate = RunState::ShowIdentify;
+    did_something = true;
+}
+```
+
+And we'll pop over to `main.rs` and add `ShowIdentify` as a `RunState`:
+
+```rust
+#[derive(PartialEq, Copy, Clone)]
+pub enum RunState {
+    AwaitingInput,
+    PreRun,
+    Ticking,
+    ShowInventory,
+    ShowDropItem,
+    ShowTargeting { range : i32, item : Entity},
+    MainMenu { menu_selection : gui::MainMenuSelection },
+    SaveGame,
+    NextLevel,
+    PreviousLevel,
+    TownPortal,
+    ShowRemoveItem,
+    GameOver,
+    MagicMapReveal { row : i32 },
+    MapGeneration,
+    ShowCheatMenu,
+    ShowVendor { vendor: Entity, mode : VendorMode },
+    TeleportingToOtherLevel { x: i32, y: i32, depth: i32 },
+    ShowRemoveCurse,
+    ShowIdentify
+}
+```
+
+Add it as an escape clause:
+
+```rust
+RunState::Ticking => {
+    while newrunstate == RunState::Ticking {
+        self.run_systems();
+        self.ecs.maintain();
+        match *self.ecs.fetch::<RunState>() {
+            RunState::AwaitingInput => newrunstate = RunState::AwaitingInput,
+            RunState::MagicMapReveal{ .. } => newrunstate = RunState::MagicMapReveal{ row: 0 },
+            RunState::TownPortal => newrunstate = RunState::TownPortal,
+            RunState::TeleportingToOtherLevel{ x, y, depth } => newrunstate = RunState::TeleportingToOtherLevel{ x, y, depth },
+            RunState::ShowRemoveCurse => newrunstate = RunState::ShowRemoveCurse,
+            RunState::ShowIdentify => newrunstate = RunState::ShowIdentify,
+            _ => newrunstate = RunState::Ticking
+        }
+    }
+}
+```
+
+And handle it in our tick system:
+
+```rust
+RunState::ShowIdentify => {
+    let result = gui::identify_menu(self, ctx);
+    match result.0 {
+        gui::ItemMenuResult::Cancel => newrunstate = RunState::AwaitingInput,
+        gui::ItemMenuResult::NoResponse => {}
+        gui::ItemMenuResult::Selected => {
+            let item_entity = result.1.unwrap();
+            if let Some(name) = self.ecs.read_storage::<Name>().get(item_entity) {
+                let mut dm = self.ecs.fetch_mut::<MasterDungeonMap>();
+                dm.identified_items.insert(name.name.clone());
+            }
+        }
+    }
+}
+```
+
+Finally, open up `gui.rs` and provide the menu function:
+
+```rust
+pub fn identify_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
+    let player_entity = gs.ecs.fetch::<Entity>();
+    let equipped = gs.ecs.read_storage::<Equipped>();
+    let backpack = gs.ecs.read_storage::<InBackpack>();
+    let entities = gs.ecs.entities();
+    let items = gs.ecs.read_storage::<Item>();
+    let names = gs.ecs.read_storage::<Name>();
+    let dm = gs.ecs.fetch::<MasterDungeonMap>();
+    let obfuscated = gs.ecs.read_storage::<ObfuscatedName>();
+
+    let build_cursed_iterator = || {
+        (&entities, &items).join().filter(|(item_entity,_item)| {
+            let mut keep = false;
+            if let Some(bp) = backpack.get(*item_entity) {
+                if bp.owner == *player_entity {
+                    if let Some(name) = names.get(*item_entity) {
+                        if obfuscated.get(*item_entity).is_some() && !dm.identified_items.contains(&name.name) {
+                            keep = true;
+                        }
+                    }
+                }
+            }
+            // It's equipped, so we know it's cursed
+            if let Some(equip) = equipped.get(*item_entity) {
+                if equip.owner == *player_entity {
+                    if let Some(name) = names.get(*item_entity) {
+                        if obfuscated.get(*item_entity).is_some() && !dm.identified_items.contains(&name.name) {
+                            keep = true;
+                        }
+                    }
+                }
+            }
+            keep
+        })
+    };
+
+    let count = build_cursed_iterator().count();
+
+    let mut y = (25 - (count / 2)) as i32;
+    ctx.draw_box(15, y-2, 31, (count+3) as i32, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK));
+    ctx.print_color(18, y-2, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Remove Curse From Which Item?");
+    ctx.print_color(18, y+ count as i32+1, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "ESCAPE to cancel");
+
+    let mut equippable : Vec<Entity> = Vec::new();
+    for (j, (entity, _item)) in build_cursed_iterator().enumerate() {
+        ctx.set(17, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437('('));
+        ctx.set(18, y, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), 97+j as u8);
+        ctx.set(19, y, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), rltk::to_cp437(')'));
+
+        ctx.print_color(21, y, get_item_color(&gs.ecs, entity), RGB::from_f32(0.0, 0.0, 0.0), &get_item_display_name(&gs.ecs, entity));
+        equippable.push(entity);
+        y += 1;
+    }
+
+    match ctx.key {
+        None => (ItemMenuResult::NoResponse, None),
+        Some(key) => {
+            match key {
+                VirtualKeyCode::Escape => { (ItemMenuResult::Cancel, None) }
+                _ => {
+                    let selection = rltk::letter_to_option(key);
+                    if selection > -1 && selection < count as i32 {
+                        return (ItemMenuResult::Selected, Some(equippable[selection as usize]));
+                    }
+                    (ItemMenuResult::NoResponse, None)
+                }
+            }
+        }
+    }
+}
+```
+
+You can now identify items!
+
+TODO: Screenshot
 
 ## Stat Modifying Items
 
 ## Weapons that "proc" an effect
 
-## Fixing cursed sword weighting before we forget
+## Fixing spawn weightings before we forget
 
 ...
 
