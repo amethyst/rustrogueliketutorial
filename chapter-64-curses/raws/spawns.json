@@ -13,7 +13,7 @@
     { "name" : "Shield", "weight" : 3, "min_depth" : 0, "max_depth" : 100 },
     { "name" : "Longsword", "weight" : 2, "min_depth" : 3, "max_depth" : 100 },
     { "name" : "Longsword +1", "weight" : 1, "min_depth" : 3, "max_depth" : 100 },
-    { "name" : "Longsword -1", "weight" : 100, "min_depth" : 1, "max_depth" : 100 },
+    { "name" : "Longsword -1", "weight" : 1, "min_depth" : 3, "max_depth" : 100 },
     { "name" : "Tower Shield", "weight" : 1, "min_depth" : 3, "max_depth" : 100 },
     { "name" : "Leather Armor", "weight" : 1, "min_depth" : 2, "max_depth" : 100 },
     { "name" : "Leather Boots", "weight" : 1, "min_depth" : 2, "max_depth" : 100 },

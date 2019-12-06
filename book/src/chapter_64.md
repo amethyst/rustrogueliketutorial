@@ -120,7 +120,7 @@ pub fn get_item_color(ecs : &World, item : Entity) -> RGB {
 }
 ```
 
-(screenshot)
+![Screenshot](./c63-s1.gif)
 
 ## Preventing the unequipping of cursed items
 
@@ -252,7 +252,9 @@ impl<'a> System<'a> for ItemEquipOnUse {
 }
 ```
 
-We've moved identification down beneath the item scanning, and added a `can_use` bool; if the switch would result in unequipping a cursed item, we cancel the job.
+We've moved identification down beneath the item scanning, and added a `can_use` bool; if the switch would result in unequipping a cursed item, we cancel the job. If you `cargo run` the project now, you will find that there's no way to remove cursed equipment once it is wielded:
+
+![Screenshot](./c63-s2.gif)
 
 ## Removing Curses
 
@@ -468,7 +470,7 @@ RunState::ShowRemoveCurse => {
 
 You can now `cargo run`, find a cursed sword (they are *everywhere*), equip it, and use a *Remove Curse* scroll to free yourself from its grip.
 
-TODO: Screenshot
+![Screenshot](./c63-s3.gif)
 
 ## Identification Items
 
@@ -652,7 +654,7 @@ pub fn identify_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Optio
 
     let mut y = (25 - (count / 2)) as i32;
     ctx.draw_box(15, y-2, 31, (count+3) as i32, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK));
-    ctx.print_color(18, y-2, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Remove Curse From Which Item?");
+    ctx.print_color(18, y-2, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Identify Which Item?");
     ctx.print_color(18, y+ count as i32+1, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "ESCAPE to cancel");
 
     let mut equippable : Vec<Entity> = Vec::new();
@@ -686,13 +688,19 @@ pub fn identify_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Optio
 
 You can now identify items!
 
-TODO: Screenshot
-
-## Stat Modifying Items
-
-## Weapons that "proc" an effect
+![Screenshot](./c63-s4.gif)
 
 ## Fixing spawn weightings before we forget
+
+Before we forget, we don't really want to litter the entire landscape with cursed swords. Pop into `spawns.json` and we'll change the cursed longsword to have the same spawn characteristics as the +1 longsword:
+
+```json
+{ "name" : "Longsword -1", "weight" : 1, "min_depth" : 3, "max_depth" : 100 },
+```
+
+## Wrap-Up
+
+This chapter has added cursed items, remove curse scrolls and item identification scrolls. That's not bad, we're getting pretty close to a completed item system!
 
 ...
 
