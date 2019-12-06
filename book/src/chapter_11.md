@@ -166,7 +166,7 @@ That's a bit of a mouthful, but it displays menu options and lets you select the
 
 ```toml
 [dependencies]
-rltk = { git = "https://github.com/thebracket/rltk_rs", features = ["serialization"] }
+rltk = { version = "0.5.9", features = ["serialization"] }
 specs = { version = "0.15.0", features = ["serde"] }
 specs-derive = "0.4.0"
 serde= { version = "1.0.93", features = ["derive"] }

@@ -139,7 +139,7 @@ Go ahead and make sure that your name is correct! Next, we're going to ask Cargo
 
 ```toml
 [dependencies]
-rltk = { git = "https://github.com/thebracket/rltk_rs" }
+rltk = "0.5.9"
 ```
 
 We're telling it that the package is named `rltk` and giving it a Github location to pull from.
