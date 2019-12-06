@@ -142,7 +142,7 @@ Go ahead and make sure that your name is correct! Next, we're going to ask Cargo
 rltk = "0.5.9"
 ```
 
-We're telling it that the package is named `rltk` and giving it a Github location to pull from.
+We're telling it that the package is named `rltk`, and is available in Cargo - so we just have to give it a version. You can do `cargo search rltk` to see the latest version at any time, or go to [the crate webpage](https://crates.io/crates/rltk).
 
 It's a good idea to occasionally run `cargo update` - this will update the libraries used by your program.
 
