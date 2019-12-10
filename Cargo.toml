@@ -76,7 +76,8 @@ members = [
     "chapter-61-townportal",
     "chapter-62-magicitems",
     "chapter-63-effects",
-    "chapter-64-curses"
+    "chapter-64-curses",
+    "chapter-65-items"
     ]
 
 [profile.dev]
