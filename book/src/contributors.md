@@ -25,6 +25,7 @@ The following people have contributed to this project:
 * [toyboot4e](https://github.com/toyboot4e) found some typos and code improvements in the Wave Function Collapse system.
 * [Sebastian N. Kaupe](https://github.com/snkaupe) fixed an issue with tool-tip whitespace.
 * [adamnemecek](https://github.com/adamnemecek) helped out with some whitespace issues.
+* [Kawzeg](https://github.com/Kawzeg) helped fix an out-of-bounds error in chapter 4.
 
 
 ## Supporters
@@ -42,6 +43,7 @@ I'd also like to take a moment to thank everyone who has sent me kind words, con
 * Brian Bucklew
 * Knightdave
 * Oskar Edgren
+* Oliver Uvman
 
 
 ---
