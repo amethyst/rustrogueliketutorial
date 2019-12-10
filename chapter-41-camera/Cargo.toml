@@ -10,8 +10,8 @@ edition = "2018"
 rltk = { version = "0.5.12", features = ["serialization"] }
 specs = { version = "0.15.0", features = ["serde"] }
 specs-derive = "0.4.0"
-serde= { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+serde= { version = "^1.0.44", features = ["derive"] }
+serde_json = "^1.0.44"
 
 [target.'cfg(any(target_arch = "wasm32"))'.dependencies]
 web-sys = { version = "0.3", features=["console"] }
