@@ -46,7 +46,7 @@ That's a lot to digest, so we'll look at a simple example of how an ECS can make
 To start, we want to tell Cargo that we're going to use Specs. Open your `Cargo.toml` file, and change the `dependencies` section to look like this:
 ```toml
 [dependencies]
-rltk = "0.5.9"
+rltk = "0.5.12"
 specs = "0.15.0"
 specs-derive = "0.4.0"
 ```
