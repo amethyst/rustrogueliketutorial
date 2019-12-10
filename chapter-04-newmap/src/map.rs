@@ -95,7 +95,7 @@ pub fn new_map_rooms_and_corridors() -> (Vec<Rect>, Vec<TileType>) {
 
             if !rooms.is_empty() {
                 let (new_x, new_y) = new_room.center();
-                let (prev_x, prev_y) = rooms[i as usize -1].center();
+                let (prev_x, prev_y) = rooms[rooms.len()-1].center();
                 if rng.range(0,2) == 1 {
                     apply_horizontal_tunnel(&mut map, prev_x, new_x, prev_y);
                     apply_vertical_tunnel(&mut map, prev_y, new_y, new_x);
