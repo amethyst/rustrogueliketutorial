@@ -203,11 +203,130 @@ impl<'a> System<'a> for EncumbranceSystem {
 }
 ```
 
-TODO: Description
-
-
+TODO: Description and screenshot
 
 ## Charged items
+
+Not all items crumble to dust when you use them. A potion vial might hold more than one dose, a magical rod might cast its effect multiple times (as usual, your imagination is the limit!). Let's make a new item, the *Rod Of Fireballs*. In `spawns.json`, we'll define the basics; it's basically a scroll of fireball, but with charges:
+
+```json
+{
+    "name" : "Rod of Fireballs",
+    "renderable": {
+        "glyph" : "/",
+        "fg" : "#FFAAAA",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "consumable" : {
+        "effects" : { 
+            "ranged" : "6",
+            "damage" : "20",
+            "area_of_effect" : "3",
+            "particle" : "▓;#FFA500;200.0"
+        },
+        "charges" : 5
+    },
+    "weight_lbs" : 0.5,
+    "base_value" : 500.0,
+    "vendor_category" : "alchemy",
+    "magic" : { "class" : "common", "naming" : "Unidentified Rod" }
+}
+```
+
+We'll need to extend the item definition in `raws/item_structs.rs` to handle the new data:
+
+```rust
+#[derive(Deserialize, Debug)]
+pub struct Consumable {
+    pub effects : HashMap<String, String>,
+    pub charges : Option<i32>
+}
+```
+
+We'll also extend the `Consumable` component in `components.rs`:
+
+```rust
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct Consumable {
+    pub max_charges : i32,
+    pub charges : i32
+}
+```
+
+Note that we're storing both the max and the current number. That's so we can allow recharging later. We'll need to extend `raws/rawmaster.rs` to apply this information:
+
+```rust
+if let Some(consumable) = &item_template.consumable {
+    let max_charges = consumable.charges.unwrap_or(1);
+    eb = eb.with(crate::components::Consumable{ max_charges, charges : max_charges });
+    apply_effects!(consumable.effects, eb);
+}
+```
+
+Now we need to make consumables with charges make use of them. That means not self-destructing if `max_charges` is greater than 1, only firing if there are charges remaining, and decrementing the charge count after usage. Fortunately, this is an easy change to `effects/triggers.rs`'s `item_trigger` function:
+
+```rust
+pub fn item_trigger(creator : Option<Entity>, item: Entity, targets : &Targets, ecs: &mut World) {
+    // Check charges
+    if let Some(c) = ecs.write_storage::<Consumable>().get_mut(item) {
+        if c.charges < 1 {
+            // Cancel
+            let mut gamelog = ecs.fetch_mut::<GameLog>();
+            gamelog.entries.insert(0, format!("{} is out of charges!", ecs.read_storage::<Name>().get(item).unwrap().name));
+            return;
+        } else {
+            c.charges -= 1;
+        }
+    }
+
+    // Use the item via the generic system
+    let did_something = event_trigger(creator, item, targets, ecs);
+
+    // If it was a consumable, then it gets deleted
+    if did_something {
+        if let Some(c) = ecs.read_storage::<Consumable>().get(item) {
+            if c.max_charges == 0 {
+                ecs.entities().delete(item).expect("Delete Failed");
+            }
+        }
+    }
+}
+```
+
+That gets you a multi-use Rod of Fireballs! However, we should have some way to let the player know if charges remain - to help out with item management. After all, it *really sucks* to point your rod at a mighty dragon and hear a "fut" sound as it eats you. We'll go into `gui.rs` and extend `get_item_display_name`:
+
+```rust
+pub fn get_item_display_name(ecs: &World, item : Entity) -> String {
+    if let Some(name) = ecs.read_storage::<Name>().get(item) {
+        if ecs.read_storage::<MagicItem>().get(item).is_some() {
+            let dm = ecs.fetch::<crate::map::MasterDungeonMap>();
+            if dm.identified_items.contains(&name.name) {
+                if let Some(c) = ecs.read_storage::<Consumable>().get(item) {
+                    if c.max_charges > 1 {
+                        format!("{} ({})", name.name.clone(), c.charges).to_string()
+                    } else {
+                        name.name.clone()
+                    }
+                } else {
+                    name.name.clone()
+                }
+            } else if let Some(obfuscated) = ecs.read_storage::<ObfuscatedName>().get(item) {
+                obfuscated.name.clone()
+            } else {
+                "Unidentified magic item".to_string()
+            }
+        } else {
+            name.name.clone()
+        }
+
+    } else {
+        "Nameless item (bug)".to_string()
+    }
+}
+```
+
+TODO - description screenshot wrap
 
 ## Status Effects
 

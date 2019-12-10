@@ -203,7 +203,10 @@ pub struct AttributeBonus {
 pub struct CursedItem {}
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
-pub struct Consumable {}
+pub struct Consumable {
+    pub max_charges : i32,
+    pub charges : i32
+}
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct ProvidesRemoveCurse {}

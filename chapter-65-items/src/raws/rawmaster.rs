@@ -314,7 +314,8 @@ pub fn spawn_named_item(raws: &RawMaster, ecs : &mut World, key : &str, pos : Sp
         });
 
         if let Some(consumable) = &item_template.consumable {
-            eb = eb.with(crate::components::Consumable{});
+            let max_charges = consumable.charges.unwrap_or(1);
+            eb = eb.with(crate::components::Consumable{ max_charges, charges : max_charges });
             apply_effects!(consumable.effects, eb);
         }
 

@@ -66,4 +66,5 @@
     - [Magic Items](./chapter_62.md)
     - [Effects](./chapter_63.md)
     - [Cursed Items](./chapter_64.md)
+    - [Even More Items](./chapter_65.md)
 - [Contributors](./contributors.md)

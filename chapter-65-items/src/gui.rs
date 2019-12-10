@@ -30,7 +30,15 @@ pub fn get_item_display_name(ecs: &World, item : Entity) -> String {
         if ecs.read_storage::<MagicItem>().get(item).is_some() {
             let dm = ecs.fetch::<crate::map::MasterDungeonMap>();
             if dm.identified_items.contains(&name.name) {
-                name.name.clone()
+                if let Some(c) = ecs.read_storage::<Consumable>().get(item) {
+                    if c.max_charges > 1 {
+                        format!("{} ({})", name.name.clone(), c.charges).to_string()
+                    } else {
+                        name.name.clone()
+                    }
+                } else {
+                    name.name.clone()
+                }
             } else if let Some(obfuscated) = ecs.read_storage::<ObfuscatedName>().get(item) {
                 obfuscated.name.clone()
             } else {
