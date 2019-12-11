@@ -5,7 +5,8 @@ use specs::prelude::*;
 use super::{Pools, Pool, Player, Renderable, Name, Position, Viewshed, Rect,
     SerializeMe, random_table::RandomTable, HungerClock, HungerState, Map, TileType, raws::*,
     Attribute, Attributes, Skills, Skill, LightSource, Initiative, Faction, EquipmentChanged,
-    OtherLevelPosition, MasterDungeonMap, EntryTrigger, TeleportTo, SingleActivation };
+    OtherLevelPosition, MasterDungeonMap, EntryTrigger, TeleportTo, SingleActivation,
+    StatusEffect, Duration, AttributeBonus };
 use crate::specs::saveload::{MarkedBuilder, SimpleMarker};
 use std::collections::HashMap;
 use crate::{attr_bonus, player_hp_at_level, mana_at_level};
@@ -68,6 +69,20 @@ pub fn player(ecs : &mut World, player_x : i32, player_y : i32) -> Entity {
     spawn_named_entity(&RAWS.lock().unwrap(), ecs, "Torn Trousers", SpawnType::Equipped{by : player});
     spawn_named_entity(&RAWS.lock().unwrap(), ecs, "Old Boots", SpawnType::Equipped{by : player});
     spawn_named_entity(&RAWS.lock().unwrap(), ecs, "Identify Scroll", SpawnType::Carried{by : player} );
+
+    // Starting hangover
+    ecs.create_entity()
+        .with(StatusEffect{ target : player })
+        .with(Duration{ turns:10 })
+        .with(Name{ name: "Hangover".to_string() })
+        .with(AttributeBonus{
+            might : Some(-1),
+            fitness : None,
+            quickness : Some(-1),
+            intelligence : Some(-1)
+        })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
 
     player
 }

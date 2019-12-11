@@ -1,6 +1,7 @@
 use specs::prelude::*;
 use super::*;
-use crate::components::{Pools, Player, Attributes, Confusion, SerializeMe, Duration, StatusEffect, Name};
+use crate::components::{Pools, Player, Attributes, Confusion, SerializeMe, Duration, StatusEffect, 
+    Name, EquipmentChanged};
 use crate::map::Map;
 use crate::gamesystem::{player_hp_at_level, mana_at_level};
 use crate::gamelog::GameLog;
@@ -125,5 +126,18 @@ pub fn add_confusion(ecs: &mut World, effect: &EffectSpawner, target: Entity) {
             .with(Name{ name : "Confusion".to_string() })
             .marked::<SimpleMarker<SerializeMe>>()
             .build();
+    }
+}
+
+pub fn attribute_effect(ecs: &mut World, effect: &EffectSpawner, target: Entity) {
+    if let EffectType::AttributeEffect{bonus, name, duration} = &effect.effect_type {
+        ecs.create_entity()
+            .with(StatusEffect{ target })
+            .with(bonus.clone())
+            .with(Duration { turns : *duration })
+            .with(Name { name : name.clone() })
+            .marked::<SimpleMarker<SerializeMe>>()
+            .build();
+        ecs.write_storage::<EquipmentChanged>().insert(target, EquipmentChanged{}).expect("Insert failed");
     }
 }

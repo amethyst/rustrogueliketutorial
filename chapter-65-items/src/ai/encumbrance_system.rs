@@ -1,7 +1,7 @@
 extern crate specs;
 use specs::prelude::*;
 use crate::{EquipmentChanged, Item, InBackpack, Equipped, Pools, Attributes, gamelog::GameLog, AttributeBonus,
-    gamesystem::attr_bonus};
+    gamesystem::attr_bonus, StatusEffect};
 use std::collections::HashMap;
 
 pub struct EncumbranceSystem {}
@@ -18,12 +18,13 @@ impl<'a> System<'a> for EncumbranceSystem {
         WriteStorage<'a, Attributes>,
         ReadExpect<'a, Entity>,
         WriteExpect<'a, GameLog>,
-        ReadStorage<'a, AttributeBonus>
+        ReadStorage<'a, AttributeBonus>,
+        ReadStorage<'a, StatusEffect>
     );
 
     fn run(&mut self, data : Self::SystemData) {
         let (mut equip_dirty, entities, items, backpacks, wielded,
-            mut pools, mut attributes, player, mut gamelog, attrbonus) = data;
+            mut pools, mut attributes, player, mut gamelog, attrbonus, statuses) = data;
 
         if equip_dirty.is_empty() { return; }
 
@@ -52,7 +53,6 @@ impl<'a> System<'a> for EncumbranceSystem {
                 totals.weight += item.weight_lbs;
                 totals.initiative += item.initiative_penalty;
                 if let Some(attr) = attrbonus.get(entity) {
-                    println!("Attr! {:?}", attr);
                     totals.might += attr.might.unwrap_or(0);
                     totals.fitness += attr.fitness.unwrap_or(0);
                     totals.quickness += attr.quickness.unwrap_or(0);
@@ -62,11 +62,22 @@ impl<'a> System<'a> for EncumbranceSystem {
         }
 
         // Total up carried items
-        for (item, carried, entity) in (&items, &backpacks, &entities).join() {
+        for (item, carried) in (&items, &backpacks).join() {
             if to_update.contains_key(&carried.owner) {
                 let totals = to_update.get_mut(&carried.owner).unwrap();
                 totals.weight += item.weight_lbs;
                 totals.initiative += item.initiative_penalty;
+            }
+        }
+
+        // Total up status effect modifiers
+        for (status, attr) in (&statuses, &attrbonus).join() {
+            if to_update.contains_key(&status.target) {
+                let totals = to_update.get_mut(&status.target).unwrap();
+                totals.might += attr.might.unwrap_or(0);
+                totals.fitness += attr.fitness.unwrap_or(0);
+                totals.quickness += attr.quickness.unwrap_or(0);
+                totals.intelligence += attr.intelligence.unwrap_or(0);
             }
         }
 

@@ -26,7 +26,7 @@ impl<'a> System<'a> for ItemRemoveSystem {
                 equipped.remove(to_remove.item);
                 backpack.insert(to_remove.item, InBackpack{ owner: entity }).expect("Unable to insert backpack");
             }
-            dirty.insert(entity, EquipmentChanged{});
+            dirty.insert(entity, EquipmentChanged{}).expect("Unable to insert");
         }
 
         wants_remove.clear();

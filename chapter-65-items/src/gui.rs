@@ -5,7 +5,8 @@ use specs::prelude::*;
 use super::{Pools, gamelog::GameLog, Map, Name, Position, State, InBackpack,
     Viewshed, RunState, Equipped, HungerClock, HungerState, rex_assets::RexAssets,
     Hidden, camera, Attributes, Attribute, Consumable, VendorMode, Item, Vendor,
-    MagicItem, MagicItemClass, ObfuscatedName, CursedItem, MasterDungeonMap };
+    MagicItem, MagicItemClass, ObfuscatedName, CursedItem, MasterDungeonMap,
+    StatusEffect, Duration };
 
 pub fn get_item_color(ecs : &World, item : Entity) -> RGB {
     let dm = ecs.fetch::<crate::map::MasterDungeonMap>();
@@ -179,13 +180,38 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     }
 
     // Status
+    let mut y = 44;
     let hunger = ecs.read_storage::<HungerClock>();
     let hc = hunger.get(*player_entity).unwrap();
     match hc.state {
-        HungerState::WellFed => ctx.print_color(50, 44, RGB::named(rltk::GREEN), RGB::named(rltk::BLACK), "Well Fed"),
+        HungerState::WellFed => {
+            ctx.print_color(50, y, RGB::named(rltk::GREEN), RGB::named(rltk::BLACK), "Well Fed");
+            y -= 1;
+        }
         HungerState::Normal => {}
-        HungerState::Hungry => ctx.print_color(50, 44, RGB::named(rltk::ORANGE), RGB::named(rltk::BLACK), "Hungry"),
-        HungerState::Starving => ctx.print_color(50, 44, RGB::named(rltk::RED), RGB::named(rltk::BLACK), "Starving"),
+        HungerState::Hungry => {
+            ctx.print_color(50, y, RGB::named(rltk::ORANGE), RGB::named(rltk::BLACK), "Hungry");
+            y -= 1;
+        }
+        HungerState::Starving => {
+            ctx.print_color(50, y, RGB::named(rltk::RED), RGB::named(rltk::BLACK), "Starving");
+            y -= 1;
+        }
+    }
+    let statuses = ecs.read_storage::<StatusEffect>();
+    let durations = ecs.read_storage::<Duration>();
+    let names = ecs.read_storage::<Name>();
+    for (status, duration, name) in (&statuses, &durations, &names).join() {
+        if status.target == *player_entity {
+            ctx.print_color(
+                50, 
+                y, 
+                RGB::named(rltk::RED), 
+                RGB::named(rltk::BLACK), 
+                &format!("{} ({})", name.name, duration.turns)
+            );
+            y -= 1;
+        }
     }
 
     // Draw the log
@@ -289,6 +315,16 @@ fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
             let stat = pools.get(entity);
             if let Some(stat) = stat {
                 tip.add(format!("Level: {}", stat.level));
+            }
+
+            // Status effects
+            let statuses = ecs.read_storage::<StatusEffect>();
+            let durations = ecs.read_storage::<Duration>();
+            let names = ecs.read_storage::<Name>();
+            for (status, duration, name) in (&statuses, &durations, &names).join() {
+                if status.target == entity {
+                    tip.add(format!("{} ({})", name.name, duration.turns));
+                }
             }
 
             tip_boxes.push(tip);

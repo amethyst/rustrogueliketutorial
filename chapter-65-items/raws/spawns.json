@@ -2,9 +2,10 @@
 "spawn_table" : [
     { "name" : "Goblin", "weight" : 10, "min_depth" : 3, "max_depth" : 4 },
     { "name" : "Orc", "weight" : 1, "min_depth" : 4, "max_depth" : 100 },
+    { "name" : "Strength Potion", "weight" : 200, "min_depth" : 0, "max_depth" : 100 },
     { "name" : "Health Potion", "weight" : 7, "min_depth" : 0, "max_depth" : 100 },
     { "name" : "Fireball Scroll", "weight" : 2, "min_depth" : 0, "max_depth" : 100, "add_map_depth_to_weight" : true },
-    { "name" : "Confusion Scroll", "weight" : 200, "min_depth" : 0, "max_depth" : 100, "add_map_depth_to_weight" : true },
+    { "name" : "Confusion Scroll", "weight" : 2, "min_depth" : 0, "max_depth" : 100, "add_map_depth_to_weight" : true },
     { "name" : "Magic Missile Scroll", "weight" : 4, "min_depth" : 0, "max_depth" : 100 },
     { "name" : "Town Portal Scroll", "weight" : 4, "min_depth" : 0, "max_depth" : 100 },
     { "name" : "Remove Curse Scroll", "weight" : 4, "min_depth" : 0, "max_depth" : 100 },
@@ -88,6 +89,24 @@
         "base_value" : 50.0,
         "vendor_category" : "alchemy",
         "magic" : { "class" : "common", "naming" : "potion" }
+    },
+
+    {
+        "name" : "Strength Potion",
+        "renderable": {
+            "glyph" : "!",
+            "fg" : "#FF00FF",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "consumable" : {
+            "effects" : { "particle" : "!;#FF0000;200.0" }
+        },
+        "weight_lbs" : 0.5,
+        "base_value" : 50.0,
+        "vendor_category" : "alchemy",
+        "magic" : { "class" : "common", "naming" : "potion" },
+        "attributes" : { "might" : 5 }
     },
 
     {

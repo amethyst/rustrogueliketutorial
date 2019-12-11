@@ -1,4 +1,4 @@
-# More Magic Items
+# Items that Affect Attributes, and Better Status Effects
 
 ---
 
@@ -563,15 +563,247 @@ impl<'a> System<'a> for InitiativeSystem {
 
 TODO: Explanation, screenshot wrap
 
+### Displaying Player Status
+
+Now that we have a generic status effect system, we should modify the UI to show ongoing statuses. Hunger is handled differently, so we'll keep it there - but let's finish that portion of `gui.rs`. In `draw_ui`, replace the *Status* section with:
+
+```rust
+// Status
+let mut y = 44;
+let hunger = ecs.read_storage::<HungerClock>();
+let hc = hunger.get(*player_entity).unwrap();
+match hc.state {
+    HungerState::WellFed => {
+        ctx.print_color(50, y, RGB::named(rltk::GREEN), RGB::named(rltk::BLACK), "Well Fed");
+        y -= 1;
+    }
+    HungerState::Normal => {}
+    HungerState::Hungry => {
+        ctx.print_color(50, y, RGB::named(rltk::ORANGE), RGB::named(rltk::BLACK), "Hungry");
+        y -= 1;
+    }
+    HungerState::Starving => {
+        ctx.print_color(50, y, RGB::named(rltk::RED), RGB::named(rltk::BLACK), "Starving");
+        y -= 1;
+    }
+}
+let statuses = ecs.read_storage::<StatusEffect>();
+let durations = ecs.read_storage::<Duration>();
+let names = ecs.read_storage::<Name>();
+for (status, duration, name) in (&statuses, &durations, &names).join() {
+    if status.target == *player_entity {
+        ctx.print_color(
+            50, 
+            y, 
+            RGB::named(rltk::RED), 
+            RGB::named(rltk::BLACK), 
+            &format!("{} ({})", name.name, duration.turns)
+        );
+        y -= 1;
+    }
+}
+```
+
+TODO: Explanation and screenshot
+
+### Displaying Mob Status
+
+It would also be nice to have some indication that status effects are applying to NPCs. There are two levels to this - we can display the status in the tooltip, and also use particles to indicate what's going on in regular play.
+
+To handle tooltips, open up `gui.rs` and go to the `draw_tooltips` function. Underneath "Comment on Pools", add the following:
+
+```rust
+// Status effects
+let statuses = ecs.read_storage::<StatusEffect>();
+let durations = ecs.read_storage::<Duration>();
+let names = ecs.read_storage::<Name>();
+for (status, duration, name) in (&statuses, &durations, &names).join() {
+    if status.target == entity {
+        tip.add(format!("{} ({})", name.name, duration.turns));
+    }
+}
+```
+
+So now if you confuse a monster, it displays the effect in the tooltip. That's a good start to explaining why a monster isn't moving! (TODO: Screenshot)
+
+The other half is to display a particle when a turn is lost to confusion. We'll add a call to the effects system to request a particle! In `ai/turn_status.rs` expand the confusion section:
+
+```rust
+// Skip turn for confusion
+if confusion.get(effect_entity).is_some() {
+    add_effect(
+        None, 
+        EffectType::Particle{
+            glyph : rltk::to_cp437('?'),
+            fg : rltk::RGB::named(rltk::CYAN),
+            bg : rltk::RGB::named(rltk::BLACK),
+            lifespan: 200.0
+        },
+        Targets::Single{ target:status_effect.target }
+    );
+    not_my_turn.push(status_effect.target);
+}
+```
+
+(screenshot)
+
 ### Hangovers
+
+Going back to the design document, we mentioned that you start with a hangover. We can finally implement it! Since you start the game with a hangover, open up `spawner.rs` and add the following to the end of the player spawn to make a hangover entity:
+
+```rust
+// Starting hangover
+ecs.create_entity()
+    .with(StatusEffect{ target : player })
+    .with(Duration{ turns:10 })
+    .with(Name{ name: "Hangover".to_string() })
+    .with(AttributeBonus{
+        might : Some(-1),
+        fitness : None,
+        quickness : Some(-1),
+        intelligence : Some(-1)
+    })
+    .marked::<SimpleMarker<SerializeMe>>()
+    .build();
+```
+
+Being hungover sucks! You are weaker, slower and less intelligent. Or you will be, once we modify the encumbrance system (it really needs a new name) to handle attribute changes from statuses. The system needs one small improvement:
+
+```rust
+// Total up status effect modifiers
+for (status, attr) in (&statuses, &attrbonus).join() {
+    if to_update.contains_key(&status.target) {
+        let totals = to_update.get_mut(&status.target).unwrap();
+        totals.might += attr.might.unwrap_or(0);
+        totals.fitness += attr.fitness.unwrap_or(0);
+        totals.quickness += attr.quickness.unwrap_or(0);
+        totals.intelligence += attr.intelligence.unwrap_or(0);
+    }
+}
+```
+
+This shows the *real* reason for having a hangover system: it lets us safely test effects changing your attributes and make sure the expiration works!
+
+TODO: Screenshot
 
 ### Potion of Strength
 
-### Stun
+Now that we have all of this, let's use it to build a strength potion (I always picture the old *Asterix The Gaul* comics). In `spawns.json`, we define the new potion:
 
-### Nausea and Stinking Cloud
+```json
+{
+    "name" : "Strength Potion",
+    "renderable": {
+        "glyph" : "!",
+        "fg" : "#FF00FF",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "consumable" : {
+        "effects" : { "particle" : "!;#FF0000;200.0" }
+    },
+    "weight_lbs" : 0.5,
+    "base_value" : 50.0,
+    "vendor_category" : "alchemy",
+    "magic" : { "class" : "common", "naming" : "potion" },
+    "attributes" : { "might" : 5 }
+},
+```
 
-## Damage Types
+There's nothing new here: we're going to show a particle effect, and we've attached an `attributes` section just like the others to the potion. We are going to have to tweak the effects system to know how to apply transient attribute effects, however. In `effects/mod.rs`, we'll add a new effect type:
+
+```rust
+#[derive(Debug)]
+pub enum EffectType { 
+    Damage { amount : i32 },
+    Bloodstain,
+    Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
+    EntityDeath,
+    ItemUse { item: Entity },
+    WellFed,
+    Healing { amount : i32 },
+    Confusion { turns : i32 },
+    TriggerFire { trigger: Entity },
+    TeleportTo { x:i32, y:i32, depth: i32, player_only : bool },
+    AttributeEffect { bonus : AttributeBonus, name : String, duration : i32 }
+}
+```
+
+We'll mark it as affecting entities:
+
+```rust
+fn tile_effect_hits_entities(effect: &EffectType) -> bool {
+    match effect {
+        EffectType::Damage{..} => true,
+        EffectType::WellFed => true,
+        EffectType::Healing{..} => true,
+        EffectType::Confusion{..} => true,
+        EffectType::TeleportTo{..} => true,
+        EffectType::AttributeEffect{..} => true,
+        _ => false
+    }
+}
+```
+
+And tell it to call a new function we haven't written yet:
+
+```rust
+fn affect_entity(ecs: &mut World, effect: &EffectSpawner, target: Entity) {
+    match &effect.effect_type {
+        EffectType::Damage{..} => damage::inflict_damage(ecs, effect, target),
+        EffectType::EntityDeath => damage::death(ecs, effect, target),
+        EffectType::Bloodstain{..} => if let Some(pos) = entity_position(ecs, target) { damage::bloodstain(ecs, pos) },
+        EffectType::Particle{..} => if let Some(pos) = entity_position(ecs, target) { particles::particle_to_tile(ecs, pos, &effect) },
+        EffectType::WellFed => hunger::well_fed(ecs, effect, target),
+        EffectType::Healing{..} => damage::heal_damage(ecs, effect, target),
+        EffectType::Confusion{..} => damage::add_confusion(ecs, effect, target),
+        EffectType::TeleportTo{..} => movement::apply_teleport(ecs, effect, target),
+        EffectType::AttributeEffect{..} => damage::attribute_effect(ecs, effect, target),
+        _ => {}
+    }
+}
+```
+
+Now we need to go into `effects/damage.rs` and write the new function:
+
+```rust
+pub fn attribute_effect(ecs: &mut World, effect: &EffectSpawner, target: Entity) {
+    if let EffectType::AttributeEffect{bonus, name, duration} = &effect.effect_type {
+        ecs.create_entity()
+            .with(StatusEffect{ target })
+            .with(bonus.clone())
+            .with(Duration { turns : *duration })
+            .with(Name { name : name.clone() })
+            .marked::<SimpleMarker<SerializeMe>>()
+            .build();
+        ecs.write_storage::<EquipmentChanged>().insert(target, EquipmentChanged{}).expect("Insert failed");
+    }
+}
+```
+
+All that remains is to open up `effects/triggers.rs` and add attribute bonus effects as a trigger type:
+
+```rust
+// Attribute Modifiers
+if let Some(attr) = ecs.read_storage::<AttributeBonus>().get(entity) {
+    add_effect(
+        creator,
+        EffectType::AttributeEffect{
+            bonus : attr.clone(),
+            duration : 10,
+            name : ecs.read_storage::<Name>().get(entity).unwrap().name.clone()
+        },
+        targets.clone()
+    );
+    did_something = true;
+}
+```
+
+TODO: Wrap up with screenshot
+
+## Wrap Up
+
+And there we have it: a status effects system that is nice and generic, and a system to let items fire them - as well as provide attribute bonuses and penalties. That wraps up the items system for now. In the next chapter, we'll move onto magic spells - which will use many of the foundations we've built in these chapters.
 
 ...
 
