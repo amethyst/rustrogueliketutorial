@@ -230,8 +230,16 @@ pub struct AreaOfEffect {
 }
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
-pub struct Confusion {
+pub struct Confusion {}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct Duration {
     pub turns : i32
+}
+
+#[derive(Component, Debug, Clone)]
+pub struct StatusEffect {
+    pub target : Entity
 }
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
@@ -402,6 +410,34 @@ pub struct SerializationHelper {
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct DMSerializationHelper {
     pub map : super::map::MasterDungeonMap
+}
+
+// StatusEffect wrapper
+#[derive(Serialize, Deserialize, Clone)]
+pub struct StatusEffectData<M>(M);
+
+impl<M: Marker + Serialize> ConvertSaveload<M> for StatusEffect
+where
+    for<'de> M: Deserialize<'de>,
+{
+    type Data = StatusEffectData<M>;
+    type Error = NoError;
+
+    fn convert_into<F>(&self, mut ids: F) -> Result<Self::Data, Self::Error>
+    where
+        F: FnMut(Entity) -> Option<M>,
+    {
+        let marker = ids(self.target).unwrap();
+        Ok(StatusEffectData(marker))
+    }
+
+    fn convert_from<F>(data: Self::Data, mut ids: F) -> Result<Self, Self::Error>
+    where
+        F: FnMut(M) -> Option<Entity>,
+    {
+        let entity = ids(data.0).unwrap();
+        Ok(StatusEffect{target: entity})
+    }
 }
 
 // Chasing wrapper

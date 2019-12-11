@@ -330,6 +330,247 @@ TODO - description screenshot wrap
 
 ## Status Effects
 
+Right now, we're handling status effects on a case-by-base basis, and it's relatively unusual to apply them. Most deep roguelikes have *lots* of possible effects - ranging from hallucinating on mushrooms to moving at super speed after drinking some brown goop! We've left these until now because they dovetail nicely into the other things we've been doing in this chapter.
+
+Up until this chapter, we've added *Confusion* as a tag to the target - and relied upon the tag to store the duration. That's not really in the spirit of an ECS! Rather, *Confusion* is an entity *effect* that applies to a *target* for a *duration* number of turns. As usual, examining the taxonomy is a great way to figure out what entity/component groups something should have. So we'll visit `components.rs` and make two new components (also registering them in `main.rs` and `saveload_system.rs`), and modify the `Confusion` component to match this:
+
+```rust
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct Confusion {}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct Duration {
+    pub turns : i32
+}
+
+#[derive(Component, Debug, Clone)]
+pub struct StatusEffect {
+    pub target : Entity
+}
+```
+
+Also because we're storing an `Entity`, we need to write a wrapper to keep serialization happy:
+
+```rust
+// StatusEffect wrapper
+#[derive(Serialize, Deserialize, Clone)]
+pub struct StatusEffectData<M>(M);
+
+impl<M: Marker + Serialize> ConvertSaveload<M> for StatusEffect
+where
+    for<'de> M: Deserialize<'de>,
+{
+    type Data = StatusEffectData<M>;
+    type Error = NoError;
+
+    fn convert_into<F>(&self, mut ids: F) -> Result<Self::Data, Self::Error>
+    where
+        F: FnMut(Entity) -> Option<M>,
+    {
+        let marker = ids(self.target).unwrap();
+        Ok(StatusEffectData(marker))
+    }
+
+    fn convert_from<F>(data: Self::Data, mut ids: F) -> Result<Self, Self::Error>
+    where
+        F: FnMut(M) -> Option<Entity>,
+    {
+        let entity = ids(data.0).unwrap();
+        Ok(StatusEffect{target: entity})
+    }
+}
+```
+
+That's all well and good - but we've broken a few things! Everything that expected `Confusion` to have a `turns` field is now complaining.
+
+We'll start in `raws/rawmaster.rs` and separate the effect from the duration:
+
+```rust
+"confusion" => {
+    $eb = $eb.with(Confusion{});
+    $eb = $eb.with(Duration{ turns: effect.1.parse::<i32>().unwrap() });
+}
+```
+
+In `effects/triggers.rs` we'll make the duration take from the `Duration` component of the effect:
+
+```rust
+// Confusion
+if let Some(confusion) = ecs.read_storage::<Confusion>().get(entity) {
+    if let Some(duration) = ecs.read_storage::<Duration>().get(entity) {
+        add_effect(creator, EffectType::Confusion{ turns : duration.turns }, targets.clone());
+        did_something = true;
+    }
+}
+```
+
+We'll change `effects/damage.rs`'s confusion function to match the new scheme of things:
+
+```rust
+pub fn add_confusion(ecs: &mut World, effect: &EffectSpawner, target: Entity) {
+    if let EffectType::Confusion{turns} = &effect.effect_type {
+        ecs.create_entity()
+            .with(StatusEffect{ target })
+            .with(Confusion{})
+            .with(Duration{ turns : *turns})
+            .with(Name{ name : "Confusion".to_string() })
+            .marked::<SimpleMarker<SerializeMe>>()
+            .build();
+    }
+}
+```
+
+That leaves `ai/effect_status.rs`. We'll change this to no longer worry about durations at all, and simply check for the presence of an effect - and if its *Confusion*, take away the target's turn:
+
+```rust
+extern crate specs;
+use specs::prelude::*;
+use crate::{MyTurn, Confusion, RunState, StatusEffect};
+use std::collections::HashSet;
+
+pub struct TurnStatusSystem {}
+
+impl<'a> System<'a> for TurnStatusSystem {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( WriteStorage<'a, MyTurn>,
+                        ReadStorage<'a, Confusion>,
+                        Entities<'a>,
+                        ReadExpect<'a, RunState>,
+                        ReadStorage<'a, StatusEffect>
+                    );
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (mut turns, confusion, entities, runstate, statuses) = data;
+
+        if *runstate != RunState::Ticking { return; }
+
+        // Collect a set of all entities whose turn it is
+        let mut entity_turns = HashSet::new();
+        for (entity, _turn) in (&entities, &turns).join() {
+            entity_turns.insert(entity);
+        }
+
+        // Find status effects affecting entities whose turn it is
+        let mut not_my_turn : Vec<Entity> = Vec::new();
+        for (effect_entity, status_effect) in (&entities, &statuses).join() {
+            if entity_turns.contains(&status_effect.target) {
+                // Skip turn for confusion
+                if confusion.get(effect_entity).is_some() {
+                    not_my_turn.push(status_effect.target);
+                }
+            }
+        }
+
+        for e in not_my_turn {
+            turns.remove(e);
+        }
+    }
+}
+```
+
+If you `cargo run`, this will work - but there's one glaring problem: once confused, you are confused *forever* (or until someone puts you out of your misery). That's not quite what we had in mind. We've de-coupled the effect's duration from the effect taking place (which is a good thing!), but that means we have to handle durations!
+
+Here's an interesting conundrum: status effects are there own entities, but don't have an *Initiative*. Turns are relative, since entities can operate at different speeds. So when do we want to handle duration? The answer is *the player's turn*; time may be relative, but from the player's point of view turns are quite well defined. In effect, the rest of the world is speeding up when you are slowed - because we don't want to force the player to sit and be bored while the world chugs around them. Since we are switching to player control in the `ai/initiative_system.rs` - we'll handle it in there:
+
+```rust
+extern crate specs;
+use specs::prelude::*;
+use crate::{Initiative, Position, MyTurn, Attributes, RunState, Pools, Duration, 
+    EquipmentChanged, StatusEffect};
+
+pub struct InitiativeSystem {}
+
+impl<'a> System<'a> for InitiativeSystem {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( WriteStorage<'a, Initiative>,
+                        ReadStorage<'a, Position>,
+                        WriteStorage<'a, MyTurn>,
+                        Entities<'a>,
+                        WriteExpect<'a, rltk::RandomNumberGenerator>,
+                        ReadStorage<'a, Attributes>,
+                        WriteExpect<'a, RunState>,
+                        ReadExpect<'a, Entity>,
+                        ReadExpect<'a, rltk::Point>,
+                        ReadStorage<'a, Pools>,
+                        WriteStorage<'a, Duration>,
+                        WriteStorage<'a, EquipmentChanged>,
+                        ReadStorage<'a, StatusEffect>
+                    );
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (mut initiatives, positions, mut turns, entities, mut rng, attributes,
+            mut runstate, player, player_pos, pools, mut durations, mut dirty,
+            statuses) = data;
+
+        if *runstate != RunState::Ticking { return; }
+
+        // Clear any remaining MyTurn we left by mistkae
+        turns.clear();
+
+        // Roll initiative
+        for (entity, initiative, pos) in (&entities, &mut initiatives, &positions).join() {
+            initiative.current -= 1;
+            if initiative.current < 1 {
+                let mut myturn = true;
+
+                // Re-roll
+                initiative.current = 6 + rng.roll_dice(1, 6);
+
+                // Give a bonus for quickness
+                if let Some(attr) = attributes.get(entity) {
+                    initiative.current -= attr.quickness.bonus;
+                }
+
+                // Apply pool penalty
+                if let Some(pools) = pools.get(entity) {
+                    initiative.current += f32::floor(pools.total_initiative_penalty) as i32;
+                }
+
+                // TODO: More initiative granting boosts/penalties will go here later
+
+                // If its the player, we want to go to an AwaitingInput state
+                if entity == *player {
+                    // Give control to the player
+                    *runstate = RunState::AwaitingInput;
+                } else {
+                    let distance = rltk::DistanceAlg::Pythagoras.distance2d(*player_pos, rltk::Point::new(pos.x, pos.y));
+                    if distance > 20.0 {
+                        myturn = false;
+                    }
+                }
+
+                // It's my turn!
+                if myturn {
+                    turns.insert(entity, MyTurn{}).expect("Unable to insert turn");
+                }
+
+            }
+        }
+
+        // Handle durations
+        if *runstate == RunState::AwaitingInput {
+            for (effect_entity, duration, status) in (&entities, &mut durations, &statuses).join() {
+                duration.turns -= 1;
+                if duration.turns < 1 {
+                    dirty.insert(status.target, EquipmentChanged{}).expect("Unable to insert");
+                    entities.delete(effect_entity).expect("Unable to delete");
+                }
+            }
+        }
+    }
+}
+```
+
+TODO: Explanation, screenshot wrap
+
+### Hangovers
+
+### Potion of Strength
+
+### Stun
+
+### Nausea and Stinking Cloud
+
 ## Damage Types
 
 ...
