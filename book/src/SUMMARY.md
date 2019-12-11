@@ -67,4 +67,6 @@
     - [Effects](./chapter_63.md)
     - [Cursed Items](./chapter_64.md)
     - [Even More Items](./chapter_65.md)
+    - [Magic Spells](./chapter_66.md)
+    Enter the Dragon
 - [Contributors](./contributors.md)

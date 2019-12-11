@@ -61,6 +61,7 @@ CALL :Stage chapter-62-magicitems
 CALL :Stage chapter-63-effects
 CALL :Stage chapter-64-curses
 CALL :Stage chapter-65-items
+CALL :Stage chapter-66-spells
 
 REM Publish or perish
 cd book\book\wasm
