@@ -203,7 +203,18 @@ impl<'a> System<'a> for EncumbranceSystem {
 }
 ```
 
-TODO: Description and screenshot
+So this is mostly the same logic as before, but we've changed quite a few things:
+
+* Instead of a tuple holding our weight and initiative effects, we've added a `struct` to hold all of the things we want to add up. Rust is nice, you can declare a struct inside a function if you only need it once!
+* Just like before, we add up weights for all items, and initiative penalties for equipped items.
+* We also add up attribute bonuses/penalties for each item if they have them.
+* Then we apply them to the `modifiers` portion of the attributes, and recalculate the bonuses.
+
+The great thing is that because the other systems that use these attributes are already looking at bonuses (and the GUI is looking at modifiers for display), a lot of things *just work* (and not entirely in the Bethesda sense of the phrase... yeah, I actually enjoy *Fallout 76* but it would be nice if things actually did just work!).
+
+Now, if you `cargo run` the project you can find *Gauntlets of Ogre Power* and equip them for the bonus - and then remove them to take it away:
+
+![Screenshot](./c65-s1.gif)
 
 ## Charged items
 
@@ -326,7 +337,11 @@ pub fn get_item_display_name(ecs: &World, item : Entity) -> String {
 }
 ```
 
-TODO - description screenshot wrap
+So the function is basically unchanged, but once we've determined that an item is magical AND identified, we look to see if it has charges. If it does, we append the number of charges in parentheses to the item name in the display list.
+
+If you `cargo run` the project now, you can find your *Rod of Fireballs* and blast away until you run out of charges:
+
+![Screenshot](./c65-s2.gif)
 
 ## Status Effects
 
@@ -561,7 +576,7 @@ impl<'a> System<'a> for InitiativeSystem {
 }
 ```
 
-TODO: Explanation, screenshot wrap
+The system is basically unchanged, but we've added a few more accessors into different component storages - and added the "Handle durations" section at the end. This simply joins entities that have a duration and a status effect, and decrements the duration. If the duration is complete, it marks the status's target as dirty (so any recalculation that needs to happen will happen), and deletes the status effect entity.
 
 ### Displaying Player Status
 
@@ -604,7 +619,7 @@ for (status, duration, name) in (&statuses, &durations, &names).join() {
 }
 ```
 
-TODO: Explanation and screenshot
+This is very similar to what we had before, but we are storing `y` as a variable - so the list of status effects can grow upwards. Then we query the ECS for entities that have a status, duration and name - and if it is targeting the player, we use that to display the status.
 
 ### Displaying Mob Status
 
@@ -624,7 +639,7 @@ for (status, duration, name) in (&statuses, &durations, &names).join() {
 }
 ```
 
-So now if you confuse a monster, it displays the effect in the tooltip. That's a good start to explaining why a monster isn't moving! (TODO: Screenshot)
+So now if you confuse a monster, it displays the effect in the tooltip. That's a good start to explaining why a monster isn't moving!
 
 The other half is to display a particle when a turn is lost to confusion. We'll add a call to the effects system to request a particle! In `ai/turn_status.rs` expand the confusion section:
 
@@ -645,7 +660,9 @@ if confusion.get(effect_entity).is_some() {
 }
 ```
 
-(screenshot)
+So if you `cargo run` the project now, you can see confusion in action:
+
+![Screenshot](./c65-s3.gif)
 
 ### Hangovers
 
@@ -684,7 +701,9 @@ for (status, attr) in (&statuses, &attrbonus).join() {
 
 This shows the *real* reason for having a hangover system: it lets us safely test effects changing your attributes and make sure the expiration works!
 
-TODO: Screenshot
+If you `cargo run` the game now, you can watch the hangover in effect and wearing off:
+
+![Screenshot](./c65-s4.gif)
 
 ### Potion of Strength
 
@@ -799,7 +818,9 @@ if let Some(attr) = ecs.read_storage::<AttributeBonus>().get(entity) {
 }
 ```
 
-TODO: Wrap up with screenshot
+This is similar to the other triggers - it makes another event fire, this time with the attribute effect in place. You can `cargo run` now, and strength potions are working in the game. Here's a screenshot of drinking one while still hungover, showing you that effects now correctly stack:
+
+![Screenshot](./c65-s5.gif)
 
 ## Wrap Up
 
