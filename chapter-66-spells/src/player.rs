@@ -6,7 +6,7 @@ use std::cmp::{max, min};
 use super::{Position, Player, Viewshed, State, Map, RunState, Attributes, WantsToMelee, Item,
     gamelog::GameLog, WantsToPickupItem, TileType, HungerClock, HungerState,
     EntityMoved, Door, BlocksTile, BlocksVisibility, Renderable, Pools, Faction,
-    raws::Reaction, Vendor, VendorMode};
+    raws::Reaction, Vendor, VendorMode, WantsToCastSpell};
 
 pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) -> RunState {
     let mut positions = ecs.write_storage::<Position>();
@@ -200,6 +200,10 @@ fn skip_turn(ecs: &mut World) -> RunState {
         let mut health_components = ecs.write_storage::<Pools>();
         let pools = health_components.get_mut(*player_entity).unwrap();
         pools.hit_points.current = i32::min(pools.hit_points.current + 1, pools.hit_points.max);
+        let mut rng = ecs.fetch_mut::<rltk::RandomNumberGenerator>();
+        if rng.roll_dice(1,6)==1 {
+            pools.mana.current = i32::min(pools.mana.current + 1, pools.mana.max);
+        }
     }
 
     RunState::Ticking
@@ -222,7 +226,6 @@ fn use_consumable_hotkey(gs: &mut State, key: i32) -> RunState {
     if (key as usize) < carried_consumables.len() {
         use crate::components::Ranged;
         if let Some(ranged) = gs.ecs.read_storage::<Ranged>().get(carried_consumables[key as usize]) {
-            println!("Entering targeting mode");
             return RunState::ShowTargeting{ range: ranged.range, item: carried_consumables[key as usize] };
         }
         let mut intent = gs.ecs.write_storage::<WantsToUseItem>();
@@ -232,6 +235,39 @@ fn use_consumable_hotkey(gs: &mut State, key: i32) -> RunState {
         ).expect("Unable to insert intent");
         return RunState::Ticking;
     }
+    RunState::Ticking
+}
+
+fn use_spell_hotkey(gs: &mut State, key: i32) -> RunState {
+    use super::KnownSpells;
+    use super::raws::find_spell_entity;
+
+    let player_entity = gs.ecs.fetch::<Entity>();
+    let known_spells_storage = gs.ecs.read_storage::<KnownSpells>();
+    let known_spells = &known_spells_storage.get(*player_entity).unwrap().spells;
+
+    if (key as usize) < known_spells.len() {
+        let pools = gs.ecs.read_storage::<Pools>();
+        let player_pools = pools.get(*player_entity).unwrap();
+        if player_pools.mana.current >= known_spells[key as usize].mana_cost {
+            if let Some(spell_entity) = find_spell_entity(&gs.ecs, &known_spells[key as usize].display_name) {
+                use crate::components::Ranged;
+                if let Some(ranged) = gs.ecs.read_storage::<Ranged>().get(spell_entity) {
+                    return RunState::ShowTargeting{ range: ranged.range, item: spell_entity };
+                };
+                let mut intent = gs.ecs.write_storage::<WantsToCastSpell>();
+                intent.insert(
+                    *player_entity,
+                    WantsToCastSpell{ spell: spell_entity, target: None }
+                ).expect("Unable to insert intent");
+                return RunState::Ticking;
+            }
+        } else {
+            let mut gamelog = gs.ecs.fetch_mut::<GameLog>();
+            gamelog.entries.insert(0, "You don't have enough mana to cast that!".to_string());
+        }
+    }
+
     RunState::Ticking
 }
 
@@ -253,6 +289,24 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
             };
         if let Some(key) = key {
             return use_consumable_hotkey(gs, key-1);
+        }
+    }
+    if ctx.control && ctx.key.is_some() {
+        let key : Option<i32> =
+            match ctx.key.unwrap() {
+                VirtualKeyCode::Key1 => Some(1),
+                VirtualKeyCode::Key2 => Some(2),
+                VirtualKeyCode::Key3 => Some(3),
+                VirtualKeyCode::Key4 => Some(4),
+                VirtualKeyCode::Key5 => Some(5),
+                VirtualKeyCode::Key6 => Some(6),
+                VirtualKeyCode::Key7 => Some(7),
+                VirtualKeyCode::Key8 => Some(8),
+                VirtualKeyCode::Key9 => Some(9),
+                _ => None
+            };
+        if let Some(key) = key {
+            return use_spell_hotkey(gs, key-1);
         }
     }
 

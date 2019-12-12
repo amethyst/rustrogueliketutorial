@@ -1,11 +1,11 @@
 use super::{WantsToPickupItem, Name, InBackpack, Position, gamelog, WantsToUseItem,
     WantsToDropItem, Map, AreaOfEffect, Equippable, Equipped, WantsToRemoveItem, EquipmentChanged,
-    IdentifiedItem, Item, ObfuscatedName, MagicItem, MasterDungeonMap, CursedItem };
+    IdentifiedItem, Item, ObfuscatedName, MagicItem, MasterDungeonMap, CursedItem, WantsToCastSpell };
 
 mod collection_system;
 pub use collection_system::ItemCollectionSystem;
 mod use_system;
-pub use use_system::ItemUseSystem;
+pub use use_system::{ItemUseSystem, SpellUseSystem};
 mod drop_system;
 pub use drop_system::ItemDropSystem;
 mod remove_system;

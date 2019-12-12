@@ -32,6 +32,23 @@ pub struct Renderable {
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Player {}
 
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct KnownSpell {
+    pub display_name : String,
+    pub mana_cost : i32
+}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct KnownSpells {
+    pub spells : Vec<KnownSpell>
+}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct SpellTemplate {
+    pub mana_cost : i32
+}
+
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct Viewshed {
     pub visible_tiles : Vec<rltk::Point>,
@@ -248,6 +265,11 @@ pub struct ProvidesHealing {
 }
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct ProvidesMana {
+    pub mana_amount : i32
+}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct BlocksVisibility {}
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
@@ -272,6 +294,13 @@ pub struct WantsToPickupItem {
 #[derive(Component, Debug)]
 pub struct WantsToUseItem {
     pub item : Entity,
+    pub target : Option<rltk::Point>
+}
+
+// See wrapper below for serialization
+#[derive(Component, Debug)]
+pub struct WantsToCastSpell {
+    pub spell : Entity,
     pub target : Option<rltk::Point>
 }
 
@@ -580,6 +609,35 @@ where
         let item = ids(data.0).unwrap();
         let target = data.1;
         Ok(WantsToUseItem{item, target})
+    }
+}
+
+// WantsToCastSpell wrapper
+#[derive(Serialize, Deserialize, Clone)]
+pub struct WantsToCastSpellData<M>(M, Option<rltk::Point>);
+
+impl<M: Marker + Serialize> ConvertSaveload<M> for WantsToCastSpell
+where
+    for<'de> M: Deserialize<'de>,
+{
+    type Data = WantsToCastSpellData<M>;
+    type Error = NoError;
+
+    fn convert_into<F>(&self, mut ids: F) -> Result<Self::Data, Self::Error>
+    where
+        F: FnMut(Entity) -> Option<M>,
+    {
+        let marker = ids(self.spell).unwrap();
+        Ok(WantsToCastSpellData(marker, self.target))
+    }
+
+    fn convert_from<F>(data: Self::Data, mut ids: F) -> Result<Self, Self::Error>
+    where
+        F: FnMut(M) -> Option<Entity>,
+    {
+        let spell = ids(data.0).unwrap();
+        let target = data.1;
+        Ok(WantsToCastSpell{spell, target})
     }
 }
 

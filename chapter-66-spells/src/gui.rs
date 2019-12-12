@@ -6,7 +6,7 @@ use super::{Pools, gamelog::GameLog, Map, Name, Position, State, InBackpack,
     Viewshed, RunState, Equipped, HungerClock, HungerState, rex_assets::RexAssets,
     Hidden, camera, Attributes, Attribute, Consumable, VendorMode, Item, Vendor,
     MagicItem, MagicItemClass, ObfuscatedName, CursedItem, MasterDungeonMap,
-    StatusEffect, Duration };
+    StatusEffect, Duration, KnownSpells };
 
 pub fn get_item_color(ecs : &World, item : Entity) -> RGB {
     let dm = ecs.fetch::<crate::map::MasterDungeonMap>();
@@ -177,6 +177,19 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
             y += 1;
             index += 1;
         }
+    }
+
+    // Spells
+    y += 1;
+    let blue = RGB::named(rltk::CYAN);
+    let known_spells_storage = ecs.read_storage::<KnownSpells>();
+    let known_spells = &known_spells_storage.get(*player_entity).unwrap().spells;
+    let mut index = 1;
+    for spell in known_spells.iter() {
+        ctx.print_color(50, y, blue, black, &format!("^{}", index));
+        ctx.print_color(53, y, blue, black, &format!("{} ({})", &spell.display_name, spell.mana_cost));
+        index += 1;
+        y += 1;
     }
 
     // Status

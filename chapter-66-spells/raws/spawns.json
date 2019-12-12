@@ -4,6 +4,7 @@
     { "name" : "Orc", "weight" : 1, "min_depth" : 4, "max_depth" : 100 },
     { "name" : "Strength Potion", "weight" : 2, "min_depth" : 0, "max_depth" : 100 },
     { "name" : "Health Potion", "weight" : 7, "min_depth" : 0, "max_depth" : 100 },
+    { "name" : "Mana Potion", "weight" : 7, "min_depth" : 0, "max_depth" : 100 },
     { "name" : "Fireball Scroll", "weight" : 2, "min_depth" : 0, "max_depth" : 100, "add_map_depth_to_weight" : true },
     { "name" : "Confusion Scroll", "weight" : 2, "min_depth" : 0, "max_depth" : 100, "add_map_depth_to_weight" : true },
     { "name" : "Magic Missile Scroll", "weight" : 4, "min_depth" : 0, "max_depth" : 100 },
@@ -84,6 +85,23 @@
         },
         "consumable" : {
             "effects" : { "provides_healing" : "8" }
+        },
+        "weight_lbs" : 0.5,
+        "base_value" : 50.0,
+        "vendor_category" : "alchemy",
+        "magic" : { "class" : "common", "naming" : "potion" }
+    },
+
+    {
+        "name" : "Mana Potion",
+        "renderable": {
+            "glyph" : "!",
+            "fg" : "#FF00FF",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "consumable" : {
+            "effects" : { "provides_mana" : "4" }
         },
         "weight_lbs" : 0.5,
         "base_value" : 50.0,
@@ -1690,6 +1708,18 @@
             "effects" : {
                 "damage" : "6"
             }
+        }
+    }
+],
+
+"spells" : [
+    {
+        "name" : "Zap",
+        "mana_cost" : 1,
+        "effects" : { 
+            "ranged" : "6",
+            "damage" : "5",
+            "particle_line" : "▓;#00FFFF;400.0"
         }
     }
 ]
