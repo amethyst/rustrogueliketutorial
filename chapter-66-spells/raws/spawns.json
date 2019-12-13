@@ -42,7 +42,7 @@
     { "name" : "Deer", "weight" : 14, "min_depth" : 2, "max_depth" : 2 },
     { "name" : "Bandit", "weight" : 9, "min_depth" : 2, "max_depth" : 3 },
     { "name" : "Bat", "weight" : 15, "min_depth" : 3, "max_depth" : 3 },
-    { "name" : "Large Spider", "weight" : 3, "min_depth" : 3, "max_depth" : 3 },
+    { "name" : "Large Spider", "weight" : 300, "min_depth" : 3, "max_depth" : 3 },
     { "name" : "Gelatinous Cube", "weight" : 3, "min_depth" : 3, "max_depth" : 3 },
     { "name" : "Dragon Wyrmling", "weight" : 1, "min_depth" : 5, "max_depth" : 7 },
     { "name" : "Lizardman", "weight" : 10, "min_depth" : 5, "max_depth" : 7 },
@@ -1497,7 +1497,7 @@
             "armor_class" : 11,
             "attacks" : [
                 { "name" : "bite", "hit_bonus" : 0, "damage" : "1d4" }
-            ]   
+            ]
         },
         "faction" : "Herbivores"
     },
@@ -1519,8 +1519,11 @@
             "armor_class" : 12,
             "attacks" : [
                 { "name" : "bite", "hit_bonus" : 1, "damage" : "1d12" }
-            ]   
+            ]
         },
+        "abilities" : [
+            { "spell" : "Web", "chance" : 0.2, "range" : 6.0, "min_range" : 3.0 }
+        ],
         "faction" : "Carnivores"
     },
 

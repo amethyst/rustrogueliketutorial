@@ -44,6 +44,19 @@ pub struct KnownSpells {
     pub spells : Vec<KnownSpell>
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct SpecialAbility {
+    pub spell : String,
+    pub chance : f32,
+    pub range : f32,
+    pub min_range : f32
+}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct SpecialAbilities {
+    pub abilities : Vec<SpecialAbility>
+}
+
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct SpellTemplate {
     pub mana_cost : i32

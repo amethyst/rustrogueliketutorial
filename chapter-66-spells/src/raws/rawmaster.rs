@@ -402,6 +402,7 @@ pub fn spawn_named_item(raws: &RawMaster, ecs : &mut World, key : &str, pos : Sp
     None
 }
 
+#[allow(clippy::cognitive_complexity)]
 pub fn spawn_named_mob(raws: &RawMaster, ecs : &mut World, key : &str, pos : SpawnType) -> Option<Entity> {
     if raws.mob_index.contains_key(key) {
         let mob_template = &raws.raws.mobs[raws.mob_index[key]];
@@ -541,6 +542,21 @@ pub fn spawn_named_mob(raws: &RawMaster, ecs : &mut World, key : &str, pos : Spa
             eb = eb.with(Vendor{ categories : vendor.clone() });
         }
 
+        if let Some(ability_list) = &mob_template.abilities {
+            let mut a = SpecialAbilities { abilities : Vec::new() };
+            for ability in ability_list.iter() {
+                a.abilities.push(
+                    SpecialAbility{
+                        chance : ability.chance,
+                        spell : ability.spell.clone(),
+                        range : ability.range,
+                        min_range : ability.min_range
+                    }
+                );
+            }
+            eb = eb.with(a);
+        }
+
         let new_mob = eb.build();
 
         // Are they wielding anyting?
@@ -625,6 +641,20 @@ pub fn find_spell_entity(ecs : &World, name : &str) -> Option<Entity> {
     let entities = ecs.entities();
 
     for (entity, sname, _template) in (&entities, &names, &spell_templates).join() {
+        if name == sname.name {
+            return Some(entity);
+        }
+    }
+    None
+}
+
+pub fn find_spell_entity_by_name(
+    name : &str,
+    names : &ReadStorage::<Name>,
+    spell_templates : &ReadStorage::<SpellTemplate>,
+    entities : &Entities) -> Option<Entity>
+{
+    for (entity, sname, _template) in (entities, names, spell_templates).join() {
         if name == sname.name {
             return Some(entity);
         }

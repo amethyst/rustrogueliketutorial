@@ -1410,8 +1410,239 @@ If you `cargo run` now, you can find a dagger - and sometimes you can poison you
 
 ### Enemy Spellcasting/Ability Use
 
+With the exception of magical weapons (which will benefit whomever swings them), the effects system is pretty asymmetrical right now. Mobs can't send most of these effects back at you. It's pretty common in roguelikes for monsters to use the same rules as the player (this is actually a low-value objective in the [Berlin Interpretation](chapter_43.html) we are attempting to implement). We won't attempt to make monsters use whatever items they may spawn with (yet!), but we will give them the ability to cast spells - as *special attacks*. Lets give *Large Spiders* the ability to slow you in a web, with the `Web` spell we defined above. As usual, we'll start in the JSON file deciding what this should look like:
+
+```json
+{
+    "name" : "Large Spider",
+    "level" : 2,
+    "attributes" : {},
+    "renderable": {
+        "glyph" : "s",
+        "fg" : "#FF0000",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "vision_range" : 6,
+    "movement" : "static",
+    "natural" : {
+        "armor_class" : 12,
+        "attacks" : [
+            { "name" : "bite", "hit_bonus" : 1, "damage" : "1d12" }
+        ]
+    },
+    "abilities" : [
+        { "spell" : "Web", "chance" : 0.2, "range" : 6.0, "min_range" : 3.0 }
+    ],
+    "faction" : "Carnivores"
+},
+```
+
+This is the same *Large Spider* as before, but we've added an `abilities` section listing that it has a 20% chance of deciding to make a web. We'll need to extend `raws/mob_structs.rs` to support this:
+
+```rust
+#[derive(Deserialize, Debug)]
+pub struct Mob {
+    pub name : String,
+    pub renderable : Option<Renderable>,
+    pub blocks_tile : bool,
+    pub vision_range : i32,
+    pub movement : String,
+    pub quips : Option<Vec<String>>,
+    pub attributes : MobAttributes,
+    pub skills : Option<HashMap<String, i32>>,
+    pub level : Option<i32>,
+    pub hp : Option<i32>,
+    pub mana : Option<i32>,
+    pub equipped : Option<Vec<String>>,
+    pub natural : Option<MobNatural>,
+    pub loot_table : Option<String>,
+    pub light : Option<MobLight>,
+    pub faction : Option<String>,
+    pub gold : Option<String>,
+    pub vendor : Option<Vec<String>>,
+    pub abilities : Option<Vec<MobAbility>>
+}
+
+#[derive(Deserialize, Debug)]
+pub struct MobAbility {
+    pub spell : String,
+    pub chance : f32,
+    pub range : f32,
+    pub min_range : f32
+}
+```
+
+Let's make a new component to hold this data for monsters (and anything else with special abilities). In `components.rs` (and the usual registration in `main.rs` and `saveload_system.rs`; you only need to register the component `SpecialAbilities`):
+
+```rust
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct SpecialAbility {
+    pub spell : String,
+    pub chance : f32,
+    pub range : f32,
+    pub min_range : f32
+}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct SpecialAbilities {
+    pub abilities : Vec<SpecialAbility>
+}
+```
+
+Now we go to `raws/rawmaster.rs` to attach the component in the `spawn_named_mob` function. Right before the `build()` call, we can add-in special abilities:
+
+```rust
+if let Some(ability_list) = &mob_template.abilities {
+    let mut a = SpecialAbilities { abilities : Vec::new() };
+    for ability in ability_list.iter() {
+        a.abilities.push(
+            SpecialAbility{
+                chance : ability.chance,
+                spell : ability.spell.clone(),
+                range : ability.range,
+                min_range : ability.min_range
+            }
+        );
+    }
+    eb = eb.with(a);
+}
+```
+
+Now that we've created the component, we should give monsters a chance to use their new-found abilities. The `visible_ai_system` can easily be modified for this:
+
+```rust
+extern crate specs;
+use specs::prelude::*;
+use crate::{MyTurn, Faction, Position, Map, raws::Reaction, Viewshed, WantsToFlee,
+    WantsToApproach, Chasing, SpecialAbilities, WantsToCastSpell, Name, SpellTemplate};
+
+pub struct VisibleAI {}
+
+impl<'a> System<'a> for VisibleAI {
+    #[allow(clippy::type_complexity)]
+    type SystemData = (
+        ReadStorage<'a, MyTurn>,
+        ReadStorage<'a, Faction>,
+        ReadStorage<'a, Position>,
+        ReadExpect<'a, Map>,
+        WriteStorage<'a, WantsToApproach>,
+        WriteStorage<'a, WantsToFlee>,
+        Entities<'a>,
+        ReadExpect<'a, Entity>,
+        ReadStorage<'a, Viewshed>,
+        WriteStorage<'a, Chasing>,
+        ReadStorage<'a, SpecialAbilities>,
+        WriteExpect<'a, rltk::RandomNumberGenerator>,
+        WriteStorage<'a, WantsToCastSpell>,
+        ReadStorage<'a, Name>,
+        ReadStorage<'a, SpellTemplate>
+    );
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (turns, factions, positions, map, mut want_approach, mut want_flee, entities, player,
+            viewsheds, mut chasing, abilities, mut rng, mut casting, names, spells) = data;
+
+        for (entity, _turn, my_faction, pos, viewshed) in (&entities, &turns, &factions, &positions, &viewsheds).join() {
+            if entity != *player {
+                let my_idx = map.xy_idx(pos.x, pos.y);
+                let mut reactions : Vec<(usize, Reaction, Entity)> = Vec::new();
+                let mut flee : Vec<i32> = Vec::new();
+                for visible_tile in viewshed.visible_tiles.iter() {
+                    let idx = map.xy_idx(visible_tile.x, visible_tile.y);
+                    if my_idx != idx {
+                        evaluate(idx, &map, &factions, &my_faction.name, &mut reactions);
+                    }
+                }
+
+                let mut done = false;
+                for reaction in reactions.iter() {
+                    match reaction.1 {
+                        Reaction::Attack => {
+                            if let Some(abilities) = abilities.get(entity) {
+                                let range = rltk::DistanceAlg::Pythagoras.distance2d(
+                                    rltk::Point::new(pos.x, pos.y),
+                                    rltk::Point::new(reaction.0 as i32 % map.width, reaction.0 as i32 / map.width)
+                                );
+                                for ability in abilities.abilities.iter() {
+                                    if range >= ability.min_range && range <= ability.range &&
+                                        rng.roll_dice(1,100) >= (ability.chance * 100.0) as i32
+                                    {
+                                        use crate::raws::find_spell_entity_by_name;
+                                        casting.insert(
+                                            entity,
+                                            WantsToCastSpell{
+                                                spell : find_spell_entity_by_name(&ability.spell, &names, &spells, &entities).unwrap(),
+                                                target : Some(rltk::Point::new(reaction.0 as i32 % map.width, reaction.0 as i32 / map.width))}
+                                        ).expect("Unable to insert");
+                                        done = true;
+                                    }
+                                }
+                            }
+
+                            if !done {
+                                want_approach.insert(entity, WantsToApproach{ idx: reaction.0 as i32 }).expect("Unable to insert");
+                                chasing.insert(entity, Chasing{ target: reaction.2}).expect("Unable to insert");
+                                done = true;
+                            }
+                        }
+                        Reaction::Flee => {
+                            flee.push(reaction.0 as i32);
+                        }
+                        _ => {}
+                    }
+                }
+
+                if !done && !flee.is_empty() {
+                    want_flee.insert(entity, WantsToFlee{ indices : flee }).expect("Unable to insert");
+                }
+            }
+        }
+    }
+}
+```
+
+There's one trick here: `find_spell_entity_by_name`; because we are inside a system, we can't just pass a `World` parameter. So I added an in-system version to `raws/rawmaster.rs`:
+
+```rust
+pub fn find_spell_entity_by_name(
+    name : &str,
+    names : &ReadStorage::<Name>,
+    spell_templates : &ReadStorage::<SpellTemplate>,
+    entities : &Entities) -> Option<Entity>
+{
+    for (entity, sname, _template) in (entities, names, spell_templates).join() {
+        if name == sname.name {
+            return Some(entity);
+        }
+    }
+    None
+}
+```
+
+Once that's in place, you can `cargo run` - and Spiders can hit you with webs!
+
+![Screenshot](./c66-webs.gif)
+
 ## Wrap Up
 
+This is the last of the item effects mini-series: we've accomplished our objectives! There is now a single pipeline for defining effects, and they can be applied by:
+
+* Casting a spell (which you can learn from books)
+* Using a scroll
+* Drinking a potion
+* A weapon "proc" effect on hit
+* Monster special abilities
+
+These effects can:
+
+* Target a single tile,
+* Target a single entity,
+* Target an area of effect,
+* Target multiple entities
+
+The effects can also be chained, allowing you to specify visual effects and other things to go off when the effect is triggered. We're down to relatively minimal effort to add new effects to creatures, and only a bit of work to add new effects as they are needed. This will help with the upcoming chapter, which will feature an acid breath-weapon wielding Dragon in his lair.
 
 ...
 
