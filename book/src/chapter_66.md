@@ -738,7 +738,680 @@ if can_heal {
 
 This gives a 1 in 6 chance of restoring some mana when you rest, if you are eligible for healing.
 
-## Enemy Spell Use - Special Attacks
+## Learning Spells
+
+The sky really is the limit when it comes to designing spell effects. You can happily play with it all night (I did!). We're going to start by going into `spawner.rs` and removing the starting spell - you don't start with any at all:
+
+```rust
+.with(KnownSpells{ spells : Vec::new() })
+```
+
+Now we'll introduce our first *spell-book*, and make it a spawnable treasure. Let's define our first book in `spawns.json`:
+
+```json
+{
+    "name" : "Beginner's Magic",
+    "renderable": {
+        "glyph" : "¶",
+        "fg" : "#FF00FF",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "consumable" : {
+        "effects" : { "teach_spell" : "Zap" }
+    },
+    "weight_lbs" : 0.5,
+    "base_value" : 50.0,
+    "vendor_category" : "alchemy"
+},
+```
+
+Once again, 90% of this is already written. The new part is the effect, `teach_spells`. We'll need a component to represent this effect, so once again in `components.rs` (and registered in `main.rs` / `saveload_system.rs`):
+
+```rust
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct TeachesSpell {
+    pub spell : String
+}
+```
+
+Now we'll add it into the effects system inside `raws/rawmaster.rs`:
+
+```rust
+"teach_spell" => $eb = $eb.with(TeachesSpell{ spell: effect.1.to_string() }),
+```
+
+Finally, we need to integrate it into our `effects/triggers.rs` system as another effect:
+
+```rust
+// Learn spells
+    if let Some(spell) = ecs.read_storage::<TeachesSpell>().get(entity) {
+        if let Some(known) = ecs.write_storage::<KnownSpells>().get_mut(creator.unwrap()) {
+            if let Some(spell_entity) = crate::raws::find_spell_entity(ecs, &spell.spell) {
+                if let Some(spell_info) = ecs.read_storage::<SpellTemplate>().get(spell_entity) {
+                    let mut already_known = false;
+                    known.spells.iter().for_each(|s| if s.display_name == spell.spell { already_known = true });
+                    if !already_known {
+                        known.spells.push(KnownSpell{ display_name: spell.spell.clone(), mana_cost : spell_info.mana_cost });
+                    }
+                }
+            }
+        }
+        did_something = true;
+    }
+```
+
+This is a big chain of `if let`, but it makes sense: we make sure that the item teaches a spell, then we find the student's list of known spells, then we find the spell's template - and if all of that worked, we check to see if they already know the spell, and learn it if they did not. Then we mark `did_something`, so the book destructs.
+
+For testing purposes, open up `spawns.json` and lets make the spell-book appear everywhere:
+
+```json
+{ "name" : "A Beginner's Guide to Magic", "weight" : 200, "min_depth" : 0, "max_depth" : 100 },
+```
+
+Now `cargo run` the project, you should have no trouble finding a book and learning to `Zap` things!
+
+![Screenshot](./c66-learnzap.gif)
+
+Remember to lower the weight to something reasonable when you're done.
+
+```json
+{ "name" : "A Beginner's Guide to Magic", "weight" : 5, "min_depth" : 0, "max_depth" : 100 },
+```
+
+## Putting this all together - Poison
+
+It's been a long road through a few chapters of making a generic effects system. Before we move back to the fun part of finishing our game (maps and monsters!), it would be good to put it all together - combined with one new (small) system - to show what we've achieved. To that end, we're going to add two types of poison - a damage over time (DOT) and a slowing venom. We'll make it available as an unfortunate potion choice (which will become useful in the future!), an attack scroll, a spell, and as something spiders can inflict upon their victims. The amazing part is that now we have a unified system, this really isn't too hard!
+
+### Slow, Hate and Damage Over Time Effects
+
+We'll start by making two new components to represent the effects. In `components.rs` (and registered in `main.rs` and `saveload_system.rs`):
+
+```rust
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct Slow {
+    pub initiative_penalty : f32
+}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct DamageOverTime {
+    pub damage : i32
+}
+```
+
+Next, we'll open `raws/rawmaster.rs` and add these as loadable effect types:
+
+```rust
+macro_rules! apply_effects {
+    ( $effects:expr, $eb:expr ) => {
+        for effect in $effects.iter() {
+        let effect_name = effect.0.as_str();
+            match effect_name {
+                "provides_healing" => $eb = $eb.with(ProvidesHealing{ heal_amount: effect.1.parse::<i32>().unwrap() }),
+                "provides_mana" => $eb = $eb.with(ProvidesMana{ mana_amount: effect.1.parse::<i32>().unwrap() }),
+                "teach_spell" => $eb = $eb.with(TeachesSpell{ spell: effect.1.to_string() }),
+                "ranged" => $eb = $eb.with(Ranged{ range: effect.1.parse::<i32>().unwrap() }),
+                "damage" => $eb = $eb.with(InflictsDamage{ damage : effect.1.parse::<i32>().unwrap() }),
+                "area_of_effect" => $eb = $eb.with(AreaOfEffect{ radius: effect.1.parse::<i32>().unwrap() }),
+                "confusion" => {
+                    $eb = $eb.with(Confusion{});
+                    $eb = $eb.with(Duration{ turns: effect.1.parse::<i32>().unwrap() });
+                }
+                "magic_mapping" => $eb = $eb.with(MagicMapper{}),
+                "town_portal" => $eb = $eb.with(TownPortal{}),
+                "food" => $eb = $eb.with(ProvidesFood{}),
+                "single_activation" => $eb = $eb.with(SingleActivation{}),
+                "particle_line" => $eb = $eb.with(parse_particle_line(&effect.1)),
+                "particle" => $eb = $eb.with(parse_particle(&effect.1)),
+                "remove_curse" => $eb = $eb.with(ProvidesRemoveCurse{}),
+                "identify" => $eb = $eb.with(ProvidesIdentification{}),
+                "slow" => $eb = $eb.with(Slow{ initiative_penalty : effect.1.parse::<f32>().unwrap() }),
+                "damage_over_time" => $eb = $eb.with( DamageOverTime { damage : effect.1.parse::<i32>().unwrap() } ),
+                _ => println!("Warning: consumable effect {} not implemented.", effect_name)
+            }
+        }
+    };
+}
+```
+
+So now `Slow` and `DamageOverTime` are recognized as effects in the various raw file entries, and can have their components applied. Next up, we need to teach the effects system to apply it. We'll start in `effects/mod.rs` adding them to the `EffectType` enum:
+
+```rust
+#[derive(Debug)]
+pub enum EffectType { 
+    Damage { amount : i32 },
+    Bloodstain,
+    Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
+    EntityDeath,
+    ItemUse { item: Entity },
+    SpellUse { spell: Entity },
+    WellFed,
+    Healing { amount : i32 },
+    Mana { amount : i32 },
+    Confusion { turns : i32 },
+    TriggerFire { trigger: Entity },
+    TeleportTo { x:i32, y:i32, depth: i32, player_only : bool },
+    AttributeEffect { bonus : AttributeBonus, name : String, duration : i32 },
+    Slow { initiative_penalty : f32 },
+    DamageOverTime { damage : i32 }
+}
+```
+
+In the same file, we need to indicate that they apply to entities:
+
+```rust
+fn tile_effect_hits_entities(effect: &EffectType) -> bool {
+    match effect {
+        EffectType::Damage{..} => true,
+        EffectType::WellFed => true,
+        EffectType::Healing{..} => true,
+        EffectType::Mana{..} => true,
+        EffectType::Confusion{..} => true,
+        EffectType::TeleportTo{..} => true,
+        EffectType::AttributeEffect{..} => true,
+        EffectType::Slow{..} => true,
+        EffectType::DamageOverTime{..} => true,
+        _ => false
+    }
+}
+```
+
+We also need the routing table in `affect_entity` to direct them correctly:
+
+```rust
+fn affect_entity(ecs: &mut World, effect: &EffectSpawner, target: Entity) {
+    match &effect.effect_type {
+        EffectType::Damage{..} => damage::inflict_damage(ecs, effect, target),
+        EffectType::EntityDeath => damage::death(ecs, effect, target),
+        EffectType::Bloodstain{..} => if let Some(pos) = entity_position(ecs, target) { damage::bloodstain(ecs, pos) },
+        EffectType::Particle{..} => if let Some(pos) = entity_position(ecs, target) { particles::particle_to_tile(ecs, pos, &effect) },
+        EffectType::WellFed => hunger::well_fed(ecs, effect, target),
+        EffectType::Healing{..} => damage::heal_damage(ecs, effect, target),
+        EffectType::Mana{..} => damage::restore_mana(ecs, effect, target),
+        EffectType::Confusion{..} => damage::add_confusion(ecs, effect, target),
+        EffectType::TeleportTo{..} => movement::apply_teleport(ecs, effect, target),
+        EffectType::AttributeEffect{..} => damage::attribute_effect(ecs, effect, target),
+        EffectType::Slow{..} => damage::slow(ecs, effect, target),
+        EffectType::DamageOverTime{..} => damage::damage_over_time(ecs, effect, target),
+        _ => {}
+    }
+}
+```
+
+In turn, this requires that we create two new functions in `effects/damage.rs` to match the ones we just called:
+
+```rust
+pub fn slow(ecs: &mut World, effect: &EffectSpawner, target: Entity) {
+    if let EffectType::Slow{initiative_penalty} = &effect.effect_type {
+        ecs.create_entity()
+            .with(StatusEffect{ target })
+            .with(Slow{ initiative_penalty : *initiative_penalty })
+            .with(Duration{ turns : 5})
+            .with(
+                if *initiative_penalty > 0.0 {
+                    Name{ name : "Slowed".to_string() }
+                } else {
+                    Name{ name : "Hasted".to_string() }
+                }
+            )
+            .marked::<SimpleMarker<SerializeMe>>()
+            .build();
+    }
+}
+
+pub fn damage_over_time(ecs: &mut World, effect: &EffectSpawner, target: Entity) {
+    if let EffectType::DamageOverTime{damage} = &effect.effect_type {
+        ecs.create_entity()
+            .with(StatusEffect{ target })
+            .with(DamageOverTime{ damage : *damage })
+            .with(Duration{ turns : 5})
+            .with(Name{ name : "Damage Over Time".to_string() })
+            .marked::<SimpleMarker<SerializeMe>>()
+            .build();
+    }
+}
+```
+
+You'll notice that both of these are similar to *Confusion* - they apply a status effect. Now we need to handle the effects in the `effects/triggers.rs` file - in the `event_trigger` function:
+
+```rust
+// Slow
+if let Some(slow) = ecs.read_storage::<Slow>().get(entity) {
+    add_effect(creator, EffectType::Slow{ initiative_penalty : slow.initiative_penalty }, targets.clone());
+    did_something = true;
+}
+
+// Damage Over Time
+if let Some(damage) = ecs.read_storage::<DamageOverTime>().get(entity) {
+    add_effect(creator, EffectType::DamageOverTime{ damage : damage.damage }, targets.clone());
+    did_something = true;
+}
+```
+
+Finally, we need the status effects to have their way with the victim! The first `Slow` effect makes sense to handle in the `ai/encumbrance_system.rs` file. Right after we handle attribute effects, add:
+
+```rust
+// Total up haste/slow
+for (status, slow) in (&statuses, &slowed).join() {
+    if to_update.contains_key(&status.target) {
+        let totals = to_update.get_mut(&status.target).unwrap();
+        totals.initiative += slow.initiative_penalty;
+    }
+}
+```
+
+We'll add `DamageOverTime` support to the duration tick (it could be a separate system, but we're already iterating over the status effects at the right time - so we may as well combine them). Extend the duration check in `ai/initiative_system.rs` to include it:
+
+```rust
+impl<'a> System<'a> for InitiativeSystem {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( WriteStorage<'a, Initiative>,
+                        ReadStorage<'a, Position>,
+                        WriteStorage<'a, MyTurn>,
+                        Entities<'a>,
+                        WriteExpect<'a, rltk::RandomNumberGenerator>,
+                        ReadStorage<'a, Attributes>,
+                        WriteExpect<'a, RunState>,
+                        ReadExpect<'a, Entity>,
+                        ReadExpect<'a, rltk::Point>,
+                        ReadStorage<'a, Pools>,
+                        WriteStorage<'a, Duration>,
+                        WriteStorage<'a, EquipmentChanged>,
+                        ReadStorage<'a, StatusEffect>,
+                        ReadStorage<'a, DamageOverTime>
+                    );
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (mut initiatives, positions, mut turns, entities, mut rng, attributes,
+            mut runstate, player, player_pos, pools, mut durations, mut dirty,
+            statuses, dots) = data;
+...
+// Handle durations
+if *runstate == RunState::AwaitingInput {
+    use crate::effects::*;
+    for (effect_entity, duration, status) in (&entities, &mut durations, &statuses).join() {
+        if entities.is_alive(status.target) {
+            duration.turns -= 1;
+            if let Some(dot) = dots.get(effect_entity) {
+                add_effect(
+                    None, 
+                    EffectType::Damage{ amount : dot.damage }, 
+                    Targets::Single{ target : status.target 
+                    }
+                );
+            }
+            if duration.turns < 1 {
+                dirty.insert(status.target, EquipmentChanged{}).expect("Unable to insert");
+                entities.delete(effect_entity).expect("Unable to delete");
+            }
+        }
+    }
+}
+```
+
+There's one new concept in that code: `is_alive`. Status effects might out-live their target, so we only want to apply them if the target is still a valid entity. Otherwise, the game will crash!
+
+### Just Add Items
+
+That's all that's required to make the two effects functional - now we just need to add them to some items and spells. Lets add three potions that demonstrate what we've just done:
+
+```json
+{ "name" : "Poison Potion", "weight" : 100, "min_depth" : 0, "max_depth" : 100 },
+{ "name" : "Slow Potion", "weight" : 100, "min_depth" : 0, "max_depth" : 100 },
+{ "name" : "Haste Potion", "weight" : 100, "min_depth" : 0, "max_depth" : 100 },
+...
+{
+    "name" : "Poison Potion",
+    "renderable": {
+        "glyph" : "!",
+        "fg" : "#FF00FF",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "consumable" : {
+        "effects" : { "damage_over_time" : "2" }
+    },
+    "weight_lbs" : 0.5,
+    "base_value" : 50.0,
+    "vendor_category" : "alchemy",
+    "magic" : { "class" : "common", "naming" : "potion" }
+},
+
+{
+    "name" : "Slow Potion",
+    "renderable": {
+        "glyph" : "!",
+        "fg" : "#FF00FF",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "consumable" : {
+        "effects" : { "slow" : "2.0" }
+    },
+    "weight_lbs" : 0.5,
+    "base_value" : 50.0,
+    "vendor_category" : "alchemy",
+    "magic" : { "class" : "common", "naming" : "potion" }
+},
+
+{
+    "name" : "Haste Potion",
+    "renderable": {
+        "glyph" : "!",
+        "fg" : "#FF00FF",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "consumable" : {
+        "effects" : { "slow" : "-2.0" }
+    },
+    "weight_lbs" : 0.5,
+    "base_value" : 100.0,
+    "vendor_category" : "alchemy",
+    "magic" : { "class" : "common", "naming" : "potion" }
+},
+```
+
+Notice that we've given them really high spawn chances - we'll correct that once we know they work! If you `cargo run` now, you'll find the potions in the woods - and they will damage/haste/slow you as you'd expect. This demonstrates:
+
+* Our generic potion naming is correctly obfuscating new potions.
+* Our slow/damage-over-time effects are applying to self-used items.
+* We can make these effects function for potions just by adding them to the `spawns.json` file now. You could even use negative damage for a heal-over-time effect.
+
+Now to show off the system, let's also make a `Scroll of Web` and a `Rod of Venom`:
+
+```json
+{
+    "name" : "Web Scroll",
+    "renderable": {
+        "glyph" : ")",
+        "fg" : "#FFAAAA",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "consumable" : {
+        "effects" : { 
+            "ranged" : "6",
+            "slow" : "10.0",
+            "area_of_effect" : "3",
+            "particle_line" : "☼;#FFFFFF;200.0"
+        }
+    },
+    "weight_lbs" : 0.5,
+    "base_value" : 500.0,
+    "vendor_category" : "alchemy",
+    "magic" : { "class" : "common", "naming" : "scroll" }
+},
+
+{
+    "name" : "Rod of Venom",
+    "renderable": {
+        "glyph" : "/",
+        "fg" : "#FFAAAA",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "consumable" : {
+        "effects" : { 
+            "ranged" : "6",
+            "damage_over_time" : "1",
+            "particle_line" : "▓;#00FF00;200.0"
+        },
+        "charges" : 5
+    },
+    "weight_lbs" : 0.5,
+    "base_value" : 500.0,
+    "vendor_category" : "alchemy",
+    "magic" : { "class" : "common", "naming" : "Unidentified Rod" }
+}
+```
+
+We'll make these common spawns and bring the potions down to reasonable values:
+
+```json
+{ "name" : "Poison Potion", "weight" : 3, "min_depth" : 0, "max_depth" : 100 },
+{ "name" : "Slow Potion", "weight" : 3, "min_depth" : 0, "max_depth" : 100 },
+{ "name" : "Haste Potion", "weight" : 3, "min_depth" : 0, "max_depth" : 100 },
+{ "name" : "Web Scroll", "weight" : 100, "min_depth" : 0, "max_depth" : 100 },
+{ "name" : "Rod of Venom", "weight" : 100, "min_depth" : 0, "max_depth" : 100 },
+```
+
+If we `cargo run` now and find the new scroll and rod, we can inflict poison and area-of-effect slowness (which is basically a web!) on our unsuspecting victims! Once again, we've proven the system to be pretty flexible:
+
+* You can also apply the new effects to scrolls and rods, and the naming system continues to work.
+* The effects apply to both area-of-effect and single target victims.
+
+To continue demonstrating out flexible effects system, we'll add two spells - `Venom` and `Web`, and a couple of books from which to learn them - `Arachnophilia 101` and `Venom 101`. In the *Spells* section of `spawns.json`, we can add:
+
+```json
+{
+    "name" : "Web",
+    "mana_cost" : 2,
+    "effects" : { 
+        "ranged" : "6",
+        "slow" : "10",
+        "area_of_effect" : "3",
+        "particle_line" : "☼;#FFFFFF;400.0"
+    }
+},
+
+{
+    "name" : "Venom",
+    "mana_cost" : 2,
+    "effects" : { 
+        "ranged" : "6",
+        "damage_over_time" : "4",
+        "particle_line" : "▓;#00FF00;400.0"
+    }
+}
+```
+
+We'll add the book just like the beginner's magic book:
+
+```json
+{
+    "name" : "Arachnophilia 101",
+    "renderable": {
+        "glyph" : "¶",
+        "fg" : "#FF00FF",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "consumable" : {
+        "effects" : { "teach_spell" : "Web" }
+    },
+    "weight_lbs" : 0.5,
+    "base_value" : 50.0,
+    "vendor_category" : "alchemy"
+},
+
+{
+    "name" : "Venom 101",
+    "renderable": {
+        "glyph" : "¶",
+        "fg" : "#FF00FF",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "consumable" : {
+        "effects" : { "teach_spell" : "Venom" }
+    },
+    "weight_lbs" : 0.5,
+    "base_value" : 50.0,
+    "vendor_category" : "alchemy"
+    },
+```
+
+And we'll fix the spawn probabilities:
+
+```json
+{ "name" : "Web Scroll", "weight" : 2, "min_depth" : 0, "max_depth" : 100 },
+{ "name" : "Rod of Venom", "weight" : 2, "min_depth" : 0, "max_depth" : 100 },
+{ "name" : "Arachnophilia 101", "weight" : 100, "min_depth" : 0, "max_depth" : 100 },
+{ "name" : "Venom 101", "weight" : 100, "min_depth" : 0, "max_depth" : 100 },
+```
+
+Once again, if you `cargo run` the project - you can run around learning these spells - and inflict them upon your foes! We've validated:
+
+* Our spell learning system is flexible.
+* The effects system continues to apply these effects appropriately, this time via spellcasting.
+
+## More effect triggers
+
+The testing we've done in this chapter section has shown us the power of what we've built: a single system can provide effects for items and spells, supporting multiple target types and additional effects on top of them. That's really great, and shows off what you can do with an ECS (and a messaging system on top). It seems like to *really* put the cherry on top of the system there are two more circumstances in which effects should fire:
+
+1. As "proc" effects after a weapon hits (so a "dagger of venom" might poison the target).
+2. As special abilities for enemies (I promised you we were getting there! Not quite yet, though...)
+
+### Damage Procs
+
+Let's start with "proc" effects on weapons. Thinking about it, weapon procs can either affect the target or the caster (you might have a sword that heals you when you hit something, for example - or you might want to apply a damage-over-time to the target with your extra-sharp sword). They shouldn't *always* proc - so there needs to be a chance (which could be 100%) for it to happen. And they need to have an effect, which can conveniently use the effect system we've painstakingly defined. Let's put this together in `spawns.json` into a *Dagger of Venom*:
+
+```json
+{
+    "name" : "Dagger of Venom",
+    "renderable": {
+        "glyph" : "/",
+        "fg" : "#FFAAAA",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "weapon" : {
+        "range" : "melee",
+        "attribute" : "Quickness",
+        "base_damage" : "1d4+1",
+        "hit_bonus" : 1,
+        "proc_chance" : 0.5,
+        "proc_target" : "Target",
+        "proc_effects" : { "damage_over_time" : "2" }
+    },
+    "weight_lbs" : 1.0,
+    "base_value" : 2.0,
+    "initiative_penalty" : -1,
+    "vendor_category" : "weapon",
+    "magic" : { "class" : "common", "naming" : "Unidentified Dagger" }
+},
+```
+
+To make this, I copy/pasted a basic *Dagger* and gave it a hit/damage/initiative bonus. I then added in some new fields: `proc_chance`, `proc_target` and `proc_effects`. The `effects` system can take care of the effects with a little bit of help. First, we need to extend the "weapon" structure in `raws/item_structs.rs` to handle the extra fields:
+
+```rust
+#[derive(Deserialize, Debug)]
+pub struct Weapon {
+    pub range: String,
+    pub attribute: String,
+    pub base_damage: String,
+    pub hit_bonus: i32,
+    pub proc_chance : Option<f32>,
+    pub proc_target : Option<String>,
+    pub proc_effects : Option<HashMap<String, String>>
+}
+```
+
+Now, we'll add these fields into the `MeleeWeapon` component type (in `components.rs`):
+
+```rust
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct MeleeWeapon {
+    pub attribute : WeaponAttribute,
+    pub damage_n_dice : i32,
+    pub damage_die_type : i32,
+    pub damage_bonus : i32,
+    pub hit_bonus : i32,
+    pub proc_chance : Option<f32>,
+    pub proc_target : Option<String>,
+}
+```
+
+We also need to instantiate that data when we are reading about the weapon. We can extend the *weapon* section of `spawn_named_item` in `raws/rawmaster.rs` quite easily:
+
+```rust
+if let Some(weapon) = &item_template.weapon {
+    eb = eb.with(Equippable{ slot: EquipmentSlot::Melee });
+    let (n_dice, die_type, bonus) = parse_dice_string(&weapon.base_damage);
+    let mut wpn = MeleeWeapon{
+        attribute : WeaponAttribute::Might,
+        damage_n_dice : n_dice,
+        damage_die_type : die_type,
+        damage_bonus : bonus,
+        hit_bonus : weapon.hit_bonus,
+        proc_chance : weapon.proc_chance,
+        proc_target : weapon.proc_target.clone()
+    };
+    match weapon.attribute.as_str() {
+        "Quickness" => wpn.attribute = WeaponAttribute::Quickness,
+        _ => wpn.attribute = WeaponAttribute::Might
+    }
+    eb = eb.with(wpn);
+    if let Some(proc_effects) =& weapon.proc_effects {
+        apply_effects!(proc_effects, eb);
+    }
+}
+```
+
+Now we need to make the proc effect happen (or not, it's random!). We have a bit of work to do in `melee_combat_system.rs`. First, when we spawn the default weapon (unarmed), we need the new fields:
+
+```rust
+// Define the basic unarmed attack - overridden by wielding check below if a weapon is equipped
+let mut weapon_info = MeleeWeapon{
+    attribute : WeaponAttribute::Might,
+    hit_bonus : 0,
+    damage_n_dice : 1,
+    damage_die_type : 4,
+    damage_bonus : 0,
+    proc_chance : None,
+    proc_target : None
+};
+```
+
+Where we find the wielded weapon, we also need to store the entity (so we have access to the effects components):
+
+```rust
+let mut weapon_entity : Option<Entity> = None;
+for (weaponentity,wielded,melee) in (&entities, &equipped_items, &meleeweapons).join() {
+    if wielded.owner == entity && wielded.slot == EquipmentSlot::Melee {
+        weapon_info = melee.clone();
+        weapon_entity = Some(weaponentity);
+    }
+}
+```
+
+Then, after `add_effect` for a successful hit we add in the weapon "proccing":
+
+```rust
+log.entries.insert(0, format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));
+
+// Proc effects
+if let Some(chance) = &weapon_info.proc_chance {
+    if rng.roll_dice(1, 100) <= (chance * 100.0) as i32 {
+        let effect_target = if weapon_info.proc_target.unwrap() == "Self" {
+            Targets::Single{ target: entity }
+        } else {
+            Targets::Single { target : wants_melee.target }
+        };
+        add_effect(
+            Some(entity),
+            EffectType::ItemUse{ item: weapon_entity.unwrap() },
+            effect_target
+        )
+    }
+}
+```
+
+This is pretty simple: it rolls a 100 sided dice, and uses the fractional "proc chance" as a percentage chance of it taking place. If it does take place, it sets the effect target to the wielder or target depending upon the proc effect, and calls the `add_effect` system to launch it.
+
+Remember to put `Dagger of Venom` into your spawn table:
+
+```json
+{ "name" : "Dagger of Venom", "weight" : 100, "min_depth" : 0, "max_depth" : 100 },
+```
+
+If you `cargo run` now, you can find a dagger - and sometimes you can poison your victim. Again, we've really shown off the power of the ECS/messaging system here: with a little extension, our entire effects system also works for weapon procs!
+
+### Enemy Spellcasting/Ability Use
+
+## Wrap Up
+
 
 ...
 

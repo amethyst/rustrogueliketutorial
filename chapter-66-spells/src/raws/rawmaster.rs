@@ -276,6 +276,7 @@ macro_rules! apply_effects {
             match effect_name {
                 "provides_healing" => $eb = $eb.with(ProvidesHealing{ heal_amount: effect.1.parse::<i32>().unwrap() }),
                 "provides_mana" => $eb = $eb.with(ProvidesMana{ mana_amount: effect.1.parse::<i32>().unwrap() }),
+                "teach_spell" => $eb = $eb.with(TeachesSpell{ spell: effect.1.to_string() }),
                 "ranged" => $eb = $eb.with(Ranged{ range: effect.1.parse::<i32>().unwrap() }),
                 "damage" => $eb = $eb.with(InflictsDamage{ damage : effect.1.parse::<i32>().unwrap() }),
                 "area_of_effect" => $eb = $eb.with(AreaOfEffect{ radius: effect.1.parse::<i32>().unwrap() }),
@@ -291,6 +292,8 @@ macro_rules! apply_effects {
                 "particle" => $eb = $eb.with(parse_particle(&effect.1)),
                 "remove_curse" => $eb = $eb.with(ProvidesRemoveCurse{}),
                 "identify" => $eb = $eb.with(ProvidesIdentification{}),
+                "slow" => $eb = $eb.with(Slow{ initiative_penalty : effect.1.parse::<f32>().unwrap() }),
+                "damage_over_time" => $eb = $eb.with( DamageOverTime { damage : effect.1.parse::<i32>().unwrap() } ),
                 _ => println!("Warning: consumable effect {} not implemented.", effect_name)
             }
         }
@@ -338,13 +341,18 @@ pub fn spawn_named_item(raws: &RawMaster, ecs : &mut World, key : &str, pos : Sp
                 damage_n_dice : n_dice,
                 damage_die_type : die_type,
                 damage_bonus : bonus,
-                hit_bonus : weapon.hit_bonus
+                hit_bonus : weapon.hit_bonus,
+                proc_chance : weapon.proc_chance,
+                proc_target : weapon.proc_target.clone()
             };
             match weapon.attribute.as_str() {
                 "Quickness" => wpn.attribute = WeaponAttribute::Quickness,
                 _ => wpn.attribute = WeaponAttribute::Might
             }
             eb = eb.with(wpn);
+            if let Some(proc_effects) =& weapon.proc_effects {
+                apply_effects!(proc_effects, eb);
+            }
         }
 
         if let Some(wearable) = &item_template.wearable {

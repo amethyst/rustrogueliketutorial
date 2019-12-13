@@ -60,7 +60,7 @@ pub fn player(ecs : &mut World, player_x : i32, player_y : i32) -> Entity {
         .with(LightSource{ color: rltk::RGB::from_f32(1.0, 1.0, 0.5), range: 8 })
         .with(Initiative{current: 0})
         .with(Faction{name : "Player".to_string() })
-        .with(KnownSpells{ spells : vec![ KnownSpell{ display_name : "Zap".to_string(), mana_cost: 1 } ] })
+        .with(KnownSpells{ spells : Vec::new() })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 

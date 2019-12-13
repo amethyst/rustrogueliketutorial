@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use super::*;
 use crate::components::{Pools, Player, Attributes, Confusion, SerializeMe, Duration, StatusEffect, 
-    Name, EquipmentChanged};
+    Name, EquipmentChanged, Slow, DamageOverTime};
 use crate::map::Map;
 use crate::gamesystem::{player_hp_at_level, mana_at_level};
 use crate::gamelog::GameLog;
@@ -77,7 +77,7 @@ pub fn death(ecs: &mut World, effect: &EffectSpawner, target : Entity) {
                         player_stats.level
                     );
                     player_stats.mana.current = player_stats.mana.max;
-    
+
                     let player_pos = ecs.fetch::<rltk::Point>();
                     let map = ecs.fetch::<Map>();
                     for i in 0..10 {
@@ -157,5 +157,35 @@ pub fn attribute_effect(ecs: &mut World, effect: &EffectSpawner, target: Entity)
             .marked::<SimpleMarker<SerializeMe>>()
             .build();
         ecs.write_storage::<EquipmentChanged>().insert(target, EquipmentChanged{}).expect("Insert failed");
+    }
+}
+
+pub fn slow(ecs: &mut World, effect: &EffectSpawner, target: Entity) {
+    if let EffectType::Slow{initiative_penalty} = &effect.effect_type {
+        ecs.create_entity()
+            .with(StatusEffect{ target })
+            .with(Slow{ initiative_penalty : *initiative_penalty })
+            .with(Duration{ turns : 5})
+            .with(
+                if *initiative_penalty > 0.0 {
+                    Name{ name : "Slowed".to_string() }
+                } else {
+                    Name{ name : "Hasted".to_string() }
+                }
+            )
+            .marked::<SimpleMarker<SerializeMe>>()
+            .build();
+    }
+}
+
+pub fn damage_over_time(ecs: &mut World, effect: &EffectSpawner, target: Entity) {
+    if let EffectType::DamageOverTime{damage} = &effect.effect_type {
+        ecs.create_entity()
+            .with(StatusEffect{ target })
+            .with(DamageOverTime{ damage : *damage })
+            .with(Duration{ turns : 5})
+            .with(Name{ name : "Damage Over Time".to_string() })
+            .marked::<SimpleMarker<SerializeMe>>()
+            .build();
     }
 }

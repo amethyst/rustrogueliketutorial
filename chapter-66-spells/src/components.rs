@@ -250,6 +250,16 @@ pub struct AreaOfEffect {
 pub struct Confusion {}
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct Slow {
+    pub initiative_penalty : f32
+}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct DamageOverTime {
+    pub damage : i32
+}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct Duration {
     pub turns : i32
 }
@@ -267,6 +277,11 @@ pub struct ProvidesHealing {
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct ProvidesMana {
     pub mana_amount : i32
+}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct TeachesSpell {
+    pub spell : String
 }
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
@@ -340,7 +355,9 @@ pub struct MeleeWeapon {
     pub damage_n_dice : i32,
     pub damage_die_type : i32,
     pub damage_bonus : i32,
-    pub hit_bonus : i32
+    pub hit_bonus : i32,
+    pub proc_chance : Option<f32>,
+    pub proc_target : Option<String>,
 }
 
 #[derive(Component, Serialize, Deserialize, Clone)]

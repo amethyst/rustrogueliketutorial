@@ -36,12 +36,15 @@ impl<'a> System<'a> for MeleeCombatSystem {
             if attacker_pools.hit_points.current > 0 && target_pools.hit_points.current > 0 {
                 let target_name = names.get(wants_melee.target).unwrap();
 
+                // Define the basic unarmed attack - overridden by wielding check below if a weapon is equipped
                 let mut weapon_info = MeleeWeapon{
                     attribute : WeaponAttribute::Might,
                     hit_bonus : 0,
                     damage_n_dice : 1,
                     damage_die_type : 4,
-                    damage_bonus : 0
+                    damage_bonus : 0,
+                    proc_chance : None,
+                    proc_target : None
                 };
 
                 if let Some(nat) = natural.get(entity) {
@@ -54,9 +57,11 @@ impl<'a> System<'a> for MeleeCombatSystem {
                     }
                 }
 
-                for (wielded,melee) in (&equipped_items, &meleeweapons).join() {
+                let mut weapon_entity : Option<Entity> = None;
+                for (weaponentity,wielded,melee) in (&entities, &equipped_items, &meleeweapons).join() {
                     if wielded.owner == entity && wielded.slot == EquipmentSlot::Melee {
                         weapon_info = melee.clone();
+                        weapon_entity = Some(weaponentity);
                     }
                 }
 
@@ -105,7 +110,27 @@ impl<'a> System<'a> for MeleeCombatSystem {
                         EffectType::Damage{ amount: damage },
                         Targets::Single{ target: wants_melee.target }
                     );
-                    log.entries.insert(0, format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));                    
+                    log.entries.insert(0, format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));
+
+                    // Proc effects
+                    if let Some(chance) = &weapon_info.proc_chance {
+                        let roll = rng.roll_dice(1, 100);
+                        //println!("Roll {}, Chance {}", roll, chance);
+                        if roll <= (chance * 100.0) as i32 {
+                            //println!("Proc!");
+                            let effect_target = if weapon_info.proc_target.unwrap() == "Self" {
+                                Targets::Single{ target: entity }
+                            } else {
+                                Targets::Single { target : wants_melee.target }
+                            };
+                            add_effect(
+                                Some(entity),
+                                EffectType::ItemUse{ item: weapon_entity.unwrap() },
+                                effect_target
+                            )
+                        }
+                    }
+
                 } else  if natural_roll == 1 {
                     // Natural 1 miss
                     log.entries.insert(0, format!("{} considers attacking {}, but misjudges the timing.", name.name, target_name.name));

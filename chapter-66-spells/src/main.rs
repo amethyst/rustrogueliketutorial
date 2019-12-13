@@ -578,6 +578,10 @@ fn main() {
     gs.ecs.register::<KnownSpells>();
     gs.ecs.register::<SpellTemplate>();
     gs.ecs.register::<WantsToCastSpell>();
+    gs.ecs.register::<TeachesSpell>();
+    gs.ecs.register::<ProvidesMana>();
+    gs.ecs.register::<Slow>();
+    gs.ecs.register::<DamageOverTime>();
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
     raws::load_raws();

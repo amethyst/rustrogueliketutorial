@@ -22,7 +22,8 @@ pub fn item_trigger(creator : Option<Entity>, item: Entity, targets : &Targets, 
     // If it was a consumable, then it gets deleted
     if did_something {
         if let Some(c) = ecs.read_storage::<Consumable>().get(item) {
-            if c.max_charges == 0 {
+            println!("{}", c.max_charges);
+            if c.max_charges < 2 {
                 ecs.entities().delete(item).expect("Delete Failed");
             }
         }
@@ -56,6 +57,7 @@ pub fn trigger(creator : Option<Entity>, trigger: Entity, targets : &Targets, ec
     }
 }
 
+#[allow(clippy::cognitive_complexity)]
 fn event_trigger(creator : Option<Entity>, entity: Entity, targets : &Targets, ecs: &mut World) -> bool {
     let mut did_something = false;
     let mut gamelog = ecs.fetch_mut::<GameLog>();
@@ -191,6 +193,34 @@ fn event_trigger(creator : Option<Entity>, entity: Entity, targets : &Targets, e
             },
             targets.clone()
         );
+        did_something = true;
+    }
+
+    // Learn spells
+    if let Some(spell) = ecs.read_storage::<TeachesSpell>().get(entity) {
+        if let Some(known) = ecs.write_storage::<KnownSpells>().get_mut(creator.unwrap()) {
+            if let Some(spell_entity) = crate::raws::find_spell_entity(ecs, &spell.spell) {
+                if let Some(spell_info) = ecs.read_storage::<SpellTemplate>().get(spell_entity) {
+                    let mut already_known = false;
+                    known.spells.iter().for_each(|s| if s.display_name == spell.spell { already_known = true });
+                    if !already_known {
+                        known.spells.push(KnownSpell{ display_name: spell.spell.clone(), mana_cost : spell_info.mana_cost });
+                    }
+                }
+            }
+        }
+        did_something = true;
+    }
+
+    // Slow
+    if let Some(slow) = ecs.read_storage::<Slow>().get(entity) {
+        add_effect(creator, EffectType::Slow{ initiative_penalty : slow.initiative_penalty }, targets.clone());
+        did_something = true;
+    }
+
+    // Damage Over Time
+    if let Some(damage) = ecs.read_storage::<DamageOverTime>().get(entity) {
+        add_effect(creator, EffectType::DamageOverTime{ damage : damage.damage }, targets.clone());
         did_something = true;
     }
 
