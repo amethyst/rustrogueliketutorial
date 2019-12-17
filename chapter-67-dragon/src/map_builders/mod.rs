@@ -31,9 +31,11 @@ mod door_placement;
 mod town;
 mod forest;
 mod limestone_cavern;
+mod dwarf_fort_builder;
 mod area_ending_point;
 use forest::forest_builder;
 use limestone_cavern::*;
+use dwarf_fort_builder::*;
 use distant_exit::DistantExit;
 use simple_map::SimpleMapBuilder;
 use bsp_dungeon::BspDungeonBuilder;
@@ -308,6 +310,7 @@ pub fn level_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator, widt
         3 => limestone_cavern_builder(new_depth, rng, width, height),
         4 => limestone_deep_cavern_builder(new_depth, rng, width, height),
         5 => limestone_transition_builder(new_depth, rng, width, height),
+        6 => dwarf_fort_builder(new_depth, rng, width, height),
         _ => random_builder(new_depth, rng, width, height)
     }
 }

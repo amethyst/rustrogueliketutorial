@@ -49,7 +49,7 @@ impl<'a> System<'a> for MeleeCombatSystem {
 
                 if let Some(nat) = natural.get(entity) {
                     if !nat.attacks.is_empty() {
-                        let attack_index = if nat.attacks.len()==1 { 0 } else { rng.roll_dice(1, nat.attacks.len() as i32) as usize };
+                        let attack_index = if nat.attacks.len()==1 { 0 } else { rng.roll_dice(1, nat.attacks.len() as i32) as usize -1 };
                         weapon_info.hit_bonus = nat.attacks[attack_index].hit_bonus;
                         weapon_info.damage_n_dice = nat.attacks[attack_index].damage_n_dice;
                         weapon_info.damage_die_type = nat.attacks[attack_index].damage_die_type;
@@ -79,6 +79,8 @@ impl<'a> System<'a> for MeleeCombatSystem {
                 }
                 let modified_hit_roll = natural_roll + attribute_hit_bonus + skill_hit_bonus
                     + weapon_hit_bonus + status_hit_bonus;
+                println!("Natural roll: {}", natural_roll);
+                println!("Modified hit roll: {}", modified_hit_roll);
 
                 let mut armor_item_bonus_f = 0.0;
                 for (wielded,armor) in (&equipped_items, &wearables).join() {
@@ -96,6 +98,7 @@ impl<'a> System<'a> for MeleeCombatSystem {
                 let armor_class = base_armor_class + armor_quickness_bonus + armor_skill_bonus
                     + armor_item_bonus;
 
+                println!("Armor class: {}", armor_class);
                 if natural_roll != 1 && (natural_roll == 20 || modified_hit_roll > armor_class) {
                     // Target hit! Until we support weapons, we're going with 1d4
                     let base_damage = rng.roll_dice(weapon_info.damage_n_dice, weapon_info.damage_die_type);
@@ -103,8 +106,13 @@ impl<'a> System<'a> for MeleeCombatSystem {
                     let skill_damage_bonus = skill_bonus(Skill::Melee, &*attacker_skills);
                     let weapon_damage_bonus = weapon_info.damage_bonus;
 
-                    let damage = i32::max(0, base_damage + attr_damage_bonus + skill_hit_bonus +
+                    let damage = i32::max(0, base_damage + attr_damage_bonus + 
                         skill_damage_bonus + weapon_damage_bonus);
+
+                    println!("Damage: {} + {}attr + {}skill + {}weapon = {}",
+                        base_damage, attr_damage_bonus, skill_damage_bonus,
+                        weapon_damage_bonus, damage
+                    );
                     add_effect(
                         Some(entity),
                         EffectType::Damage{ amount: damage },

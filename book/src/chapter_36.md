@@ -1966,7 +1966,7 @@ impl PrefabBuilder {
             for tx in 0..level.width {
                 if tx < build_data.map.width as usize && ty < build_data.map.height as usize {
                     let idx = build_data.map.xy_idx(tx as i32, ty as i32);
-                    self.char_to_map(string_vec[i], idx, build_data);
+                    if i < string_vec.len() { self.char_to_map(string_vec[i], idx, build_data); }
                 }
                 i += 1;
             }
@@ -2021,7 +2021,7 @@ impl PrefabBuilder {
             for tx in 0..section.width {
                 if tx > 0 && tx < build_data.map.width as usize -1 && ty < build_data.map.height as usize -1 && ty > 0 {
                     let idx = build_data.map.xy_idx(tx as i32 + chunk_x, ty as i32 + chunk_y);
-                    self.char_to_map(string_vec[i], idx, build_data);
+                    if i < string_vec.len() { self.char_to_map(string_vec[i], idx, build_data); }
                 }
                 i += 1;
             }
@@ -2119,7 +2119,7 @@ impl PrefabBuilder {
                 for ty in 0..vault.height {
                     for tx in 0..vault.width {
                         let idx = build_data.map.xy_idx(tx as i32 + chunk_x, ty as i32 + chunk_y);
-                        self.char_to_map(string_vec[i], idx, build_data);
+                        if i < string_vec.len() { self.char_to_map(string_vec[i], idx, build_data); }
                         used_tiles.insert(idx);
                         i += 1;
                     }

@@ -5,11 +5,11 @@ pub fn attr_bonus(value: i32) -> i32 {
 }
 
 pub fn player_hp_per_level(fitness: i32) -> i32 {
-    10 + attr_bonus(fitness)
+    15 + attr_bonus(fitness)
 }
 
 pub fn player_hp_at_level(fitness:i32, level:i32) -> i32 {
-    10 + (player_hp_per_level(fitness) * level)
+    15 + (player_hp_per_level(fitness) * level)
 }
 
 pub fn npc_hp(fitness: i32, level: i32) -> i32 {

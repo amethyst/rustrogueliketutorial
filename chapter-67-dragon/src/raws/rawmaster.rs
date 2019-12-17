@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 use specs::prelude::*;
 use crate::components::*;
 use super::{Raws, faction_structs::Reaction};
-use crate::random_table::{RandomTable};
+use crate::random_table::{MasterTable, RandomTable};
 use crate::{attr_bonus, npc_hp, mana_at_level};
 use regex::Regex;
 use crate::specs::saveload::{MarkedBuilder, SimpleMarker};
@@ -674,7 +674,19 @@ pub fn spawn_named_entity(raws: &RawMaster, ecs : &mut World, key : &str, pos : 
     None
 }
 
-pub fn get_spawn_table_for_depth(raws: &RawMaster, depth: i32) -> RandomTable {
+pub enum SpawnTableType { Item, Mob, Prop }
+
+pub fn spawn_type_by_name(raws: &RawMaster, key : &str) -> SpawnTableType {
+    if raws.item_index.contains_key(key) {
+        SpawnTableType::Item
+    } else if raws.mob_index.contains_key(key) {
+        SpawnTableType::Mob
+    } else {
+        SpawnTableType::Prop
+    }
+}
+
+pub fn get_spawn_table_for_depth(raws: &RawMaster, depth: i32) -> MasterTable {
     use super::SpawnTableEntry;
 
     let available_options : Vec<&SpawnTableEntry> = raws.raws.spawn_table
@@ -682,13 +694,13 @@ pub fn get_spawn_table_for_depth(raws: &RawMaster, depth: i32) -> RandomTable {
         .filter(|a| depth >= a.min_depth && depth <= a.max_depth)
         .collect();
 
-    let mut rt = RandomTable::new();
+    let mut rt = MasterTable::new();
     for e in available_options.iter() {
         let mut weight = e.weight;
         if e.add_map_depth_to_weight.is_some() {
             weight += depth;
         }
-        rt = rt.add(e.name.clone(), weight);
+        rt.add(e.name.clone(), weight, raws);
     }
 
     rt
@@ -699,7 +711,7 @@ pub fn get_item_drop(raws: &RawMaster, rng : &mut rltk::RandomNumberGenerator, t
         let mut rt = RandomTable::new();
         let available_options = &raws.raws.loot_tables[raws.loot_index[table]];
         for item in available_options.drops.iter() {
-            rt = rt.add(item.name.clone(), item.weight);
+            rt.add(item.name.clone(), item.weight);
         }
         let result =rt.roll(rng);
         return Some(result);

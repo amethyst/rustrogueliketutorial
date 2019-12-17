@@ -11,17 +11,17 @@
     { "name" : "Haste Potion", "weight" : 3, "min_depth" : 0, "max_depth" : 100 },
     { "name" : "Web Scroll", "weight" : 2, "min_depth" : 0, "max_depth" : 100 },
     { "name" : "Rod of Venom", "weight" : 2, "min_depth" : 0, "max_depth" : 100 },
-    { "name" : "Health Potion", "weight" : 7, "min_depth" : 0, "max_depth" : 100 },
+    { "name" : "Health Potion", "weight" : 15, "min_depth" : 0, "max_depth" : 100 },
     { "name" : "Mana Potion", "weight" : 7, "min_depth" : 0, "max_depth" : 100 },
-    { "name" : "Fireball Scroll", "weight" : 2, "min_depth" : 0, "max_depth" : 100, "add_map_depth_to_weight" : true },
-    { "name" : "Confusion Scroll", "weight" : 2, "min_depth" : 0, "max_depth" : 100, "add_map_depth_to_weight" : true },
+    { "name" : "Fireball Scroll", "weight" : 2, "min_depth" : 0, "max_depth" : 100 },
+    { "name" : "Confusion Scroll", "weight" : 2, "min_depth" : 0, "max_depth" : 100 },
     { "name" : "Magic Missile Scroll", "weight" : 4, "min_depth" : 0, "max_depth" : 100 },
     { "name" : "Town Portal Scroll", "weight" : 4, "min_depth" : 0, "max_depth" : 100 },
     { "name" : "Remove Curse Scroll", "weight" : 4, "min_depth" : 0, "max_depth" : 100 },
     { "name" : "Identify Scroll", "weight" : 4, "min_depth" : 0, "max_depth" : 100 },
     { "name" : "Rod of Fireballs", "weight" : 1, "min_depth" : 0, "max_depth" : 100 },
     { "name" : "Gauntlets of Ogre Power", "weight" : 1, "min_depth" : 0, "max_depth" : 100 },
-    { "name" : "Dagger of Venom", "weight" : 100, "min_depth" : 0, "max_depth" : 100 },
+    { "name" : "Dagger of Venom", "weight" : 2, "min_depth" : 0, "max_depth" : 100 },
     { "name" : "Dagger", "weight" : 3, "min_depth" : 0, "max_depth" : 100 },
     { "name" : "Shield", "weight" : 3, "min_depth" : 0, "max_depth" : 100 },
     { "name" : "Longsword", "weight" : 2, "min_depth" : 3, "max_depth" : 100 },
@@ -39,7 +39,6 @@
     { "name" : "Kobold", "weight" : 15, "min_depth" : 3, "max_depth" : 3 },
     { "name" : "Rat", "weight" : 15, "min_depth" : 2, "max_depth" : 2 },
     { "name" : "Mangy Wolf", "weight" : 13, "min_depth" : 2, "max_depth" : 2 },
-    { "name" : "Deer", "weight" : 14, "min_depth" : 2, "max_depth" : 2 },
     { "name" : "Bandit", "weight" : 9, "min_depth" : 2, "max_depth" : 3 },
     { "name" : "Bat", "weight" : 15, "min_depth" : 3, "max_depth" : 3 },
     { "name" : "Large Spider", "weight" : 3, "min_depth" : 3, "max_depth" : 3 },
@@ -1283,7 +1282,7 @@
         "vision_range" : 8,
         "movement" : "static",
         "attributes" : {
-            "might" : 3,
+            "might" : 7,
             "fitness" : 3
         },
         "skills" : {
@@ -1380,7 +1379,7 @@
             "armor_class" : 11,
             "attacks" : [
                 { "name" : "bite", "hit_bonus" : 0, "damage" : "1d4" }
-            ]   
+            ]
         },
         "loot_table" : "Animal",
         "faction" : "Herbivores"
@@ -1575,12 +1574,48 @@
             "armor_class" : 15,
             "attacks" : [
                 { "name" : "bite", "hit_bonus" : 4, "damage" : "1d10+2" }
-            ]   
+            ]
         },
         "loot_table" : "Wyrms",
         "faction" : "Wyrm",
         "level" : 3,
         "gold" : "3d6"
+    },
+
+    {
+        "name" : "Black Dragon",
+        "renderable": {
+            "glyph" : "D",
+            "fg" : "#FF0000",
+            "bg" : "#000000",
+            "order" : 1
+        },
+        "blocks_tile" : true,
+        "vision_range" : 12,
+        "movement" : "static",
+        "attributes" : {
+            "might" : 5,
+            "fitness" : 5
+        },
+        "skills" : {
+            "Melee" : 18,
+            "Defense" : 16
+        },
+        "natural" : {
+            "armor_class" : 17,
+            "attacks" : [
+                { "name" : "bite", "hit_bonus" : 4, "damage" : "1d10+2" },
+                { "name" : "left_claw", "hit_bonus" : 2, "damage" : "1d10" },
+                { "name" : "right_claw", "hit_bonus" : 2, "damage" : "1d10" }
+            ]
+        },
+        "loot_table" : "Wyrms",
+        "faction" : "Wyrm",
+        "level" : 6,
+        "gold" : "20d10",
+        "abilities" : [
+            { "spell" : "Acid Breath", "chance" : 0.2, "range" : 8.0, "min_range" : 2.0 }
+        ]
     },
 
     {
@@ -1922,6 +1957,17 @@
             "ranged" : "6",
             "damage_over_time" : "4",
             "particle_line" : "▓;#00FF00;400.0"
+        }
+    },
+
+    {
+        "name" : "Acid Breath",
+        "mana_cost" : 2,
+        "effects" : {
+            "ranged" : "6",
+            "damage" : "10",
+            "area_of_effect" : "3",
+            "particle_line" : "☼;#00FF00;400.0"
         }
     }
 ]

@@ -3,7 +3,7 @@ use rltk::{ RGB, RandomNumberGenerator };
 extern crate specs;
 use specs::prelude::*;
 use super::{Pools, Pool, Player, Renderable, Name, Position, Viewshed, Rect,
-    SerializeMe, random_table::RandomTable, HungerClock, HungerState, Map, TileType, raws::*,
+    SerializeMe, random_table::RandomTable, random_table::MasterTable, HungerClock, HungerState, Map, TileType, raws::*,
     Attribute, Attributes, Skills, Skill, LightSource, Initiative, Faction, EquipmentChanged,
     OtherLevelPosition, MasterDungeonMap, EntryTrigger, TeleportTo, SingleActivation,
     StatusEffect, Duration, AttributeBonus, KnownSpells };
@@ -91,7 +91,7 @@ pub fn player(ecs : &mut World, player_x : i32, player_y : i32) -> Entity {
 
 const MAX_MONSTERS : i32 = 4;
 
-fn room_table(map_depth: i32) -> RandomTable {
+fn room_table(map_depth: i32) -> MasterTable {
     get_spawn_table_for_depth(&RAWS.lock().unwrap(), map_depth)
 }
 
@@ -151,7 +151,9 @@ pub fn spawn_entity(ecs: &mut World, spawn : &(&usize, &String)) {
         return;
     }
 
-    println!("WARNING: We don't know how to spawn [{}]!", spawn.1);
+    if spawn.1 != "None" {
+        println!("WARNING: We don't know how to spawn [{}]!", spawn.1);
+    }
 }
 
 pub fn spawn_town_portal(ecs: &mut World) {

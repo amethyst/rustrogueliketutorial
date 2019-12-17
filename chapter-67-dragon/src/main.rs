@@ -171,7 +171,7 @@ impl GameState for State {
                     if self.mapgen_index < self.mapgen_history.len() && self.mapgen_index < self.mapgen_history.len() { camera::render_debug_map(&self.mapgen_history[self.mapgen_index], ctx); }
 
                     self.mapgen_timer += ctx.frame_time_ms;
-                    if self.mapgen_timer > 150.0 {
+                    if self.mapgen_timer > 250.0 {
                         self.mapgen_timer = 0.0;
                         self.mapgen_index += 1;
                         if self.mapgen_index >= self.mapgen_history.len() {

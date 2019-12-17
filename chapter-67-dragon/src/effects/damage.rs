@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use super::*;
 use crate::components::{Pools, Player, Attributes, Confusion, SerializeMe, Duration, StatusEffect, 
-    Name, EquipmentChanged, Slow, DamageOverTime};
+    Name, EquipmentChanged, Slow, DamageOverTime, Skills};
 use crate::map::Map;
 use crate::gamesystem::{player_hp_at_level, mana_at_level};
 use crate::gamelog::GameLog;
@@ -42,7 +42,7 @@ pub fn death(ecs: &mut World, effect: &EffectSpawner, target : Entity) {
     let mut gold_gain = 0.0f32;
 
     let mut pools = ecs.write_storage::<Pools>();
-    let attributes = ecs.read_storage::<Attributes>();
+    let mut attributes = ecs.write_storage::<Attributes>();
 
     if let Some(pos) = entity_position(ecs, target) {
         let mut map_mut = ecs.fetch_mut::<Map>();
@@ -60,13 +60,49 @@ pub fn death(ecs: &mut World, effect: &EffectSpawner, target : Entity) {
             if xp_gain != 0 || gold_gain != 0.0 {
                 let mut log = ecs.fetch_mut::<GameLog>();
                 let mut player_stats = pools.get_mut(source).unwrap();
-                let player_attributes = attributes.get(source).unwrap();
+                let mut player_attributes = attributes.get_mut(source).unwrap();
                 player_stats.xp += xp_gain;
                 player_stats.gold += gold_gain;
                 if player_stats.xp >= player_stats.level * 1000 {
                     // We've gone up a level!
                     player_stats.level += 1;
                     log.entries.insert(0, format!("Congratulations, you are now level {}", player_stats.level));
+
+                    // Improve a random attribute
+                    let mut rng = ecs.fetch_mut::<rltk::RandomNumberGenerator>();
+                    let attr_to_boost = rng.roll_dice(1, 4);
+                    match attr_to_boost {
+                        1 => {
+                            player_attributes.might.base += 1;
+                            log.entries.insert(0, "You feel stronger!".to_string());
+                        }
+                        2 => {
+                            player_attributes.fitness.base += 1;
+                            log.entries.insert(0, "You feel healthier!".to_string());
+                        }
+                        3 => {
+                            player_attributes.quickness.base += 1;
+                            log.entries.insert(0, "You feel quicker!".to_string());
+                        }
+                        _ => {
+                            player_attributes.intelligence.base += 1;
+                            log.entries.insert(0, "You feel smarter!".to_string());
+                        }
+                    }
+
+                    // Improve all skills
+                    let mut skills = ecs.write_storage::<Skills>();
+                    let player_skills = skills.get_mut(*ecs.fetch::<Entity>()).unwrap();
+                    for sk in player_skills.skills.iter_mut() {
+                        *sk.1 += 1;
+                    }
+
+                    ecs.write_storage::<EquipmentChanged>()
+                        .insert(
+                            *ecs.fetch::<Entity>(),
+                            EquipmentChanged{})
+                        .expect("Insert Failed");
+
                     player_stats.hit_points.max = player_hp_at_level(
                         player_attributes.fitness.base + player_attributes.fitness.modifiers,
                         player_stats.level
