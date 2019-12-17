@@ -63,6 +63,7 @@ CALL :Stage chapter-64-curses
 CALL :Stage chapter-65-items
 CALL :Stage chapter-66-spells
 CALL :Stage chapter-67-dragon
+CALL :Stage chapter-68-mushrooms
 
 REM Publish or perish
 cd book\book\wasm

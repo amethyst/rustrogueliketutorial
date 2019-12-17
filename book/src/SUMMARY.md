@@ -69,4 +69,5 @@
     - [Even More Items](./chapter_65.md)
     - [Magic Spells](./chapter_66.md)
     - [Enter the Dragon](./chapter_67.md)
+    - [Mushrooms!](./chapter_68.md)
 - [Contributors](./contributors.md)
