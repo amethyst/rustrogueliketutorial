@@ -689,6 +689,7 @@ let mut result = RunState::AwaitingInput;
 let mut swap_entities : Vec<(Entity, i32, i32)> = Vec::new();
 
 for (entity, _player, pos, viewshed) in (&entities, &players, &mut positions, &mut viewsheds).join() {
+    if pos.x + delta_x < 1 || pos.x + delta_x > map.width-1 || pos.y + delta_y < 1 || pos.y + delta_y > map.height-1 { return RunState::AwaitingInput; }
     let destination_idx = map.xy_idx(pos.x + delta_x, pos.y + delta_y);
 
     for potential_target in map.tile_content[destination_idx].iter() {
