@@ -204,7 +204,7 @@ impl Solver {
                 let new_chunk_idx = if possible_options.len() == 1 { 0 }
                     else { rng.roll_dice(1, possible_options.len() as i32)-1 };
 
-                self.chunks[chunk_index] = Some(new_chunk_idx as usize);
+                self.chunks[chunk_index] = Some(possible_options[new_chunk_idx as usize]);
                 let left_x = chunk_x as i32 * self.chunk_size as i32;
                 let right_x = (chunk_x as i32+1) * self.chunk_size as i32;
                 let top_y = chunk_y as i32 * self.chunk_size as i32;
@@ -215,7 +215,7 @@ impl Solver {
                 for y in top_y .. bottom_y {
                     for x in left_x .. right_x {
                         let mapidx = map.xy_idx(x, y);
-                        let tile = self.constraints[new_chunk_idx as usize].pattern[i];
+                        let tile = self.constraints[possible_options[new_chunk_idx as usize]].pattern[i];
                         map.tiles[mapidx] = tile;
                         i += 1;
                     }

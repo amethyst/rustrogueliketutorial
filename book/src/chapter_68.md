@@ -12,7 +12,49 @@
 
 The design document says that once you've conquered the dragon in the fortress, you proceed into a vast mushroom forest. This is an interesting transition: we've done forests before, but we want to make the mushroom forest different from the *Into The Woods* level. On this level, we also want to transition between the fortress and the forest - so we'll need another layered approach.
 
+We'll start by adding a new function to the level builder in `map_builder/mod.rs`:
 
+```rust
+mod mushroom_forest;
+use mushroom_forest::*;
+...
+pub fn level_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator, width: i32, height: i32) -> BuilderChain {
+    println!("Depth: {}", new_depth);
+    match new_depth {
+        1 => town_builder(new_depth, rng, width, height),
+        2 => forest_builder(new_depth, rng, width, height),
+        3 => limestone_cavern_builder(new_depth, rng, width, height),
+        4 => limestone_deep_cavern_builder(new_depth, rng, width, height),
+        5 => limestone_transition_builder(new_depth, rng, width, height),
+        6 => dwarf_fort_builder(new_depth, rng, width, height),
+        7 => mushroom_entrance(new_depth, rng, width, height),
+        _ => random_builder(new_depth, rng, width, height)
+    }
+}
+```
+
+Now we'll make a new file, `map_builder/mushroom_forest.rs`:
+
+```rust
+use super::{BuilderChain, XStart, YStart, AreaStartingPosition, 
+    CullUnreachable, VoronoiSpawning,
+    AreaEndingPosition, XEnd, YEnd, DrunkardsWalkBuilder, PrefabBuilder};
+use crate::map_builders::prefab_builder::prefab_sections::UNDERGROUND_FORT;
+
+pub fn mushroom_entrance(new_depth: i32, _rng: &mut rltk::RandomNumberGenerator, width: i32, height: i32) -> BuilderChain {
+    let mut chain = BuilderChain::new(new_depth, width, height, "Into The Mushroom Grove");
+    chain.start_with(DrunkardsWalkBuilder::winding_passages());
+    chain.with(PrefabBuilder::sectional(UNDERGROUND_FORT));
+    chain.with(AreaStartingPosition::new(XStart::CENTER, YStart::CENTER));
+    chain.with(CullUnreachable::new());
+    chain.with(AreaStartingPosition::new(XStart::RIGHT, YStart::CENTER));
+    chain.with(AreaEndingPosition::new(XEnd::LEFT, YEnd::CENTER));
+    chain.with(VoronoiSpawning::new());
+    chain
+}
+```
+
+This should look familiar: we're using the Drunkard's Walk algorithm tuned for winding passages, and then adding the "right fort" we made earlier to it.
 
 ...
 

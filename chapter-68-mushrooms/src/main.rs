@@ -46,7 +46,7 @@ extern crate lazy_static;
 
 rltk::add_wasm_support!();
 
-const SHOW_MAPGEN_VISUALIZER : bool = false;
+const SHOW_MAPGEN_VISUALIZER : bool = true;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum VendorMode { Buy, Sell }
@@ -598,7 +598,7 @@ fn main() {
     gs.ecs.insert(particle_system::ParticleBuilder::new());
     gs.ecs.insert(rex_assets::RexAssets::new());
 
-    gs.generate_world_map(1, 0);
+    gs.generate_world_map(7, 0);
 
     rltk::main_loop(context, gs);
 }
