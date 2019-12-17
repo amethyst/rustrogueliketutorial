@@ -78,7 +78,8 @@ members = [
     "chapter-63-effects",
     "chapter-64-curses",
     "chapter-65-items",
-    "chapter-66-spells"
+    "chapter-66-spells",
+    "chapter-67-dragon"
     ]
 
 [profile.dev]
