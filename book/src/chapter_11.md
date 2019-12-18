@@ -20,12 +20,12 @@ Being in the menu is a *state* - so we'll add it to the ever-expanding `RunState
 
 ```rust
 #[derive(PartialEq, Copy, Clone)]
-pub enum RunState { AwaitingInput, 
-    PreRun, 
-    PlayerTurn, 
-    MonsterTurn, 
-    ShowInventory, 
-    ShowDropItem, 
+pub enum RunState { AwaitingInput,
+    PreRun,
+    PlayerTurn,
+    MonsterTurn,
+    ShowInventory,
+    ShowDropItem,
     ShowTargeting { range : i32, item : Entity},
     MainMenu { menu_selection : gui::MainMenuSelection }
 }
@@ -51,7 +51,7 @@ fn tick(&mut self, ctx : &mut Rltk) {
         newrunstate = *runstate;
     }
 
-    ctx.cls();        
+    ctx.cls();
 
     match newrunstate {
         RunState::MainMenu{..} => {}
@@ -71,7 +71,7 @@ fn tick(&mut self, ctx : &mut Rltk) {
                 }
 
                 gui::draw_ui(&self.ecs, ctx);
-            } 
+            }
         }
     }
     ...
@@ -104,7 +104,7 @@ pub fn main_menu(gs : &mut State, ctx : &mut Rltk) -> MainMenuResult {
     let runstate = gs.ecs.fetch::<RunState>();
 
     ctx.print_color_centered(15, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Rust Roguelike Tutorial");
-    
+
     if let RunState::MainMenu{ menu_selection : selection } = *runstate {
         if selection == MainMenuSelection::NewGame {
             ctx.print_color_centered(24, RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK), "Begin New Game");
@@ -181,12 +181,12 @@ We'll extend `RunState` once more to support game saving:
 
 ```rust
 #[derive(PartialEq, Copy, Clone)]
-pub enum RunState { AwaitingInput, 
-    PreRun, 
-    PlayerTurn, 
-    MonsterTurn, 
-    ShowInventory, 
-    ShowDropItem, 
+pub enum RunState { AwaitingInput,
+    PreRun,
+    PlayerTurn,
+    MonsterTurn,
+    ShowInventory,
+    ShowDropItem,
     ShowTargeting { range : i32, item : Entity},
     MainMenu { menu_selection : gui::MainMenuSelection },
     SaveGame
@@ -326,55 +326,32 @@ pub fn player(ecs : &mut World, player_x : i32, player_y : i32) -> Entity {
 
 The new line (`.marked::<SimpleMarker<SerializeMe>>()`) needs to be repeated for all of our spawners in this file. It's worth looking at the source for this chapter; to avoid making a *huge* chapter full of source code, I've omitted the repeated details.
 
-## Serializing components that don't contain an Entity
+## The ConvertSaveload derive macro
 
-It's pretty easy to serialize a type that doesn't have an Entity in it: mark it with `#[derive(Component, Serialize, Deserialize, Clone)]`. So we go through all the simple component types in `components.rs`; for example, here's `Position`:
+The `Entity` class itself (provided by Specs) isn't directly serializable; it's actually a reference to an identity in a special structure called a "slot map" (basically a really efficient way to store data and keep the locations stable until you delete it, but re-use the space when it becomes available). So, in order to save and load `Entity` classes, it becomes necessary to convert these synthetic identities to unique ID numbers. Fortunately, Specs provides a `derive` macro called `ConvertSaveload` for this purpose. It works for most components, but not for all!
+
+It's pretty easy to serialize a type that doesn't have an Entity in it - but *does* have data: mark it with `#[derive(Component, ConvertSaveload, Clone)]`. So we go through all the simple component types in `components.rs`; for example, here's `Position`:
 
 ```rust
-#[derive(Component, Serialize, Deserialize, Clone)]
+#[derive(Component, ConvertSaveload, Clone)]
 pub struct Position {
     pub x: i32,
     pub y: i32,
 }
 ```
 
-## Serializing components that point to entities
+So what this is saying is that:
 
-Here is where it gets a little messy. There are no provided `derive` functions for handling serialization of `Entity`, so we have to do it the hard way. The good news is that we're not doing it very often. Here's a helper for `InBackpack`:
+* The structure is a `Component`. You can replace this with writing code specifying Specs storage if you prefer, but the macro is much easier!
+* `ConvertSaveload` is actually adding `Serialize` and `Deserialize`, but with extra conversion for any `Entity` classes it encounters.
+* `Clone` is saying "this structure can be copied in memory from one point to another." This is necessary for the inner-workings of Serde, and also allows you to attach `.clone()` to the end of any reference to a component - and get another, perfect copy of it. In most cases, `clone` is *really* fast (and occasionally the compiler can make it do nothing at all!)
+
+When you have a component with no data, the `ConvertSaveload` macro doesn't work! Fortunately, these don't require any additional conversion - so you can fall back to the default Serde syntax. Here's a non-data ("tag") class:
 
 ```rust
-// InBackpack wrapper
-#[derive(Serialize, Deserialize, Clone)]
-pub struct InBackpackData<M>(M);
-
-impl<M: Marker + Serialize> ConvertSaveload<M> for InBackpack
-where
-    for<'de> M: Deserialize<'de>,
-{
-    type Data = InBackpackData<M>;
-    type Error = NoError;
-
-    fn convert_into<F>(&self, mut ids: F) -> Result<Self::Data, Self::Error>
-    where
-        F: FnMut(Entity) -> Option<M>,
-    {
-        let marker = ids(self.owner).unwrap();
-        Ok(InBackpackData(marker))
-    }
-
-    fn convert_from<F>(data: Self::Data, mut ids: F) -> Result<Self, Self::Error>
-    where
-        F: FnMut(M) -> Option<Entity>,
-    {
-        let entity = ids(data.0).unwrap();
-        Ok(InBackpack{owner: entity})
-    }
-}
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct Player {}
 ```
-
-So we start off by making a "data" class for `InBackpack`, which simply stores the entity at which it points. Then we implement `convert_info` and `convert_from` to satisfy Specs' `ConvertSaveLoad` trait. In `convert_into`, we use the `ids` map to get a saveable ID number for the item, and return an `InBackpackData` using this marker. `convert_from` does the reverse: we get the ID, look up the ID, and return an `InBackpack` method.
-
-So that's not *too* bad. If you look at the source, we've done this for all of the types that store `Entity` data - some of which have other data, or multiple `Entity` types.
 
 ## Actually saving something
 
@@ -435,7 +412,7 @@ pub fn save_game(ecs : &mut World) {
 }
 ```
 
-What's going on here, then? 
+What's going on here, then?
 
 1. We start by creating a new component type - `SerializationHelper` that stores a copy of the map (see, we are using the map stuff from above!). It then creates a new entity, and gives it the new component - with a copy of the map (the `clone` command makes a deep copy). This is needed so we don't need to serialize the map separately.
 2. We enter a block to avoid borrow-checker issues.
@@ -469,7 +446,7 @@ pub fn main_menu(gs : &mut State, ctx : &mut Rltk) -> MainMenuResult {
     let runstate = gs.ecs.fetch::<RunState>();
 
     ctx.print_color_centered(15, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Rust Roguelike Tutorial");
-    
+
     if let RunState::MainMenu{ menu_selection : selection } = *runstate {
         if selection == MainMenuSelection::NewGame {
             ctx.print_color_centered(24, RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK), "Begin New Game");
