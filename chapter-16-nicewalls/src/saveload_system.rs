@@ -87,7 +87,7 @@ pub fn load_game(ecs: &mut World) {
     let mut de = serde_json::Deserializer::from_str(&data);
 
     {
-        let mut d = (&mut ecs.entities(), &mut ecs.write_storage::<SimpleMarker<SerializeMe>>(), &mut SimpleMarkerAllocator::<SerializeMe>::new());
+        let mut d = (&mut ecs.entities(), &mut ecs.write_storage::<SimpleMarker<SerializeMe>>(), &mut ecs.write_resource::<SimpleMarkerAllocator<SerializeMe>>());
 
         deserialize_individually!(ecs, de, d, Position, Renderable, Player, Viewshed, Monster,
             Name, BlocksTile, CombatStats, SufferDamage, WantsToMelee, Item, Consumable, Ranged, InflictsDamage,
