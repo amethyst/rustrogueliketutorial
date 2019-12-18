@@ -854,7 +854,7 @@ fn vendor_sell_menu(gs : &mut State, ctx : &mut Rltk, _vendor : Entity, _mode : 
 
     let mut y = (25 - (count / 2)) as i32;
     ctx.draw_box(15, y-2, 51, (count+3) as i32, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK));
-    ctx.print_color(18, y-2, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Sell Which Item? (tab to switch to buy mode)");
+    ctx.print_color(18, y-2, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Sell Which Item? (space to switch to buy mode)");
     ctx.print_color(18, y+count as i32+1, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "ESCAPE to cancel");
 
     let mut equippable : Vec<Entity> = Vec::new();
@@ -875,7 +875,7 @@ fn vendor_sell_menu(gs : &mut State, ctx : &mut Rltk, _vendor : Entity, _mode : 
         None => (VendorResult::NoResponse, None, None, None),
         Some(key) => {
             match key {
-                VirtualKeyCode::Tab => { (VendorResult::BuyMode, None, None, None) }
+                VirtualKeyCode::Space => { (VendorResult::BuyMode, None, None, None) }
                 VirtualKeyCode::Escape => { (VendorResult::Cancel, None, None, None) }
                 _ => {
                     let selection = rltk::letter_to_option(key);
@@ -899,7 +899,7 @@ fn vendor_buy_menu(gs : &mut State, ctx : &mut Rltk, vendor : Entity, _mode : Ve
 
     let mut y = (25 - (count / 2)) as i32;
     ctx.draw_box(15, y-2, 51, (count+3) as i32, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK));
-    ctx.print_color(18, y-2, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Buy Which Item? (tab to switch to sell mode)");
+    ctx.print_color(18, y-2, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Buy Which Item? (space to switch to sell mode)");
     ctx.print_color(18, y+count as i32+1, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "ESCAPE to cancel");
 
     for (j,sale) in inventory.iter().enumerate() {
@@ -916,7 +916,7 @@ fn vendor_buy_menu(gs : &mut State, ctx : &mut Rltk, vendor : Entity, _mode : Ve
         None => (VendorResult::NoResponse, None, None, None),
         Some(key) => {
             match key {
-                VirtualKeyCode::Tab => { (VendorResult::SellMode, None, None, None) }
+                VirtualKeyCode::Space => { (VendorResult::SellMode, None, None, None) }
                 VirtualKeyCode::Escape => { (VendorResult::Cancel, None, None, None) }
                 _ => {
                     let selection = rltk::letter_to_option(key);
