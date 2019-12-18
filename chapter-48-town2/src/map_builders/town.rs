@@ -87,7 +87,7 @@ impl TownBuilder {
         -> (HashSet<usize>, i32)
     {
         let mut available_building_tiles : HashSet<usize> = HashSet::new();
-        let wall_gap_y = rng.roll_dice(1, build_data.height - 8) + 5;
+        let wall_gap_y = rng.roll_dice(1, build_data.height - 9) + 5;
         for y in 1 .. build_data.height-2 {
             if !(y > wall_gap_y-4 && y < wall_gap_y+4)  {
                 let idx = build_data.map.xy_idx(30, y);
