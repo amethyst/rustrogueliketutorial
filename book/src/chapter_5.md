@@ -207,6 +207,10 @@ In our `map.rs` file, we add the following:
 
 ```rust
 impl Algorithm2D for Map {
+    fn in_bounds(&self, pos : Point) -> bool {
+        pos.x > 0 && pos.x < self.width-1 && pos.y > 0 && pos.y < self.height-1
+    }
+
     fn point2d_to_index(&self, pt: Point) -> i32 {
         (pt.y * self.width) + pt.x
     }
@@ -217,7 +221,7 @@ impl Algorithm2D for Map {
 }
 ```
 
-This tells Rust that we are implementing `Algorithm2D` from RLTK (we also need to adjust the `use` statement to `use rltk::{ RGB, Rltk, Console, RandomNumberGenerator, BaseMap, Algorithm2D, Point };`). `point2d_to_index` is pretty much the same as the `xy_idx` function we've been using: it returns the array index to which an x/y position points. `index_to_point2d` does the same thing backwards: given an index, it returns the x/y coordinates it references.
+This tells Rust that we are implementing `Algorithm2D` from RLTK (we also need to adjust the `use` statement to `use rltk::{ RGB, Rltk, Console, RandomNumberGenerator, BaseMap, Algorithm2D, Point };`). `point2d_to_index` is pretty much the same as the `xy_idx` function we've been using: it returns the array index to which an x/y position points. `index_to_point2d` does the same thing backwards: given an index, it returns the x/y coordinates it references. `in_bounds` provides the RLTK algorithms with a way to know how large your map is: some algorithms continue following a line, and it's helpful to make sure that they stop when they hit the edge of the map.
 
 We also need to support `BaseMap`. We don't need all of it yet, so we're going to stub parts of it out. In `map.rs`:
 
