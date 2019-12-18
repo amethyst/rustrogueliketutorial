@@ -50,7 +50,6 @@ pub struct CombatStats {
     pub power : i32
 }
 
-// See wrapper below for serialization
 #[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct WantsToMelee {
     pub target : Entity
@@ -92,27 +91,23 @@ pub struct ProvidesHealing {
     pub heal_amount : i32
 }
 
-// See wrapper below for serialization
 #[derive(Component, Debug, ConvertSaveload)]
 pub struct InBackpack {
     pub owner : Entity
 }
 
-// See wrapper below for serialization
 #[derive(Component, Debug, ConvertSaveload)]
 pub struct WantsToPickupItem {
     pub collected_by : Entity,
     pub item : Entity
 }
 
-// See wrapper below for serialization
 #[derive(Component, Debug, ConvertSaveload)]
 pub struct WantsToUseItem {
     pub item : Entity,
     pub target : Option<rltk::Point>
 }
 
-// See wrapper below for serialization
 #[derive(Component, Debug, ConvertSaveload)]
 pub struct WantsToDropItem {
     pub item : Entity

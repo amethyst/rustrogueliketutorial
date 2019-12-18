@@ -1334,7 +1334,7 @@ Our other stated goal is that once an AI starts to chase a target, it shouldn't 
 We can accomplish this by creating a new component (in `components.rs`, remembering to register in `main.rs` and `saveload_system.rs`):
 
 ```rust
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct Chasing {
     pub target : Entity
 }
@@ -1342,35 +1342,7 @@ pub struct Chasing {
 
 Unfortunately, we're storing an `Entity` - so we need some extra boilerplate to make the serialization system happy:
 
-```rust
-// Chasing wrapper
-#[derive(Serialize, Deserialize, Clone)]
-pub struct ChasingData<M>(M);
-
-impl<M: Marker + Serialize> ConvertSaveload<M> for Chasing
-where
-    for<'de> M: Deserialize<'de>,
-{
-    type Data = ChasingData<M>;
-    type Error = NoError;
-
-    fn convert_into<F>(&self, mut ids: F) -> Result<Self::Data, Self::Error>
-    where
-        F: FnMut(Entity) -> Option<M>,
-    {
-        let marker = ids(self.target).unwrap();
-        Ok(ChasingData(marker))
-    }
-
-    fn convert_from<F>(data: Self::Data, mut ids: F) -> Result<Self, Self::Error>
-    where
-        F: FnMut(M) -> Option<Entity>,
-    {
-        let entity = ids(data.0).unwrap();
-        Ok(Chasing{target: entity})
-    }
-}
-```
+```rust```
 
 Now we can modify our `visible_ai_system.rs` file to add a `Chasing` component whenever it wants to chase after a target. There's a lot of small changes, so I've included the whole file:
 

@@ -1,7 +1,6 @@
 use super::{MapBuilder, Map, Rect, apply_room_to_map,
     TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER, draw_corridor};
 use rltk::RandomNumberGenerator;
-use specs::prelude::*;
 
 pub struct BspDungeonBuilder {
     map : Map,

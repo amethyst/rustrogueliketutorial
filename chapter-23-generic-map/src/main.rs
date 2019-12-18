@@ -307,7 +307,6 @@ impl State {
 
         // Build a new map and place the player
         let mut builder;
-        let worldmap;
         let current_depth;
         let player_start;
         {
@@ -317,7 +316,6 @@ impl State {
             builder.build_map();
             *worldmap_resource = builder.get_map();
             player_start = builder.get_starting_position();
-            worldmap = worldmap_resource.clone();
         }
 
         // Spawn bad guys

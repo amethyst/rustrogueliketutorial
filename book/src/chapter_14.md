@@ -170,8 +170,7 @@ fn shield(ecs: &mut World, x: i32, y: i32) {
 Generally, having a shield in your backpack doesn't help much (obvious "how did you fit it in there?" questions aside - like many games, we'll gloss over that one!) - so you have to be able to pick one to equip. We'll start by making another component, `Equipped`. This works in a similar fashion to `InBackpack` - it indicates that an entity is holding it. Unlike `InBackpack`, it will indicate what slot is in use. Here's the basic `Equipped` component, in `components.rs`:
 
 ```rust
-// See wrapper below for serialization
-#[derive(Component)]
+#[derive(Component, ConvertSaveload, Clone)]
 pub struct Equipped {
     pub owner : Entity,
     pub slot : EquipmentSlot
@@ -332,12 +331,12 @@ If you `cargo run` the project now, you can run around picking up the new items 
 Logically, a shield should provide some protection against incoming damage - and being stabbed with a dagger should hurt more than being punched! To facilitate this, we'll add some more components (this should be a familiar song by now). In `components.rs`:
 
 ```rust
-#[derive(Component, Serialize, Deserialize, Clone)]
+#[derive(Component, ConvertSaveload, Clone)]
 pub struct MeleePowerBonus {
     pub power : i32
 }
 
-#[derive(Component, Serialize, Deserialize, Clone)]
+#[derive(Component, ConvertSaveload, Clone)]
 pub struct DefenseBonus {
     pub defense : i32
 }
@@ -481,7 +480,7 @@ RunState::ShowRemoveItem => {
 We'll implement a new component in `components.rs` (see the source code for the serialization handler; it's a cut-and-paste of the handler for wanting to drop an item, with the names changed):
 
 ```rust
-#[derive(Component, Debug)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct WantsToRemoveItem {
     pub item : Entity
 }

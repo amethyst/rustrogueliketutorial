@@ -1,7 +1,6 @@
 use super::{MapBuilder, Map, Rect, TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER,
     draw_corridor};
 use rltk::RandomNumberGenerator;
-use specs::prelude::*;
 
 const MIN_ROOM_SIZE : i32 = 8;
 

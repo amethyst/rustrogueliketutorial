@@ -1,6 +1,5 @@
 extern crate rltk;
 use rltk::{ RGB, Rltk, Console, BaseMap, Algorithm2D, Point };
-use super::{Rect};
 extern crate specs;
 use specs::prelude::*;
 use serde::{Serialize, Deserialize};

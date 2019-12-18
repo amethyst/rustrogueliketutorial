@@ -358,7 +358,7 @@ pub struct Duration {
     pub turns : i32
 }
 
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct StatusEffect {
     pub target : Entity
 }
@@ -366,35 +366,7 @@ pub struct StatusEffect {
 
 Also because we're storing an `Entity`, we need to write a wrapper to keep serialization happy:
 
-```rust
-// StatusEffect wrapper
-#[derive(Serialize, Deserialize, Clone)]
-pub struct StatusEffectData<M>(M);
-
-impl<M: Marker + Serialize> ConvertSaveload<M> for StatusEffect
-where
-    for<'de> M: Deserialize<'de>,
-{
-    type Data = StatusEffectData<M>;
-    type Error = NoError;
-
-    fn convert_into<F>(&self, mut ids: F) -> Result<Self::Data, Self::Error>
-    where
-        F: FnMut(Entity) -> Option<M>,
-    {
-        let marker = ids(self.target).unwrap();
-        Ok(StatusEffectData(marker))
-    }
-
-    fn convert_from<F>(data: Self::Data, mut ids: F) -> Result<Self, Self::Error>
-    where
-        F: FnMut(M) -> Option<Entity>,
-    {
-        let entity = ids(data.0).unwrap();
-        Ok(StatusEffect{target: entity})
-    }
-}
-```
+```rust```
 
 That's all well and good - but we've broken a few things! Everything that expected `Confusion` to have a `turns` field is now complaining.
 

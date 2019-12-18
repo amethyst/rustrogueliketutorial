@@ -6,6 +6,7 @@ use specs::prelude::*;
 use std::collections::HashMap;
 
 #[derive(PartialEq, Copy, Clone)]
+#[allow(dead_code)]
 pub enum DistanceAlgorithm { Pythagoras, Manhattan, Chebyshev }
 
 pub struct VoronoiCellBuilder {
@@ -53,6 +54,7 @@ impl MapBuilder for VoronoiCellBuilder {
 }
 
 impl VoronoiCellBuilder {
+    #[allow(dead_code)]
     pub fn new(new_depth : i32) -> VoronoiCellBuilder {
         VoronoiCellBuilder{
             map : Map::new(new_depth),

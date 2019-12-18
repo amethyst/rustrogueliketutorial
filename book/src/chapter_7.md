@@ -436,7 +436,7 @@ If you `cargo run` this, you'll see that you can walk up to a mob and try to mov
 We're going to do this in an ECS way, so there's a bit of boilerplate. In `components.rs`, we make a couple of new components:
 
 ```rust
-#[derive(Component, Debug)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct WantsToMelee {
     pub target : Entity
 }

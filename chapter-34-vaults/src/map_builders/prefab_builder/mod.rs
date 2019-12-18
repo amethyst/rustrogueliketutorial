@@ -1,7 +1,5 @@
-use super::{MapBuilder, Map, TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER,
+use super::{MapBuilder, Map, TileType, Position, SHOW_MAPGEN_VISUALIZER,
     remove_unreachable_areas_returning_most_distant};
-use rltk::RandomNumberGenerator;
-use specs::prelude::*;
 mod prefab_levels;
 pub mod prefab_sections;
 

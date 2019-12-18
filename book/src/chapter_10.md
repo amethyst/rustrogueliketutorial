@@ -249,7 +249,7 @@ RunState::ShowTargeting{range, item} => {
 
 What's this `target`? I added another field to `WantsToUseItem` in `components.rs`:
 ```rust
-#[derive(Component, Debug)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct WantsToUseItem {
     pub item : Entity,
     pub target : Option<rltk::Point>

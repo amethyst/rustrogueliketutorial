@@ -275,44 +275,10 @@ pub fn find_spell_entity(ecs : &World, name : &str) -> Option<Entity> {
 Now that we have Zap defined as a spell template, we can finish up the `spell_hotkeys` system we started earlier. First, we'll need a component to indicate a desire to cast a spell. In `components.rs` (and registered in `main.rs` and `saveload_system.rs`):
 
 ```rust
-// See wrapper below for serialization
-#[derive(Component, Debug)]
+#[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct WantsToCastSpell {
     pub spell : Entity,
     pub target : Option<rltk::Point>
-}
-```
-
-Because it's a component with `Entity` data, we also need the helper:
-
-```rust
-// WantsToCastSpell wrapper
-#[derive(Serialize, Deserialize, Clone)]
-pub struct WantsToCastSpellData<M>(M, Option<rltk::Point>);
-
-impl<M: Marker + Serialize> ConvertSaveload<M> for WantsToCastSpell
-where
-    for<'de> M: Deserialize<'de>,
-{
-    type Data = WantsToCastSpellData<M>;
-    type Error = NoError;
-
-    fn convert_into<F>(&self, mut ids: F) -> Result<Self::Data, Self::Error>
-    where
-        F: FnMut(Entity) -> Option<M>,
-    {
-        let marker = ids(self.spell).unwrap();
-        Ok(WantsToCastSpellData(marker, self.target))
-    }
-
-    fn convert_from<F>(data: Self::Data, mut ids: F) -> Result<Self, Self::Error>
-    where
-        F: FnMut(M) -> Option<Entity>,
-    {
-        let spell = ids(data.0).unwrap();
-        let target = data.1;
-        Ok(WantsToCastSpell{spell, target})
-    }
 }
 ```
 

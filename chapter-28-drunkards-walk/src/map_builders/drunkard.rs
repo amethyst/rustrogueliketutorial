@@ -58,6 +58,7 @@ impl MapBuilder for DrunkardsWalkBuilder {
 }
 
 impl DrunkardsWalkBuilder {
+    #[allow(dead_code)]
     pub fn new(new_depth : i32, settings: DrunkardSettings) -> DrunkardsWalkBuilder {
         DrunkardsWalkBuilder{
             map : Map::new(new_depth),

@@ -82,6 +82,7 @@ pub struct ParticleBuilder {
 }
 
 impl ParticleBuilder {
+    #[allow(clippy::new_without_default)]
     pub fn new() -> ParticleBuilder {
         ParticleBuilder{ requests : Vec::new() }
     }

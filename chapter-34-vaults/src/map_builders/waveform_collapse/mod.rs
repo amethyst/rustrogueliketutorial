@@ -1,7 +1,6 @@
 use super::{MapBuilder, Map, TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER,
     generate_voronoi_spawn_regions, remove_unreachable_areas_returning_most_distant};
 use rltk::RandomNumberGenerator;
-use specs::prelude::*;
 use std::collections::HashMap;
 mod common;
 use common::*;
