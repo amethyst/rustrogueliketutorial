@@ -76,6 +76,7 @@ REM Usage: Stage Chapter
 :Stage
 cd %~1
 cargo build --release --target wasm32-unknown-unknown
+if %errorlevel% neq 0 exit /b %errorlevel%
 wasm-bindgen ..\target\wasm32-unknown-unknown\release\%~1.wasm --out-dir ../book/book/wasm/%~1 --no-modules --no-typescript
 cd ..
 move .\book\book\wasm\%~1\%~1.js .\book\book\wasm\%~1\myblob.js
