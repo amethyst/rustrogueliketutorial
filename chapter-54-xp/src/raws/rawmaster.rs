@@ -153,7 +153,7 @@ pub fn spawn_named_item(raws: &RawMaster, ecs : &mut World, key : &str, pos : Sp
     if raws.item_index.contains_key(key) {
         let item_template = &raws.raws.items[raws.item_index[key]];
 
-        let mut eb = ecs.create_entity().marked::<SimpleMarker<SerializeMe>>();;
+        let mut eb = ecs.create_entity().marked::<SimpleMarker<SerializeMe>>();
 
         // Spawn in the specified location
         eb = spawn_position(pos, eb, key, raws);
@@ -220,7 +220,7 @@ pub fn spawn_named_mob(raws: &RawMaster, ecs : &mut World, key : &str, pos : Spa
     if raws.mob_index.contains_key(key) {
         let mob_template = &raws.raws.mobs[raws.mob_index[key]];
 
-        let mut eb = ecs.create_entity().marked::<SimpleMarker<SerializeMe>>();;
+        let mut eb = ecs.create_entity().marked::<SimpleMarker<SerializeMe>>();
 
         // Spawn in the specified location
         eb = spawn_position(pos, eb, key, raws);
@@ -348,7 +348,7 @@ pub fn spawn_named_prop(raws: &RawMaster, ecs : &mut World, key : &str, pos : Sp
     if raws.prop_index.contains_key(key) {
         let prop_template = &raws.raws.props[raws.prop_index[key]];
 
-        let mut eb = ecs.create_entity().marked::<SimpleMarker<SerializeMe>>();;
+        let mut eb = ecs.create_entity().marked::<SimpleMarker<SerializeMe>>();
 
         // Spawn in the specified location
         eb = spawn_position(pos, eb, key, raws);
