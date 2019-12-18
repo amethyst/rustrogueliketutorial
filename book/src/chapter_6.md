@@ -159,24 +159,29 @@ If you `cargo run` your project now, it will be very slow - and your console wil
 To prevent this - and make a turn-based game - we introduce a new concept to the game state. The game is either "running" or "waiting for input" - so we make an `enum` to handle this:
 
 ```rust
+#[derive(PartialEq, Copy, Clone)]
 pub enum RunState { Paused, Running }
 ```
 
-We add it to the `run_systems` call:
+Notice the `derive` macro! Derivation is a way to ask Rust (and crates) to add code to your structure for you, to cut down on typing boilerplate. In this case, the `enum` needs a few extra features. `PartialEq` allows you to compare the `RunState` with other `RunState` variables to determine if they are the same (or different). `Copy` marks it as a "copy" type - it can safely be copied in memory (meaning it has no pointers that will be messed up doing this). `Clone` quietly adds a `.clone()` function to it, allowing you to make a memory copy that way.
+
+Next, we need to add it into the `State` structure:
 
 ```rust
-impl State {
-    fn run_systems(&mut self) {
-        let mut vis = VisibilitySystem{};
-        vis.run_now(&self.ecs);
-        let mut mob = MonsterAI{};
-        mob.run_now(&self.ecs);
-        self.ecs.maintain();
-    }
+pub struct State {
+    pub ecs: World,
+    pub runstate : RunState
 }
 ```
 
-We also amend our State creator to include a `runstate: RunState::Running`.
+In turn, we need to amend our State creator to include a `runstate: RunState::Running`:
+
+```rust
+let mut gs = State {
+    ecs: World::new(),
+    runstate : RunState::Running
+};
+```
 
 Now, we change our `tick` function to only run the simulation when the game isn't paused - and otherwise to ask for user input:
 
