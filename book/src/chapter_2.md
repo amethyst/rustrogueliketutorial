@@ -41,6 +41,8 @@ For small games, an ECS often feels like it's adding a bit of extra typing to yo
 
 That's a lot to digest, so we'll look at a simple example of how an ECS can make your life a bit easier.
 
+It's important to know that ECS is just one way of handling composition. There are many others, and there really is no right answer. With a bit of searching, you can find a bunch of different ways to approach ECS. There's plenty of object-oriented approaches. There are plenty of "free function" approaches. They all have merit, and can work for you. I've gone with the Entity-Component approach in this book, but there are *many* other ways to skin the cat. As you gain experience, you'll find one that's comfortable for you! My advice: if anyone tells you that a particular method is the "right" one, ignore them - programming is the art of making something that works, rather than a quest for purity!
+
 ## Including Specs in the project
 
 To start, we want to tell Cargo that we're going to use Specs. Open your `Cargo.toml` file, and change the `dependencies` section to look like this:
