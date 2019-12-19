@@ -841,12 +841,78 @@ If you `cargo run` now, the dragon can attack you as you walk around it.
 
 ### Clipping The Dragon's Wings
 
+Another issue is that Dragon can follow you down narrow corridors, even though it doesn't fit. Path-finding for large entities is often problematic in games; Dwarf Fortress ended up with a nasty completely separate system for wagons! Let's hope we can do better than that. Our movement system largely relies upon the `blocked` structure inside maps, so we need a way to add blockage information for entities larger than one tile. In `map/mod.rs`, we add the following:
+
+```rust
+pub fn populate_blocked_multi(&mut self, width : i32, height : i32) {
+    self.populate_blocked();
+    for y in 1 .. self.height-1 {
+        for x in 1 .. self.width - 1 {
+            let idx = self.xy_idx(x, y);
+            if !self.blocked[idx] {
+                for cy in 0..height {
+                    for cx in 0..width {
+                        let tx = x + cx;
+                        let ty = y + cy;
+                        if tx < self.width-1 && ty < self.height-1 {
+                            let tidx = self.xy_idx(tx, ty);
+                            if self.blocked[tidx] {
+                                self.blocked[idx] = true;
+                            }
+                        } else {
+                            self.blocked[idx] = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+I'd caution against that many nested loops, but at least it has escape clauses! So what does this do:
+
+1. It starts by building the `blocked` information for all tiles, using the existing `populate_blocked` function.
+2. It then iterates the map, and if a tile *isn't* blocked:
+    1. It iterates each tile within the size of the entity, added to the current coordinate.
+    2. If any of those tiles are blocked, it sets the tile to be examined as blocked also.
+
+So the net result is that you get a map of places the large entity can stand. Now we need to plug that into `ai/chase_ai_system.rs`:
+
+```rust
+...
+turn_done.push(entity);
+let target_pos = targets[&entity];
+let path;
+
+if let Some(size) = sizes.get(entity) {
+    let mut map_copy = map.clone();
+    map_copy.populate_blocked_multi(size.x, size.y);
+    path = rltk::a_star_search(
+        map_copy.xy_idx(pos.x, pos.y) as i32,
+        map_copy.xy_idx(target_pos.0, target_pos.1) as i32,
+        &mut map_copy
+    );
+} else {
+    path = rltk::a_star_search(
+        map.xy_idx(pos.x, pos.y) as i32,
+        map.xy_idx(target_pos.0, target_pos.1) as i32,
+        &mut *map
+    );
+}
+if path.success && path.steps.len()>1 && path.steps.len()<15 {
+    ...
+```
+
+So we've changed the value of `path` to be the same code as before for 1x1 entities, but to take a *clone* of the map for large entities and use the new `populate_blocked_multi` function to add blocks appropriate for a creature of this size.
+
+If you `cargo run` now, you can escape from the dragon by taking narrow passageways.
 
 ## So why this much work?
 
 So why *did* we spend so much time making irregular sized objects work so generically, when we could have special cased the black dragon? It's so that we can make more big things later. :-)
 
-A word of caution: it's always tempting to do this for *everything*, but remember the `YAGNI` rule: `You Ain't Gonna Need It`. If you don't really have a good reason to implement a feature, hold off until you either need it or it makes sense!
+A word of caution: it's always tempting to do this for *everything*, but remember the `YAGNI` rule: `You Ain't Gonna Need It`. If you don't really have a good reason to implement a feature, hold off until you either need it or it makes sense! (Fun aside: I first heard of this rule by a fellow with the username of `TANSAAFL`. Took me ages to realize he "there ain't no such thing as a free lunch.")
 
 ## Worrying about balance / Playtesting
 

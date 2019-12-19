@@ -1,6 +1,6 @@
 extern crate specs;
 use specs::prelude::*;
-use crate::{MyTurn, Chasing, Position, Map, ApplyMove};
+use crate::{MyTurn, Chasing, Position, Map, ApplyMove, TileSize};
 use std::collections::HashMap;
 
 pub struct ChaseAI {}
@@ -13,12 +13,13 @@ impl<'a> System<'a> for ChaseAI {
         ReadStorage<'a, Position>,
         WriteExpect<'a, Map>,
         Entities<'a>,
-        WriteStorage<'a, ApplyMove>
+        WriteStorage<'a, ApplyMove>,
+        ReadStorage<'a, TileSize>
     );
 
     fn run(&mut self, data : Self::SystemData) {
         let (mut turns, mut chasing, positions, mut map,
-            entities, mut apply_move) = data;
+            entities, mut apply_move, sizes) = data;
 
         let mut targets : HashMap<Entity, (i32, i32)> = HashMap::new();
         let mut end_chase : Vec<Entity> = Vec::new();
@@ -42,11 +43,23 @@ impl<'a> System<'a> for ChaseAI {
         {
             turn_done.push(entity);
             let target_pos = targets[&entity];
-            let path = rltk::a_star_search(
-                map.xy_idx(pos.x, pos.y) as i32,
-                map.xy_idx(target_pos.0, target_pos.1) as i32,
-                &mut *map
-            );
+            let path;
+
+            if let Some(size) = sizes.get(entity) {
+                let mut map_copy = map.clone();
+                map_copy.populate_blocked_multi(size.x, size.y);
+                path = rltk::a_star_search(
+                    map_copy.xy_idx(pos.x, pos.y) as i32,
+                    map_copy.xy_idx(target_pos.0, target_pos.1) as i32,
+                    &mut map_copy
+                );
+            } else {
+                path = rltk::a_star_search(
+                    map.xy_idx(pos.x, pos.y) as i32,
+                    map.xy_idx(target_pos.0, target_pos.1) as i32,
+                    &mut *map
+                );
+            }
             if path.success && path.steps.len()>1 && path.steps.len()<15 {
                 apply_move.insert(entity, ApplyMove{ dest_idx: path.steps[1] }).expect("Unable to insert");
                 turn_done.push(entity);
