@@ -752,11 +752,101 @@ If you `cargo run` now, the dragon won't affect themselves at all. If you launch
 
 ### Letting the dragon attack from any tile
 
-Another issue that you may have noticed is that the dragon can only attack you from its "head" (the top-left tile). I like to think of Dragons as having catlike agility (I tend to think of them being a lot like cats in general!), so that won't work!
+Another issue that you may have noticed is that the dragon can only attack you from its "head" (the top-left tile). I like to think of Dragons as having catlike agility (I tend to think of them being a lot like cats in general!), so that won't work! We'll start out with a helper function. Open up the venerable `rect.rs` (we haven't touched it since the beginning!), and we'll add a new function to it:
+
+```rust
+use std::collections::HashSet;
+...
+pub fn get_all_tiles(&self) -> HashSet<(i32,i32)> {
+    let mut result = HashSet::new();
+    for y in self.y1 .. self.y2 {
+        for x in self.x1 .. self.x2 {
+            result.insert((x,y));
+        }
+    }
+    result
+}
+```
+
+This returns a `HashSet` of tiles that are within the rectangle. Very simple, and hopefully optimizes into quite a fast function! Now we go into `ai/adjacent_ai_system.rs`. We'll modify the system to also query `TileSize`:
+
+```rust
+impl<'a> System<'a> for AdjacentAI {
+    #[allow(clippy::type_complexity)]
+    type SystemData = (
+        WriteStorage<'a, MyTurn>,
+        ReadStorage<'a, Faction>,
+        ReadStorage<'a, Position>,
+        ReadExpect<'a, Map>,
+        WriteStorage<'a, WantsToMelee>,
+        Entities<'a>,
+        ReadExpect<'a, Entity>,
+        ReadStorage<'a, TileSize>
+    );
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (mut turns, factions, positions, map, mut want_melee, entities, player, sizes) = data;
+```
+
+Then we'll check to see if there's an irregular size (and use the old code if there isn't) - and do some rectangle math to find the adjacent tiles otherwise:
+
+```rust
+fn run(&mut self, data : Self::SystemData) {
+    let (mut turns, factions, positions, map, mut want_melee, entities, player, sizes) = data;
+
+    let mut turn_done : Vec<Entity> = Vec::new();
+    for (entity, _turn, my_faction, pos) in (&entities, &turns, &factions, &positions).join() {
+        if entity != *player {
+            let mut reactions : Vec<(Entity, Reaction)> = Vec::new();
+            let idx = map.xy_idx(pos.x, pos.y);
+            let w = map.width;
+            let h = map.height;
+
+            if let Some(size) = sizes.get(entity) {
+                use crate::rect::Rect;
+                let mob_rect = Rect::new(pos.x, pos.y, size.x, size.y).get_all_tiles();
+                let parent_rect = Rect::new(pos.x -1, pos.y -1, size.x+2, size.y + 2);
+                parent_rect.get_all_tiles().iter().filter(|t| !mob_rect.contains(t)).for_each(|t| {
+                    if t.0 > 0 && t.0 < w-1 && t.1 > 0 && t.1 < h-1 {
+                        let target_idx = map.xy_idx(t.0, t.1);
+                        evaluate(target_idx, &map, &factions, &my_faction.name, &mut reactions);
+                    }
+                });
+            } else {
+
+                // Add possible reactions to adjacents for each direction
+                if pos.x > 0 { evaluate(idx-1, &map, &factions, &my_faction.name, &mut reactions); }
+                if pos.x < w-1 { evaluate(idx+1, &map, &factions, &my_faction.name, &mut reactions); }
+                if pos.y > 0 { evaluate(idx-w as usize, &map, &factions, &my_faction.name, &mut reactions); }
+                if pos.y < h-1 { evaluate(idx+w as usize, &map, &factions, &my_faction.name, &mut reactions); }
+                if pos.y > 0 && pos.x > 0 { evaluate((idx-w as usize)-1, &map, &factions, &my_faction.name, &mut reactions); }
+                if pos.y > 0 && pos.x < w-1 { evaluate((idx-w as usize)+1, &map, &factions, &my_faction.name, &mut reactions); }
+                if pos.y < h-1 && pos.x > 0 { evaluate((idx+w as usize)-1, &map, &factions, &my_faction.name, &mut reactions); }
+                if pos.y < h-1 && pos.x < w-1 { evaluate((idx+w as usize)+1, &map, &factions, &my_faction.name, &mut reactions); }
+
+            }
+            ...
+```
+
+Walking through this:
+
+1. We start with the same setup as before.
+2. We use `if let` to obtain a tile size if there is one.
+3. We setup a `mob_rect` that is equal to the position and dimensions of the mob, and obtain the *Set* of tiles it covers.
+4. We setup a `parent_rect` that is one tile larger in all directions.
+5. We call `parent_rect.get_all_tiles()` and transform it into an iterator. Then we `filter` it to only include tiles that aren't in `mob_rect` - so we have all adjacent tiles.
+6. Then we use `for_each` on the resultant set of tiles, make sure that the tiles are within the map, and add them to call `evaluate` on them.
+
+If you `cargo run` now, the dragon can attack you as you walk around it.
 
 ### Clipping The Dragon's Wings
 
 
+## So why this much work?
+
+So why *did* we spend so much time making irregular sized objects work so generically, when we could have special cased the black dragon? It's so that we can make more big things later. :-)
+
+A word of caution: it's always tempting to do this for *everything*, but remember the `YAGNI` rule: `You Ain't Gonna Need It`. If you don't really have a good reason to implement a feature, hold off until you either need it or it makes sense!
 
 ## Worrying about balance / Playtesting
 

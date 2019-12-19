@@ -79,8 +79,8 @@ impl<'a> System<'a> for MeleeCombatSystem {
                 }
                 let modified_hit_roll = natural_roll + attribute_hit_bonus + skill_hit_bonus
                     + weapon_hit_bonus + status_hit_bonus;
-                println!("Natural roll: {}", natural_roll);
-                println!("Modified hit roll: {}", modified_hit_roll);
+                //println!("Natural roll: {}", natural_roll);
+                //println!("Modified hit roll: {}", modified_hit_roll);
 
                 let mut armor_item_bonus_f = 0.0;
                 for (wielded,armor) in (&equipped_items, &wearables).join() {
@@ -98,7 +98,7 @@ impl<'a> System<'a> for MeleeCombatSystem {
                 let armor_class = base_armor_class + armor_quickness_bonus + armor_skill_bonus
                     + armor_item_bonus;
 
-                println!("Armor class: {}", armor_class);
+                //println!("Armor class: {}", armor_class);
                 if natural_roll != 1 && (natural_roll == 20 || modified_hit_roll > armor_class) {
                     // Target hit! Until we support weapons, we're going with 1d4
                     let base_damage = rng.roll_dice(weapon_info.damage_n_dice, weapon_info.damage_die_type);
@@ -109,10 +109,10 @@ impl<'a> System<'a> for MeleeCombatSystem {
                     let damage = i32::max(0, base_damage + attr_damage_bonus + 
                         skill_damage_bonus + weapon_damage_bonus);
 
-                    println!("Damage: {} + {}attr + {}skill + {}weapon = {}",
+                    /*println!("Damage: {} + {}attr + {}skill + {}weapon = {}",
                         base_damage, attr_damage_bonus, skill_damage_bonus,
                         weapon_damage_bonus, damage
-                    );
+                    );*/
                     add_effect(
                         Some(entity),
                         EffectType::Damage{ amount: damage },
