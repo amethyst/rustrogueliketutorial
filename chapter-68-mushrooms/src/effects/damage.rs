@@ -11,6 +11,11 @@ pub fn inflict_damage(ecs: &mut World, damage: &EffectSpawner, target: Entity) {
     let mut pools = ecs.write_storage::<Pools>();
     if let Some(pool) = pools.get_mut(target) {
         if !pool.god_mode {
+            if let Some(creator) = damage.creator {
+                if creator == target { 
+                    return; 
+                }
+            }
             if let EffectType::Damage{amount} = damage.effect_type {
                 pool.hit_points.current -= amount;
                 add_effect(None, EffectType::Bloodstain, Targets::Single{target});

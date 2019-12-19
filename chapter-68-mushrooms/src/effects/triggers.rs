@@ -78,7 +78,7 @@ fn event_trigger(creator : Option<Entity>, entity: Entity, targets : &Targets, e
 
     // Line particle spawn
     if let Some(part) = ecs.read_storage::<SpawnParticleLine>().get(entity) {
-        if let Some(start_pos) = targeting::find_item_position(ecs, entity, creator) {            
+        if let Some(start_pos) = targeting::find_item_position(ecs, entity, creator) {
             match targets {
                 Targets::Tile{tile_idx} => spawn_line_particles(ecs, start_pos, *tile_idx, part),
                 Targets::Tiles{tiles} => tiles.iter().for_each(|tile_idx| spawn_line_particles(ecs, start_pos, *tile_idx, part)),

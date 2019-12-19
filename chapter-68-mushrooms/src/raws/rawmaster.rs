@@ -317,6 +317,9 @@ pub fn spawn_named_item(raws: &RawMaster, ecs : &mut World, key : &str, pos : Sp
         // Renderable
         if let Some(renderable) = &item_template.renderable {
             eb = eb.with(get_renderable_component(renderable));
+            if renderable.x_size.is_some() || renderable.y_size.is_some() {
+                eb = eb.with(TileSize{ x : renderable.x_size.unwrap_or(1), y : renderable.y_size.unwrap_or(1) });
+            }
         }
 
         eb = eb.with(Name{ name : item_template.name.clone() });
@@ -418,6 +421,9 @@ pub fn spawn_named_mob(raws: &RawMaster, ecs : &mut World, key : &str, pos : Spa
         // Renderable
         if let Some(renderable) = &mob_template.renderable {
             eb = eb.with(get_renderable_component(renderable));
+            if renderable.x_size.is_some() || renderable.y_size.is_some() {
+                eb = eb.with(TileSize{ x : renderable.x_size.unwrap_or(1), y : renderable.y_size.unwrap_or(1) });
+            }
         }
 
         eb = eb.with(Name{ name : mob_template.name.clone() });
@@ -583,6 +589,9 @@ pub fn spawn_named_prop(raws: &RawMaster, ecs : &mut World, key : &str, pos : Sp
         // Renderable
         if let Some(renderable) = &prop_template.renderable {
             eb = eb.with(get_renderable_component(renderable));
+            if renderable.x_size.is_some() || renderable.y_size.is_some() {
+                eb = eb.with(TileSize{ x : renderable.x_size.unwrap_or(1), y : renderable.y_size.unwrap_or(1) });
+            }
         }
 
         eb = eb.with(Name{ name : prop_template.name.clone() });

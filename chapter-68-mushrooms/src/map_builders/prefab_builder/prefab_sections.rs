@@ -20,7 +20,7 @@ pub const UNDERGROUND_FORT : PrefabSection = PrefabSection{
     template : RIGHT_FORT,
     width: 15,
     height: 43,
-    placement: ( HorizontalPlacement::Right, VerticalPlacement::Center )
+    placement: ( HorizontalPlacement::Right, VerticalPlacement::Top )
 };
 
 #[allow(dead_code)]

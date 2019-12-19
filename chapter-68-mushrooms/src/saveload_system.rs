@@ -58,7 +58,7 @@ pub fn save_game(ecs : &mut World) {
             TeleportTo, ApplyMove, ApplyTeleport, MagicItem, ObfuscatedName, IdentifiedItem,
             SpawnParticleBurst, SpawnParticleLine, CursedItem, ProvidesRemoveCurse, ProvidesIdentification,
             AttributeBonus, StatusEffect, Duration, KnownSpells, SpellTemplate, WantsToCastSpell, TeachesSpell,
-            ProvidesMana, Slow, DamageOverTime, SpecialAbilities
+            ProvidesMana, Slow, DamageOverTime, SpecialAbilities, TileSize
         );
     }
 
@@ -116,7 +116,7 @@ pub fn load_game(ecs: &mut World) {
             TeleportTo, ApplyMove, ApplyTeleport, MagicItem, ObfuscatedName, IdentifiedItem,
             SpawnParticleBurst, SpawnParticleLine, CursedItem, ProvidesRemoveCurse, ProvidesIdentification,
             AttributeBonus, StatusEffect, Duration, KnownSpells, SpellTemplate, WantsToCastSpell, TeachesSpell,
-            ProvidesMana, Slow, DamageOverTime, SpecialAbilities
+            ProvidesMana, Slow, DamageOverTime, SpecialAbilities, TileSize
         );
     }
 

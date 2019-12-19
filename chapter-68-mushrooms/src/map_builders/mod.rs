@@ -32,8 +32,6 @@ mod town;
 mod forest;
 mod limestone_cavern;
 mod dwarf_fort_builder;
-mod mushroom_forest;
-use mushroom_forest::*;
 mod area_ending_point;
 use forest::forest_builder;
 use limestone_cavern::*;
@@ -68,6 +66,8 @@ use room_corridor_spawner::CorridorSpawner;
 use door_placement::DoorPlacement;
 use town::town_builder;
 use area_ending_point::*;
+mod mushroom_forest;
+use mushroom_forest::*;
 
 pub struct BuilderMap {
     pub spawn_list : Vec<(usize, String)>,
