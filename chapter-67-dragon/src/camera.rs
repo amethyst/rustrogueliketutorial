@@ -1,5 +1,5 @@
 use specs::prelude::*;
-use super::{Map,Position,Renderable,Hidden};
+use super::{Map,Position,Renderable,Hidden,TileSize};
 use rltk::{Point, Rltk, Console, RGB};
 use crate::map::tile_glyph;
 
@@ -49,16 +49,35 @@ pub fn render_camera(ecs: &World, ctx : &mut Rltk) {
     let renderables = ecs.read_storage::<Renderable>();
     let hidden = ecs.read_storage::<Hidden>();
     let map = ecs.fetch::<Map>();
+    let sizes = ecs.read_storage::<TileSize>();
+    let entities = ecs.entities();
 
-    let mut data = (&positions, &renderables, !&hidden).join().collect::<Vec<_>>();
+    let mut data = (&positions, &renderables, &entities, !&hidden).join().collect::<Vec<_>>();
     data.sort_by(|&a, &b| b.1.render_order.cmp(&a.1.render_order) );
-    for (pos, render, _hidden) in data.iter() {
-        let idx = map.xy_idx(pos.x, pos.y);
-        if map.visible_tiles[idx] {
-            let entity_screen_x = pos.x - min_x;
-            let entity_screen_y = pos.y - min_y;
-            if entity_screen_x > 0 && entity_screen_x < map_width && entity_screen_y > 0 && entity_screen_y < map_height {
-                ctx.set(entity_screen_x + 1, entity_screen_y + 1, render.fg, render.bg, render.glyph);
+    for (pos, render, entity, _hidden) in data.iter() {
+        if let Some(size) = sizes.get(*entity) {
+            for cy in 0 .. size.y {
+                for cx in 0 .. size.x {
+                    let tile_x = cx + pos.x;
+                    let tile_y = cy + pos.y;
+                    let idx = map.xy_idx(tile_x, tile_y);
+                    if map.visible_tiles[idx] {
+                        let entity_screen_x = (cx + pos.x) - min_x;
+                        let entity_screen_y = (cy + pos.y) - min_y;
+                        if entity_screen_x > 0 && entity_screen_x < map_width && entity_screen_y > 0 && entity_screen_y < map_height {
+                            ctx.set(entity_screen_x + 1, entity_screen_y + 1, render.fg, render.bg, render.glyph);
+                        }
+                    }
+                }
+            }
+        } else {
+            let idx = map.xy_idx(pos.x, pos.y);
+            if map.visible_tiles[idx] {
+                let entity_screen_x = pos.x - min_x;
+                let entity_screen_y = pos.y - min_y;
+                if entity_screen_x > 0 && entity_screen_x < map_width && entity_screen_y > 0 && entity_screen_y < map_height {
+                    ctx.set(entity_screen_x + 1, entity_screen_y + 1, render.fg, render.bg, render.glyph);
+                }
             }
         }
     }

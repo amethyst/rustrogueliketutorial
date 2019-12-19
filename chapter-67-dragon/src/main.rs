@@ -583,6 +583,7 @@ fn main() {
     gs.ecs.register::<Slow>();
     gs.ecs.register::<DamageOverTime>();
     gs.ecs.register::<SpecialAbilities>();
+    gs.ecs.register::<TileSize>();
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
     raws::load_raws();
@@ -598,7 +599,7 @@ fn main() {
     gs.ecs.insert(particle_system::ParticleBuilder::new());
     gs.ecs.insert(rex_assets::RexAssets::new());
 
-    gs.generate_world_map(1, 0);
+    gs.generate_world_map(6, 0);
 
     rltk::main_loop(context, gs);
 }

@@ -14,6 +14,12 @@ pub struct Position {
     pub y: i32,
 }
 
+#[derive(Component, ConvertSaveload, Clone)]
+pub struct TileSize {
+    pub x: i32,
+    pub y: i32,
+}
+
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct OtherLevelPosition {
     pub x: i32,

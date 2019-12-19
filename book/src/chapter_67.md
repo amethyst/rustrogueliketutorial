@@ -305,8 +305,8 @@ In `spawns.json`, we'll make a start at sketching out what the dragon looks like
     "vision_range" : 12,
     "movement" : "static",
     "attributes" : {
-        "might" : 5,
-        "fitness" : 5
+        "might" : 13,
+        "fitness" : 13
     },
     "skills" : {
         "Melee" : 18,
@@ -340,7 +340,7 @@ We'll also need to define an *Acid Breath* effect:
         "ranged" : "6",
         "damage" : "10",
         "area_of_effect" : "3",
-        "particle_line" : "☼;#00FF00;400.0"
+        "particle" : "☼;#00FF00;400.0"
     }
 }
 ```
@@ -425,6 +425,338 @@ Go ahead and change the `main` function back:
 ```rust
 gs.generate_world_map(1, 0);
 ```
+
+## The Dragon isn't very scary
+
+If you play the game, the dragon is quite lethal. He doesn't, however, have much of a visceral impact - he's just a red `D` symbol that sometimes fires a green cloud at you. That's a decent imagination trigger, and you can even look at his tooltip to know that `D` is for `Dragon` - but it seems like we can do better than that. Also, Dragons are really rather large - and it's a bit odd that a Dragon takes up the same amount of map space as a sheep.
+
+We'll start by adding a new component to represent larger entities:
+
+```rust
+#[derive(Component, ConvertSaveload, Clone)]
+pub struct TileSize {
+    pub x: i32,
+    pub y: i32,
+}
+```
+
+As usual, we won't forget to register it in `main.rs` and `saveload_system.rs`! We'll also allow you to specify a size for entities in the JSON file. In `raws/item_structs.rs`, we'll extend `Renderable` (remember, we re-use it for other types):
+
+```rust
+#[derive(Deserialize, Debug)]
+pub struct Renderable {
+    pub glyph: String,
+    pub fg : String,
+    pub bg : String,
+    pub order: i32,
+    pub x_size : Option<i32>,
+    pub y_size : Option<i32>
+}
+```
+
+We've made the new fields *optional* - so our existing code will work. Now in `raws/rawmaster.rs`, find the `spawn_named_mob` function section that adds a `Renderable` component to the entity (it's around line 418 in my source code). If a size was specified, we need to add a `TileSize` component:
+
+```rust
+// Renderable
+if let Some(renderable) = &mob_template.renderable {
+    eb = eb.with(get_renderable_component(renderable));
+    if renderable.x_size.is_some() || renderable.y_size.is_some() {
+        eb = eb.with(TileSize{ x : renderable.x_size.unwrap_or(1), y : renderable.y_size.unwrap_or(1) });
+    }
+}
+```
+
+Now, we'll go into `spawns.json` and add the extra size to the dragon:
+
+```json
+{
+    "name" : "Black Dragon",
+    "renderable": {
+        "glyph" : "D",
+        "fg" : "#FF0000",
+        "bg" : "#000000",
+        "order" : 1,
+        "x_size" : 2,
+        "y_size" : 2
+    },
+    ...
+```
+
+With the housekeeping taken care of, we need to be able to *render* larger entities to the map. Open up `camera.rs` and we'll amend the rendering like this:
+
+```rust
+// Render entities
+let positions = ecs.read_storage::<Position>();
+let renderables = ecs.read_storage::<Renderable>();
+let hidden = ecs.read_storage::<Hidden>();
+let map = ecs.fetch::<Map>();
+let sizes = ecs.read_storage::<TileSize>();
+let entities = ecs.entities();
+
+let mut data = (&positions, &renderables, &entities, !&hidden).join().collect::<Vec<_>>();
+data.sort_by(|&a, &b| b.1.render_order.cmp(&a.1.render_order) );
+for (pos, render, entity, _hidden) in data.iter() {
+    if let Some(size) = sizes.get(*entity) {
+        for cy in 0 .. size.y {
+            for cx in 0 .. size.x {
+                let tile_x = cx + pos.x;
+                let tile_y = cy + pos.y;
+                let idx = map.xy_idx(tile_x, tile_y);
+                if map.visible_tiles[idx] {
+                    let entity_screen_x = (cx + pos.x) - min_x;
+                    let entity_screen_y = (cy + pos.y) - min_y;
+                    if entity_screen_x > 0 && entity_screen_x < map_width && entity_screen_y > 0 && entity_screen_y < map_height {
+                        ctx.set(entity_screen_x + 1, entity_screen_y + 1, render.fg, render.bg, render.glyph);
+                    }
+                }
+            }
+        }
+    } else {
+        let idx = map.xy_idx(pos.x, pos.y);
+        if map.visible_tiles[idx] {
+            let entity_screen_x = pos.x - min_x;
+            let entity_screen_y = pos.y - min_y;
+            if entity_screen_x > 0 && entity_screen_x < map_width && entity_screen_y > 0 && entity_screen_y < map_height {
+                ctx.set(entity_screen_x + 1, entity_screen_y + 1, render.fg, render.bg, render.glyph);
+            }
+        }
+    }
+}
+```
+
+So how does this work? We check to see if the entity we are rendering has a `TileSize` component, using the `if let` syntax for match assignment. If it does, we render each tile individually for their specified size. If it doesn't, we render exactly as before. Note that we're bounds and visibility checking each tile; that's not the fastest approach, but does guaranty that if you can see *part* of the Dragon, it will be rendered.
+
+If you `cargo run` now, you'll find yourself facing off with a much bigger Dragon:
+
+![Screenshot](./c67-s3.gif)
+
+### Selecting the Dragon
+
+If you actually engage with the dragon in combat, a bunch of problems appear:
+
+* For ranged attacks, you can only target the top-left tile of the dragon. That includes area-of-effect.
+* Melee also only affects the Dragon's top-left tile.
+* You can actually walk *through* the other dragon tiles.
+* The Dragon can clip through terrain and still walk down narrow hallways. He might be good at folding up his wings!
+
+Fortunately, we can solve a *lot* of this with the `map_indexing_system`. The system needs to be expanded to take into account multi-tile entities, and store an entry for *each tile* occupied by the entity:
+
+```rust
+use specs::prelude::*;
+use super::{Map, Position, BlocksTile, TileSize};
+
+pub struct MapIndexingSystem {}
+
+impl<'a> System<'a> for MapIndexingSystem {
+    type SystemData = ( WriteExpect<'a, Map>,
+                        ReadStorage<'a, Position>,
+                        ReadStorage<'a, BlocksTile>,
+                        ReadStorage<'a, TileSize>,
+                        Entities<'a>,);
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (mut map, position, blockers, sizes, entities) = data;
+
+        map.populate_blocked();
+        map.clear_content_index();
+        for (entity, position) in (&entities, &position).join() {
+            let idx = map.xy_idx(position.x, position.y);
+
+            if let Some(size) = sizes.get(entity) {
+                // Multi-tile
+                for y in position.y .. position.y + size.y {
+                    for x in position.x .. position.x + size.x {
+                        if x > 0 && x < map.width-1 && y > 0 && y < map.height-1 {
+                            let idx = map.xy_idx(x, y);
+                            if blockers.get(entity).is_some() {
+                                map.blocked[idx] = true;
+                            }
+
+                            // Push the entity to the appropriate index slot. It's a Copy
+                            // type, so we don't need to clone it (we want to avoid moving it out of the ECS!)
+                            map.tile_content[idx].push(entity);
+                        }
+                    }
+                }
+            } else {
+                // Single Tile
+                if blockers.get(entity).is_some() {
+                    map.blocked[idx] = true;
+                }
+
+                // Push the entity to the appropriate index slot. It's a Copy
+                // type, so we don't need to clone it (we want to avoid moving it out of the ECS!)
+                map.tile_content[idx].push(entity);
+            }
+        }
+    }
+}
+```
+
+This solves several problems: you can now attack any part of the dragon, all of the dragon's body blocks others from moving through it, and ranged targeting works against any of its tiles. Tool-tips however, stubbornly still don't work - you can only get information from the Dragon's top left tile. Fortunately, it's easy to switch the tooltips system to use the `map.tile_content` structure rather than repeatedly iterating positions. It probably performs better, too. In `gui.rs`, replace the start of the function with:
+
+```rust
+fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
+    use rltk::to_cp437;
+    use rltk::Algorithm2D;
+
+    let (min_x, _max_x, min_y, _max_y) = camera::get_screen_bounds(ecs, ctx);
+    let map = ecs.fetch::<Map>();
+    let hidden = ecs.read_storage::<Hidden>();
+    let attributes = ecs.read_storage::<Attributes>();
+    let pools = ecs.read_storage::<Pools>();
+
+    let mouse_pos = ctx.mouse_pos();
+    let mut mouse_map_pos = mouse_pos;
+    mouse_map_pos.0 += min_x - 1;
+    mouse_map_pos.1 += min_y - 1;
+    if mouse_pos.0 < 1 || mouse_pos.0 > 49 || mouse_pos.1 < 1 || mouse_pos.1 > 40 {
+        return;
+    }
+    if mouse_map_pos.0 >= map.width-1 || mouse_map_pos.1 >= map.height-1 || mouse_map_pos.0 < 1 || mouse_map_pos.1 < 1
+    {
+        return;
+    }
+    if !map.in_bounds(rltk::Point::new(mouse_map_pos.0, mouse_map_pos.1)) { return; }
+    let mouse_idx = map.xy_idx(mouse_map_pos.0, mouse_map_pos.1);
+    if !map.visible_tiles[mouse_idx] { return; }
+
+    let mut tip_boxes : Vec<Tooltip> = Vec::new();
+    for entity in map.tile_content[mouse_idx].iter().filter(|e| hidden.get(**e).is_none()) {
+        ...
+```
+
+Now you can use tooltips to identify the Dragon, and target any part of it. Just to show how generic the code is, here's a screenshot with a truly enormous drake:
+
+![Screenshot](./c67-s4.gif)
+
+You probably noticed the dragon died really easily. What happened?
+
+* The dragon isn't immune to his own breath weapon, so being in the breath radius inflicted damage upon the poor beast.
+* The area-of-effect system meant that the Dragon was hit repeatedly - several tiles were within the radius, so *for each tile* - the Dragon took damage. That's not entirely unrealistic (you'd expect a *fireball* to hit more surface area on a large target), but is definitely an unexpected consequence! Area-of-effect poison or web would stack one status effect per tile on the poor victim, also.
+
+It's an interesting question as to whether we want area-of-effect to hit the caster in general; it makes for a good balance on *Fireball* (and is an old D&D saw - careful not to hit yourself), but it can definitely lead to unexpected effects.
+
+Fortunately, we can cure the first part - attacking yourself - with a simple change to `effects/damage.rs`:
+
+```rust
+pub fn inflict_damage(ecs: &mut World, damage: &EffectSpawner, target: Entity) {
+    let mut pools = ecs.write_storage::<Pools>();
+    if let Some(pool) = pools.get_mut(target) {
+        if !pool.god_mode {
+            if let Some(creator) = damage.creator {
+                if creator == target { 
+                    return; 
+                }
+            }
+            ...
+```
+
+Area-of-effect spells no longer obliterate the caster, but can still hit friendlies. That's a decent compromise! We'll also add de-duplication to our `effects` system. It's probably a good idea, anyway. Open up `effects/mod.rs` and we'll get started. First, we need to include `HashSet` as an imported type:
+
+```rust
+use std::collections::{HashSet, VecDeque};
+```
+
+Next, we'll add a `dedupe` field to the `EffectSpawner` type:
+
+```rust
+#[derive(Debug)]
+pub struct EffectSpawner {
+    pub creator : Option<Entity>,
+    pub effect_type : EffectType,
+    pub targets : Targets,
+    dedupe : HashSet<Entity>
+}
+```
+
+And modify the `add_effect` function to include one:
+
+```rust
+pub fn add_effect(creator : Option<Entity>, effect_type: EffectType, targets : Targets) {
+    EFFECT_QUEUE
+        .lock()
+        .unwrap()
+        .push_back(EffectSpawner{
+            creator,
+            effect_type,
+            targets,
+            dedupe : HashSet::new()
+        });
+}
+```
+
+Next, we need to modify a bunch of locations to make the referenced effect *mutable* - as in, it can be changed:
+
+```rust
+pub fn run_effects_queue(ecs : &mut World) {
+    loop {
+        let effect : Option<EffectSpawner> = EFFECT_QUEUE.lock().unwrap().pop_front();
+        if let Some(mut effect) = effect {
+            target_applicator(ecs, &mut effect);
+        } else {
+            break;
+        }
+    }
+}
+
+fn target_applicator(ecs : &mut World, effect : &mut EffectSpawner) {
+    if let EffectType::ItemUse{item} = effect.effect_type {
+        triggers::item_trigger(effect.creator, item, &effect.targets, ecs);
+    } else if let EffectType::SpellUse{spell} = effect.effect_type {
+        triggers::spell_trigger(effect.creator, spell, &effect.targets, ecs);
+    } else if let EffectType::TriggerFire{trigger} = effect.effect_type {
+        triggers::trigger(effect.creator, trigger, &effect.targets, ecs);
+    } else {
+        match &effect.targets.clone() {
+            Targets::Tile{tile_idx} => affect_tile(ecs, effect, *tile_idx),
+            Targets::Tiles{tiles} => tiles.iter().for_each(|tile_idx| affect_tile(ecs, effect, *tile_idx)),
+            Targets::Single{target} => affect_entity(ecs, effect, *target),
+            Targets::TargetList{targets} => targets.iter().for_each(|entity| affect_entity(ecs, effect, *entity)),
+        }
+    }
+}
+
+fn affect_tile(ecs: &mut World, effect: &mut EffectSpawner, tile_idx : i32) {
+    ...
+}
+```
+
+Finally, let's add duplicate prevention to `affect_entity`:
+
+```rust
+fn affect_entity(ecs: &mut World, effect: &mut EffectSpawner, target: Entity) {
+    if effect.dedupe.contains(&target) { 
+        return; 
+    }
+    effect.dedupe.insert(target);
+    match &effect.effect_type {
+        EffectType::Damage{..} => damage::inflict_damage(ecs, effect, target),
+        EffectType::EntityDeath => damage::death(ecs, effect, target),
+        EffectType::Bloodstain{..} => if let Some(pos) = entity_position(ecs, target) { damage::bloodstain(ecs, pos) },
+        EffectType::Particle{..} => if let Some(pos) = entity_position(ecs, target) { particles::particle_to_tile(ecs, pos, &effect) },
+        EffectType::WellFed => hunger::well_fed(ecs, effect, target),
+        EffectType::Healing{..} => damage::heal_damage(ecs, effect, target),
+        EffectType::Mana{..} => damage::restore_mana(ecs, effect, target),
+        EffectType::Confusion{..} => damage::add_confusion(ecs, effect, target),
+        EffectType::TeleportTo{..} => movement::apply_teleport(ecs, effect, target),
+        EffectType::AttributeEffect{..} => damage::attribute_effect(ecs, effect, target),
+        EffectType::Slow{..} => damage::slow(ecs, effect, target),
+        EffectType::DamageOverTime{..} => damage::damage_over_time(ecs, effect, target),
+        _ => {}
+    }
+}
+```
+
+If you `cargo run` now, the dragon won't affect themselves at all. If you launch fireballs at the dragon (I modified `spawner.rs` temporarily to start with a *Rod of Fireballs* to test it!), it affects the Dragon just the once. Excellent!
+
+### Letting the dragon attack from any tile
+
+Another issue that you may have noticed is that the dragon can only attack you from its "head" (the top-left tile). I like to think of Dragons as having catlike agility (I tend to think of them being a lot like cats in general!), so that won't work!
+
+### Clipping The Dragon's Wings
+
+
 
 ## Worrying about balance / Playtesting
 

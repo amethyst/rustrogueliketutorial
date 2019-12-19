@@ -1588,14 +1588,16 @@
             "glyph" : "D",
             "fg" : "#FF0000",
             "bg" : "#000000",
-            "order" : 1
+            "order" : 1,
+            "x_size" : 2,
+            "y_size" : 2
         },
         "blocks_tile" : true,
         "vision_range" : 12,
         "movement" : "static",
         "attributes" : {
-            "might" : 5,
-            "fitness" : 5
+            "might" : 13,
+            "fitness" : 13
         },
         "skills" : {
             "Melee" : 18,
@@ -1967,7 +1969,7 @@
             "ranged" : "6",
             "damage" : "10",
             "area_of_effect" : "3",
-            "particle_line" : "☼;#00FF00;400.0"
+            "particle" : "☼;#00FF00;400.0"
         }
     }
 ]
