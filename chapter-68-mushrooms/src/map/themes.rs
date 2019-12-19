@@ -3,6 +3,14 @@ use rltk::RGB;
 
 pub fn tile_glyph(idx: usize, map : &Map) -> (u8, RGB, RGB) {
     let (glyph, mut fg, mut bg) = match map.depth {
+        7 => {
+            let x = idx as i32 % map.width;
+            if x > map.width-16 {
+                get_tile_glyph_default(idx, map)
+            } else {
+                get_mushroom_glyph(idx, map)
+            }
+        }
         5 => {
             let x = idx as i32 % map.width;
             if x < map.width/2 {
@@ -38,6 +46,27 @@ fn get_forest_glyph(idx:usize, map: &Map) -> (u8, RGB, RGB) {
         TileType::Wall => { glyph = rltk::to_cp437('♣'); fg = RGB::from_f32(0.0, 0.6, 0.0); }
         TileType::Bridge => { glyph = rltk::to_cp437('.'); fg = RGB::named(rltk::CHOCOLATE); }
         TileType::Road => { glyph = rltk::to_cp437('≡'); fg = RGB::named(rltk::YELLOW); }
+        TileType::Grass => { glyph = rltk::to_cp437('"'); fg = RGB::named(rltk::GREEN); }
+        TileType::ShallowWater => { glyph = rltk::to_cp437('~'); fg = RGB::named(rltk::CYAN); }
+        TileType::DeepWater => { glyph = rltk::to_cp437('~'); fg = RGB::named(rltk::BLUE); }
+        TileType::Gravel => { glyph = rltk::to_cp437(';'); fg = RGB::from_f32(0.5, 0.5, 0.5); }
+        TileType::DownStairs => { glyph = rltk::to_cp437('>'); fg = RGB::from_f32(0., 1.0, 1.0); }
+        TileType::UpStairs => { glyph = rltk::to_cp437('<'); fg = RGB::from_f32(0., 1.0, 1.0); }
+        _ => { glyph = rltk::to_cp437('"'); fg = RGB::from_f32(1.0, 0.0, 1.0); }
+    }
+
+    (glyph, fg, bg)
+}
+
+fn get_mushroom_glyph(idx:usize, map: &Map) -> (u8, RGB, RGB) {
+    let glyph;
+    let fg;
+    let bg = RGB::from_f32(0., 0., 0.);
+
+    match map.tiles[idx] {
+        TileType::Wall => { glyph = rltk::to_cp437('♣'); fg = RGB::from_f32(1.0, 0.0, 1.0); }
+        TileType::Bridge => { glyph = rltk::to_cp437('.'); fg = RGB::named(rltk::GREEN); }
+        TileType::Road => { glyph = rltk::to_cp437('≡'); fg = RGB::named(rltk::CHOCOLATE); }
         TileType::Grass => { glyph = rltk::to_cp437('"'); fg = RGB::named(rltk::GREEN); }
         TileType::ShallowWater => { glyph = rltk::to_cp437('~'); fg = RGB::named(rltk::CYAN); }
         TileType::DeepWater => { glyph = rltk::to_cp437('~'); fg = RGB::named(rltk::BLUE); }
