@@ -294,6 +294,7 @@ macro_rules! apply_effects {
                 "identify" => $eb = $eb.with(ProvidesIdentification{}),
                 "slow" => $eb = $eb.with(Slow{ initiative_penalty : effect.1.parse::<f32>().unwrap() }),
                 "damage_over_time" => $eb = $eb.with( DamageOverTime { damage : effect.1.parse::<i32>().unwrap() } ),
+                "target_self" => $eb = $eb.with( AlwaysTargetsSelf{} ),
                 _ => println!("Warning: consumable effect {} not implemented.", effect_name)
             }
         }
@@ -550,6 +551,21 @@ pub fn spawn_named_mob(raws: &RawMaster, ecs : &mut World, key : &str, pos : Spa
 
         if let Some(ability_list) = &mob_template.abilities {
             let mut a = SpecialAbilities { abilities : Vec::new() };
+            for ability in ability_list.iter() {
+                a.abilities.push(
+                    SpecialAbility{
+                        chance : ability.chance,
+                        spell : ability.spell.clone(),
+                        range : ability.range,
+                        min_range : ability.min_range
+                    }
+                );
+            }
+            eb = eb.with(a);
+        }
+
+        if let Some(ability_list) = &mob_template.on_death {
+            let mut a = OnDeath{ abilities : Vec::new() };
             for ability in ability_list.iter() {
                 a.abilities.push(
                     SpecialAbility{

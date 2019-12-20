@@ -46,7 +46,7 @@ extern crate lazy_static;
 
 rltk::add_wasm_support!();
 
-const SHOW_MAPGEN_VISUALIZER : bool = true;
+const SHOW_MAPGEN_VISUALIZER : bool = false;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum VendorMode { Buy, Sell }
@@ -584,6 +584,8 @@ fn main() {
     gs.ecs.register::<DamageOverTime>();
     gs.ecs.register::<SpecialAbilities>();
     gs.ecs.register::<TileSize>();
+    gs.ecs.register::<OnDeath>();
+    gs.ecs.register::<AlwaysTargetsSelf>();
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
     raws::load_raws();

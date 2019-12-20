@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use super::*;
 use crate::components::{Pools, Player, Attributes, Confusion, SerializeMe, Duration, StatusEffect, 
-    Name, EquipmentChanged, Slow, DamageOverTime, Skills};
+    Name, EquipmentChanged, Slow, DamageOverTime, Skills, OnDeath, Position};
 use crate::map::Map;
 use crate::gamesystem::{player_hp_at_level, mana_at_level};
 use crate::gamelog::GameLog;
@@ -53,7 +53,7 @@ pub fn death(ecs: &mut World, effect: &EffectSpawner, target : Entity) {
         let mut map_mut = ecs.fetch_mut::<Map>();
         map_mut.blocked[pos as usize] = false;
         std::mem::drop(map_mut);
-    }
+    }    
 
     if let Some(source) = effect.creator {
         if ecs.read_storage::<Player>().get(source).is_some() {

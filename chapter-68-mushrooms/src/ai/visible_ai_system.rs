@@ -52,7 +52,7 @@ impl<'a> System<'a> for VisibleAI {
                                 );
                                 for ability in abilities.abilities.iter() {
                                     if range >= ability.min_range && range <= ability.range &&
-                                        rng.roll_dice(1,100) >= (ability.chance * 100.0) as i32
+                                        rng.roll_dice(1,100) <= (ability.chance * 100.0) as i32
                                     {
                                         use crate::raws::find_spell_entity_by_name;
                                         casting.insert(

@@ -93,6 +93,37 @@ pub fn delete_the_dead(ecs : &mut World) {
         }
     }
 
+    // Fire death events
+    use crate::effects::*;
+    use crate::Map;
+    use crate::components::{OnDeath, AreaOfEffect};
+    for victim in dead.iter() {
+        let death_effects = ecs.read_storage::<OnDeath>();
+        if let Some(death_effect) = death_effects.get(*victim) {
+            let mut rng = ecs.fetch_mut::<rltk::RandomNumberGenerator>();
+            for effect in death_effect.abilities.iter() {
+                if rng.roll_dice(1,100) <= (effect.chance * 100.0) as i32 {
+                    let map = ecs.fetch::<Map>();
+                    if let Some(pos) = ecs.read_storage::<Position>().get(*victim) {
+                        let spell_entity = crate::raws::find_spell_entity(ecs, &effect.spell).unwrap();
+                        let tile_idx = map.xy_idx(pos.x, pos.y);
+                        let target = 
+                            if let Some(aoe) = ecs.read_storage::<AreaOfEffect>().get(spell_entity) {
+                                Targets::Tiles { tiles : aoe_tiles(&map, rltk::Point::new(pos.x, pos.y), aoe.radius) }
+                            } else {
+                                Targets::Tile{ tile_idx : tile_idx as i32 }
+                            };
+                        add_effect(
+                            None,
+                            EffectType::SpellUse{ spell: crate::raws::find_spell_entity( ecs, &effect.spell ).unwrap() },
+                            target
+                        );
+                    }
+                }
+            }
+        }
+    }
+
     for victim in dead {
         ecs.delete_entity(victim).expect("Unable to delete");
     }

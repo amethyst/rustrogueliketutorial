@@ -64,6 +64,14 @@ pub struct SpecialAbilities {
 }
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct OnDeath {
+    pub abilities : Vec<SpecialAbility>
+}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct AlwaysTargetsSelf {}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct SpellTemplate {
     pub mana_cost : i32
 }
