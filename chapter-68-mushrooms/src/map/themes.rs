@@ -64,7 +64,7 @@ fn get_mushroom_glyph(idx:usize, map: &Map) -> (u8, RGB, RGB) {
     let bg = RGB::from_f32(0., 0., 0.);
 
     match map.tiles[idx] {
-        TileType::Wall => { glyph = rltk::to_cp437('♣'); fg = RGB::from_f32(1.0, 0.0, 1.0); }
+        TileType::Wall => { glyph = rltk::to_cp437('♠'); fg = RGB::from_f32(1.0, 0.0, 1.0); }
         TileType::Bridge => { glyph = rltk::to_cp437('.'); fg = RGB::named(rltk::GREEN); }
         TileType::Road => { glyph = rltk::to_cp437('≡'); fg = RGB::named(rltk::CHOCOLATE); }
         TileType::Grass => { glyph = rltk::to_cp437('"'); fg = RGB::named(rltk::GREEN); }

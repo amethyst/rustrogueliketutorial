@@ -63,14 +63,14 @@
 "faction_table" : [
     { "name" : "Player", "responses": { }},
     { "name" : "Mindless", "responses": { "Default" : "attack" } },
-    { "name" : "Townsfolk", "responses" : { "Default" : "flee", "Player" : "ignore", "Townsfolk" : "ignore" } },
+    { "name" : "Townsfolk", "responses" : { "Default" : "flee", "Player" : "ignore", "Townsfolk" : "ignore", "Dwarven Remnant" : "ignore" } },
     { "name" : "Bandits", "responses" : { "Default" : "attack", "Bandits" : "ignore" } },
     { "name" : "Cave Goblins", "responses" : { "Default" : "attack", "Cave Goblins" : "ignore" } },
     { "name" : "Carnivores", "responses" : { "Default" : "attack", "Carnivores" : "ignore" } },
     { "name" : "Herbivores", "responses" : { "Default" : "flee", "Herbivores" : "ignore" } },
     { "name" : "Hungry Rodents", "responses": { "Default" : "attack", "Hungry Rodents" : "ignore" }},
     { "name" : "Wyrm", "responses": { "Default" : "attack", "Wyrm" : "ignore" }},
-    { "name" : "Dwarven Remnant", "responses": { "Default" : "attack", "Player" : "ignore" }}
+    { "name" : "Dwarven Remnant", "responses": { "Default" : "attack", "Player" : "ignore", "Dwarven Remnant" : "ignore" }}
 ],
 
 "items" : [

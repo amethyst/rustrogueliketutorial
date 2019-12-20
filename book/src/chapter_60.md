@@ -397,7 +397,7 @@ We also need to add "dragon scales" as a nicely rewarding commodity. In the item
 Since the dwarves are dead (presumably they dug too deep, again...), we just have some leftovers of their civilization to deal with. Golems, traps and landmines (oh my!). Lets make a new faction for the golems; they shouldn't like the dragons very much, but lets be nice to the player and have them be ignored:
 
 ```json
-{ "name" : "Dwarven Remnant", "responses": { "Default" : "attack", "Player" : "ignore" }}
+{ "name" : "Dwarven Remnant", "responses": { "Default" : "attack", "Player" : "ignore", "Dwarven Remnant" : "ignore" }}
 ```
 
 This lets us build a relatively formidable golem. It can be formidable, because it will be fighting the lizards:

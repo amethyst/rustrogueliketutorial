@@ -64,7 +64,7 @@
     { "name" : "Herbivores", "responses" : { "Default" : "flee", "Herbivores" : "ignore" } },
     { "name" : "Hungry Rodents", "responses": { "Default" : "attack", "Hungry Rodents" : "ignore" }},
     { "name" : "Wyrm", "responses": { "Default" : "attack", "Wyrm" : "ignore" }},
-    { "name" : "Dwarven Remnant", "responses": { "Default" : "attack", "Player" : "ignore" }}
+    { "name" : "Dwarven Remnant", "responses": { "Default" : "attack", "Player" : "ignore", "Dwarven Remnant" : "ignore" }}
 ],
 
 "items" : [

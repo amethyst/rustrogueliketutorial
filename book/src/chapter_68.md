@@ -61,6 +61,65 @@ This should look familiar: we're using the cellular automata again - but mixing 
 
 ## Theming the mushroom grove
 
+We've used split themes before (for entering the fortress), so it shouldn't be a surprise that we'll be opening up `map/themes.rs` and adding another one! In this case, we want the fortress theme to apply to the fortifications on the East of the map, and a new mushroom grove look to apply to the rest.
+
+We can update `tile_glyph` to look like this:
+
+```rust
+pub fn tile_glyph(idx: usize, map : &Map) -> (u8, RGB, RGB) {
+    let (glyph, mut fg, mut bg) = match map.depth {
+        7 => {
+            let x = idx as i32 % map.width;
+            if x > map.width-16 {
+                get_tile_glyph_default(idx, map)
+            } else {
+                get_mushroom_glyph(idx, map)
+            }
+        }
+        5 => {
+            let x = idx as i32 % map.width;
+            if x < map.width/2 {
+                get_limestone_cavern_glyph(idx, map)
+            } else {
+                get_tile_glyph_default(idx, map)
+            }
+        }
+        4 => get_limestone_cavern_glyph(idx, map),
+        3 => get_limestone_cavern_glyph(idx, map),
+        2 => get_forest_glyph(idx, map),
+        _ => get_tile_glyph_default(idx, map)
+    };
+    ...
+```
+
+The `get_mushroom_glyph` function is basically the same as `get_forest_glyph`, but changed to look more like a mushroom grove from the game Dwarf Fortress (yay, Plump Helmets!):
+
+```rust
+fn get_mushroom_glyph(idx:usize, map: &Map) -> (u8, RGB, RGB) {
+    let glyph;
+    let fg;
+    let bg = RGB::from_f32(0., 0., 0.);
+
+    match map.tiles[idx] {
+        TileType::Wall => { glyph = rltk::to_cp437('♠'); fg = RGB::from_f32(1.0, 0.0, 1.0); }
+        TileType::Bridge => { glyph = rltk::to_cp437('.'); fg = RGB::named(rltk::GREEN); }
+        TileType::Road => { glyph = rltk::to_cp437('≡'); fg = RGB::named(rltk::CHOCOLATE); }
+        TileType::Grass => { glyph = rltk::to_cp437('"'); fg = RGB::named(rltk::GREEN); }
+        TileType::ShallowWater => { glyph = rltk::to_cp437('~'); fg = RGB::named(rltk::CYAN); }
+        TileType::DeepWater => { glyph = rltk::to_cp437('~'); fg = RGB::named(rltk::BLUE); }
+        TileType::Gravel => { glyph = rltk::to_cp437(';'); fg = RGB::from_f32(0.5, 0.5, 0.5); }
+        TileType::DownStairs => { glyph = rltk::to_cp437('>'); fg = RGB::from_f32(0., 1.0, 1.0); }
+        TileType::UpStairs => { glyph = rltk::to_cp437('<'); fg = RGB::from_f32(0., 1.0, 1.0); }
+        _ => { glyph = rltk::to_cp437('"'); fg = RGB::from_f32(0.0, 0.6, 0.0); }
+    }
+
+    (glyph, fg, bg)
+}
+```
+
+This gives a slightly trippy but quite nice world view:
+
+![Screenshot](./c68-s2.jpg)
 
 
 ...
