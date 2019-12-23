@@ -70,4 +70,5 @@
     - [Magic Spells](./chapter_66.md)
     - [Enter the Dragon](./chapter_67.md)
     - [Mushrooms](./chapter_68.md)
+    - [More Shrooms](./chapter_69.md)
 - [Contributors](./contributors.md)
