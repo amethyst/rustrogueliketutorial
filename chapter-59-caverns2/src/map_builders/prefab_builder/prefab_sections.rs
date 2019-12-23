@@ -81,17 +81,17 @@ pub const ORC_CAMP : PrefabSection = PrefabSection{
 
 #[allow(dead_code)]
 const ORC_CAMP_TXT : &str = "
-
- ≈≈≈≈o≈≈≈≈≈
- ≈☼      ☼≈
- ≈ g      ≈
- ≈        ≈
- ≈    g   ≈
- o   O    o
- ≈        ≈
- ≈ g      ≈
- ≈    g   ≈
- ≈☼      ☼≈
- ≈≈≈≈o≈≈≈≈≈
-
+            
+ ########## 
+ ≈☼      ☼≈ 
+ ≈ g      ≈ 
+ ≈        ≈ 
+ ≈    g   ≈ 
+ o   O    o 
+ ≈        ≈ 
+ ≈ g      ≈ 
+ ≈    g   ≈ 
+ ≈☼      ☼≈ 
+ ≈≈≈≈o≈≈≈≈≈ 
+            
 ";

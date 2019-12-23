@@ -52,7 +52,7 @@ fn get_forest_glyph(idx:usize, map: &Map) -> (u8, RGB, RGB) {
         TileType::Gravel => { glyph = rltk::to_cp437(';'); fg = RGB::from_f32(0.5, 0.5, 0.5); }
         TileType::DownStairs => { glyph = rltk::to_cp437('>'); fg = RGB::from_f32(0., 1.0, 1.0); }
         TileType::UpStairs => { glyph = rltk::to_cp437('<'); fg = RGB::from_f32(0., 1.0, 1.0); }
-        _ => { glyph = rltk::to_cp437('"'); fg = RGB::from_f32(1.0, 0.0, 1.0); }
+        _ => { glyph = rltk::to_cp437('"'); fg = RGB::from_f32(0.0, 0.5, 0.0); }
     }
 
     (glyph, fg, bg)

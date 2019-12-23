@@ -81,17 +81,39 @@ pub const ORC_CAMP : PrefabSection = PrefabSection{
 
 #[allow(dead_code)]
 const ORC_CAMP_TXT : &str = "
+            
+ ########## 
+ ≈☼      ☼≈ 
+ ≈ g      ≈ 
+ ≈        ≈ 
+ ≈    g   ≈ 
+ o   O    o 
+ ≈        ≈ 
+ ≈ g      ≈ 
+ ≈    g   ≈ 
+ ≈☼      ☼≈ 
+ ≈≈≈≈o≈≈≈≈≈ 
+            
+";
 
- ≈≈≈≈o≈≈≈≈≈
- ≈☼      ☼≈
- ≈ g      ≈
- ≈        ≈
- ≈    g   ≈
- o   O    o
- ≈        ≈
- ≈ g      ≈
- ≈    g   ≈
- ≈☼      ☼≈
- ≈≈≈≈o≈≈≈≈≈
+#[allow(dead_code)]
+pub const DROW_ENTRY : PrefabSection = PrefabSection{
+    template : DROW_ENTRY_TXT,
+    width: 12,
+    height: 10,
+    placement: ( HorizontalPlacement::Center, VerticalPlacement::Center )
+};
 
+#[allow(dead_code)]
+const DROW_ENTRY_TXT : &str = "
+            
+ ########## 
+ #        # 
+ #   >    # 
+ #        # 
+ #e       # 
+    e     # 
+ #e       # 
+ ########## 
+            
 ";

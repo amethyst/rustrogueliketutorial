@@ -94,6 +94,10 @@ impl PrefabBuilder {
                 build_data.starting_position = Some(Position{ x:x as i32, y:y as i32 });
             }
             '>' => build_data.map.tiles[idx] = TileType::DownStairs,
+            'e' => {
+                build_data.map.tiles[idx] = TileType::Floor;
+                build_data.spawn_list.push((idx, "Dark Elf".to_string()));
+            }
             'g' => {
                 build_data.map.tiles[idx] = TileType::Floor;
                 build_data.spawn_list.push((idx, "Goblin".to_string()));

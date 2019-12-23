@@ -42,7 +42,7 @@ impl<'a> System<'a> for ItemEquipOnUse {
                         } else {
                             to_unequip.push(item_entity);
                             if target == *player_entity {
-                                log_entries.push(format!("You unequip {}.", name.name));                                
+                                log_entries.push(format!("You unequip {}.", name.name));
                             }
                         }
                     }
@@ -54,7 +54,7 @@ impl<'a> System<'a> for ItemEquipOnUse {
                         identified_item.insert(target, IdentifiedItem{ name: names.get(useitem.item).unwrap().name.clone() })
                             .expect("Unable to insert");
                     }
-                    
+
 
                     for item in to_unequip.iter() {
                         equipped.remove(*item);
