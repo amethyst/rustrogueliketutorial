@@ -436,7 +436,7 @@ Let's take a moment to introduce some better armor and weaponry to the level, an
         "order" : 2
     },
     "wearable" : {
-        "slot" : "Torso",
+        "slot" : "Head",
         "armor_class" : 1.0
     },
     "weight_lbs" : 5.0,

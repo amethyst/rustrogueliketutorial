@@ -650,7 +650,11 @@ A simple boost is a better longsword:
     "vendor_category" : "weapon",
     "magic" : { "class" : "common", "naming" : "Unidentified Longsword" }
 },
+```
 
+And of course, add it to the spawn list:
+
+```json
 { "name" : "Longsword +2", "weight" : 1, "min_depth" : 7, "max_depth" : 100 },
 ```
 
@@ -675,9 +679,15 @@ Another easy one is a magical breastplate:
     "vendor_category" : "armor",
     "magic" : { "class" : "common", "naming" : "Unidentified Breastplate" }
 },
+```
 
+Again, it also needs to be spawnable:
+
+```json
 { "name" : "Breastplate +1", "weight" : 1, "min_depth" : 7, "max_depth" : 100 },
 ```
+
+Likewise, it's easy to take the basic Tower Shield and offer an improved version:
 
 ```json
 {
@@ -697,15 +707,332 @@ Another easy one is a magical breastplate:
     "initiative_penalty" : 0.0,
     "vendor_category" : "armor"
 },
+```
 
+Of course, it also requires some spawn data:
+
+```json
 { "name" : "Tower Shield +1", "weight" : 1, "min_depth" : 7, "max_depth" : 100 },
 ```
 
-We should also consider filling some of the unused equipment slots.
-: Head, Torso, Legs, Feet, Hands
+We should also consider filling some of the unused equipment slots. We have quite a few Torso-oriented items, and very little to fill other slots. In the name of completeness, we should add a few!
 
+### Head Items
+
+Currently, we only have the one head item: the *chain coif*. It would make sense to have a head item for each of the major categories of armor we've been using so far: cloth, leather, chain (we have that one!) and plate.
+
+The item definitions are:
+
+```json
+{
+    "name" : "Cloth Cap",
+    "renderable": {
+        "glyph" : "[",
+        "fg" : "#00FF00",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "wearable" : {
+        "slot" : "Head",
+        "armor_class" : 0.2
+    },
+    "weight_lbs" : 0.25,
+    "base_value" : 5.0,
+    "initiative_penalty" : 0.1,
+    "vendor_category" : "armor"
+},
+
+{
+    "name" : "Leather Cap",
+    "renderable": {
+        "glyph" : "[",
+        "fg" : "#00FF00",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "wearable" : {
+        "slot" : "Head",
+        "armor_class" : 0.4
+    },
+    "weight_lbs" : 0.5,
+    "base_value" : 10.0,
+    "initiative_penalty" : 0.2,
+    "vendor_category" : "armor"
+},
+
+{
+    "name" : "Chain Coif",
+    "renderable": {
+        "glyph" : "[",
+        "fg" : "#00FF00",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "wearable" : {
+        "slot" : "Head",
+        "armor_class" : 1.0
+    },
+    "weight_lbs" : 5.0,
+    "base_value" : 20.0,
+    "initiative_penalty" : 0.5,
+    "vendor_category" : "armor"
+},
+
+{
+    "name" : "Steel Helm",
+    "renderable": {
+        "glyph" : "[",
+        "fg" : "#00FF00",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "wearable" : {
+        "slot" : "Head",
+        "armor_class" : 2.0
+    },
+    "weight_lbs" : 15.0,
+    "base_value" : 100.0,
+    "initiative_penalty" : 1.0,
+    "vendor_category" : "armor"
+},
+```
+
+And here's updated spawn information for them:
+
+```json
+{ "name" : "Cloth Cap", "weight" : 5, "min_depth" : 4, "max_depth" : 100 },
+{ "name" : "Leather Cap", "weight" : 4, "min_depth" : 4, "max_depth" : 100 },
+{ "name" : "Chain Coif", "weight" : 3, "min_depth" : 4, "max_depth" : 100 },
+{ "name" : "Steel Helm", "weight" : 2, "min_depth" : 4, "max_depth" : 100 },
+```
+
+### Leg Items
+
+We also have a few leg items right now, but not many: we have torn trousers and cloth pants. Let's also expand those to include leather, chain and steel.
+
+```json
+{
+    "name" : "Leather Pants",
+    "renderable": {
+        "glyph" : "[",
+        "fg" : "#00FFFF",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "wearable" : {
+        "slot" : "Legs",
+        "armor_class" : 0.2
+    },
+    "weight_lbs" : 5.0,
+    "base_value" : 25.0,
+    "initiative_penalty" : 0.2,
+    "vendor_category" : "clothes"
+},
+
+{
+    "name" : "Chain Leggings",
+    "renderable": {
+        "glyph" : "[",
+        "fg" : "#00FFFF",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "wearable" : {
+        "slot" : "Legs",
+        "armor_class" : 0.3
+    },
+    "weight_lbs" : 10.0,
+    "base_value" : 50.0,
+    "initiative_penalty" : 0.3,
+    "vendor_category" : "clothes"
+},
+
+{
+    "name" : "Steel Greaves",
+    "renderable": {
+        "glyph" : "[",
+        "fg" : "#00FFFF",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "wearable" : {
+        "slot" : "Legs",
+        "armor_class" : 0.5
+    },
+    "weight_lbs" : 20.0,
+    "base_value" : 100.0,
+    "initiative_penalty" : 0.5,
+    "vendor_category" : "clothes"
+},
+```
+
+Likewise, we need to give them spawn data:
+
+```json
+{ "name" : "Cloth Pants", "weight" : 6, "min_depth" : 1, "max_depth" : 100 },
+{ "name" : "Leather Pants", "weight" : 5, "min_depth" : 1, "max_depth" : 100 },
+{ "name" : "Chain Leggings", "weight" : 4, "min_depth" : 1, "max_depth" : 100 },
+{ "name" : "Steel Greaves", "weight" : 3, "min_depth" : 5, "max_depth" : 100 },
+```
+
+### Foot Items
+
+Likewise, our story for foot armor is quite limited. We have old boots, slippers, and leather boots. We should add a chain and plate option to these, too:
+
+```json
+{
+    "name" : "Leather Boots",
+    "renderable": {
+        "glyph" : "[",
+        "fg" : "#00FF00",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "wearable" : {
+        "slot" : "Feet",
+        "armor_class" : 0.2
+    },
+    "weight_lbs" : 2.0,
+    "base_value" : 5.0,
+    "initiative_penalty" : 0.25,
+    "vendor_category" : "clothes"
+},
+
+{
+    "name" : "Chain Boots",
+    "renderable": {
+        "glyph" : "[",
+        "fg" : "#00FF00",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "wearable" : {
+        "slot" : "Feet",
+        "armor_class" : 0.3
+    },
+    "weight_lbs" : 3.0,
+    "base_value" : 10.0,
+    "initiative_penalty" : 0.25,
+    "vendor_category" : "armor"
+},
+
+{
+    "name" : "Steel Boots",
+    "renderable": {
+        "glyph" : "[",
+        "fg" : "#00FF00",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "wearable" : {
+        "slot" : "Feet",
+        "armor_class" : 0.5
+    },
+    "weight_lbs" : 5.0,
+    "base_value" : 10.0,
+    "initiative_penalty" : 0.4,
+    "vendor_category" : "armor"
+},
+```
+
+And some spawn information:
+
+```json
+{ "name" : "Leather Boots", "weight" : 5, "min_depth" : 1, "max_depth" : 100 },
+{ "name" : "Chain Boots", "weight" : 4, "min_depth" : 3, "max_depth" : 100 },
+{ "name" : "Steel Boots", "weight" : 2, "min_depth" : 5, "max_depth" : 100 },
+```
+
+### Hand Items
+
+Our hand armor story is really poor right now: we have *gauntlets of ogre power* and nothing else! Lets add some "normal" gloves as well to round things out:
+
+```json
+{
+    "name" : "Cloth Gloves",
+    "renderable": {
+        "glyph" : "[",
+        "fg" : "#FF9999",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "wearable" : {
+        "slot" : "Hands",
+        "armor_class" : 0.1
+    },
+    "weight_lbs" : 0.5,
+    "base_value" : 1.0,
+    "initiative_penalty" : 0.1,
+    "vendor_category" : "clothes"
+},
+
+{
+    "name" : "Leather Gloves",
+    "renderable": {
+        "glyph" : "[",
+        "fg" : "#FF9999",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "wearable" : {
+        "slot" : "Hands",
+        "armor_class" : 0.2
+    },
+    "weight_lbs" : 1.0,
+    "base_value" : 1.0,
+    "initiative_penalty" : 0.1,
+    "vendor_category" : "clothes"
+},
+
+{
+    "name" : "Chain Gloves",
+    "renderable": {
+        "glyph" : "[",
+        "fg" : "#FF9999",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "wearable" : {
+        "slot" : "Hands",
+        "armor_class" : 0.3
+    },
+    "weight_lbs" : 2.0,
+    "base_value" : 10.0,
+    "initiative_penalty" : 0.2,
+    "vendor_category" : "clothes"
+},
+
+{
+    "name" : "Steel Gloves",
+    "renderable": {
+        "glyph" : "[",
+        "fg" : "#FF9999",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "wearable" : {
+        "slot" : "Hands",
+        "armor_class" : 0.5
+    },
+    "weight_lbs" : 5.0,
+    "base_value" : 10.0,
+    "initiative_penalty" : 0.3,
+    "vendor_category" : "clothes"
+},
+```
+
+And of course, some spawn data:
+
+```json
+{ "name" : "Cloth Gloves", "weight" : 6, "min_depth" : 1, "max_depth" : 100 },
+{ "name" : "Leather Gloves", "weight" : 5, "min_depth" : 1, "max_depth" : 100 },
+{ "name" : "Chain Gloves", "weight" : 3, "min_depth" : 1, "max_depth" : 100 },
+{ "name" : "Steel Gloves", "weight" : 2, "min_depth" : 5, "max_depth" : 100 },
+```
 
 ## Wrap Up
+
+And there we have it - a working fort-to-mushroom grove transition level, and a fleshed out item table. In the next chapter, we'll continue to make progress on fulfilling the design document with the remainder of the mushroom forest, and a bit more work on making the item story better.
 
 ...
 
