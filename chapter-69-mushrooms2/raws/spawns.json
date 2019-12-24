@@ -21,7 +21,6 @@
     { "name" : "Identify Scroll", "weight" : 4, "min_depth" : 0, "max_depth" : 100 },
     { "name" : "Rod of Fireballs", "weight" : 1, "min_depth" : 0, "max_depth" : 100 },
     { "name" : "Gauntlets of Ogre Power", "weight" : 1, "min_depth" : 0, "max_depth" : 100 },
-    { "name" : "Dagger of Venom", "weight" : 2, "min_depth" : 0, "max_depth" : 100 },
     { "name" : "Dagger", "weight" : 3, "min_depth" : 0, "max_depth" : 100 },
     { "name" : "Shield", "weight" : 3, "min_depth" : 0, "max_depth" : 100 },
     { "name" : "Longsword", "weight" : 2, "min_depth" : 3, "max_depth" : 100 },
@@ -68,7 +67,6 @@
     { "name" : "Stonefall Trap", "weight" : 4, "min_depth" : 5, "max_depth" : 6 },
     { "name" : "Landmine", "weight" : 1, "min_depth" : 5, "max_depth" : 6 },
     { "name" : "Breastplate", "weight" : 7, "min_depth" : 5, "max_depth" : 7 },
-    { "name" : "Breastplate +1", "weight" : 1, "min_depth" : 7, "max_depth" : 100 },
     { "name" : "War Axe", "weight" : 7, "min_depth" : 5, "max_depth" : 7 },
     { "name" : "Dwarf-Steel Shirt", "weight" : 1, "min_depth" : 5, "max_depth" : 7 }
 ],
@@ -553,30 +551,6 @@
             "bonus_max" : 5,
             "include_cursed" : true
         }
-    },
-
-    {
-        "name" : "Dagger of Venom",
-        "renderable": {
-            "glyph" : "/",
-            "fg" : "#FFAAAA",
-            "bg" : "#000000",
-            "order" : 2
-        },
-        "weapon" : {
-            "range" : "melee",
-            "attribute" : "Quickness",
-            "base_damage" : "1d4+1",
-            "hit_bonus" : 1,
-            "proc_chance" : 0.5,
-            "proc_target" : "Target",
-            "proc_effects" : { "damage_over_time" : "2" }
-        },
-        "weight_lbs" : 1.0,
-        "base_value" : 2.0,
-        "initiative_penalty" : -1,
-        "vendor_category" : "weapon",
-        "magic" : { "class" : "common", "naming" : "Unidentified Dagger" }
     },
 
     {
@@ -2586,6 +2560,17 @@
             "single_activation" : "1",
             "target_self" : "1"
         }
+    }
+],
+
+"weapon_traits" : [
+    {
+        "name" : "Venomous",
+        "effects" : { "damage_over_time" : "2" }
+    },
+    {
+        "name" : "Dazzling",
+        "effects" : { "confusion" : "2" }
     }
 ]
 }

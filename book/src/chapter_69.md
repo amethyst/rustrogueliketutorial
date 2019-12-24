@@ -512,7 +512,290 @@ If you `cargo run` now, you'll find gradually improving magical items of all typ
 
 ## Trait Items
 
+With the `dagger of venom`, we introduced a new type of item: one that inflicts an effect when you hit. Given that this can be any effect in the game, there's a lot of possibilities for effects! Manually adding in all of the effects would *take a while* - it's probably quicker to come up with a generic system, and have real variety in our items as a result (as well as not forgetting to add them!).
+
+Let's get started by adding a new section to `spawns.json`, dedicated to *weapon traits*:
+
+```json
+"weapon_traits" : [
+    {
+        "name" : "Venomous",
+        "effects" : { "damage_over_time" : "2" }
+    }
+]
+```
+
+We'll add more traits later, for now we'll focus on making the system work at all! To read the data, we'll make a new file, `raws/weapon_traits.rs` (don't get confused by Rust traits and weapon traits; they aren't the same thing at all). We'll put in enough structure to allow Serde to read the JSON file:
+
+```rust
+use serde::{Deserialize};
+use std::collections::HashMap;
+
+#[derive(Deserialize, Debug)]
+pub struct WeaponTrait {
+    pub name : String,
+    pub effects : HashMap<String, String>
+}
+```
+
+Now we need to extend the data in `raws/mod.rs` to include it. At the top of the file, include:
+
+```rust
+mod weapon_traits;
+pub use weapon_traits::*;
+```
+
+And then we'll add it into the `Raws` structure, just like we did for spells:
+
+```rust
+#[derive(Deserialize, Debug)]
+pub struct Raws {
+    pub items : Vec<Item>,
+    pub mobs : Vec<Mob>,
+    pub props : Vec<Prop>,
+    pub spawn_table : Vec<SpawnTableEntry>,
+    pub loot_tables : Vec<LootTable>,
+    pub faction_table : Vec<FactionInfo>,
+    pub spells : Vec<Spell>,
+    pub weapon_traits : Vec<WeaponTrait>
+}
+```
+
+In turn, we have to extend the constructor in `raws/rawmaster.rs` to include an empty traits list:
+
+```rust
+impl RawMaster {
+    pub fn empty() -> RawMaster {
+        RawMaster {
+            raws : Raws{
+                items: Vec::new(),
+                mobs: Vec::new(),
+                props: Vec::new(),
+                spawn_table: Vec::new(),
+                loot_tables: Vec::new(),
+                faction_table : Vec::new(),
+                spells : Vec::new(),
+                weapon_traits : Vec::new()
+            },
+            item_index : HashMap::new(),
+            mob_index : HashMap::new(),
+            prop_index : HashMap::new(),
+            loot_index : HashMap::new(),
+            faction_index : HashMap::new(),
+            spell_index : HashMap::new()
+        }
+    }
+    ...
+```
+
+Thanks to the magic of Serde, that's all there is to actually *loading* the data! Now for the hard part: procedurally generating magic items that feature one or more traits. To avoid repeating ourselves, we're going to separate the code we wrote previously into reusable functions:
+
+```rust
+// Put this above the raws implementation
+struct NewMagicItem {
+    name : String,
+    bonus : i32
+}
+...
+
+// Inside the raws implementation
+fn append_magic_template(items_to_build : &mut Vec<NewMagicItem>, item : &super::Item) {
+    if let Some(template) = &item.template_magic {
+        if item.weapon.is_some() || item.wearable.is_some() {
+            if template.include_cursed {
+                items_to_build.push(NewMagicItem{
+                    name : item.name.clone(),
+                    bonus : -1
+                });
+            }
+            for bonus in template.bonus_min ..= template.bonus_max {
+                items_to_build.push(NewMagicItem{
+                    name : item.name.clone(),
+                    bonus
+                });
+            }
+        } else {
+            println!("{} is marked as templated, but isn't a weapon or armor.", item.name);
+        }
+    }
+}
+
+fn build_base_magic_item(&self, nmw : &NewMagicItem) -> super::Item {
+    let base_item_index = self.item_index[&nmw.name];
+    let mut base_item_copy = self.raws.items[base_item_index].clone();
+
+    if nmw.bonus == -1 {
+        base_item_copy.name = format!("{} -1", nmw.name);
+    } else {
+        base_item_copy.name = format!("{} +{}", nmw.name, nmw.bonus);
+    }
+
+    base_item_copy.magic = Some(super::MagicItem{
+        class : match nmw.bonus {
+            2 => "rare".to_string(),
+            3 => "rare".to_string(),
+            4 => "rare".to_string(),
+            5 => "legendary".to_string(),
+            _ => "common".to_string()
+        },
+        naming : base_item_copy.template_magic.as_ref().unwrap().unidentified_name.clone(),
+        cursed: if nmw.bonus == -1 { Some(true) } else { None }
+    });
+
+    if let Some(initiative_penalty) = base_item_copy.initiative_penalty.as_mut() {
+        *initiative_penalty -= nmw.bonus as f32;
+    }
+    if let Some(base_value) = base_item_copy.base_value.as_mut() {
+        *base_value += (nmw.bonus as f32 + 1.0) * 50.0;
+    }
+    if let Some(mut weapon) = base_item_copy.weapon.as_mut() {
+        weapon.hit_bonus += nmw.bonus;
+        let (n,die,plus) = parse_dice_string(&weapon.base_damage);
+        let final_bonus = plus+nmw.bonus;
+        if final_bonus > 0 {
+            weapon.base_damage = format!("{}d{}+{}", n, die, final_bonus);
+        } else if final_bonus < 0 {
+            weapon.base_damage = format!("{}d{}-{}", n, die, i32::abs(final_bonus));
+        }
+    }
+    if let Some(mut armor) = base_item_copy.wearable.as_mut() {
+        armor.armor_class += nmw.bonus as f32;
+    }
+    base_item_copy
+}
+
+fn build_magic_weapon_or_armor(&mut self, items_to_build : &[NewMagicItem]) {
+    for nmw in items_to_build.iter() {
+        let base_item_copy = self.build_base_magic_item(&nmw);
+
+        let real_name = base_item_copy.name.clone();
+        self.raws.items.push(base_item_copy);
+        self.item_index.insert(real_name.clone(), self.raws.items.len()-1);
+
+        self.raws.spawn_table.push(super::SpawnTableEntry{
+            name : real_name.clone(),
+            weight : 10 - i32::abs(nmw.bonus),
+            min_depth : 1 + i32::abs((nmw.bonus-1)*3),
+            max_depth : 100,
+            add_map_depth_to_weight : None
+        });
+    }
+}
+
+fn build_traited_weapons(&mut self, items_to_build : &[NewMagicItem]) {
+    items_to_build.iter().filter(|i| i.bonus > 0).for_each(|nmw| {
+        for wt in self.raws.weapon_traits.iter() {
+            let mut base_item_copy = self.build_base_magic_item(&nmw);
+            if let Some(mut weapon) = base_item_copy.weapon.as_mut() {
+                base_item_copy.name = format!("{} {}", wt.name, base_item_copy.name);
+                if let Some(base_value) = base_item_copy.base_value.as_mut() {
+                    *base_value *= 2.0;
+                }
+                    weapon.proc_chance = Some(0.25);
+                    weapon.proc_effects = Some(wt.effects.clone());
+
+                let real_name = base_item_copy.name.clone();
+                self.raws.items.push(base_item_copy);
+                self.item_index.insert(real_name.clone(), self.raws.items.len()-1);
+
+                self.raws.spawn_table.push(super::SpawnTableEntry{
+                    name : real_name.clone(),
+                    weight : 9 - i32::abs(nmw.bonus),
+                    min_depth : 2 + i32::abs((nmw.bonus-1)*3),
+                    max_depth : 100,
+                    add_map_depth_to_weight : None
+                });
+            }
+        }
+    });
+}
+
+pub fn load(&mut self, raws : Raws) {
+    self.raws = raws;
+    self.item_index = HashMap::new();
+    let mut used_names : HashSet<String> = HashSet::new();
+    let mut items_to_build = Vec::new();
+
+    for (i,item) in self.raws.items.iter().enumerate() {
+        if used_names.contains(&item.name) {
+            println!("WARNING -  duplicate item name in raws [{}]", item.name);
+        }
+        self.item_index.insert(item.name.clone(), i);
+        used_names.insert(item.name.clone());
+
+        RawMaster::append_magic_template(&mut items_to_build, item);
+    }
+    for (i,mob) in self.raws.mobs.iter().enumerate() {
+        if used_names.contains(&mob.name) {
+            println!("WARNING -  duplicate mob name in raws [{}]", mob.name);
+        }
+        self.mob_index.insert(mob.name.clone(), i);
+        used_names.insert(mob.name.clone());
+    }
+    for (i,prop) in self.raws.props.iter().enumerate() {
+        if used_names.contains(&prop.name) {
+            println!("WARNING -  duplicate prop name in raws [{}]", prop.name);
+        }
+        self.prop_index.insert(prop.name.clone(), i);
+        used_names.insert(prop.name.clone());
+    }
+
+    for spawn in self.raws.spawn_table.iter() {
+        if !used_names.contains(&spawn.name) {
+            println!("WARNING - Spawn tables references unspecified entity {}", spawn.name);
+        }
+    }
+
+    for (i,loot) in self.raws.loot_tables.iter().enumerate() {
+        self.loot_index.insert(loot.name.clone(), i);
+    }
+
+    for faction in self.raws.faction_table.iter() {
+        let mut reactions : HashMap<String, Reaction> = HashMap::new();
+        for other in faction.responses.iter() {
+            reactions.insert(
+                other.0.clone(),
+                match other.1.as_str() {
+                    "ignore" => Reaction::Ignore,
+                    "flee" => Reaction::Flee,
+                    _ => Reaction::Attack
+                }
+            );
+        }
+        self.faction_index.insert(faction.name.clone(), reactions);
+    }
+
+    for (i,spell) in self.raws.spells.iter().enumerate() {
+        self.spell_index.insert(spell.name.clone(), i);
+    }
+
+    self.build_magic_weapon_or_armor(&items_to_build);
+    self.build_traited_weapons(&items_to_build);
+}
+```
+
+You'll notice that there is a new function in there `build_traited_weapons`. This iterates through the magic items, filtering weapons only - and only those with a bonus (I don't really want to get into what a cursed venomous dagger does, just yet). It reads through all of the traits and makes a (rarer) version of each magical weapon with that trait applied.
+
+Let's go ahead and add one more trait to `spawns.json`:
+
+```json
+"weapon_traits" : [
+    {
+        "name" : "Venomous",
+        "effects" : { "damage_over_time" : "2" }
+    },
+    {
+        "name" : "Dazzling",
+        "effects" : { "confusion" : "2" }
+    }
+]
+```
+
+If you `cargo run` and play now, you'll sometimes find such wonders as *Dazzling Longsword +1*, or *Venomous Dagger +2*.
+
 ## Wrap-Up
+
+In this chapter, we've built ourselves a mushroom grove level, and a second level transitioning to the dark elven stronghold. We've started to add dark elves, and to power-up (and save typing) we're automatically generating magical items from -1 to +5. We then generated "traited" versions of the same weapons. Now there's a *huge* amount of variety between runs, which should keep the gear-oriented player happy. There's also a nice progression of levels, and we're ready to tackle the dark elven city - and ranged weaponry!
 
 ...
 
