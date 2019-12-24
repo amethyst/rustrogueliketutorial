@@ -3,6 +3,8 @@ use rltk::RGB;
 
 pub fn tile_glyph(idx: usize, map : &Map) -> (u8, RGB, RGB) {
     let (glyph, mut fg, mut bg) = match map.depth {
+        9 => get_mushroom_glyph(idx, map),
+        8 => get_mushroom_glyph(idx, map),
         7 => {
             let x = idx as i32 % map.width;
             if x > map.width-16 {
