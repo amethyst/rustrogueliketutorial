@@ -65,6 +65,7 @@ CALL :Stage chapter-66-spells
 CALL :Stage chapter-67-dragon
 CALL :Stage chapter-68-mushrooms
 CALL :Stage chapter-69-mushrooms2
+CALL :Stage chapter-70-missiles
 
 REM Publish or perish
 cd book\book\wasm

@@ -71,4 +71,5 @@
     - [Enter the Dragon](./chapter_67.md)
     - [Mushrooms](./chapter_68.md)
     - [More Shrooms](./chapter_69.md)
+    - [Missiles](./chapter_70.md)
 - [Contributors](./contributors.md)
