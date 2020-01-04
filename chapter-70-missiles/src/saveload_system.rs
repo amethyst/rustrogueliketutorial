@@ -49,7 +49,7 @@ pub fn save_game(ecs : &mut World) {
         serialize_individually!(ecs, serializer, data, Position, Renderable, Player, Viewshed,
             Name, BlocksTile, WantsToMelee, Item, Consumable, Ranged, InflictsDamage,
             AreaOfEffect, Confusion, ProvidesHealing, InBackpack, WantsToPickupItem, WantsToUseItem,
-            WantsToDropItem, SerializationHelper, Equippable, Equipped, MeleeWeapon, Wearable,
+            WantsToDropItem, SerializationHelper, Equippable, Equipped, Weapon, Wearable,
             WantsToRemoveItem, ParticleLifetime, HungerClock, ProvidesFood, MagicMapper, Hidden,
             EntryTrigger, EntityMoved, SingleActivation, BlocksVisibility, Door,
             Quips, Attributes, Skills, Pools, NaturalAttackDefense, LootTable,
@@ -58,7 +58,8 @@ pub fn save_game(ecs : &mut World) {
             TeleportTo, ApplyMove, ApplyTeleport, MagicItem, ObfuscatedName, IdentifiedItem,
             SpawnParticleBurst, SpawnParticleLine, CursedItem, ProvidesRemoveCurse, ProvidesIdentification,
             AttributeBonus, StatusEffect, Duration, KnownSpells, SpellTemplate, WantsToCastSpell, TeachesSpell,
-            ProvidesMana, Slow, DamageOverTime, SpecialAbilities, TileSize, OnDeath, AlwaysTargetsSelf
+            ProvidesMana, Slow, DamageOverTime, SpecialAbilities, TileSize, OnDeath, AlwaysTargetsSelf,
+            Target, WantsToShoot
         );
     }
 
@@ -107,7 +108,7 @@ pub fn load_game(ecs: &mut World) {
         deserialize_individually!(ecs, de, d, Position, Renderable, Player, Viewshed,
             Name, BlocksTile, WantsToMelee, Item, Consumable, Ranged, InflictsDamage,
             AreaOfEffect, Confusion, ProvidesHealing, InBackpack, WantsToPickupItem, WantsToUseItem,
-            WantsToDropItem, SerializationHelper, Equippable, Equipped, MeleeWeapon, Wearable,
+            WantsToDropItem, SerializationHelper, Equippable, Equipped, Weapon, Wearable,
             WantsToRemoveItem, ParticleLifetime, HungerClock, ProvidesFood, MagicMapper, Hidden,
             EntryTrigger, EntityMoved, SingleActivation, BlocksVisibility, Door,
             Quips, Attributes, Skills, Pools, NaturalAttackDefense, LootTable,
@@ -116,7 +117,8 @@ pub fn load_game(ecs: &mut World) {
             TeleportTo, ApplyMove, ApplyTeleport, MagicItem, ObfuscatedName, IdentifiedItem,
             SpawnParticleBurst, SpawnParticleLine, CursedItem, ProvidesRemoveCurse, ProvidesIdentification,
             AttributeBonus, StatusEffect, Duration, KnownSpells, SpellTemplate, WantsToCastSpell, TeachesSpell,
-            ProvidesMana, Slow, DamageOverTime, SpecialAbilities, TileSize, OnDeath, AlwaysTargetsSelf
+            ProvidesMana, Slow, DamageOverTime, SpecialAbilities, TileSize, OnDeath, AlwaysTargetsSelf,
+            Target, WantsToShoot
         );
     }
 

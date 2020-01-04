@@ -554,6 +554,26 @@
     },
 
     {
+        "name" : "Shortbow",
+        "renderable": {
+            "glyph" : ")",
+            "fg" : "#FFAAAA",
+            "bg" : "#000000",
+            "order" : 2
+        },
+        "weapon" : {
+            "range" : "4",
+            "attribute" : "Quickness",
+            "base_damage" : "1d4",
+            "hit_bonus" : 0
+        },
+        "weight_lbs" : 2.0,
+        "base_value" : 5.0,
+        "initiative_penalty" : 1,
+        "vendor_category" : "weapon"
+    },
+
+    {
         "name" : "Shortsword",
         "renderable": {
             "glyph" : "/",

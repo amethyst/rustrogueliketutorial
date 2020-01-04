@@ -464,7 +464,8 @@ pub fn spawn_named_item(raws: &RawMaster, ecs : &mut World, key : &str, pos : Sp
         if let Some(weapon) = &item_template.weapon {
             eb = eb.with(Equippable{ slot: EquipmentSlot::Melee });
             let (n_dice, die_type, bonus) = parse_dice_string(&weapon.base_damage);
-            let mut wpn = MeleeWeapon{
+            let mut wpn = Weapon{
+                range : if weapon.range == "melee" { None } else { Some(weapon.range.parse::<i32>().expect("Not a number")) },
                 attribute : WeaponAttribute::Might,
                 damage_n_dice : n_dice,
                 damage_die_type : die_type,

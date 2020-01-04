@@ -6,7 +6,7 @@ use super::{Pools, gamelog::GameLog, Map, Name, State, InBackpack,
     Viewshed, RunState, Equipped, HungerClock, HungerState, rex_assets::RexAssets,
     Hidden, camera, Attributes, Attribute, Consumable, VendorMode, Item, Vendor,
     MagicItem, MagicItemClass, ObfuscatedName, CursedItem, MasterDungeonMap,
-    StatusEffect, Duration, KnownSpells };
+    StatusEffect, Duration, KnownSpells, Weapon, Target };
 
 pub fn get_item_color(ecs : &World, item : Entity) -> RGB {
     let dm = ecs.fetch::<crate::map::MasterDungeonMap>();
@@ -97,6 +97,7 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     let box_gray : RGB = RGB::from_hex("#999999").expect("Oops");
     let black = RGB::named(rltk::BLACK);
     let white = RGB::named(rltk::WHITE);
+    let yellow = RGB::named(rltk::YELLOW);
 
     draw_hollow_box(ctx, 0, 0, 79, 59, box_gray, black); // Overall box
     draw_hollow_box(ctx, 0, 0, 49, 45, box_gray, black); // Map box
@@ -157,16 +158,33 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     let mut y = 13;
     let entities = ecs.entities();
     let equipped = ecs.read_storage::<Equipped>();
+    let weapon = ecs.read_storage::<Weapon>();
     for (entity, equipped_by) in (&entities, &equipped).join() {
         if equipped_by.owner == *player_entity {
-            ctx.print_color(50, y, get_item_color(ecs, entity), black, &get_item_display_name(ecs, entity));
+            let name = get_item_display_name(ecs, entity);
+            ctx.print_color(50, y, get_item_color(ecs, entity), black, &name);
             y += 1;
+
+            if let Some(weapon) = weapon.get(entity) {
+                let mut weapon_info = if weapon.damage_bonus < 0 {
+                    format!("┤ {} ({}d{}{})", &name, weapon.damage_n_dice, weapon.damage_die_type, weapon.damage_bonus)
+                } else if weapon.damage_bonus == 0 {
+                    format!("┤ {} ({}d{})", &name, weapon.damage_n_dice, weapon.damage_die_type)
+                } else {
+                    format!("┤ {} ({}d{}+{})", &name, weapon.damage_n_dice, weapon.damage_die_type, weapon.damage_bonus)
+                };
+
+                if let Some(range) = weapon.range {
+                    weapon_info += &format!(" (range: {}, F to fire, V cycle targets)", range);
+                }
+                weapon_info += " ├";
+                ctx.print_color(3, 45, yellow, black, &weapon_info);
+            }
         }
     }
 
     // Consumables
     y += 1;
-    let yellow = RGB::named(rltk::YELLOW);
     let consumables = ecs.read_storage::<Consumable>();
     let backpack = ecs.read_storage::<InBackpack>();
     let mut index = 1;
