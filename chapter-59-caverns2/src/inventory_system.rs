@@ -291,7 +291,7 @@ impl<'a> System<'a> for ItemDropSystem {
             dirty.insert(entity, EquipmentChanged{}).expect("Unable to insert");
 
             if entity == *player_entity {
-                gamelog.entries.insert(0, format!("you drop the {}.", names.get(to_drop.item).unwrap().name));
+                gamelog.entries.insert(0, format!("You drop the.", names.get(to_drop.item).unwrap().name));
             }
         }
 
