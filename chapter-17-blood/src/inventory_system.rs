@@ -228,7 +228,7 @@ impl<'a> System<'a> for ItemDropSystem {
             backpack.remove(to_drop.item);
 
             if entity == *player_entity {
-                gamelog.entries.insert(0, format!("You drop the.", names.get(to_drop.item).unwrap().name));
+                gamelog.entries.insert(0, format!("You drop the {}.", names.get(to_drop.item).unwrap().name));
             }
         }
 

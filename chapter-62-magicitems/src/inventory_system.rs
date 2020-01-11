@@ -354,7 +354,7 @@ impl<'a> System<'a> for ItemDropSystem {
                 gamelog.entries.insert(
                     0, 
                     format!(
-                        "You drop the.",
+                        "You drop the {}.",
                         obfuscate_name(to_drop.item, &names, &magic_items, &obfuscated_names, &dm)
                     )
                 );
