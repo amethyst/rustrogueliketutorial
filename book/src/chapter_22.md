@@ -112,7 +112,7 @@ fn bear_trap(ecs: &mut World, x: i32, y: i32) {
 }
 ```
 
-Now, we want to modify the object renderer to not show things that are *hidden*. The [Specs Book](https://slide-rs.github.io/specs/08_join.html) provides a great clue as to how to *exclude* a component from a join, so we do that (in `main.rs`):
+Now, we want to modify the object renderer to not show things that are *hidden*. The [Specs Book](https://specs.amethyst.rs/docs/tutorials/08_join.html) provides a great clue as to how to *exclude* a component from a join, so we do that (in `main.rs`):
 
 ```rust
 let mut data = (&positions, &renderables, !&hidden).join().collect::<Vec<_>>();
