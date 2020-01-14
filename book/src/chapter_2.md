@@ -210,7 +210,7 @@ for (pos, render) in (&positions, &renderables).join() {
 }
 ```
 
-What does this do? `let positions = self.ecs.read_storage::<Position>();` asks the ECS for read access to the container it is using to store `Position` components. Likewise, we ask for read access to the `Renderable` storage. It only makes sense to draw a character if it has both of these - you *need* a `Position` to know where to draw, and `Renderable` to know what to draw! You can learn more about these stores in [The Specs Book](https://slide-rs.github.io/specs/01_intro.html). The important part is `read_storage` - we're asking for read-only access to the structure used to store components of each type.
+What does this do? `let positions = self.ecs.read_storage::<Position>();` asks the ECS for read access to the container it is using to store `Position` components. Likewise, we ask for read access to the `Renderable` storage. It only makes sense to draw a character if it has both of these - you *need* a `Position` to know where to draw, and `Renderable` to know what to draw! You can learn more about these stores in [The Specs Book](https://specs.amethyst.rs/docs/tutorials/01_intro.html). The important part is `read_storage` - we're asking for read-only access to the structure used to store components of each type.
 
 Fortunately, Specs has our back:
 

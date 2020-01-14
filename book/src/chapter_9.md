@@ -773,7 +773,7 @@ Your IDE is probably now highlighting lots of errors for `Renderable` components
 })
 ```
 
-To make this *do* something, we go to our item rendering code in `main.rs` and add a sort to the iterators. We referenced the [Book of Specs](https://slide-rs.github.io/specs/11_advanced_component.html) for how to do this! Basically, we obtain the joined set of `Position` and `Renderable` components, and collect them into a vector. We then sort that vector, and iterate it to render in the appropriate order. In `main.rs`, replace the previous entity rendering code with:
+To make this *do* something, we go to our item rendering code in `main.rs` and add a sort to the iterators. We referenced the [Book of Specs](https://specs.amethyst.rs/docs/tutorials/11_advanced_component.html) for how to do this! Basically, we obtain the joined set of `Position` and `Renderable` components, and collect them into a vector. We then sort that vector, and iterate it to render in the appropriate order. In `main.rs`, replace the previous entity rendering code with:
 
 ```rust
 let mut data = (&positions, &renderables).join().collect::<Vec<_>>();
