@@ -102,7 +102,7 @@ You will probably have a *lot* of components by the time your game is done - so 
 
 ```rust
 #[derive(Component)]
-struct Pos {
+struct Position {
     x: i32,
     y: i32,
 }
