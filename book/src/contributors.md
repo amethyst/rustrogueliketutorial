@@ -26,6 +26,7 @@ The following people have contributed to this project:
 * [Sebastian N. Kaupe](https://github.com/snkaupe) fixed an issue with tool-tip whitespace.
 * [adamnemecek](https://github.com/adamnemecek) helped out with some whitespace issues.
 * [Kawzeg](https://github.com/Kawzeg) helped fix an out-of-bounds error in chapter 4.
+* [joguSD](https://github.com/joguSD) reminded me to fix my SSL certificate.
 
 
 ## Supporters
