@@ -17,7 +17,7 @@ The *source code* for this tutorial (and associated material) is licensed under 
 * You *have* to include a notice that you used MIT Licensed code written by Herbert Wolverson in your project.
 * It's not required, but a link to this project would be appreciated. Let me know if you've used it, and I'll be *thrilled* to link back to your project in a "cool things people made with this tutorial" page!
 
-The *tutorial text*/book is licensed under the [Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) license.
+The *tutorial text*/book is licensed under the [Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) license.
 
 You are free to:
 
