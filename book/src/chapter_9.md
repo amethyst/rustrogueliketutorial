@@ -125,7 +125,14 @@ pub const MAPHEIGHT : usize = 50;
 pub const MAPCOUNT : usize = MAPHEIGHT * MAPWIDTH;
 ```
 
-In `spawner.rs`, we create a new function - `spawn_room`:
+We want to control how many things we spawn, monsters and items. We'd like more monsters than items, to avoid too much of a "Monty Haul" dungeon! Also in `spawner.rs`, we'll add these constants (they can go anywhere, next to the other constants makes sense):
+
+```rust
+const MAX_MONSTERS : i32 = 4;
+const MAX_ITEMS : i32 = 2;
+```
+
+Still in `spawner.rs`, we create a new function - `spawn_room` that uses these constants:
 
 ```rust
 /// Fills a room with stuff!
