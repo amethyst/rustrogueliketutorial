@@ -72,3 +72,4 @@
     - [Mushrooms](./chapter_68.md)
     - [More Shrooms](./chapter_69.md)
 - [Contributors](./contributors.md)
+- [Licensing](./license.md)
