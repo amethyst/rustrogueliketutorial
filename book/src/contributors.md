@@ -34,18 +34,31 @@ The following people have contributed to this project:
 I'd also like to take a moment to thank everyone who has sent me kind words, contributed with issue reports, and the following Patrons (from patreon.com):
 
 * Ben Gamble
-* Noah
-* Ryan Orlando
-* Shane Sveller
-* Tom Leys
+* Boyd Trolinger
+* Brian Bucklew
+* Chad Thorenson
 * Crocodylus Pontifex (great name!)
 * Enrique Garcia
-* Pat LaBine
-* Brian Bucklew
-* Knightdave
-* Oskar Edgren
+* Finn Günther
+* Fredrik Holmqvist
+* Galen Palmer
+* Jeffrey Lyne
+* Josh Isaak
+* Kenton Hamaluik
+* KnightDave
+* Mark Rowe
+* Noah
 * Oliver Uvman
+* Oskar Edgren
+* Pat LaBine
+* Russel Myers
+* Ryan Orlando
+* Shane Sveller
+* Snayff
+* Tom Leys
+* Tommi Sinuvuo
 
+If I've missed your contribution, please let me know!
 
 ---
 
