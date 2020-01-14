@@ -286,7 +286,7 @@ If you `cargo run` the project now, rooms now sometimes contain health potions. 
 Having potions exist is a great start, but it would be helpful to be able to pick them up! We'll create a new component in `components.rs` (and register it in `main.rs`!), to represent an item being in someone's backpack:
 
 ```rust
-#[derive(Component, Debug, ConvertSaveload, Clone)]
+#[derive(Component, Debug, Clone)]
 pub struct InBackpack {
     pub owner : Entity
 }
@@ -295,7 +295,7 @@ pub struct InBackpack {
 We also want to make item collection generic - that is, any entity can pick up an item. It would be pretty straightforward to just make it work for the player, but later on we might decide that monsters can pick up loot (introducing a whole new tactical element - bait!). So we'll also make a component indicating intent in `components.rs` (and register it in `main.rs`):
 
 ```rust
-#[derive(Component, Debug, ConvertSaveload, Clone)]
+#[derive(Component, Debug, Clone)]
 pub struct WantsToPickupItem {
     pub collected_by : Entity,
     pub item : Entity

@@ -31,6 +31,7 @@ The following people have contributed to this project:
 * [NielsRenard](https://github.com/NielsRenard) fixed my awful English for dropping items and helped with even more broken Specs book links.
 * [ZeroCity](https://github.com/zerocity) fixed a typo in Chapter 2 (`Position` not `Pos`).
 * Fuddles from the r/roguelikedev Discord pointed out an issue with structure naming.
+* [dethmuffin](https://github.com/dethmuffin) pointed out an inconsistency in chapter 9, in the new `ConvertSaveLoad` code. 
 
 ## Supporters
 
