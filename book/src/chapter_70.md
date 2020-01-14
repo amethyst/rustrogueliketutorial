@@ -709,7 +709,198 @@ If you `cargo run` the project now, you can target and shoot things - and enjoy 
 
 ## Making Monsters Shoot Back
 
+Only the player having a bow is more than a little unfair. It also takes a lot of challenge out of the game: you can shoot things as they approach you, but they can't fire back. Let's add a new monster, the *Bandit Archer*. It's mostly a copy of the *Bandit*, but they have a short bow instead of a dagger. In `spawns.json`:
 
+```json
+{ "name" : "Bandit Archer", "weight" : 9, "min_depth" : 2, "max_depth" : 3 },
+...
+{
+    "name" : "Bandit Archer",
+    "renderable": {
+        "glyph" : "☻",
+        "fg" : "#FF5500",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "vision_range" : 6,
+    "movement" : "random_waypoint",
+    "quips" : [ "Stand and deliver!", "Alright, hand it over" ],
+    "attributes" : {},
+    "equipped" : [ "Shortbow", "Shield", "Leather Armor", "Leather Boots" ],
+    "light" : {
+        "range" : 6,
+        "color" : "#FFFF55"
+    },
+    "faction" : "Bandits",
+    "gold" : "1d6"
+},
+```
+
+We've changed their color slightly, and added a `Shortbow` to their equipment list. We already support equipment spawning, so that should be enough for the bow to appear in their equipment - but they don't know how to use it. We already handle spellcasting (and things like dragon breath) in `ai/visible_ai_systems.rs` - so that's a logical place to consider adding shooting. We can add it quite simply: check to see if there is a ranged weapon equipped, and if there is - check range and generate a `WantsToShoot`. We'll modify the reaction `Attack`:
+
+```rust
+Reaction::Attack => {
+    let range = rltk::DistanceAlg::Pythagoras.distance2d(
+        rltk::Point::new(pos.x, pos.y),
+        rltk::Point::new(reaction.0 as i32 % map.width, reaction.0 as i32 / map.width)
+    );
+    if let Some(abilities) = abilities.get(entity) {
+        for ability in abilities.abilities.iter() {
+            if range >= ability.min_range && range <= ability.range &&
+                rng.roll_dice(1,100) <= (ability.chance * 100.0) as i32
+            {
+                use crate::raws::find_spell_entity_by_name;
+                casting.insert(
+                    entity,
+                    WantsToCastSpell{
+                        spell : find_spell_entity_by_name(&ability.spell, &names, &spells, &entities).unwrap(),
+                        target : Some(rltk::Point::new(reaction.0 as i32 % map.width, reaction.0 as i32 / map.width))}
+                ).expect("Unable to insert");
+                done = true;
+            }
+        }
+    }
+
+    if !done {
+        for (weapon, equip) in (&weapons, &equipped).join() {
+            if let Some(wrange) = weapon.range {
+                if equip.owner == entity {
+                    println!("Owner found. Ranges: {}/{}", wrange, range);
+                    if wrange >= range as i32 {
+                        println!("Inserting shoot");
+                        wants_shoot.insert(entity, WantsToShoot{ target: reaction.2 }).expect("Insert fail");
+                        done = true;
+                    }
+                }
+            }
+        }
+    }
+    ...
+```
+
+If you `cargo run` now, the bandits shoot back!
+
+## Templating magical bows
+
+Add the shortbow to your spawn list:
+
+```json
+{ "name" : "Shortbow", "weight" : 2, "min_depth" : 3, "max_depth" : 100 },
+```
+
+You can also add magical templating to it:
+
+```json
+{
+    "name" : "Shortbow",
+    "renderable": {
+        "glyph" : ")",
+        "fg" : "#FFAAAA",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "weapon" : {
+        "range" : "4",
+        "attribute" : "Quickness",
+        "base_damage" : "1d4",
+        "hit_bonus" : 0
+    },
+    "weight_lbs" : 2.0,
+    "base_value" : 5.0,
+    "initiative_penalty" : 1,
+    "vendor_category" : "weapon",
+    "template_magic" : {
+        "unidentified_name" : "Unidentified Shortbow",
+        "bonus_min" : 1,
+        "bonus_max" : 5,
+        "include_cursed" : true
+    }
+},
+```
+
+## Making Dark Elves Scarier
+
+So now we can introduce some goblin archers, to make the caves a little scarier. We won't introduce any ranged weapons in the dragon/lizard levels, to even the odds a little (the game just got easier!). We can cut-and-paste a goblin just like we did for the bandit:
+
+```json
+{
+    "name" : "Goblin Archer",
+    "renderable": {
+        "glyph" : "g",
+        "fg" : "#FFFF00",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "vision_range" : 8,
+    "movement" : "static",
+    "attributes" : {},
+    "faction" : "Cave Goblins",
+    "gold" : "1d6",
+    "equipped" : [ "Shortbow", "Leather Armor", "Leather Boots" ],
+},
+```
+
+And that brings us to our goal when we started the chapter. We wanted to give Dark Elves hand-crossbows. We'll start by generating the new weapon type in `spawns.json`:
+
+```json
+{
+    "name" : "Hand Crossbow",
+    "renderable": {
+        "glyph" : ")",
+        "fg" : "#FFAAAA",
+        "bg" : "#000000",
+        "order" : 2
+    },
+    "weapon" : {
+        "range" : "6",
+        "attribute" : "Quickness",
+        "base_damage" : "1d6",
+        "hit_bonus" : 0
+    },
+    "weight_lbs" : 2.0,
+    "base_value" : 5.0,
+    "initiative_penalty" : 1,
+    "vendor_category" : "weapon",
+    "template_magic" : {
+        "unidentified_name" : "Unidentified Hand Crossbow",
+        "bonus_min" : 1,
+        "bonus_max" : 5,
+        "include_cursed" : true
+    }
+},
+```
+
+We should also add it to the spawns table, but only for dark elf levels:
+
+```json
+{ "name" : "Hand Crossbow", "weight" : 2, "min_depth" : 9, "max_depth" : 11 }
+```
+
+Finally, we give it to the dark elves:
+
+```json
+{
+    "name" : "Dark Elf",
+    "renderable": {
+        "glyph" : "e",
+        "fg" : "#FF0000",
+        "bg" : "#000000",
+        "order" : 1
+    },
+    "blocks_tile" : true,
+    "vision_range" : 8,
+    "movement" : "random_waypoint",
+    "attributes" : {},
+    "equipped" : [ "Hand Crossbow", "Scimitar", "Buckler", "Drow Chain", "Drow Leggings", "Drow Boots" ],
+    "faction" : "DarkElf",
+    "gold" : "3d6",
+    "level" : 6
+},
+```
+
+And that's it! When you reach the Dark Elves guarding the entrance to their city - they can now shoot you. We'll flesh out the city in the next chapter.
 
 ...
 
