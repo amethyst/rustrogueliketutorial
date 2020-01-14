@@ -381,6 +381,336 @@ pub struct WantsToShoot {
 }
 ```
 
+We'll also want to make a new system, and store it in `ranged_combat_system.rs`. It's basically a cut-and-paste of the `melee_combat_system`, but looking for `WantsToShoot` instead:
+
+```rust
+extern crate specs;
+use specs::prelude::*;
+use super::{Attributes, Skills, WantsToShoot, Name, gamelog::GameLog,
+    HungerClock, HungerState, Pools, skill_bonus,
+    Skill, Equipped, Weapon, EquipmentSlot, WeaponAttribute, Wearable, NaturalAttackDefense,
+    effects::*, Map, Position};
+use rltk::{to_cp437, RGB, Point};
+
+pub struct RangedCombatSystem {}
+
+impl<'a> System<'a> for RangedCombatSystem {
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( Entities<'a>,
+                        WriteExpect<'a, GameLog>,
+                        WriteStorage<'a, WantsToShoot>,
+                        ReadStorage<'a, Name>,
+                        ReadStorage<'a, Attributes>,
+                        ReadStorage<'a, Skills>,
+                        ReadStorage<'a, HungerClock>,
+                        ReadStorage<'a, Pools>,
+                        WriteExpect<'a, rltk::RandomNumberGenerator>,
+                        ReadStorage<'a, Equipped>,
+                        ReadStorage<'a, Weapon>,
+                        ReadStorage<'a, Wearable>,
+                        ReadStorage<'a, NaturalAttackDefense>,
+                        ReadStorage<'a, Position>,
+                        ReadExpect<'a, Map>
+                      );
+
+    fn run(&mut self, data : Self::SystemData) {
+        let (entities, mut log, mut wants_shoot, names, attributes, skills,
+            hunger_clock, pools, mut rng, equipped_items, weapon, wearables, natural,
+            positions, map) = data;
+
+        for (entity, wants_shoot, name, attacker_attributes, attacker_skills, attacker_pools) in (&entities, &wants_shoot, &names, &attributes, &skills, &pools).join() {
+            // Are the attacker and defender alive? Only attack if they are
+            let target_pools = pools.get(wants_shoot.target).unwrap();
+            let target_attributes = attributes.get(wants_shoot.target).unwrap();
+            let target_skills = skills.get(wants_shoot.target).unwrap();
+            if attacker_pools.hit_points.current > 0 && target_pools.hit_points.current > 0 {
+                let target_name = names.get(wants_shoot.target).unwrap();
+
+                // Fire projectile effect
+                let apos = positions.get(entity).unwrap();
+                let dpos = positions.get(wants_shoot.target).unwrap();
+                add_effect(
+                    None, 
+                    EffectType::ParticleProjectile{ 
+                        glyph: to_cp437('*'),
+                        fg : RGB::named(rltk::CYAN), 
+                        bg : RGB::named(rltk::BLACK), 
+                        lifespan : 300.0, 
+                        speed: 50.0, 
+                        path: rltk::line2d(
+                            rltk::LineAlg::Bresenham, 
+                            Point::new(apos.x, apos.y), 
+                            Point::new(dpos.x, dpos.y)
+                        )
+                     }, 
+                    Targets::Tile{tile_idx : map.xy_idx(apos.x, apos.y) as i32}
+                );
+
+                // Define the basic unarmed attack - overridden by wielding check below if a weapon is equipped
+                let mut weapon_info = Weapon{
+                    range: None,
+                    attribute : WeaponAttribute::Might,
+                    hit_bonus : 0,
+                    damage_n_dice : 1,
+                    damage_die_type : 4,
+                    damage_bonus : 0,
+                    proc_chance : None,
+                    proc_target : None
+                };
+
+                if let Some(nat) = natural.get(entity) {
+                    if !nat.attacks.is_empty() {
+                        let attack_index = if nat.attacks.len()==1 { 0 } else { rng.roll_dice(1, nat.attacks.len() as i32) as usize -1 };
+                        weapon_info.hit_bonus = nat.attacks[attack_index].hit_bonus;
+                        weapon_info.damage_n_dice = nat.attacks[attack_index].damage_n_dice;
+                        weapon_info.damage_die_type = nat.attacks[attack_index].damage_die_type;
+                        weapon_info.damage_bonus = nat.attacks[attack_index].damage_bonus;
+                    }
+                }
+
+                let mut weapon_entity : Option<Entity> = None;
+                for (weaponentity,wielded,melee) in (&entities, &equipped_items, &weapon).join() {
+                    if wielded.owner == entity && wielded.slot == EquipmentSlot::Melee {
+                        weapon_info = melee.clone();
+                        weapon_entity = Some(weaponentity);
+                    }
+                }
+
+                let natural_roll = rng.roll_dice(1, 20);
+                let attribute_hit_bonus = if weapon_info.attribute == WeaponAttribute::Might
+                    { attacker_attributes.might.bonus }
+                    else { attacker_attributes.quickness.bonus};
+                let skill_hit_bonus = skill_bonus(Skill::Melee, &*attacker_skills);
+                let weapon_hit_bonus = weapon_info.hit_bonus;
+                let mut status_hit_bonus = 0;
+                if let Some(hc) = hunger_clock.get(entity) { // Well-Fed grants +1
+                    if hc.state == HungerState::WellFed {
+                        status_hit_bonus += 1;
+                    }
+                }
+                let modified_hit_roll = natural_roll + attribute_hit_bonus + skill_hit_bonus
+                    + weapon_hit_bonus + status_hit_bonus;
+                //println!("Natural roll: {}", natural_roll);
+                //println!("Modified hit roll: {}", modified_hit_roll);
+
+                let mut armor_item_bonus_f = 0.0;
+                for (wielded,armor) in (&equipped_items, &wearables).join() {
+                    if wielded.owner == wants_shoot.target {
+                        armor_item_bonus_f += armor.armor_class;
+                    }
+                }
+                let base_armor_class = match natural.get(wants_shoot.target) {
+                    None => 10,
+                    Some(nat) => nat.armor_class.unwrap_or(10)
+                };
+                let armor_quickness_bonus = target_attributes.quickness.bonus;
+                let armor_skill_bonus = skill_bonus(Skill::Defense, &*target_skills);
+                let armor_item_bonus = armor_item_bonus_f as i32;
+                let armor_class = base_armor_class + armor_quickness_bonus + armor_skill_bonus
+                    + armor_item_bonus;
+
+                //println!("Armor class: {}", armor_class);
+                if natural_roll != 1 && (natural_roll == 20 || modified_hit_roll > armor_class) {
+                    // Target hit! Until we support weapons, we're going with 1d4
+                    let base_damage = rng.roll_dice(weapon_info.damage_n_dice, weapon_info.damage_die_type);
+                    let attr_damage_bonus = attacker_attributes.might.bonus;
+                    let skill_damage_bonus = skill_bonus(Skill::Melee, &*attacker_skills);
+                    let weapon_damage_bonus = weapon_info.damage_bonus;
+
+                    let damage = i32::max(0, base_damage + attr_damage_bonus + 
+                        skill_damage_bonus + weapon_damage_bonus);
+
+                    /*println!("Damage: {} + {}attr + {}skill + {}weapon = {}",
+                        base_damage, attr_damage_bonus, skill_damage_bonus,
+                        weapon_damage_bonus, damage
+                    );*/
+                    add_effect(
+                        Some(entity),
+                        EffectType::Damage{ amount: damage },
+                        Targets::Single{ target: wants_shoot.target }
+                    );
+                    log.entries.insert(0, format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));
+
+                    // Proc effects
+                    if let Some(chance) = &weapon_info.proc_chance {
+                        let roll = rng.roll_dice(1, 100);
+                        //println!("Roll {}, Chance {}", roll, chance);
+                        if roll <= (chance * 100.0) as i32 {
+                            //println!("Proc!");
+                            let effect_target = if weapon_info.proc_target.unwrap() == "Self" {
+                                Targets::Single{ target: entity }
+                            } else {
+                                Targets::Single { target : wants_shoot.target }
+                            };
+                            add_effect(
+                                Some(entity),
+                                EffectType::ItemUse{ item: weapon_entity.unwrap() },
+                                effect_target
+                            )
+                        }
+                    }
+
+                } else  if natural_roll == 1 {
+                    // Natural 1 miss
+                    log.entries.insert(0, format!("{} considers attacking {}, but misjudges the timing.", name.name, target_name.name));
+                    add_effect(
+                        None,
+                        EffectType::Particle{ glyph: rltk::to_cp437('‼'), fg: rltk::RGB::named(rltk::BLUE), bg : rltk::RGB::named(rltk::BLACK), lifespan: 200.0 },
+                        Targets::Single{ target: wants_shoot.target }
+                    );
+                } else {
+                    // Miss
+                    log.entries.insert(0, format!("{} attacks {}, but can't connect.", name.name, target_name.name));
+                    add_effect(
+                        None,
+                        EffectType::Particle{ glyph: rltk::to_cp437('‼'), fg: rltk::RGB::named(rltk::CYAN), bg : rltk::RGB::named(rltk::BLACK), lifespan: 200.0 },
+                        Targets::Single{ target: wants_shoot.target }
+                    );
+                }
+            }
+        }
+
+        wants_shoot.clear();
+    }
+}
+```
+
+Most of this is straight out of the previous system. You'll also want to add in into `run_systems` in `main.rs`; right after melee is a good spot:
+
+```rust
+let mut ranged = RangedCombatSystem{};
+ranged.run_now(&self.ecs);
+```
+
+The eagle-eyed reader will have noticed that we also snuck in an extra `add_effect` call, this time invoking an `EffectType::ParticleProjectile`. This isn't essential, but displaying a flying projectile really brings out the flavor in a ranged battle. So far, our particles have been stationary, so lets add in some "juice" to them!
+
+In `components.rs`, we'll update the `ParticleLifetime` component to include an optional animation:
+
+```rust
+#[derive(Serialize, Deserialize, Clone)]
+pub struct ParticleAnimation {
+    pub step_time : f32,
+    pub path : Vec<Point>,
+    pub current_step : usize,
+    pub timer : f32
+}
+
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct ParticleLifetime {
+    pub lifetime_ms : f32,
+    pub animation : Option<ParticleAnimation>
+}
+```
+
+This adds a `step_time` - how long should the particle dwell on each step. A `path` - a vector of `Point`s listing each step along the way. `current_step` and `timer` will be used to track the projectile's progress.
+
+You'll want to go into `particle_system.rs` and modify the particle spawning to include `None` by default:
+
+```rust
+particles.insert(p, ParticleLifetime{ lifetime_ms: new_particle.lifetime, animation: None }).expect("Unable to insert lifetime");
+```
+
+While we're here, we'll rename the culling function (`cull_dead_particles`) to `update_particles` - better reflecting what it does. We'll also add in some logic to see if there is animation, and have it update its position along the animation track:
+
+```rust
+pub fn update_particles(ecs : &mut World, ctx : &Rltk) {
+    let mut dead_particles : Vec<Entity> = Vec::new();
+    {
+        // Age out particles
+        let mut particles = ecs.write_storage::<ParticleLifetime>();
+        let entities = ecs.entities();
+        let map = ecs.fetch::<Map>();
+        for (entity, mut particle) in (&entities, &mut particles).join() {
+            if let Some(animation) = &mut particle.animation {
+                animation.timer += ctx.frame_time_ms;
+                if animation.timer > animation.step_time && animation.current_step < animation.path.len()-2 {
+                    animation.current_step += 1;
+
+                    if let Some(pos) = ecs.write_storage::<Position>().get_mut(entity) {
+                        pos.x = animation.path[animation.current_step].x;
+                        pos.y = animation.path[animation.current_step].y;
+                    }
+                }
+            }
+
+            particle.lifetime_ms -= ctx.frame_time_ms;
+            if particle.lifetime_ms < 0.0 {
+                dead_particles.push(entity);
+            }
+        }
+    }
+    for dead in dead_particles.iter() {
+        ecs.delete_entity(*dead).expect("Particle will not die");
+    }
+}
+```
+
+Open up `main.rs` again, and search for `cull_dead_particles` and replace it with `update_particles`.
+
+That's enough to actually animate the particles and still have them vanish when done, but we need to update the `Effects` system to spawn the new type of particle. In `effects/mod.rs`, we'll extend the `EffectType` enum to include the new one:
+
+```rust
+#[derive(Debug)]
+pub enum EffectType { 
+    ...
+    ParticleProjectile { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32, speed: f32, path: Vec<Point> },
+    ...
+```
+
+We also have to update `affect_tile` in the same file:
+
+```rust
+fn affect_tile(ecs: &mut World, effect: &mut EffectSpawner, tile_idx : i32) {
+    if tile_effect_hits_entities(&effect.effect_type) {
+        let content = ecs.fetch::<Map>().tile_content[tile_idx as usize].clone();
+        content.iter().for_each(|entity| affect_entity(ecs, effect, *entity));
+    }
+
+    match &effect.effect_type {
+        EffectType::Bloodstain => damage::bloodstain(ecs, tile_idx),
+        EffectType::Particle{..} => particles::particle_to_tile(ecs, tile_idx, &effect),
+        EffectType::ParticleProjectile{..} => particles::projectile(ecs, tile_idx, &effect),
+        _ => {}
+    }
+}
+```
+
+This calls into `particles::projectile`, so open up `effects/particles.rs` and we'll add the function:
+
+```rust
+pub fn projectile(ecs: &mut World, tile_idx : i32, effect: &EffectSpawner) {
+    if let EffectType::ParticleProjectile{ glyph, fg, bg, 
+        lifespan, speed, path } = &effect.effect_type 
+    {
+        let map = ecs.fetch::<Map>();
+        let x = tile_idx % map.width;
+        let y = tile_idx / map.width;
+        std::mem::drop(map);
+        ecs.create_entity()
+            .with(Position{ x, y })
+            .with(Renderable{ fg: *fg, bg: *bg, glyph: *glyph, render_order: 0 })
+            .with(ParticleLifetime{
+                lifetime_ms: path.len() as f32 * speed,
+                animation: Some(ParticleAnimation{
+                    step_time: *speed,
+                    path: path.to_vec(),
+                    current_step: 0,
+                    timer: 0.0
+                })
+            })
+            .build();
+    }
+}
+```
+
+If you `cargo run` the project now, you can target and shoot things - and enjoy a bit of animation:
+
+![Screenshot](./c70-pewpew.gif)
+
+## Making Monsters Shoot Back
+
+
+
 ...
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-70-missiles)**

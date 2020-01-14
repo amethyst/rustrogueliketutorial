@@ -6,7 +6,8 @@ use std::cmp::{max, min};
 use super::{Position, Player, Viewshed, State, Map, RunState, Attributes, WantsToMelee, Item,
     gamelog::GameLog, WantsToPickupItem, TileType, HungerClock, HungerState,
     EntityMoved, Door, BlocksTile, BlocksVisibility, Renderable, Pools, Faction,
-    raws::Reaction, Vendor, VendorMode, WantsToCastSpell, Target, Equipped, Weapon};
+    raws::Reaction, Vendor, VendorMode, WantsToCastSpell, Target, Equipped, Weapon,
+    WantsToShoot, Name};
 
 fn get_player_target_list(ecs : &mut World) -> Vec<(f32,Entity)> {
     let mut possible_targets : Vec<(f32,Entity)> = Vec::new();
@@ -52,6 +53,34 @@ pub fn end_turn_targeting(ecs: &mut World) {
     }
 }
 
+fn fire_on_target(ecs: &mut World) -> RunState {
+    let targets = ecs.write_storage::<Target>();
+    let entities = ecs.entities();
+    let mut current_target : Option<Entity> = None;
+    let mut log = ecs.fetch_mut::<GameLog>();
+
+
+    for (e,_t) in (&entities, &targets).join() {
+        current_target = Some(e);
+    }
+
+    if let Some(target) = current_target {
+        let player_entity = ecs.fetch::<Entity>();
+        let mut shoot_store = ecs.write_storage::<WantsToShoot>();
+        let names = ecs.read_storage::<Name>();
+        if let Some(name) = names.get(target) {
+            log.entries.insert(0, format!("You fire at {}", name.name));
+        }
+        shoot_store.insert(*player_entity, WantsToShoot{ target }).expect("Insert Fail");
+
+        return RunState::Ticking;
+    } else {
+        log.entries.insert(0, "You don't have a target selected!".to_string());
+        return RunState::AwaitingInput;
+    }
+
+}
+
 fn cycle_target(ecs: &mut World) {
     let possible_targets = get_player_target_list(ecs);
     let mut targets = ecs.write_storage::<Target>();
@@ -73,9 +102,9 @@ fn cycle_target(ecs: &mut World) {
             }
 
             if index > possible_targets.len()-2 {
-                targets.insert(possible_targets[0].1, Target{});
+                targets.insert(possible_targets[0].1, Target{}).expect("Insert fail");
             } else {
-                targets.insert(possible_targets[index+1].1, Target{});
+                targets.insert(possible_targets[index+1].1, Target{}).expect("Insert fail");
             }
         }
     }
@@ -444,6 +473,7 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
                 cycle_target(&mut gs.ecs);
                 return RunState::AwaitingInput;
             }
+            VirtualKeyCode::F => return fire_on_target(&mut gs.ecs),
 
             // Save and Quit
             VirtualKeyCode::Escape => return RunState::SaveGame,

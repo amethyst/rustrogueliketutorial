@@ -1,14 +1,27 @@
 use specs::prelude::*;
-use super::{ Rltk, ParticleLifetime, Position, Renderable };
+use super::{ Rltk, ParticleLifetime, Position, Renderable, Map };
 use rltk::RGB;
 
-pub fn cull_dead_particles(ecs : &mut World, ctx : &Rltk) {
+pub fn update_particles(ecs : &mut World, ctx : &Rltk) {
     let mut dead_particles : Vec<Entity> = Vec::new();
     {
         // Age out particles
         let mut particles = ecs.write_storage::<ParticleLifetime>();
         let entities = ecs.entities();
+        let map = ecs.fetch::<Map>();
         for (entity, mut particle) in (&entities, &mut particles).join() {
+            if let Some(animation) = &mut particle.animation {
+                animation.timer += ctx.frame_time_ms;
+                if animation.timer > animation.step_time && animation.current_step < animation.path.len()-2 {
+                    animation.current_step += 1;
+
+                    if let Some(pos) = ecs.write_storage::<Position>().get_mut(entity) {
+                        pos.x = animation.path[animation.current_step].x;
+                        pos.y = animation.path[animation.current_step].y;
+                    }
+                }
+            }
+
             particle.lifetime_ms -= ctx.frame_time_ms;
             if particle.lifetime_ms < 0.0 {
                 dead_particles.push(entity);
@@ -66,7 +79,7 @@ impl<'a> System<'a> for ParticleSpawnSystem {
             let p = entities.create();
             positions.insert(p, Position{ x: new_particle.x, y: new_particle.y }).expect("Unable to inser position");
             renderables.insert(p, Renderable{ fg: new_particle.fg, bg: new_particle.bg, glyph: new_particle.glyph, render_order: 0 }).expect("Unable to insert renderable");
-            particles.insert(p, ParticleLifetime{ lifetime_ms: new_particle.lifetime }).expect("Unable to insert lifetime");
+            particles.insert(p, ParticleLifetime{ lifetime_ms: new_particle.lifetime, animation: None }).expect("Unable to insert lifetime");
         }
 
         particle_builder.requests.clear();

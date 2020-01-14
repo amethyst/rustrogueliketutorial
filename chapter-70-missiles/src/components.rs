@@ -2,7 +2,7 @@ extern crate specs;
 use specs::prelude::*;
 extern crate specs_derive;
 extern crate rltk;
-use rltk::{RGB};
+use rltk::{RGB, Point};
 use serde::{Serialize, Deserialize};
 use specs::saveload::{Marker, ConvertSaveload};
 use specs::error::NoError;
@@ -407,9 +407,18 @@ pub struct NaturalAttackDefense {
     pub attacks : Vec<NaturalAttack>
 }
 
+#[derive(Serialize, Deserialize, Clone)]
+pub struct ParticleAnimation {
+    pub step_time : f32,
+    pub path : Vec<Point>,
+    pub current_step : usize,
+    pub timer : f32
+}
+
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct ParticleLifetime {
-    pub lifetime_ms : f32
+    pub lifetime_ms : f32,
+    pub animation : Option<ParticleAnimation>
 }
 
 #[derive(Component, Serialize, Deserialize, Clone)]

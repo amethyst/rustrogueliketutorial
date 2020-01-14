@@ -562,7 +562,7 @@
             "order" : 2
         },
         "weapon" : {
-            "range" : "4",
+            "range" : "6",
             "attribute" : "Quickness",
             "base_damage" : "1d4",
             "hit_bonus" : 0

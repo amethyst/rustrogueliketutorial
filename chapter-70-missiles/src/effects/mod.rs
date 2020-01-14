@@ -10,6 +10,7 @@ mod triggers;
 mod hunger;
 mod movement;
 use crate::components::AttributeBonus;
+use rltk::Point;
 
 lazy_static! {
     pub static ref EFFECT_QUEUE : Mutex<VecDeque<EffectSpawner>> = Mutex::new(VecDeque::new());
@@ -20,6 +21,7 @@ pub enum EffectType {
     Damage { amount : i32 },
     Bloodstain,
     Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
+    ParticleProjectile { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32, speed: f32, path: Vec<Point> },
     EntityDeath,
     ItemUse { item: Entity },
     SpellUse { spell: Entity },
@@ -114,6 +116,7 @@ fn affect_tile(ecs: &mut World, effect: &mut EffectSpawner, tile_idx : i32) {
     match &effect.effect_type {
         EffectType::Bloodstain => damage::bloodstain(ecs, tile_idx),
         EffectType::Particle{..} => particles::particle_to_tile(ecs, tile_idx, &effect),
+        EffectType::ParticleProjectile{..} => particles::projectile(ecs, tile_idx, &effect),
         _ => {}
     }
 }
