@@ -156,7 +156,7 @@ for (entity, equipped_by) in (&entities, &equipped).join() {
 
 This is a good start, because now we're telling the user that they have a ranged weapon (and generally showing immediate results of a weapon upgrade is good!):
 
-(TODO: Screenshot)
+![Screenshot](./c70-s1.jpg)
 
 So, now to let the player easily target enemies! We'll start by making a `Target` component. In `components.rs` (and, as usual, registered in `main.rs` and `saveload_system.rs`):
 
@@ -368,7 +368,7 @@ VirtualKeyCode::V => {
 
 If you `cargo run` now, you can equip your bow and start targeting:
 
-(TODO: Screenshot)
+![Screenshot](./c70-s2.jpg)
 
 ### Shooting Things
 
