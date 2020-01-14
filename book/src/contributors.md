@@ -29,6 +29,7 @@ The following people have contributed to this project:
 * [joguSD](https://github.com/joguSD) reminded me to fix my SSL certificate.
 * [Olivia Ifrim](https://github.com/iolivia) helped me fix some broken links to the Specs book.
 * [NielsRenard](https://github.com/NielsRenard) fixed my awful English for dropping items and helped with even more broken Specs book links.
+* [ZeroCity](https://github.com/zerocity) fixed a typo in Chapter 2 (`Position` not `Pos`).
 
 ## Supporters
 
