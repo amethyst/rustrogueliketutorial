@@ -45,15 +45,15 @@ impl<'a> System<'a> for MonsterAI {
                 else if viewshed.visible_tiles.contains(&*player_pos) {
                     // Path to the player
                     let path = rltk::a_star_search(
-                        map.xy_idx(pos.x, pos.y) as i32,
-                        map.xy_idx(player_pos.x, player_pos.y) as i32,
+                        map.xy_idx(pos.x, pos.y),
+                        map.xy_idx(player_pos.x, player_pos.y),
                         &mut *map
                     );
                     if path.success && path.steps.len()>1 {
                         let mut idx = map.xy_idx(pos.x, pos.y);
                         map.blocked[idx] = false;
-                        pos.x = path.steps[1] % map.width;
-                        pos.y = path.steps[1] / map.width;
+                        pos.x = path.steps[1] as i32 % map.width;
+                        pos.y = path.steps[1] as i32 / map.width;
                         idx = map.xy_idx(pos.x, pos.y);
                         map.blocked[idx] = true;
                         viewshed.dirty = true;
