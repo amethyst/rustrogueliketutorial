@@ -48,7 +48,7 @@ let item_heals = healing.get(useitem.item);
 match item_heals {
     None => {}
     Some(healer) => {
-        stats.hp = i32::max(stats.max_hp, stats.hp + healer.heal_amount);
+        stats.hp = i32::min(stats.max_hp, stats.hp + healer.heal_amount);
         if entity == *player_entity {
             gamelog.entries.insert(0, format!("You drink the {}, healing {} hp.", names.get(useitem.item).unwrap().name, healer.heal_amount));
         }
@@ -380,7 +380,7 @@ match item_heals {
         for target in targets.iter() {
             let stats = combat_stats.get_mut(*target);
             if let Some(stats) = stats {
-                stats.hp = i32::max(stats.max_hp, stats.hp + healer.heal_amount);
+                stats.hp = i32::min(stats.max_hp, stats.hp + healer.heal_amount);
                 if entity == *player_entity {
                     gamelog.entries.insert(0, format!("You use the {}, healing {} hp.", names.get(useitem.item).unwrap().name, healer.heal_amount));
                 }
