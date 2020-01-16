@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rltk = { version = "0.5.15", features = ["serialization"] }
+rltk = { version = "0.5.17", features = ["serialization"] }
 specs = { version = "0.15.0", features = ["serde"] }
 specs-derive = "0.4.0"
 serde= { version = "^1.0.44", features = ["derive"] }
@@ -17,4 +17,4 @@ regex = "1.3.1"
 
 [target.'cfg(any(target_arch = "wasm32"))'.dependencies]
 web-sys = { version = "0.3", features=["console"] }
-wasm-bindgen = "0.2"
+wasm-bindgen = "0.2.58"
