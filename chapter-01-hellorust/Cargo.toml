@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rltk = "0.5.17"
+rltk = { git = "https://github.com/thebracket/rltk_rs", branch = "pedantry" }
 
 [target.'cfg(any(target_arch = "wasm32"))'.dependencies]
 web-sys = { version = "0.3", features=["console"] }

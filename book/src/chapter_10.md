@@ -492,7 +492,7 @@ for mob in add_confusion.iter() {
 Alright! Now we can *add* the `Confused` status to anything. We should update the `monster_ai_system` to use it. Replace the loop with:
 
 ```rust
-for (entity, mut viewshed,_monster,mut pos) in (&entities, &mut viewshed, &monster, &mut position).join() {
+ for (entity, mut viewshed,_monster,mut pos) in (&entities, &mut viewshed, &monster, &mut position).join() {
     let mut can_act = true;
 
     let is_confused = confused.get_mut(entity);
@@ -512,15 +512,15 @@ for (entity, mut viewshed,_monster,mut pos) in (&entities, &mut viewshed, &monst
         else if viewshed.visible_tiles.contains(&*player_pos) {
             // Path to the player
             let path = rltk::a_star_search(
-                map.xy_idx(pos.x, pos.y) as i32, 
-                map.xy_idx(player_pos.x, player_pos.y) as i32, 
+                map.xy_idx(pos.x, pos.y),
+                map.xy_idx(player_pos.x, player_pos.y),
                 &mut *map
             );
             if path.success && path.steps.len()>1 {
                 let mut idx = map.xy_idx(pos.x, pos.y);
                 map.blocked[idx] = false;
-                pos.x = path.steps[1] % map.width;
-                pos.y = path.steps[1] / map.width;
+                pos.x = path.steps[1] as i32 % map.width;
+                pos.y = path.steps[1] as i32 / map.width;
                 idx = map.xy_idx(pos.x, pos.y);
                 map.blocked[idx] = true;
                 viewshed.dirty = true;

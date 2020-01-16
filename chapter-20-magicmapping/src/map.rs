@@ -143,48 +143,35 @@ impl Map {
 }
 
 impl BaseMap for Map {
-    fn is_opaque(&self, idx:i32) -> bool {
-        self.tiles[idx as usize] == TileType::Wall
+    fn is_opaque(&self, idx:usize) -> bool {
+        self.tiles[idx] == TileType::Wall
     }
 
-    fn get_available_exits(&self, idx:i32) -> Vec<(i32, f32)> {
-        let mut exits : Vec<(i32, f32)> = Vec::new();
-        let x = idx % self.width;
-        let y = idx / self.width;
+    fn get_available_exits(&self, idx:usize) -> Vec<(usize, f32)> {
+        let mut exits : Vec<(usize, f32)> = Vec::new();
+        let x = idx as i32 % self.width;
+        let y = idx as i32 / self.width;
+        let w = self.width as usize;
 
         // Cardinal directions
         if self.is_exit_valid(x-1, y) { exits.push((idx-1, 1.0)) };
         if self.is_exit_valid(x+1, y) { exits.push((idx+1, 1.0)) };
-        if self.is_exit_valid(x, y-1) { exits.push((idx-self.width, 1.0)) };
-        if self.is_exit_valid(x, y+1) { exits.push((idx+self.width, 1.0)) };
+        if self.is_exit_valid(x, y-1) { exits.push((idx-w, 1.0)) };
+        if self.is_exit_valid(x, y+1) { exits.push((idx+w, 1.0)) };
 
         // Diagonals
-        if self.is_exit_valid(x-1, y-1) { exits.push(((idx-self.width)-1, 1.45)); }
-        if self.is_exit_valid(x+1, y-1) { exits.push(((idx-self.width)+1, 1.45)); }
-        if self.is_exit_valid(x-1, y+1) { exits.push(((idx+self.width)-1, 1.45)); }
-        if self.is_exit_valid(x+1, y+1) { exits.push(((idx+self.width)+1, 1.45)); }
+        if self.is_exit_valid(x-1, y-1) { exits.push(((idx-w)-1, 1.45)); }
+        if self.is_exit_valid(x+1, y-1) { exits.push(((idx-w)+1, 1.45)); }
+        if self.is_exit_valid(x-1, y+1) { exits.push(((idx+w)-1, 1.45)); }
+        if self.is_exit_valid(x+1, y+1) { exits.push(((idx+w)+1, 1.45)); }
 
         exits
-    }
-
-    fn get_pathing_distance(&self, idx1:i32, idx2:i32) -> f32 {
-        let p1 = Point::new(idx1 % self.width, idx1 / self.width);
-        let p2 = Point::new(idx2 % self.width, idx2 / self.width);
-        rltk::DistanceAlg::Pythagoras.distance2d(p1, p2)
     }
 }
 
 impl Algorithm2D for Map {
-    fn in_bounds(&self, pos : Point) -> bool {
-        pos.x > 0 && pos.x < self.width-1 && pos.y > 0 && pos.y < self.height-1
-    }
-
-    fn point2d_to_index(&self, pt: Point) -> i32 {
-        (pt.y * self.width) + pt.x
-    }
-
-    fn index_to_point2d(&self, idx:i32) -> Point {
-        Point{ x: idx % self.width, y: idx / self.width }
+    fn dimensions(&self) -> Point {
+        Point::new(self.width, self.height)
     }
 }
 

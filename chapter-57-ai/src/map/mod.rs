@@ -115,16 +115,8 @@ impl BaseMap for Map {
 }
 
 impl Algorithm2D for Map {
-    fn in_bounds(&self, pos : Point) -> bool {
-        pos.x > 0 && pos.x < self.width-1 && pos.y > 0 && pos.y < self.height-1
-    }
-
-    fn point2d_to_index(&self, pt: Point) -> i32 {
-        (pt.y * self.width) + pt.x
-    }
-
-    fn index_to_point2d(&self, idx:i32) -> Point {
-        Point{ x: idx % self.width, y: idx / self.width }
+    fn dimensions(&self) -> Point {
+        Point::new(self.width, self.height)
     }
 }
 

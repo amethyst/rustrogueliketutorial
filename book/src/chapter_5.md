@@ -207,43 +207,25 @@ In our `map.rs` file, we add the following:
 
 ```rust
 impl Algorithm2D for Map {
-    fn in_bounds(&self, pos : Point) -> bool {
-        pos.x > 0 && pos.x < self.width-1 && pos.y > 0 && pos.y < self.height-1
-    }
-
-    fn point2d_to_index(&self, pt: Point) -> i32 {
-        (pt.y * self.width) + pt.x
-    }
-
-    fn index_to_point2d(&self, idx:i32) -> Point {
-        Point{ x: idx % self.width, y: idx / self.width }
+    fn dimensions(&self) -> Point {
+        Point::new(self.width, self.height)
     }
 }
 ```
 
-This tells Rust that we are implementing `Algorithm2D` from RLTK (we also need to adjust the `use` statement to `use rltk::{ RGB, Rltk, Console, RandomNumberGenerator, BaseMap, Algorithm2D, Point };`). `point2d_to_index` is pretty much the same as the `xy_idx` function we've been using: it returns the array index to which an x/y position points. `index_to_point2d` does the same thing backwards: given an index, it returns the x/y coordinates it references. `in_bounds` provides the RLTK algorithms with a way to know how large your map is: some algorithms continue following a line, and it's helpful to make sure that they stop when they hit the edge of the map.
+RLTK is able to figure out a lot of other traits from the `dimensions` function: point indexing (and it's reciprocal), bounds-checks, and similar. We use return the dimensions we're already using, `self.width` and `self.height`.
 
-We also need to support `BaseMap`. We don't need all of it yet, so we're going to stub parts of it out. In `map.rs`:
+We also need to support `BaseMap`. We don't need all of it yet, so we're going to let it use defaults. In `map.rs`:
 
 ```rust
 impl BaseMap for Map {
-    fn is_opaque(&self, idx:i32) -> bool {
+    fn is_opaque(&self, idx:usize) -> bool {
         self.tiles[idx as usize] == TileType::Wall
-    }
-
-    fn get_available_exits(&self, _idx:i32) -> Vec<(i32, f32)> {
-        Vec::new()
-    }
-
-    fn get_pathing_distance(&self, idx1:i32, idx2:i32) -> f32 {
-        let p1 = Point::new(idx1 % self.width, idx1 / self.width);
-        let p2 = Point::new(idx2 % self.width, idx2 / self.width);
-        rltk::DistanceAlg::Pythagoras.distance2d(p1, p2)
     }
 }
 ```
 
-`is_opaque` simply returns true if the tile is a wall, and false otherwise. This will have to be expanded if/when we add more types of tile, but works for now. We're not touching `get_available_exits` yet - so we just return an empty list (this will be useful in later chapters). `get_pathing_distance` is a simple distance calculation - so we extract point locations from the two points and return a simple Pythagoras distance. Again, this will be useful later.
+`is_opaque` simply returns true if the tile is a wall, and false otherwise. This will have to be expanded if/when we add more types of tile, but works for now. We'll leave the rest of the trait on defaults for now (so no need to enter anything else).
 
 # Asking RLTK for a Viewshed: The System
 

@@ -30,16 +30,23 @@ This takes an index, and calculates if it can be entered.
 We then implement the trait, using this helper:
 
 ```rust
-fn get_available_exits(&self, idx:i32) -> Vec<(i32, f32)> {
-    let mut exits : Vec<(i32, f32)> = Vec::new();
-    let x = idx % self.width;
-    let y = idx / self.width;
+fn get_available_exits(&self, idx:usize) -> Vec<(usize, f32)> {
+    let mut exits : Vec<(usize, f32)> = Vec::new();
+    let x = idx as i32 % self.width;
+    let y = idx as i32 / self.width;
+    let w = self.width as usize;
 
     // Cardinal directions
     if self.is_exit_valid(x-1, y) { exits.push((idx-1, 1.0)) };
     if self.is_exit_valid(x+1, y) { exits.push((idx+1, 1.0)) };
-    if self.is_exit_valid(x, y-1) { exits.push((idx-self.width, 1.0)) };
-    if self.is_exit_valid(x, y+1) { exits.push((idx+self.width, 1.0)) };
+    if self.is_exit_valid(x, y-1) { exits.push((idx-w, 1.0)) };
+    if self.is_exit_valid(x, y+1) { exits.push((idx+w, 1.0)) };
+
+    // Diagonals
+    if self.is_exit_valid(x-1, y-1) { exits.push(((idx-w)-1, 1.45)); }
+    if self.is_exit_valid(x+1, y-1) { exits.push(((idx-w)+1, 1.45)); }
+    if self.is_exit_valid(x-1, y+1) { exits.push(((idx+w)-1, 1.45)); }
+    if self.is_exit_valid(x+1, y+1) { exits.push(((idx+w)+1, 1.45)); }
 
     exits
 }
@@ -586,7 +593,7 @@ Now we modify the `monster_ai_system`. There's a bit of clean-up here, and the "
 ```rust
 extern crate specs;
 use specs::prelude::*;
-use super::{Viewshed, Monster, Map, Position, WantsToMelee};
+use super::{Viewshed, Monster, Map, Position, WantsToMelee, RunState};
 extern crate rltk;
 use rltk::{Point};
 
@@ -597,14 +604,17 @@ impl<'a> System<'a> for MonsterAI {
     type SystemData = ( WriteExpect<'a, Map>,
                         ReadExpect<'a, Point>,
                         ReadExpect<'a, Entity>,
+                        ReadExpect<'a, RunState>,
                         Entities<'a>,
-                        WriteStorage<'a, Viewshed>, 
+                        WriteStorage<'a, Viewshed>,
                         ReadStorage<'a, Monster>,
                         WriteStorage<'a, Position>,
                         WriteStorage<'a, WantsToMelee>);
 
     fn run(&mut self, data : Self::SystemData) {
-        let (mut map, player_pos, player_entity, entities, mut viewshed, monster, mut position, mut wants_to_melee) = data;
+        let (mut map, player_pos, player_entity, runstate, entities, mut viewshed, monster, mut position, mut wants_to_melee) = data;
+
+        if *runstate != RunState::MonsterTurn { return; }
 
         for (entity, mut viewshed,_monster,mut pos) in (&entities, &mut viewshed, &monster, &mut position).join() {
             let distance = rltk::DistanceAlg::Pythagoras.distance2d(Point::new(pos.x, pos.y), *player_pos);
@@ -614,15 +624,15 @@ impl<'a> System<'a> for MonsterAI {
             else if viewshed.visible_tiles.contains(&*player_pos) {
                 // Path to the player
                 let path = rltk::a_star_search(
-                    map.xy_idx(pos.x, pos.y) as i32, 
-                    map.xy_idx(player_pos.x, player_pos.y) as i32, 
+                    map.xy_idx(pos.x, pos.y),
+                    map.xy_idx(player_pos.x, player_pos.y),
                     &mut *map
                 );
                 if path.success && path.steps.len()>1 {
                     let mut idx = map.xy_idx(pos.x, pos.y);
                     map.blocked[idx] = false;
-                    pos.x = path.steps[1] % map.width;
-                    pos.y = path.steps[1] / map.width;
+                    pos.x = path.steps[1] as i32 % map.width;
+                    pos.y = path.steps[1] as i32 / map.width;
                     idx = map.xy_idx(pos.x, pos.y);
                     map.blocked[idx] = true;
                     viewshed.dirty = true;
