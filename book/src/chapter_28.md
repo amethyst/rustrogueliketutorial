@@ -85,7 +85,7 @@ impl DrunkardsWalkBuilder {
         let start_idx = self.map.xy_idx(self.starting_position.x, self.starting_position.y);
 
         // Find all tiles we can reach from the starting point
-        let map_starts : Vec<i32> = vec![start_idx as i32];
+        let map_starts : Vec<usize> = vec![start_idx];
         let dijkstra_map = rltk::DijkstraMap::new(self.map.width, self.map.height, &map_starts , &self.map, 200.0);
         let mut exit_tile = (0, 0.0f32);
         for (i, tile) in self.map.tiles.iter_mut().enumerate() {
@@ -159,8 +159,8 @@ Since we're re-using the exact code from Cellular Automata, we should take the c
 /// Searches a map, removes unreachable areas and returns the most distant tile.
 pub fn remove_unreachable_areas_returning_most_distant(map : &mut Map, start_idx : usize) -> usize {
     map.populate_blocked();
-    let map_starts : Vec<i32> = vec![start_idx as i32];
-    let dijkstra_map = rltk::DijkstraMap::new(map.width, map.height, &map_starts , map, 200.0);
+    let map_starts : Vec<usize> = vec![start_idx];
+    let dijkstra_map = rltk::DijkstraMap::new(map.width as usize, map.height as usize, &map_starts , map, 200.0);
     let mut exit_tile = (0, 0.0f32);
     for (i, tile) in map.tiles.iter_mut().enumerate() {
         if *tile == TileType::Floor {

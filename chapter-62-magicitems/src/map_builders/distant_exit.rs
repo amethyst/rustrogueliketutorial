@@ -22,8 +22,8 @@ impl DistantExit {
             starting_pos.y
         );
         build_data.map.populate_blocked();
-        let map_starts : Vec<i32> = vec![start_idx as i32];
-        let dijkstra_map = rltk::DijkstraMap::new(build_data.map.width, build_data.map.height, &map_starts , &build_data.map, 3000.0);
+        let map_starts : Vec<usize> = vec![start_idx];
+        let dijkstra_map = rltk::DijkstraMap::new(build_data.map.width as usize, build_data.map.height as usize, &map_starts , &build_data.map, 3000.0);
         let mut exit_tile = (0, 0.0f32);
         for (i, tile) in build_data.map.tiles.iter_mut().enumerate() {
             if *tile == TileType::Floor {

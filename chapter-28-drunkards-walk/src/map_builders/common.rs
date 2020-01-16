@@ -34,8 +34,8 @@ pub fn apply_vertical_tunnel(map : &mut Map, y1:i32, y2:i32, x:i32) {
 /// Searches a map, removes unreachable areas and returns the most distant tile.
 pub fn remove_unreachable_areas_returning_most_distant(map : &mut Map, start_idx : usize) -> usize {
     map.populate_blocked();
-    let map_starts : Vec<i32> = vec![start_idx as i32];
-    let dijkstra_map = rltk::DijkstraMap::new(map.width, map.height, &map_starts , map, 200.0);
+    let map_starts : Vec<usize> = vec![start_idx];
+    let dijkstra_map = rltk::DijkstraMap::new(map.width as usize, map.height as usize, &map_starts , map, 200.0);
     let mut exit_tile = (0, 0.0f32);
     for (i, tile) in map.tiles.iter_mut().enumerate() {
         if *tile == TileType::Floor {

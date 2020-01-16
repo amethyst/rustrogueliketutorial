@@ -984,7 +984,7 @@ impl<'a> System<'a> for AnimalAI {
             if !run_away_from.is_empty() {
                 let my_idx = map.xy_idx(pos.x, pos.y);
                 map.populate_blocked();
-                let flee_map = rltk::DijkstraMap::new(map.width, map.height, &run_away_from, &*map, 100.0);
+                let flee_map = rltk::DijkstraMap::new(map.width as usize, map.height as usize, &run_away_from, &*map, 100.0);
                 let flee_target = rltk::DijkstraMap::find_highest_exit(&flee_map, my_idx as i32, &*map);
                 if let Some(flee_target) = flee_target {
                     if !map.blocked[flee_target as usize] {
@@ -1024,7 +1024,7 @@ impl<'a> System<'a> for AnimalAI {
             if !run_towards.is_empty() && !attacked {
                 let my_idx = map.xy_idx(pos.x, pos.y);
                 map.populate_blocked();
-                let chase_map = rltk::DijkstraMap::new(map.width, map.height, &run_towards, &*map, 100.0);
+                let chase_map = rltk::DijkstraMap::new(map.width as usize, map.height as usize, &run_towards, &*map, 100.0);
                 let chase_target = rltk::DijkstraMap::find_lowest_exit(&chase_map, my_idx as i32, &*map);
                 if let Some(chase_target) = chase_target {
                     if !map.blocked[chase_target as usize] {
