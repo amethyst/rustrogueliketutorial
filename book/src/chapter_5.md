@@ -122,7 +122,7 @@ There's changes in `main` and `player`, too - see the example source for all the
 
 # The field-of-view component
 
-Not just the player has limited visibility! Eventually, we'll want monsters to consider what they can see, too. So, since its reusable code, we'll make a `Viewshed` component. (I like the word *viewshed*; it comes from the cartography world - literally "what can I see from here?" - and perfectly describes out problem). We'll give each entity that has a *Viewshed* a list of tile indices they can see. In `components.rs` we add:
+Not just the player has limited visibility! Eventually, we'll want monsters to consider what they can see, too. So, since its reusable code, we'll make a `Viewshed` component. (I like the word *viewshed*; it comes from the cartography world - literally "what can I see from here?" - and perfectly describes our problem). We'll give each entity that has a *Viewshed* a list of tile indices they can see. In `components.rs` we add:
 
 ```rust
 #[derive(Component)]
