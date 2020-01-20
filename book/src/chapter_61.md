@@ -249,7 +249,7 @@ We've used *intent* based components for most other actions - movement should be
 ```rust
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct ApplyMove {
-    pub dest_idx : i32
+    pub dest_idx : usize
 }
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
@@ -291,7 +291,7 @@ impl<'a> System<'a> for MovementSystem {
         // Apply teleports
         for (entity, teleport) in (&entities, &apply_teleport).join() {
             if teleport.dest_depth == map.depth {
-                apply_move.insert(entity, ApplyMove{ dest_idx: map.xy_idx(teleport.dest_x, teleport.dest_y) as i32 })
+                apply_move.insert(entity, ApplyMove{ dest_idx: map.xy_idx(teleport.dest_x, teleport.dest_y) })
                     .expect("Unable to insert");
             } else if entity == *player_entity {
                 // It's the player - we have a mess
@@ -320,8 +320,8 @@ impl<'a> System<'a> for MovementSystem {
                 map.blocked[start_idx] = false;
                 map.blocked[dest_idx] = true;
             }
-            pos.x = movement.dest_idx % map.width;
-            pos.y = movement.dest_idx / map.width;
+            pos.x = movement.dest_idx as i32 % map.width;
+            pos.y = movement.dest_idx as i32 / map.width;
             if let Some(vs) = viewsheds.get_mut(entity) {
                 vs.dirty = true;
             }
@@ -415,7 +415,7 @@ impl<'a> System<'a> for MovementSystem {
         // Apply teleports
         for (entity, teleport) in (&entities, &apply_teleport).join() {
             if teleport.dest_depth == map.depth {
-                apply_move.insert(entity, ApplyMove{ dest_idx: map.xy_idx(teleport.dest_x, teleport.dest_y) as i32 })
+                apply_move.insert(entity, ApplyMove{ dest_idx: map.xy_idx(teleport.dest_x, teleport.dest_y) })
                     .expect("Unable to insert");
             } else if entity == *player_entity {
                 *runstate = RunState::TeleportingToOtherLevel{ x: teleport.dest_x, y: teleport.dest_y, depth: teleport.dest_depth };

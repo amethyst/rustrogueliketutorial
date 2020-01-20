@@ -44,7 +44,7 @@ impl<'a> System<'a> for DefaultMoveAI {
                     if x > 0 && x < map.width-1 && y > 0 && y < map.height-1 {
                         let dest_idx = map.xy_idx(x, y);
                         if !map.blocked[dest_idx] {
-                            apply_move.insert(entity, ApplyMove{ dest_idx : dest_idx as i32 })
+                            apply_move.insert(entity, ApplyMove{ dest_idx : dest_idx })
                                 .expect("Unable to insert");
                             turn_done.push(entity);
                         }

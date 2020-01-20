@@ -95,7 +95,7 @@ pub struct Faction {
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct ApplyMove {
-    pub dest_idx : i32
+    pub dest_idx : usize
 }
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
