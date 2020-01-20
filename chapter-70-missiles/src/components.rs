@@ -128,14 +128,14 @@ pub struct WantsToApproach {
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct WantsToFlee {
-    pub indices : Vec<i32>
+    pub indices : Vec<usize>
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq, Hash)]
 pub enum Movement {
     Static,
     Random,
-    RandomWaypoint{ path : Option<Vec<i32>> }
+    RandomWaypoint{ path : Option<Vec<usize>> }
 }
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]

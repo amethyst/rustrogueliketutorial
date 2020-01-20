@@ -63,8 +63,8 @@ impl<'a> System<'a> for DefaultMoveAI {
                         if path.len()>1 {
                             if !map.blocked[path[1] as usize] {
                                 map.blocked[idx] = false;
-                                pos.x = path[1] % map.width;
-                                pos.y = path[1] / map.width;
+                                pos.x = path[1] as i32 % map.width;
+                                pos.y = path[1] as i32 / map.width;
                                 entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
                                 idx = map.xy_idx(pos.x, pos.y);
                                 map.blocked[idx] = true;
@@ -81,8 +81,8 @@ impl<'a> System<'a> for DefaultMoveAI {
                         let idx = map.xy_idx(target_x, target_y);
                         if tile_walkable(map.tiles[idx]) {
                             let path = rltk::a_star_search(
-                                map.xy_idx(pos.x, pos.y) as i32,
-                                map.xy_idx(target_x, target_y) as i32,
+                                map.xy_idx(pos.x, pos.y),
+                                map.xy_idx(target_x, target_y),
                                 &mut *map
                             );
                             if path.success && path.steps.len()>1 {

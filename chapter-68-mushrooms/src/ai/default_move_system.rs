@@ -71,8 +71,8 @@ impl<'a> System<'a> for DefaultMoveAI {
                         let idx = map.xy_idx(target_x, target_y);
                         if tile_walkable(map.tiles[idx]) {
                             let path = rltk::a_star_search(
-                                map.xy_idx(pos.x, pos.y) as i32,
-                                map.xy_idx(target_x, target_y) as i32,
+                                map.xy_idx(pos.x, pos.y),
+                                map.xy_idx(target_x, target_y),
                                 &mut *map
                             );
                             if path.success && path.steps.len()>1 {

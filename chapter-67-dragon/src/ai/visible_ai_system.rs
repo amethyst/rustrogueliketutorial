@@ -33,7 +33,7 @@ impl<'a> System<'a> for VisibleAI {
             if entity != *player {
                 let my_idx = map.xy_idx(pos.x, pos.y);
                 let mut reactions : Vec<(usize, Reaction, Entity)> = Vec::new();
-                let mut flee : Vec<i32> = Vec::new();
+                let mut flee : Vec<usize> = Vec::new();
                 for visible_tile in viewshed.visible_tiles.iter() {
                     let idx = map.xy_idx(visible_tile.x, visible_tile.y);
                     if my_idx != idx {
@@ -73,7 +73,7 @@ impl<'a> System<'a> for VisibleAI {
                             }
                         }
                         Reaction::Flee => {
-                            flee.push(reaction.0 as i32);
+                            flee.push(reaction.0);
                         }
                         _ => {}
                     }

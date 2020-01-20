@@ -855,7 +855,7 @@ pub struct WantsToApproach {
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct WantsToFlee {
-    pub indices : Vec<i32>
+    pub indices : Vec<usize>
 }
 ```
 
@@ -891,7 +891,7 @@ impl<'a> System<'a> for VisibleAI {
             if entity != *player {
                 let my_idx = map.xy_idx(pos.x, pos.y);
                 let mut reactions : Vec<(usize, Reaction)> = Vec::new();
-                let mut flee : Vec<i32> = Vec::new();
+                let mut flee : Vec<usize> = Vec::new();
                 for visible_tile in viewshed.visible_tiles.iter() {
                     let idx = map.xy_idx(visible_tile.x, visible_tile.y);
                     if my_idx != idx {
@@ -907,7 +907,7 @@ impl<'a> System<'a> for VisibleAI {
                             done = true;
                         }
                         Reaction::Flee => {
-                            flee.push(reaction.0 as i32);
+                            flee.push(reaction.0);
                         }
                         _ => {}
                     }
@@ -1252,7 +1252,7 @@ We mentioned that we'd like townsfolk to mill about, but not randomly. Open up `
 pub enum Movement { 
     Static, 
     Random,
-    RandomWaypoint{ path : Option<Vec<i32>> }
+    RandomWaypoint{ path : Option<Vec<usize>> }
 }
 ```
 
@@ -1377,7 +1377,7 @@ impl<'a> System<'a> for VisibleAI {
             if entity != *player {
                 let my_idx = map.xy_idx(pos.x, pos.y);
                 let mut reactions : Vec<(usize, Reaction, Entity)> = Vec::new();
-                let mut flee : Vec<i32> = Vec::new();
+                let mut flee : Vec<usize> = Vec::new();
                 for visible_tile in viewshed.visible_tiles.iter() {
                     let idx = map.xy_idx(visible_tile.x, visible_tile.y);
                     if my_idx != idx {
@@ -1394,7 +1394,7 @@ impl<'a> System<'a> for VisibleAI {
                             done = true;
                         }
                         Reaction::Flee => {
-                            flee.push(reaction.0 as i32);
+                            flee.push(reaction.0);
                         }
                         _ => {}
                     }
