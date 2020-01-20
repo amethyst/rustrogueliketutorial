@@ -138,6 +138,14 @@ impl BaseMap for Map {
         self.tiles[idx] == TileType::Wall
     }
 
+
+    fn get_pathing_distance(&self, idx1:usize, idx2:usize) -> f32 {
+        let w = self.width as usize;
+        let p1 = Point::new(idx1 % w, idx1 / w);
+        let p2 = Point::new(idx2 % w, idx2 / w);
+        rltk::DistanceAlg::Pythagoras.distance2d(p1, p2)
+    }
+
     fn get_available_exits(&self, idx:usize) -> Vec<(usize, f32)> {
         let mut exits : Vec<(usize, f32)> = Vec::new();
         let x = idx as i32 % self.width;
