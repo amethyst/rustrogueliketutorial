@@ -29,14 +29,14 @@ impl<'a> System<'a> for AnimalAI {
 
         // Herbivores run away a lot
         for (entity, mut viewshed, _herbivore, mut pos) in (&entities, &mut viewshed, &herbivore, &mut position).join() {
-            let mut run_away_from : Vec<i32> = Vec::new();
+            let mut run_away_from : Vec<usize> = Vec::new();
             for other_tile in viewshed.visible_tiles.iter() {
                 let view_idx = map.xy_idx(other_tile.x, other_tile.y);
                 if view_idx > 1 && view_idx < map.tiles.len() {
                     for other_entity in map.tile_content[view_idx].iter() {
                         // They don't run away from items
                         if item.get(*other_entity).is_none() {
-                            run_away_from.push(view_idx as i32);
+                            run_away_from.push(view_idx);
                         }
                     }
                 }
