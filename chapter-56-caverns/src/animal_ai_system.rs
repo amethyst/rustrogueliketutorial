@@ -46,14 +46,14 @@ impl<'a> System<'a> for AnimalAI {
                 let my_idx = map.xy_idx(pos.x, pos.y);
                 map.populate_blocked();
                 let flee_map = rltk::DijkstraMap::new(map.width as usize, map.height as usize, &run_away_from, &*map, 100.0);
-                let flee_target = rltk::DijkstraMap::find_highest_exit(&flee_map, my_idx as i32, &*map);
+                let flee_target = rltk::DijkstraMap::find_highest_exit(&flee_map, my_idx, &*map);
                 if let Some(flee_target) = flee_target {
                     if !map.blocked[flee_target as usize] {
                         map.blocked[my_idx] = false;
                         map.blocked[flee_target as usize] = true;
                         viewshed.dirty = true;
-                        pos.x = flee_target % map.width;
-                        pos.y = flee_target / map.width;
+                        pos.x = flee_target as i32 % map.width;
+                        pos.y = flee_target as i32 / map.width;
                         entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
                     }
                 }
@@ -62,7 +62,7 @@ impl<'a> System<'a> for AnimalAI {
 
         // Carnivores just want to eat everything
         for (entity, mut viewshed, _carnivore, mut pos) in (&entities, &mut viewshed, &carnivore, &mut position).join() {
-            let mut run_towards : Vec<i32> = Vec::new();
+            let mut run_towards : Vec<usize> = Vec::new();
             let mut attacked = false;
             for other_tile in viewshed.visible_tiles.iter() {
                 let view_idx = map.xy_idx(other_tile.x, other_tile.y);
@@ -77,7 +77,7 @@ impl<'a> System<'a> for AnimalAI {
                                 wants_to_melee.insert(entity, WantsToMelee{ target: *other_entity }).expect("Unable to insert attack");
                                 attacked = true;
                             } else {
-                                run_towards.push(view_idx as i32);
+                                run_towards.push(view_idx);
                             }
                         }
                     }
@@ -88,14 +88,14 @@ impl<'a> System<'a> for AnimalAI {
                 let my_idx = map.xy_idx(pos.x, pos.y);
                 map.populate_blocked();
                 let chase_map = rltk::DijkstraMap::new(map.width as usize, map.height as usize, &run_towards, &*map, 100.0);
-                let chase_target = rltk::DijkstraMap::find_lowest_exit(&chase_map, my_idx as i32, &*map);
+                let chase_target = rltk::DijkstraMap::find_lowest_exit(&chase_map, my_idx, &*map);
                 if let Some(chase_target) = chase_target {
                     if !map.blocked[chase_target as usize] {
                         map.blocked[my_idx] = false;
                         map.blocked[chase_target as usize] = true;
                         viewshed.dirty = true;
-                        pos.x = chase_target % map.width;
-                        pos.y = chase_target / map.width;
+                        pos.x = chase_target as i32 % map.width;
+                        pos.y = chase_target as i32 / map.width;
                         entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
                     }
                 }

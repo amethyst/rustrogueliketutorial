@@ -279,20 +279,20 @@ impl YellowBrickRoad {
 
     fn build(&mut self, rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
         let starting_pos = build_data.starting_position.as_ref().unwrap().clone();
-        let start_idx = build_data.map.xy_idx(starting_pos.x, starting_pos.y) as i32;
+        let start_idx = build_data.map.xy_idx(starting_pos.x, starting_pos.y);
 
         let (end_x, end_y) = self.find_exit(build_data, build_data.map.width - 2, build_data.map.height / 2);
         let end_idx = build_data.map.xy_idx(end_x, end_y);
         build_data.map.tiles[end_idx] = TileType::DownStairs;
 
         build_data.map.populate_blocked();
-        let path = rltk::a_star_search(start_idx, end_idx as i32, &mut build_data.map);
+        let path = rltk::a_star_search(start_idx, end_idx, &mut build_data.map);
         //if !path.success {
         //    panic!("No valid path for the road");
         //}
         for idx in path.steps.iter() {
-            let x = idx % build_data.map.width;
-            let y = idx / build_data.map.width;
+            let x = *idx as i32 % build_data.map.width;
+            let y = *idx as i32 / build_data.map.width;
             self.paint_road(build_data, x, y);
             self.paint_road(build_data, x-1, y);
             self.paint_road(build_data, x+1, y);
@@ -333,7 +333,7 @@ build_data.take_snapshot();
 
 let (stream_x, stream_y) = self.find_exit(build_data, stream_startx, stream_starty);
 let stream_idx = build_data.map.xy_idx(stream_x, stream_y) as usize;
-let stream = rltk::a_star_search(stairs_idx as i32, stream_idx as i32, &mut build_data.map);
+let stream = rltk::a_star_search(stairs_idx, stream_idx, &mut build_data.map);
 for tile in stream.steps.iter() {
     if build_data.map.tiles[*tile as usize] == TileType::Floor {
         build_data.map.tiles[*tile as usize] = TileType::ShallowWater;
@@ -970,13 +970,13 @@ impl<'a> System<'a> for AnimalAI {
 
         // Herbivores run away a lot
         for (entity, mut viewshed, _herbivore, mut pos) in (&entities, &mut viewshed, &herbivore, &mut position).join() {
-            let mut run_away_from : Vec<i32> = Vec::new();
+            let mut run_away_from : Vec<usize> = Vec::new();
             for other_tile in viewshed.visible_tiles.iter() {
                 let view_idx = map.xy_idx(other_tile.x, other_tile.y);
                 for other_entity in map.tile_content[view_idx].iter() {
                     // They don't run away from items
                     if item.get(*other_entity).is_none() {
-                        run_away_from.push(view_idx as i32);
+                        run_away_from.push(view_idx);
                     }
                 }
             }
@@ -985,14 +985,14 @@ impl<'a> System<'a> for AnimalAI {
                 let my_idx = map.xy_idx(pos.x, pos.y);
                 map.populate_blocked();
                 let flee_map = rltk::DijkstraMap::new(map.width as usize, map.height as usize, &run_away_from, &*map, 100.0);
-                let flee_target = rltk::DijkstraMap::find_highest_exit(&flee_map, my_idx as i32, &*map);
+                let flee_target = rltk::DijkstraMap::find_highest_exit(&flee_map, my_idx, &*map);
                 if let Some(flee_target) = flee_target {
                     if !map.blocked[flee_target as usize] {
                         map.blocked[my_idx] = false;
                         map.blocked[flee_target as usize] = true;
                         viewshed.dirty = true;
-                        pos.x = flee_target % map.width;
-                        pos.y = flee_target / map.width;
+                        pos.x = flee_target as i32 % map.width;
+                        pos.y = flee_target as i32 / map.width;
                         entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
                     }
                 }
@@ -1001,7 +1001,7 @@ impl<'a> System<'a> for AnimalAI {
 
         // Carnivores just want to eat everything
         for (entity, mut viewshed, _carnivore, mut pos) in (&entities, &mut viewshed, &carnivore, &mut position).join() {
-            let mut run_towards : Vec<i32> = Vec::new();
+            let mut run_towards : Vec<usize> = Vec::new();
             let mut attacked = false;
             for other_tile in viewshed.visible_tiles.iter() {
                 let view_idx = map.xy_idx(other_tile.x, other_tile.y);
@@ -1015,7 +1015,7 @@ impl<'a> System<'a> for AnimalAI {
                             wants_to_melee.insert(entity, WantsToMelee{ target: *other_entity }).expect("Unable to insert attack");
                             attacked = true;
                         } else {
-                            run_towards.push(view_idx as i32);
+                            run_towards.push(view_idx);
                         }
                     }
                 }
@@ -1025,14 +1025,14 @@ impl<'a> System<'a> for AnimalAI {
                 let my_idx = map.xy_idx(pos.x, pos.y);
                 map.populate_blocked();
                 let chase_map = rltk::DijkstraMap::new(map.width as usize, map.height as usize, &run_towards, &*map, 100.0);
-                let chase_target = rltk::DijkstraMap::find_lowest_exit(&chase_map, my_idx as i32, &*map);
+                let chase_target = rltk::DijkstraMap::find_lowest_exit(&chase_map, my_idx, &*map);
                 if let Some(chase_target) = chase_target {
                     if !map.blocked[chase_target as usize] {
                         map.blocked[my_idx] = false;
                         map.blocked[chase_target as usize] = true;
                         viewshed.dirty = true;
-                        pos.x = chase_target % map.width;
-                        pos.y = chase_target / map.width;
+                        pos.x = chase_target as i32 % map.width;
+                        pos.y = chase_target as i32 / map.width;
                         entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
                     }
                 }

@@ -66,19 +66,19 @@ impl YellowBrickRoad {
 
     fn build(&mut self, rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
         let starting_pos = build_data.starting_position.as_ref().unwrap().clone();
-        let start_idx = build_data.map.xy_idx(starting_pos.x, starting_pos.y) as i32;
+        let start_idx = build_data.map.xy_idx(starting_pos.x, starting_pos.y);
 
         let (end_x, end_y) = self.find_exit(build_data, build_data.map.width - 2, build_data.map.height / 2);
         let end_idx = build_data.map.xy_idx(end_x, end_y);
 
         build_data.map.populate_blocked();
-        let path = rltk::a_star_search(start_idx, end_idx as i32, &mut build_data.map);
+        let path = rltk::a_star_search(start_idx, end_idx, &mut build_data.map);
         if !path.success {
             panic!("No valid path for the road");
         }
         for idx in path.steps.iter() {
-            let x = idx % build_data.map.width;
-            let y = idx / build_data.map.width;
+            let x = *idx as i32 % build_data.map.width;
+            let y = *idx as i32 / build_data.map.width;
             self.paint_road(build_data, x, y);
             self.paint_road(build_data, x-1, y);
             self.paint_road(build_data, x+1, y);
@@ -102,7 +102,7 @@ impl YellowBrickRoad {
 
         let (stream_x, stream_y) = self.find_exit(build_data, stream_startx, stream_starty);
         let stream_idx = build_data.map.xy_idx(stream_x, stream_y) as usize;
-        let stream = rltk::a_star_search(stairs_idx as i32, stream_idx as i32, &mut build_data.map);
+        let stream = rltk::a_star_search(stairs_idx, stream_idx, &mut build_data.map);
         for tile in stream.steps.iter() {
             if build_data.map.tiles[*tile as usize] == TileType::Floor {
                 build_data.map.tiles[*tile as usize] = TileType::ShallowWater;
