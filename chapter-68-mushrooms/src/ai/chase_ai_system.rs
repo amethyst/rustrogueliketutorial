@@ -49,14 +49,14 @@ impl<'a> System<'a> for ChaseAI {
                 let mut map_copy = map.clone();
                 map_copy.populate_blocked_multi(size.x, size.y);
                 path = rltk::a_star_search(
-                    map_copy.xy_idx(pos.x, pos.y) as i32,
-                    map_copy.xy_idx(target_pos.0, target_pos.1) as i32,
+                    map_copy.xy_idx(pos.x, pos.y),
+                    map_copy.xy_idx(target_pos.0, target_pos.1),
                     &mut map_copy
                 );
             } else {
                 path = rltk::a_star_search(
-                    map.xy_idx(pos.x, pos.y) as i32,
-                    map.xy_idx(target_pos.0, target_pos.1) as i32,
+                    map.xy_idx(pos.x, pos.y),
+                    map.xy_idx(target_pos.0, target_pos.1),
                     &mut *map
                 );
             }
