@@ -23,7 +23,9 @@ enum TileType {
 }
 ```
 
-Notice that we've included some derived features (more usage of derive macros, this time built into Rust itself): `Copy` and `Clone` allow this to be used as a "value" type (that is, it just passes around the value instead of pointers), and `PartialEq` allows us to use `==` to see if two tile types match. If we *didn't* derive these features, `if tile_type == TileType::Wall` would fail to compile!
+Notice that we've included some derived features (more usage of derive macros, this time built into Rust itself): `Copy` and `Clone`. `Clone` adds a `.clone()` method to the type, allowing a copy to be made programmatically. `Copy` changes the default from *moving* the object on assignment to making a copy - so `tile1 = tile2` leaves both values valid and not in a "moved from" state.
+
+`PartialEq` allows us to use `==` to see if two tile types match. If we *didn't* derive these features, `if tile_type == TileType::Wall` would fail to compile!
 
 ## Building a simple map
 
