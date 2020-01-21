@@ -363,7 +363,7 @@ Again, this is pretty much a direct copy:
 let log = ecs.fetch::<GameLog>();
 let mut y = 46;
 for s in log.entries.iter() {
-    if y < 59 { ctx.print(2, y, &s.to_string()); }
+    if y < 59 { ctx.print(2, y, s); }
     y += 1;
 }
 ```
