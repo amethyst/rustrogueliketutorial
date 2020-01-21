@@ -25,7 +25,7 @@ use damage_system::DamageSystem;
 mod gui;
 mod gamelog;
 
-rltk::add_wasm_support!();
+
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { AwaitingInput, PreRun, PlayerTurn, MonsterTurn }

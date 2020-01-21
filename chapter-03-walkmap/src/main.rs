@@ -4,7 +4,7 @@ use specs::prelude::*;
 extern crate specs_derive;
 use std::cmp::{min, max};
 
-rltk::add_wasm_support!();
+
 
 #[derive(Component)]
 struct Position {

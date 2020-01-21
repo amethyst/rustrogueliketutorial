@@ -11,7 +11,7 @@ use player::*;
 mod rect;
 pub use rect::Rect;
 
-rltk::add_wasm_support!();
+
 
 pub struct State {
     pub ecs: World

@@ -33,7 +33,7 @@ pub mod saveload_system;
 pub mod random_table;
 pub mod particle_system;
 
-rltk::add_wasm_support!();
+
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { AwaitingInput,

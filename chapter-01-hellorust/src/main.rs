@@ -1,4 +1,3 @@
-rltk::add_wasm_support!();
 use rltk::{Rltk, GameState, Console};
 
 struct State {}

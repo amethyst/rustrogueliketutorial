@@ -8,7 +8,3 @@ edition = "2018"
 
 [dependencies]
 rltk = { git = "https://github.com/thebracket/rltk_rs", branch = "pedantry" }
-
-[target.'cfg(any(target_arch = "wasm32"))'.dependencies]
-web-sys = { version = "0.3", features=["console"] }
-wasm-bindgen = "0.2.58"

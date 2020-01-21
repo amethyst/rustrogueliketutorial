@@ -15,7 +15,7 @@ pub use rect::Rect;
 mod visibility_system;
 use visibility_system::VisibilitySystem;
 
-rltk::add_wasm_support!();
+
 
 pub struct State {
     pub ecs: World

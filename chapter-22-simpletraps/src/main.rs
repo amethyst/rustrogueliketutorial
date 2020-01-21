@@ -36,7 +36,7 @@ pub mod hunger_system;
 pub mod rex_assets;
 pub mod trigger_system;
 
-rltk::add_wasm_support!();
+
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { AwaitingInput,

@@ -37,7 +37,7 @@ pub mod rex_assets;
 pub mod trigger_system;
 pub mod map_builders;
 
-rltk::add_wasm_support!();
+
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { AwaitingInput,

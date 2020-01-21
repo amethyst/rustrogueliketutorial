@@ -45,7 +45,7 @@ pub mod animal_ai_system;
 #[macro_use]
 extern crate lazy_static;
 
-rltk::add_wasm_support!();
+
 
 const SHOW_MAPGEN_VISUALIZER : bool = false;
 

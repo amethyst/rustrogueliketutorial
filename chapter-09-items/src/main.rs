@@ -28,7 +28,7 @@ mod spawner;
 mod inventory_system;
 use inventory_system::{ ItemCollectionSystem, PotionUseSystem, ItemDropSystem };
 
-rltk::add_wasm_support!();
+
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { AwaitingInput, PreRun, PlayerTurn, MonsterTurn, ShowInventory, ShowDropItem }

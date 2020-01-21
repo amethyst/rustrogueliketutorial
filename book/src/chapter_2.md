@@ -602,7 +602,7 @@ use std::cmp::{max, min};
 #[macro_use]
 extern crate specs_derive;
 
-rltk::add_wasm_support!();
+
 
 #[derive(Component)]
 struct Position {

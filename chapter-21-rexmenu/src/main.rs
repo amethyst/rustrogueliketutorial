@@ -35,7 +35,7 @@ pub mod particle_system;
 pub mod hunger_system;
 pub mod rex_assets;
 
-rltk::add_wasm_support!();
+
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { AwaitingInput,
