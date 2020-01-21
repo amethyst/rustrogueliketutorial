@@ -34,6 +34,7 @@ The following people have contributed to this project:
 * [dethmuffin](https://github.com/dethmuffin) pointed out an inconsistency in chapter 9, in the new `ConvertSaveLoad` code. 
 * Reddit user u/Koavf asked me to clarify the licensing for the project.
 * [Till Arnold](https://github.com/tillarnold) fixed a small typo in chapter 5.
+* [pk](https://github.com/pkrasam) helped remove some unused variable warnings.
 
 ## Supporters
 
