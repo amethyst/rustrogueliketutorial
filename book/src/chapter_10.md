@@ -178,7 +178,7 @@ RunState::ShowInventory => {
 So now in `main.rs`, where we match the appropriate game mode, we can stub in:
 ```rust
 RunState::ShowTargeting{range, item} => {
-    let target = gui::ranged_target(self, ctx, range, item);
+    let target = gui::ranged_target(self, ctx, range);
 }
 ```
 
