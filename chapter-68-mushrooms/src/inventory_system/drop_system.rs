@@ -35,8 +35,7 @@ impl<'a> System<'a> for ItemDropSystem {
             dirty.insert(entity, EquipmentChanged{}).expect("Unable to insert");
 
             if entity == *player_entity {
-                gamelog.entries.insert(
-                    0, 
+                gamelog.entries.push(
                     format!(
                         "You pick up the {}.", 
                         super::obfuscate_name(to_drop.item, &names, &magic_items, &obfuscated_names, &dm)
