@@ -257,7 +257,7 @@ match item_equippable {
             if already_equipped.owner == target && already_equipped.slot == target_slot {
                 to_unequip.push(item_entity);
                 if target == *player_entity {
-                    gamelog.entries.insert(0, format!("You unequip {}.", name.name));
+                    gamelog.entries.push(format!("You unequip {}.", name.name));
                 }
             }
         }
@@ -270,7 +270,7 @@ match item_equippable {
         equipped.insert(useitem.item, Equipped{ owner: target, slot: target_slot }).expect("Unable to insert equipped component");
         backpack.remove(useitem.item);
         if target == *player_entity {
-            gamelog.entries.insert(0, format!("You equip {}.", names.get(useitem.item).unwrap().name));
+            gamelog.entries.push(format!("You equip {}.", names.get(useitem.item).unwrap().name));
         }
     }
 }

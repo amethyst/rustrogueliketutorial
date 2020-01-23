@@ -149,7 +149,7 @@ impl<'a> System<'a> for ItemRemoveSystem {
 
         for (entity, to_remove) in (&entities, &wants_remove).join() {
             if cursed.get(to_remove.item).is_some() {
-                gamelog.entries.insert(0, format!("You cannot remove {}, it is cursed", names.get(to_remove.item).unwrap().name));
+                gamelog.entries.push(format!("You cannot remove {}, it is cursed", names.get(to_remove.item).unwrap().name));
             } else {
                 equipped.remove(to_remove.item);
                 backpack.insert(to_remove.item, InBackpack{ owner: entity }).expect("Unable to insert backpack");
@@ -204,7 +204,7 @@ impl<'a> System<'a> for ItemEquipOnUse {
                     if already_equipped.owner == target && already_equipped.slot == target_slot {
                         if cursed.get(item_entity).is_some() {
                             can_equip = false;
-                            gamelog.entries.insert(0, format!("You cannot unequip {}, it is cursed.", name.name)); 
+                            gamelog.entries.push(format!("You cannot unequip {}, it is cursed.", name.name)); 
                         } else {
                             to_unequip.push(item_entity);
                             if target == *player_entity {
@@ -228,14 +228,14 @@ impl<'a> System<'a> for ItemEquipOnUse {
                     }
 
                     for le in log_entries.iter() {
-                        gamelog.entries.insert(0, le.to_string());
+                        gamelog.entries.push(le.to_string());
                     }
 
                     // Wield the item
                     equipped.insert(useitem.item, Equipped{ owner: target, slot: target_slot }).expect("Unable to insert equipped component");
                     backpack.remove(useitem.item);
                     if target == *player_entity {
-                        gamelog.entries.insert(0, format!("You equip {}.", names.get(useitem.item).unwrap().name));
+                        gamelog.entries.push(format!("You equip {}.", names.get(useitem.item).unwrap().name));
                     }
                 }
 

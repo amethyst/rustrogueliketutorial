@@ -88,7 +88,7 @@ In `main.rs` we add a `mod gamelog;` line, and insert it as a resource with `gs.
 let log = ecs.fetch::<GameLog>();
 
 let mut y = 44;
-for s in log.entries.iter() {
+for s in log.entries.iter().rev() {
     if y < 49 { ctx.print(2, y, s); }
     y += 1;
 }

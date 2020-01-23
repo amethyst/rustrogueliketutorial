@@ -285,7 +285,7 @@ match item_edible {
         if let Some(hc) = hc {
             hc.state = HungerState::WellFed;
             hc.duration = 20;
-            gamelog.entries.insert(0, format!("You eat the {}.", names.get(useitem.item).unwrap().name));
+            gamelog.entries.push(format!("You eat the {}.", names.get(useitem.item).unwrap().name));
         }
     }
 }

@@ -557,7 +557,7 @@ In `main.rs` (line 345), we reference the player's health - they've changed dung
 ```rust
 let player_entity = self.ecs.fetch::<Entity>();
 let mut gamelog = self.ecs.fetch_mut::<gamelog::GameLog>();
-gamelog.entries.insert(0, "You descend to the next level.".to_string());
+gamelog.entries.push("You descend to the next level.".to_string());
 ```
 
 `gui.rs` is an easy fix. Replace the import for `CombatStats` with `Pools`; here's the relevant section:

@@ -104,7 +104,7 @@ fn use_spell_hotkey(gs: &mut State, key: i32) -> RunState {
             // TODO: Cast the Spell
         } else {
             let mut gamelog = gs.ecs.fetch_mut::<GameLog>();
-            gamelog.entries.insert(0, "You don't have enough mana to cast that!".to_string());
+            gamelog.entries.push("You don't have enough mana to cast that!".to_string());
         }
     }
 
@@ -311,7 +311,7 @@ fn use_spell_hotkey(gs: &mut State, key: i32) -> RunState {
             }
         } else {
             let mut gamelog = gs.ecs.fetch_mut::<GameLog>();
-            gamelog.entries.insert(0, "You don't have enough mana to cast that!".to_string());
+            gamelog.entries.push("You don't have enough mana to cast that!".to_string());
         }
     }
 

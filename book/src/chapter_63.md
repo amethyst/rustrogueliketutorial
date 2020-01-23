@@ -68,7 +68,7 @@ impl<'a> System<'a> for ItemCollectionSystem {
             dirty.insert(pickup.collected_by, EquipmentChanged{}).expect("Unable to insert");
 
             if pickup.collected_by == *player_entity {
-                gamelog.entries.insert(0, format!("You pick up the {}.", names.get(pickup.item).unwrap().name));
+                gamelog.entries.push(format!("You pick up the {}.", names.get(pickup.item).unwrap().name));
             }
         }
 
@@ -659,7 +659,7 @@ impl<'a> System<'a> for ItemEquipOnUse {
                     if already_equipped.owner == target && already_equipped.slot == target_slot {
                         to_unequip.push(item_entity);
                         if target == *player_entity {
-                            gamelog.entries.insert(0, format!("You unequip {}.", name.name));
+                            gamelog.entries.push(format!("You unequip {}.", name.name));
                         }
                     }
                 }
@@ -672,7 +672,7 @@ impl<'a> System<'a> for ItemEquipOnUse {
                 equipped.insert(useitem.item, Equipped{ owner: target, slot: target_slot }).expect("Unable to insert equipped component");
                 backpack.remove(useitem.item);
                 if target == *player_entity {
-                    gamelog.entries.insert(0, format!("You equip {}.", names.get(useitem.item).unwrap().name));
+                    gamelog.entries.push(format!("You equip {}.", names.get(useitem.item).unwrap().name));
                 }
 
                 // Done with item
@@ -888,7 +888,7 @@ fn event_trigger(creator : Option<Entity>, entity: Entity, targets : &Targets, e
     if ecs.read_storage::<ProvidesFood>().get(entity).is_some() {
         add_effect(creator, EffectType::WellFed, targets.clone());
         let names = ecs.read_storage::<Name>();
-        gamelog.entries.insert(0, format!("You eat the {}.", names.get(entity).unwrap().name));
+        gamelog.entries.push(format!("You eat the {}.", names.get(entity).unwrap().name));
     }
 }
 ```
@@ -903,7 +903,7 @@ Magic Mapping is a bit of a special case, because of the need to switch back to 
 // Magic mapper
 if ecs.read_storage::<MagicMapper>().get(entity).is_some() {
     let mut runstate = ecs.fetch_mut::<RunState>();
-    gamelog.entries.insert(0, "The map is revealed to you!".to_string());
+    gamelog.entries.push("The map is revealed to you!".to_string());
     *runstate = RunState::MagicMapReveal{ row : 0};
 }
 ```
@@ -919,9 +919,9 @@ Town Portals are also a bit of a special case, so we'll also handle them in `eve
 if ecs.read_storage::<TownPortal>().get(entity).is_some() {
     let map = ecs.fetch::<Map>();
     if map.depth == 1 {
-        gamelog.entries.insert(0, "You are already in town, so the scroll does nothing.".to_string());
+        gamelog.entries.push("You are already in town, so the scroll does nothing.".to_string());
     } else {
-        gamelog.entries.insert(0, "You are telported back to town!".to_string());
+        gamelog.entries.push("You are telported back to town!".to_string());
         let mut runstate = ecs.fetch_mut::<RunState>();
         *runstate = RunState::TownPortal;
     }
@@ -1318,14 +1318,14 @@ fn event_trigger(creator : Option<Entity>, entity: Entity, targets : &Targets, e
     if ecs.read_storage::<ProvidesFood>().get(entity).is_some() {
         add_effect(creator, EffectType::WellFed, targets.clone());
         let names = ecs.read_storage::<Name>();
-        gamelog.entries.insert(0, format!("You eat the {}.", names.get(entity).unwrap().name));
+        gamelog.entries.push(format!("You eat the {}.", names.get(entity).unwrap().name));
         did_something = true;
     }
 
     // Magic mapper
     if ecs.read_storage::<MagicMapper>().get(entity).is_some() {
         let mut runstate = ecs.fetch_mut::<RunState>();
-        gamelog.entries.insert(0, "The map is revealed to you!".to_string());
+        gamelog.entries.push("The map is revealed to you!".to_string());
         *runstate = RunState::MagicMapReveal{ row : 0};
         did_something = true;
     }
@@ -1334,9 +1334,9 @@ fn event_trigger(creator : Option<Entity>, entity: Entity, targets : &Targets, e
     if ecs.read_storage::<TownPortal>().get(entity).is_some() {
         let map = ecs.fetch::<Map>();
         if map.depth == 1 {
-            gamelog.entries.insert(0, "You are already in town, so the scroll does nothing.".to_string());
+            gamelog.entries.push("You are already in town, so the scroll does nothing.".to_string());
         } else {
-            gamelog.entries.insert(0, "You are telported back to town!".to_string());
+            gamelog.entries.push("You are telported back to town!".to_string());
             let mut runstate = ecs.fetch_mut::<RunState>();
             *runstate = RunState::TownPortal;
             did_something = true;
