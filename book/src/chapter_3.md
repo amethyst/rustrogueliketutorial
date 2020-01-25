@@ -80,7 +80,7 @@ There's a fair amount of syntax that we haven't encountered before here, so lets
 3. `let mut map = vec![TileType::Floor; 80*50];` is a confusing looking statement! Lets break it down:
     1. `let mut map` is saying "make a new variable" (`let`), "let me change it" (`mut`) and call it "map".
     2. `vec!` is a *macro*, another one build into the Rust standard library. The exclamation mark is Rust's way of saying "this is a procedural macro" (as opposed to a derive macro, like we've seen before). Procedural macros run like a function - they define a *procedure*, they just greatly reduce your typing.
-    3. Macros take their parameters in square brackets.
+    3. The `vec!` macro takes its parameters in square brackets.
     4. The first parameter is the *value* for each element of the new vector. In this case, we're setting every entry we create to be a `Floor` (from the `TileType` enumeration).
     5. The second parameter is how many tiles we should create. They will all be set to the value we set above. In this case, our map is 80x50 tiles (4,000 tiles - but we'll let the compiler do the math for us!). So we need to make 4,000 tiles.
     6. You could have replaced the `vec!` call with `for _i in 0..4000 { map.push(TileType::Floor); }`. In fact, that's pretty much what the macro did for you - but it's definitely less typing to have the macro do it for you!
