@@ -198,7 +198,7 @@ Uh oh, there's some new stuff here:
 * We set `x` to be *our* `column` value, minus the `column` value of the cell we are pointing at. The `(*(next)).column` is *horrible* syntax, and should discourage anyone from using pointers (I think that's the point). The first parentheses indicate that we're modifying the type; the `*` dereferences the pointer encased in the final set of parentheses. Since we're changing a value pointed to by a pointer, this is inherently *unsafe* (and makes the function not compile if we don't use the `unsafe` flag), and also means: *BE REALLY CAREFUL*.
 * We do the same with `y` - but with `row` values.
 * If `x` is equal to 1, then the pointer's column must be greater than our column value. In other words, the `next` cell is to the *right* of our current location. So we remove the wall to the right.
-* Likewise, if `x` is `-1`, then we must be going *left* - so we remove the wall to the right.
+* Likewise, if `x` is `-1`, then we must be going *left* - so we remove the wall to the left.
 * Once again, if `y` is `1`, we must be going up. So we remove the walls to the top.
 * Finally, if `y` is `-1`, we must be going down - so we remove the walls below us.
 
