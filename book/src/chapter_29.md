@@ -168,37 +168,35 @@ impl Cell {
 This is a simple constructor: it makes a cell with walls in each direction, and not previously visited. Cells also define a function called `remove_walls`:
 
 ```rust
-unsafe fn remove_walls(&mut self, next : *mut Cell) {
-    let x = self.column - (*(next)).column;
-    let y = self.row - (*(next)).row;
+fn remove_walls(&mut self, next : &mut Cell) {
+    let x = self.column - next.column;
+    let y = self.row - next.row;
 
     if x == 1 {
         self.walls[LEFT] = false;
-        (*(next)).walls[RIGHT] = false;
+        next.walls[RIGHT] = false;
     }
     else if x == -1 {
         self.walls[RIGHT] = false;
-        (*(next)).walls[LEFT] = false;
+        next.walls[LEFT] = false;
     }
     else if y == 1 {
         self.walls[TOP] = false;
-        (*(next)).walls[BOTTOM] = false;
+        next.walls[BOTTOM] = false;
     }
     else if y == -1 {
         self.walls[BOTTOM] = false;
-        (*(next)).walls[TOP] = false;
+        next.walls[TOP] = false;
     }
 }
 ```
 
 Uh oh, there's some new stuff here: 
 
-* The *terrifying* looking `unsafe` keyword says "this function uses code that Rust cannot prove to be memory-safe". In other words, it is the Rust equivalent of typing `here be dragons`.
-* We need the `unsafe` flag because of `next : *mut Cell`. We've not used a *raw pointer* before - we're into C/C++ land, now! The syntax is relatively straightforward; the `*` indicates that it is a *pointer* (rather than a reference). The `mut` indicates that we can change the contents (that's what makes it unsafe; Rust can't verify that the pointer is actually valid, so if we change something we might really break things!), and it *points to* a `Cell`. A *reference* is actually a type of pointer; it points to a variable, and if you access it - you are reading the variable to which it points (so there's only one copy existing). With a reference, you can change the value with `*myref = 1` - the `*` *dereferences* the reference, giving you the original area of memory. Rust can check that this is valid with the borrow checker. More on this in a moment.
-* We set `x` to be *our* `column` value, minus the `column` value of the cell we are pointing at. The `(*(next)).column` is *horrible* syntax, and should discourage anyone from using pointers (I think that's the point). The first parentheses indicate that we're modifying the type; the `*` dereferences the pointer encased in the final set of parentheses. Since we're changing a value pointed to by a pointer, this is inherently *unsafe* (and makes the function not compile if we don't use the `unsafe` flag), and also means: *BE REALLY CAREFUL*.
+* We set `x` to be *our* `column` value, minus the `column` value of the next cell.
 * We do the same with `y` - but with `row` values.
-* If `x` is equal to 1, then the pointer's column must be greater than our column value. In other words, the `next` cell is to the *right* of our current location. So we remove the wall to the right.
-* Likewise, if `x` is `-1`, then we must be going *left* - so we remove the wall to the right.
+* If `x` is equal to 1, then the `next`'s column must be greater than our column value. In other words, the `next` cell is to the *right* of our current location. So we remove the wall to the right.
+* Likewise, if `x` is `-1`, then we must be going *left* - so we remove the wall to the left.
 * Once again, if `y` is `1`, we must be going up. So we remove the walls to the top.
 * Finally, if `y` is `-1`, we must be going down - so we remove the walls below us.
 
@@ -325,11 +323,14 @@ fn generate_maze(&mut self, generator : &mut MazeBuilder) {
             Some(next) => {
                 self.cells[next].visited = true;
                 self.backtrace.insert(0, self.current);
-                unsafe {
-                    let next_cell : *mut Cell = &mut self.cells[next];
-                    let current_cell = &mut self.cells[self.current];
-                    current_cell.remove_walls(next_cell);
-                }
+                //   __lower_part__      __higher_part_
+                //   /            \      /            \
+                // --------cell1------ | cell2-----------
+                let (lower_part, higher_part) =
+                    self.cells.split_at_mut(std::cmp::max(self.current, next));
+                let cell1 = &mut lower_part[std::cmp::min(self.current, next)];
+                let cell2 = &mut higher_part[0];
+                cell1.remove_walls(cell2);
                 self.current = next;
             }
             None => {
@@ -355,9 +356,9 @@ So now we're onto the actual algorithm! Lets step through it to understand how i
 3. We add the current cell to the beginning of the `backtrace` list.
 4. We call `find_next_cell` and set its index in the variable `next`. If this is our first run, we'll get a random direction from the starting cell. Otherwise, we get an exit from the `current` cell we're visiting.
 5. If `next` has a value, then:
-    1. Get a *pointer* to the `next_cell`. If you remember, `remove_walls` takes a pointer. This is *why* we jump through those hoops: the borrow checker *really* doesn't like us borrowing values from two elements of the array at once. So to keep it happy, we use a *pointer*.
-    2. We also obtain a reference to the *current* cell.
-    3. We call `remove_walls` on the *current* cell, referencing the *next* cell. The good news is that we're being careful, so we can be sure that we aren't going to hit a null pointer error. Rust cannot know that, so we use the `unsafe` block to indicate that we know what we're doing!
+    1. Split cells to two mutable references. We will need two mutable references to the same slice, Rust normally doesn't allow this, but we can split our slice to two non-overlapping parts. This is a common use case and Rust provides a safe function to do exactly [that](https://doc.rust-lang.org/std/primitive.slice.html#method.split_at_mut).
+    2. Get mutable reference to the cell with lower index from first part and to the second from start of second part.
+    3. We call `remove_walls` on the *cell1* cell, referencing the *cell2* cell.
 6. If `next` does *not* have a value (it's equal to `None`), we:
     1. If `backtrace` isn't empty, we set `current` to the first value in the `backtrace` list.
     2. If `backtrace` *is* empty, we've finished - so we `break` out of the loop.
