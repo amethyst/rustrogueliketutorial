@@ -21,7 +21,7 @@ impl<'a> System<'a> for ItemRemoveSystem {
 
         for (entity, to_remove) in (&entities, &wants_remove).join() {
             if cursed.get(to_remove.item).is_some() {
-                gamelog.entries.insert(0, format!("You cannot remove {}, it is cursed", names.get(to_remove.item).unwrap().name));
+                gamelog.entries.push(format!("You cannot remove {}, it is cursed", names.get(to_remove.item).unwrap().name));
             } else {
                 equipped.remove(to_remove.item);
                 backpack.insert(to_remove.item, InBackpack{ owner: entity }).expect("Unable to insert backpack");

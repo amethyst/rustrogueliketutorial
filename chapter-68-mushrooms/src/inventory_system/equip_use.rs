@@ -37,7 +37,7 @@ impl<'a> System<'a> for ItemEquipOnUse {
                 for (item_entity, already_equipped, name) in (&entities, &equipped, &names).join() {
                     if already_equipped.owner == target && already_equipped.slot == target_slot {
                         if cursed.get(item_entity).is_some() {
-                            gamelog.entries.insert(0, format!("You cannot unequip {}, it is cursed.", name.name)); 
+                            gamelog.entries.push(format!("You cannot unequip {}, it is cursed.", name.name)); 
                             can_equip = false;
                         } else {
                             to_unequip.push(item_entity);
@@ -62,14 +62,14 @@ impl<'a> System<'a> for ItemEquipOnUse {
                     }
 
                     for le in log_entries.iter() {
-                        gamelog.entries.insert(0, le.to_string());
+                        gamelog.entries.push(le.to_string());
                     }
 
                     // Wield the item
                     equipped.insert(useitem.item, Equipped{ owner: target, slot: target_slot }).expect("Unable to insert equipped component");
                     backpack.remove(useitem.item);
                     if target == *player_entity {
-                        gamelog.entries.insert(0, format!("You equip {}.", names.get(useitem.item).unwrap().name));
+                        gamelog.entries.push(format!("You equip {}.", names.get(useitem.item).unwrap().name));
                     }
 
                     dirty.insert(target, EquipmentChanged{}).expect("Unable to insert");

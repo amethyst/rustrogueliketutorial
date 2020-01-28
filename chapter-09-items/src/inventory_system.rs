@@ -23,7 +23,7 @@ impl<'a> System<'a> for ItemCollectionSystem {
             backpack.insert(pickup.item, InBackpack{ owner: pickup.collected_by }).expect("Unable to insert backpack entry");
 
             if pickup.collected_by == *player_entity {
-                gamelog.entries.insert(0, format!("You pick up the {}.", names.get(pickup.item).unwrap().name));
+                gamelog.entries.push(format!("You pick up the {}.", names.get(pickup.item).unwrap().name));
             }
         }
 
@@ -54,7 +54,7 @@ impl<'a> System<'a> for PotionUseSystem {
                 Some(potion) => {
                     stats.hp = i32::min(stats.max_hp, stats.hp + potion.heal_amount);
                     if entity == *player_entity {
-                        gamelog.entries.insert(0, format!("You drink the {}, healing {} hp.", names.get(drink.potion).unwrap().name, potion.heal_amount));
+                        gamelog.entries.push(format!("You drink the {}, healing {} hp.", names.get(drink.potion).unwrap().name, potion.heal_amount));
                     }
                     entities.delete(drink.potion).expect("Delete failed");
                 }
@@ -92,7 +92,7 @@ impl<'a> System<'a> for ItemDropSystem {
             backpack.remove(to_drop.item);
 
             if entity == *player_entity {
-                gamelog.entries.insert(0, format!("You drop the {}.", names.get(to_drop.item).unwrap().name));
+                gamelog.entries.push(format!("You drop the {}.", names.get(to_drop.item).unwrap().name));
             }
         }
 

@@ -29,7 +29,7 @@ impl<'a> System<'a> for ItemCollectionSystem {
             dirty.insert(pickup.collected_by, EquipmentChanged{}).expect("Unable to insert");
 
             if pickup.collected_by == *player_entity {
-                gamelog.entries.insert(0, format!("You pick up the {}.", names.get(pickup.item).unwrap().name));
+                gamelog.entries.push(format!("You pick up the {}.", names.get(pickup.item).unwrap().name));
             }
         }
 
@@ -122,7 +122,7 @@ impl<'a> System<'a> for ItemUseSystem {
                         if already_equipped.owner == target && already_equipped.slot == target_slot {
                             to_unequip.push(item_entity);
                             if target == *player_entity {
-                                gamelog.entries.insert(0, format!("You unequip {}.", name.name));
+                                gamelog.entries.push(format!("You unequip {}.", name.name));
                             }
                         }
                     }
@@ -135,7 +135,7 @@ impl<'a> System<'a> for ItemUseSystem {
                     equipped.insert(useitem.item, Equipped{ owner: target, slot: target_slot }).expect("Unable to insert equipped component");
                     backpack.remove(useitem.item);
                     if target == *player_entity {
-                        gamelog.entries.insert(0, format!("You equip {}.", names.get(useitem.item).unwrap().name));
+                        gamelog.entries.push(format!("You equip {}.", names.get(useitem.item).unwrap().name));
                     }
                 }
             }
@@ -151,7 +151,7 @@ impl<'a> System<'a> for ItemUseSystem {
                     if let Some(hc) = hc {
                         hc.state = HungerState::WellFed;
                         hc.duration = 20;
-                        gamelog.entries.insert(0, format!("You eat the {}.", names.get(useitem.item).unwrap().name));
+                        gamelog.entries.push(format!("You eat the {}.", names.get(useitem.item).unwrap().name));
                     }
                 }
             }
@@ -162,7 +162,7 @@ impl<'a> System<'a> for ItemUseSystem {
                 None => {}
                 Some(_) => {
                     used_item = true;
-                    gamelog.entries.insert(0, "The map is revealed to you!".to_string());
+                    gamelog.entries.push("The map is revealed to you!".to_string());
                     *runstate = RunState::MagicMapReveal{ row : 0};
                 }
             }
@@ -170,11 +170,11 @@ impl<'a> System<'a> for ItemUseSystem {
             // If its a town portal...
             if let Some(_townportal) = town_portal.get(useitem.item) {
                 if map.depth == 1 {
-                    gamelog.entries.insert(0, "You are already in town, so the scroll does nothing.".to_string());
+                    gamelog.entries.push("You are already in town, so the scroll does nothing.".to_string());
                     used_item = false;
                 } else {
                     used_item = true;
-                    gamelog.entries.insert(0, "You are telported back to town!".to_string());
+                    gamelog.entries.push("You are telported back to town!".to_string());
                     *runstate = RunState::TownPortal;
                 }
             }
@@ -190,7 +190,7 @@ impl<'a> System<'a> for ItemUseSystem {
                         if let Some(stats) = stats {
                             stats.hit_points.current = i32::min(stats.hit_points.max, stats.hit_points.current + healer.heal_amount);
                             if entity == *player_entity {
-                                gamelog.entries.insert(0, format!("You use the {}, healing {} hp.", names.get(useitem.item).unwrap().name, healer.heal_amount));
+                                gamelog.entries.push(format!("You use the {}, healing {} hp.", names.get(useitem.item).unwrap().name, healer.heal_amount));
                             }
                             used_item = true;
 
@@ -218,7 +218,7 @@ impl<'a> System<'a> for ItemUseSystem {
                         if entity == *player_entity {
                             let mob_name = names.get(*mob).unwrap();
                             let item_name = names.get(useitem.item).unwrap();
-                            gamelog.entries.insert(0, format!("You use {} on {}, inflicting {} hp.", item_name.name, mob_name.name, damage.damage));
+                            gamelog.entries.push(format!("You use {} on {}, inflicting {} hp.", item_name.name, mob_name.name, damage.damage));
 
                             let pos = positions.get(*mob);
                             if let Some(pos) = pos {
@@ -244,7 +244,7 @@ impl<'a> System<'a> for ItemUseSystem {
                             if entity == *player_entity {
                                 let mob_name = names.get(*mob).unwrap();
                                 let item_name = names.get(useitem.item).unwrap();
-                                gamelog.entries.insert(0, format!("You use {} on {}, confusing them.", item_name.name, mob_name.name));
+                                gamelog.entries.push(format!("You use {} on {}, confusing them.", item_name.name, mob_name.name));
 
                                 let pos = positions.get(*mob);
                                 if let Some(pos) = pos {
@@ -305,7 +305,7 @@ impl<'a> System<'a> for ItemDropSystem {
             dirty.insert(entity, EquipmentChanged{}).expect("Unable to insert");
 
             if entity == *player_entity {
-                gamelog.entries.insert(0, format!("You drop the {}.", names.get(to_drop.item).unwrap().name));
+                gamelog.entries.push(format!("You drop the {}.", names.get(to_drop.item).unwrap().name));
             }
         }
 

@@ -98,7 +98,7 @@ match is_mapper {
         for r in map.revealed_tiles.iter_mut() {
             *r = true;
         }
-        gamelog.entries.insert(0, "The map is revealed to you!".to_string());
+        gamelog.entries.push("The map is revealed to you!".to_string());
     }
 }
 ```
@@ -118,7 +118,7 @@ match is_mapper {
     None => {}
     Some(_) => {
         used_item = true;
-        gamelog.entries.insert(0, "The map is revealed to you!".to_string());
+        gamelog.entries.push("The map is revealed to you!".to_string());
         *runstate = RunState::MagicMapReveal{ row : 0};
     }
 }

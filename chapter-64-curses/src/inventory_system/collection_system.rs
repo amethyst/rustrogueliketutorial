@@ -28,8 +28,7 @@ impl<'a> System<'a> for ItemCollectionSystem {
             dirty.insert(pickup.collected_by, EquipmentChanged{}).expect("Unable to insert");
 
             if pickup.collected_by == *player_entity {
-                gamelog.entries.insert(
-                    0, 
+                gamelog.entries.push(
                     format!(
                         "You pick up the {}.", 
                         super::obfuscate_name(pickup.item, &names, &magic_items, &obfuscated_names, &dm)

@@ -215,7 +215,7 @@ impl<'a> System<'a> for EncumbranceSystem {
                         // Overburdened
                         pool.total_initiative_penalty += 4.0;
                         if *entity == *player {
-                            gamelog.entries.insert(0, "You are overburdened, and suffering an initiative penalty.".to_string());
+                            gamelog.entries.push("You are overburdened, and suffering an initiative penalty.".to_string());
                         }
                     }
                 }
@@ -272,7 +272,7 @@ impl<'a> System<'a> for ItemCollectionSystem {
             dirty.insert(pickup.collected_by, EquipmentChanged{}).expect("Unable to insert");
 
             if pickup.collected_by == *player_entity {
-                gamelog.entries.insert(0, format!("You pick up the {}.", names.get(pickup.item).unwrap().name));
+                gamelog.entries.push(format!("You pick up the {}.", names.get(pickup.item).unwrap().name));
             }
         }
 
@@ -354,7 +354,7 @@ impl<'a> System<'a> for ItemDropSystem {
             dirty.insert(entity, EquipmentChanged{}).expect("Unable to insert");
 
             if entity == *player_entity {
-                gamelog.entries.insert(0, format!("You drop the {}.", names.get(to_drop.item).unwrap().name));
+                gamelog.entries.push(format!("You drop the {}.", names.get(to_drop.item).unwrap().name));
             }
         }
 

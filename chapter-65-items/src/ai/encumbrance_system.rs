@@ -102,7 +102,7 @@ impl<'a> System<'a> for EncumbranceSystem {
                         // Overburdened
                         pool.total_initiative_penalty += 4.0;
                         if *entity == *player {
-                            gamelog.entries.insert(0, "You are overburdened, and suffering an initiative penalty.".to_string());
+                            gamelog.entries.push("You are overburdened, and suffering an initiative penalty.".to_string());
                         }
                     }
                 }

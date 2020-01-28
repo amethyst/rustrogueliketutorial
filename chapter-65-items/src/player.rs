@@ -116,7 +116,7 @@ pub fn try_next_level(ecs: &mut World) -> bool {
         true
     } else {
         let mut gamelog = ecs.fetch_mut::<GameLog>();
-        gamelog.entries.insert(0, "There is no way down from here.".to_string());
+        gamelog.entries.push("There is no way down from here.".to_string());
         false
     }
 }
@@ -129,7 +129,7 @@ pub fn try_previous_level(ecs: &mut World) -> bool {
         true
     } else {
         let mut gamelog = ecs.fetch_mut::<GameLog>();
-        gamelog.entries.insert(0, "There is no way up from here.".to_string());
+        gamelog.entries.push("There is no way up from here.".to_string());
         false
     }
 }
@@ -150,7 +150,7 @@ fn get_item(ecs: &mut World) {
     }
 
     match target_item {
-        None => gamelog.entries.insert(0, "There is nothing here to pick up.".to_string()),
+        None => gamelog.entries.push("There is nothing here to pick up.".to_string()),
         Some(item) => {
             let mut pickup = ecs.write_storage::<WantsToPickupItem>();
             pickup.insert(*player_entity, WantsToPickupItem{ collected_by: *player_entity, item }).expect("Unable to insert want to pickup");
