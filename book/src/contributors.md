@@ -35,20 +35,25 @@ The following people have contributed to this project:
 * Reddit user u/Koavf asked me to clarify the licensing for the project.
 * [Till Arnold](https://github.com/tillarnold) fixed a small typo in chapter 5.
 * [pk](https://github.com/pkrasam) helped remove some unused variable warnings.
+* [Vojta7](https://github.com/vojta7) found a broken module reference and fixed it for me. He also found numerous typos in the WFC section and fixed them, too.
+* [skierpage](https://github.com/skierpage) fixed a lot of typos in chapter 2.
 
 ## Supporters
 
 I'd also like to take a moment to thank everyone who has sent me kind words, contributed with issue reports, and the following Patrons (from patreon.com):
 
+* Aslan Magomadov
 * Ben Gamble
 * Boyd Trolinger
 * Brian Bucklew
 * Chad Thorenson
 * Crocodylus Pontifex (great name!)
+* David Hagerty
 * Enrique Garcia
 * Finn Günther
 * Fredrik Holmqvist
 * Galen Palmer
+* George Madrid
 * Jeffrey Lyne
 * Josh Isaak
 * Kenton Hamaluik
@@ -58,10 +63,15 @@ I'd also like to take a moment to thank everyone who has sent me kind words, con
 * Oliver Uvman
 * Oskar Edgren
 * Pat LaBine
+* Pete Bevin
+* Rafin de Castro
 * Russel Myers
 * Ryan Orlando
 * Shane Sveller
+* Simon Dickinson
 * Snayff
+* Steve Hyatt
+* Teague Lasser
 * Tom Leys
 * Tommi Sinuvuo
 

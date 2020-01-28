@@ -97,7 +97,7 @@ pub fn render_pattern_to_map(map : &mut Map, chunk: &MapChunk, chunk_size: i32, 
             map.tiles[map_idx] = TileType::DownStairs;
         }
     }
-    for (x,eastbound) in chunk.exits[2].iter().enumerate() {
+    for (x,eastbound) in chunk.exits[3].iter().enumerate() {
         if *eastbound {
             let map_idx = map.xy_idx(start_x + chunk_size - 1, start_y + x as i32);
             map.tiles[map_idx] = TileType::DownStairs;

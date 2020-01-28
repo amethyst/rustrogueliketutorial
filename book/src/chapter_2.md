@@ -35,7 +35,7 @@ For example, you could build the same set of mobs with components for: `Position
 
 In other words: components are just like your inheritance tree, but instead of *inheriting* traits you *compose* them by adding components until it does what you want. This is often called "composition".
 
-The "S" in ECS stands for "Systems". A *System* is a piece of code that gathers data from the entity/components list and does something with it. It's actually quite similar to an inheritance model, but in some ways it's "backwards". For example, drawing in an OOP system is often: *For each BaseEntity, call that entities Draw command*. In an ECS system, it would be *Get all entities with a position and a renderable component, and use that data to draw them*.
+The "S" in ECS stands for "Systems". A *System* is a piece of code that gathers data from the entity/components list and does something with it. It's actually quite similar to an inheritance model, but in some ways it's "backwards". For example, drawing in an OOP system is often: *For each BaseEntity, call that entity's Draw command*. In an ECS system, it would be *Get all entities with a position and a renderable component, and use that data to draw them*.
 
 For small games, an ECS often feels like it's adding a bit of extra typing to your code. It is. You take the additional work up front, to make life easier later.
 
@@ -53,7 +53,7 @@ specs = "0.15.0"
 specs-derive = "0.4.0"
 ```
 
-This is pretty straight-forward: we're telling Rust that we still want to use RLTK, and we're also asking for specs (the version number is current at the time of writing; you can check for new ones by typing `cargo search specs`). We're also adding `specs-derive` - which provides some helper code to reduce the amount of boilerplate typing you have to do.
+This is pretty straightforward: we're telling Rust that we still want to use RLTK, and we're also asking for specs (the version number is current at the time of writing; you can check for new ones by typing `cargo search specs`). We're also adding `specs-derive` - which provides some helper code to reduce the amount of boilerplate typing you have to do.
 
 At the top of `main.rs` we add a few lines of code:
 ```rust
@@ -64,7 +64,7 @@ use std::cmp::{max, min};
 extern crate specs_derive;
 ```
 
-The `use rltk::` is a short-hand; you *can* type `rltk::Console` every time you want a console; this tells Rust that we'd like to just type `Console` instead. The `use specs::prelude::*` line is there so we aren't continually typing `specs::prelude::World` when we just want `World`.
+`use rltk::` is shorthand; you *can* type `rltk::Console` every time you want a console; this tells Rust that we'd like to just type `Console` instead. Likewise the `use specs::prelude::*` line is there so we aren't continually typing `specs::prelude::World` when we just want `World`.
 
 The command `#[macro_use]` is a little scarier looking; it just means "the next crate will contain macro code, please use it". This exists to avoid the C++ problem of `#define` commands leaking everywhere and confusing you. Rust is all about being explicit, to avoid confusing yourself later!
 
