@@ -49,25 +49,25 @@ impl Cell {
         }
     }
 
-    unsafe fn remove_walls(&mut self, next : *mut Cell) {
-        let x = self.column - (*(next)).column;
-        let y = self.row - (*(next)).row;
+    fn remove_walls(&mut self, next : &mut Cell) {
+        let x = self.column - next.column;
+        let y = self.row - next.row;
 
         if x == 1 {
             self.walls[LEFT] = false;
-            (*(next)).walls[RIGHT] = false;
+            next.walls[RIGHT] = false;
         }
         else if x == -1 {
             self.walls[RIGHT] = false;
-            (*(next)).walls[LEFT] = false;
+            next.walls[LEFT] = false;
         }
         else if y == 1 {
             self.walls[TOP] = false;
-            (*(next)).walls[BOTTOM] = false;
+            next.walls[BOTTOM] = false;
         }
         else if y == -1 {
             self.walls[BOTTOM] = false;
-            (*(next)).walls[TOP] = false;
+            next.walls[TOP] = false;
         }
     }
 }
@@ -153,11 +153,14 @@ impl<'a> Grid<'a> {
                 Some(next) => {
                     self.cells[next].visited = true;
                     self.backtrace.insert(0, self.current);
-                    unsafe {
-                        let next_cell : *mut Cell = &mut self.cells[next];
-                        let current_cell = &mut self.cells[self.current];
-                        current_cell.remove_walls(next_cell);
-                    }
+                    //   __lower_part__      __higher_part_
+                    //   /            \      /            \
+                    // --------cell1------ | cell2-----------
+                    let (lower_part, higher_part) =
+                        self.cells.split_at_mut(std::cmp::max(self.current, next));
+                    let cell1 = &mut lower_part[std::cmp::min(self.current, next)];
+                    let cell2 = &mut higher_part[0];
+                    cell1.remove_walls(cell2);
                     self.current = next;
                 }
                 None => {
