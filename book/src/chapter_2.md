@@ -48,7 +48,7 @@ It's important to know that ECS is just one way of handling composition. There a
 To start, we want to tell Cargo that we're going to use Specs. Open your `Cargo.toml` file, and change the `dependencies` section to look like this:
 ```toml
 [dependencies]
-rltk = { version = "0.6.0" }
+rltk = { version = "0.6.1" }
 specs = "0.15.0"
 specs-derive = "0.4.0"
 ```

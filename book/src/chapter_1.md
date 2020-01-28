@@ -139,7 +139,7 @@ Go ahead and make sure that your name is correct! Next, we're going to ask Cargo
 
 ```toml
 [dependencies]
-rltk = { version = "0.6.0" }
+rltk = { version = "0.6.1" }
 ```
 
 We're telling it that the package is named `rltk`, and is available in Cargo - so we just have to give it a version. You can do `cargo search rltk` to see the latest version at any time, or go to [the crate webpage](https://crates.io/crates/rltk).
