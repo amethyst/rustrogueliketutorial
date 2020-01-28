@@ -116,7 +116,7 @@ We'll start with a very basic skeleton, similar to those used before. We'll make
 
 ```rust
 use super::{MapBuilder, Map, TileType, Position, spawner, SHOW_MAPGEN_VISUALIZER,
-    draw_corridor};
+    remove_unreachable_areas_returning_most_distant};
 use rltk::RandomNumberGenerator;
 use specs::prelude::*;
 
