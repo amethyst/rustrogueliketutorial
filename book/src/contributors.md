@@ -35,6 +35,7 @@ The following people have contributed to this project:
 * Reddit user u/Koavf asked me to clarify the licensing for the project.
 * [Till Arnold](https://github.com/tillarnold) fixed a small typo in chapter 5.
 * [pk](https://github.com/pkrasam) helped remove some unused variable warnings.
+* [Vojta7](https://github.com/vojta7) found a broken module reference and fixed it for me. He also found numerous typos in the WFC section and fixed them, too.
 
 ## Supporters
 
