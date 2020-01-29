@@ -1794,9 +1794,7 @@ impl WaveformCollapseBuilder {
 }
 ```
 
-TODO: Text!
-
-Test:
+You can test this with the following code:
 
 ```rust
 let mut builder = BuilderChain::new(new_depth);
