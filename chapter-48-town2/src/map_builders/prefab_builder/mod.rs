@@ -156,19 +156,14 @@ impl PrefabBuilder {
     }
 
     fn apply_previous_iteration<F>(&mut self, mut filter: F, _rng: &mut RandomNumberGenerator, build_data : &mut BuilderMap)
-        where F : FnMut(i32, i32, &(usize, String)) -> bool
+        where F : FnMut(i32, i32) -> bool
     {
-        let spawn_clone = build_data.spawn_list.clone();
-        for e in spawn_clone.iter() {
-            let idx = e.0;
-            let x = idx as i32 % build_data.map.width;
-            let y = idx as i32 / build_data.map.width;
-            if filter(x, y, e) {
-                build_data.spawn_list.push(
-                    (idx, e.1.to_string())
-                )
-            }
-        }
+        let width = build_data.map.width;
+        build_data.spawn_list.retain(|(idx, _name)| {
+            let x = *idx as i32 % width;
+            let y = *idx as i32 / width;
+            filter(x, y)
+        });
         build_data.take_snapshot();
     }
 
@@ -194,7 +189,7 @@ impl PrefabBuilder {
         }
 
         // Build the map
-        self.apply_previous_iteration(|x,y,_e| {
+        self.apply_previous_iteration(|x,y| {
             x < chunk_x || x > (chunk_x + section.width as i32) || y < chunk_y || y > (chunk_y + section.height as i32)
         }, rng, build_data);
 
@@ -215,7 +210,7 @@ impl PrefabBuilder {
         use prefab_rooms::*;
 
         // Apply the previous builder, and keep all entities it spawns (for now)
-        self.apply_previous_iteration(|_x,_y,_e| true, rng, build_data);
+        self.apply_previous_iteration(|_x,_y| true, rng, build_data);
 
         // Do we want a vault at all?
         let vault_roll = rng.roll_dice(1, 6) + build_data.map.depth;
