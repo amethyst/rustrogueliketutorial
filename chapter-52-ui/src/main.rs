@@ -409,7 +409,6 @@ fn main() {
     let mut context = RltkBuilder::simple(80, 60)
         .with_title("Roguelike Tutorial")
         .build();
-    //let mut context = Rltk::init_simple8x8(80, 60, "Rusty Roguelike", "resources");
     context.with_post_scanlines(true);
     let mut gs = State {
         ecs: World::new(),
