@@ -167,14 +167,14 @@ dependencies = [
 name = "chapter-01-hellorust"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
 ]
 
 [[package]]
 name = "chapter-02-helloecs"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "specs",
  "specs-derive",
 ]
@@ -183,7 +183,7 @@ dependencies = [
 name = "chapter-03-walkmap"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "specs",
  "specs-derive",
 ]
@@ -192,7 +192,7 @@ dependencies = [
 name = "chapter-04-newmap"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "specs",
  "specs-derive",
 ]
@@ -201,7 +201,7 @@ dependencies = [
 name = "chapter-05-fov"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "specs",
  "specs-derive",
 ]
@@ -210,7 +210,7 @@ dependencies = [
 name = "chapter-06-monsters"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "specs",
  "specs-derive",
 ]
@@ -219,7 +219,7 @@ dependencies = [
 name = "chapter-07-damage"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "specs",
  "specs-derive",
 ]
@@ -228,7 +228,7 @@ dependencies = [
 name = "chapter-08-ui"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "specs",
  "specs-derive",
 ]
@@ -237,7 +237,7 @@ dependencies = [
 name = "chapter-09-items"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "specs",
  "specs-derive",
 ]
@@ -246,7 +246,7 @@ dependencies = [
 name = "chapter-10-ranged"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "specs",
  "specs-derive",
 ]
@@ -255,7 +255,7 @@ dependencies = [
 name = "chapter-11-loadsave"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -266,7 +266,7 @@ dependencies = [
 name = "chapter-12-delvingdeeper"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -277,7 +277,7 @@ dependencies = [
 name = "chapter-13-difficulty"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -288,7 +288,7 @@ dependencies = [
 name = "chapter-14-gear"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -299,7 +299,7 @@ dependencies = [
 name = "chapter-16-nicewalls"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -310,7 +310,7 @@ dependencies = [
 name = "chapter-17-blood"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -321,7 +321,7 @@ dependencies = [
 name = "chapter-18-particles"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -332,7 +332,7 @@ dependencies = [
 name = "chapter-19-food"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -343,7 +343,7 @@ dependencies = [
 name = "chapter-20-magicmapping"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -354,7 +354,7 @@ dependencies = [
 name = "chapter-21-rexmenu"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -365,7 +365,7 @@ dependencies = [
 name = "chapter-22-simpletraps"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -376,7 +376,7 @@ dependencies = [
 name = "chapter-23-generic-map"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -387,7 +387,7 @@ dependencies = [
 name = "chapter-24-map-testing"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -398,7 +398,7 @@ dependencies = [
 name = "chapter-25-bsproom-dungeons"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -409,7 +409,7 @@ dependencies = [
 name = "chapter-26-bsp-interiors"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -420,7 +420,7 @@ dependencies = [
 name = "chapter-27-cellular-automata"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -431,7 +431,7 @@ dependencies = [
 name = "chapter-28-drunkards-walk"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -442,7 +442,7 @@ dependencies = [
 name = "chapter-29-mazes"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -453,7 +453,7 @@ dependencies = [
 name = "chapter-30-dla"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -464,7 +464,7 @@ dependencies = [
 name = "chapter-31-symmetry"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -475,7 +475,7 @@ dependencies = [
 name = "chapter-32-voronoi"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -486,7 +486,7 @@ dependencies = [
 name = "chapter-33-wfc"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -497,7 +497,7 @@ dependencies = [
 name = "chapter-34-vaults"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -508,7 +508,7 @@ dependencies = [
 name = "chapter-35-vaults2"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -519,7 +519,7 @@ dependencies = [
 name = "chapter-36-layers"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -530,7 +530,7 @@ dependencies = [
 name = "chapter-37-layers2"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -541,7 +541,7 @@ dependencies = [
 name = "chapter-38-rooms"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -552,7 +552,7 @@ dependencies = [
 name = "chapter-39-halls"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -563,7 +563,7 @@ dependencies = [
 name = "chapter-40-doors"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -574,7 +574,7 @@ dependencies = [
 name = "chapter-41-camera"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -586,7 +586,7 @@ name = "chapter-45-raws1"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -598,7 +598,7 @@ name = "chapter-46-raws2"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -610,7 +610,7 @@ name = "chapter-47-town1"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -622,7 +622,7 @@ name = "chapter-48-town2"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -634,7 +634,7 @@ name = "chapter-49-town3"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -646,7 +646,7 @@ name = "chapter-50-stats"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -659,7 +659,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -672,7 +672,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -685,7 +685,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -698,7 +698,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -711,7 +711,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk 0.6.2",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -724,7 +724,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -737,7 +737,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -750,7 +750,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -763,7 +763,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -776,7 +776,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -789,7 +789,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -802,7 +802,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -815,7 +815,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -828,7 +828,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -841,7 +841,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -854,7 +854,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -867,7 +867,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -880,7 +880,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -893,7 +893,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -906,7 +906,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk 0.6.1",
+ "rltk",
  "serde",
  "serde_json",
  "specs",
@@ -1223,19 +1223,6 @@ dependencies = [
  "khronos_api",
  "log",
  "xml-rs",
-]
-
-[[package]]
-name = "glow"
-version = "0.3.0-alpha4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e1a6a561d672c476b6a6fc49b0b3bc7b061bbfd3a6f103055ae4530abc04a41e"
-dependencies = [
- "gl_generator 0.13.1",
- "js-sys",
- "slotmap",
- "wasm-bindgen",
- "web-sys",
 ]
 
 [[package]]
@@ -1957,36 +1944,14 @@ checksum = "b28dfe3fe9badec5dbf0a79a9cccad2cfc2ab5484bdb3e44cbd1ae8b3ba2be06"
 
 [[package]]
 name = "rltk"
-version = "0.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f0e6ffde14bac142c5eeb6e184ff84fbba08598a19d30d610badeb14b6ab2ee"
-dependencies = [
- "byteorder",
- "flate2",
- "gl_generator 0.14.0",
- "glow 0.3.0-alpha4",
- "glutin",
- "image",
- "lazy_static",
- "object-pool",
- "rand",
- "rand_xorshift",
- "regex",
- "serde",
- "ultraviolet",
- "wasm-bindgen",
- "wasm-timer",
- "web-sys",
-]
-
-[[package]]
-name = "rltk"
 version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3b464504783b01f117933538e4450bda6aeaba690789fd294c3137178fbf96fc"
 dependencies = [
  "byteorder",
  "flate2",
  "gl_generator 0.14.0",
- "glow 0.4.0",
+ "glow",
  "glutin",
  "image",
  "lazy_static",
@@ -2005,7 +1970,7 @@ dependencies = [
 name = "rust_roguelike_tutorial"
 version = "0.1.0"
 dependencies = [
- "rltk 0.6.1",
+ "rltk",
  "specs",
  "specs-derive",
 ]
