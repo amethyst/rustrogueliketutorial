@@ -36,7 +36,10 @@ This isn't a bad start, as far as ASCII user interfaces go. Some pertinent notes
 In `main.rs`, the first thing our `main` function does is to bootstrap RLTK. We specify resolution and window title here. So we'll update it to match what we want:
 
 ```rust
-let mut context = Rltk::init_simple8x8(80, 60, "Rusty Roguelike", "resources");
+use rltk::RltkBuilder;
+    let mut context = RltkBuilder::simple(80, 60)
+        .with_title("Roguelike Tutorial")
+        .build();
 ```
 
 If you `cargo run` now, you'll see a bigger console - and nothing making use of the extra space!

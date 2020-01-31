@@ -450,7 +450,10 @@ impl State {
 }
 
 fn main() {
-    let mut context = Rltk::init_simple8x8(80, 60, "Rusty Roguelike", "resources");
+    use rltk::RltkBuilder;
+    let mut context = RltkBuilder::simple(80, 60)
+        .with_title("Roguelike Tutorial")
+        .build();
     context.with_post_scanlines(true);
     let mut gs = State {
         ecs: World::new(),
