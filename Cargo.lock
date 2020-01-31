@@ -17,9 +17,9 @@ dependencies = [
 
 [[package]]
 name = "aho-corasick"
-version = "0.7.6"
+version = "0.7.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "58fb5e95d83b38284460a5fda7d6470aa0b8844d283a0b614b8535e880800d2d"
+checksum = "5f56c476256dc249def911d6f7580b5fc7e875895b5d7ee88f5d602208035744"
 dependencies = [
  "memchr",
 ]
@@ -167,14 +167,14 @@ dependencies = [
 name = "chapter-01-hellorust"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
 ]
 
 [[package]]
 name = "chapter-02-helloecs"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "specs",
  "specs-derive",
 ]
@@ -183,7 +183,7 @@ dependencies = [
 name = "chapter-03-walkmap"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "specs",
  "specs-derive",
 ]
@@ -192,7 +192,7 @@ dependencies = [
 name = "chapter-04-newmap"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "specs",
  "specs-derive",
 ]
@@ -201,7 +201,7 @@ dependencies = [
 name = "chapter-05-fov"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "specs",
  "specs-derive",
 ]
@@ -210,7 +210,7 @@ dependencies = [
 name = "chapter-06-monsters"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "specs",
  "specs-derive",
 ]
@@ -219,7 +219,7 @@ dependencies = [
 name = "chapter-07-damage"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "specs",
  "specs-derive",
 ]
@@ -228,7 +228,7 @@ dependencies = [
 name = "chapter-08-ui"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "specs",
  "specs-derive",
 ]
@@ -237,7 +237,7 @@ dependencies = [
 name = "chapter-09-items"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "specs",
  "specs-derive",
 ]
@@ -246,7 +246,7 @@ dependencies = [
 name = "chapter-10-ranged"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "specs",
  "specs-derive",
 ]
@@ -255,7 +255,7 @@ dependencies = [
 name = "chapter-11-loadsave"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -266,7 +266,7 @@ dependencies = [
 name = "chapter-12-delvingdeeper"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -277,7 +277,7 @@ dependencies = [
 name = "chapter-13-difficulty"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -288,7 +288,7 @@ dependencies = [
 name = "chapter-14-gear"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -299,7 +299,7 @@ dependencies = [
 name = "chapter-16-nicewalls"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -310,7 +310,7 @@ dependencies = [
 name = "chapter-17-blood"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -321,7 +321,7 @@ dependencies = [
 name = "chapter-18-particles"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -332,7 +332,7 @@ dependencies = [
 name = "chapter-19-food"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -343,7 +343,7 @@ dependencies = [
 name = "chapter-20-magicmapping"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -354,7 +354,7 @@ dependencies = [
 name = "chapter-21-rexmenu"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -365,7 +365,7 @@ dependencies = [
 name = "chapter-22-simpletraps"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -376,7 +376,7 @@ dependencies = [
 name = "chapter-23-generic-map"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -387,7 +387,7 @@ dependencies = [
 name = "chapter-24-map-testing"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -398,7 +398,7 @@ dependencies = [
 name = "chapter-25-bsproom-dungeons"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -409,7 +409,7 @@ dependencies = [
 name = "chapter-26-bsp-interiors"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -420,7 +420,7 @@ dependencies = [
 name = "chapter-27-cellular-automata"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -431,7 +431,7 @@ dependencies = [
 name = "chapter-28-drunkards-walk"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -442,7 +442,7 @@ dependencies = [
 name = "chapter-29-mazes"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -453,7 +453,7 @@ dependencies = [
 name = "chapter-30-dla"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -464,7 +464,7 @@ dependencies = [
 name = "chapter-31-symmetry"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -475,7 +475,7 @@ dependencies = [
 name = "chapter-32-voronoi"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -486,7 +486,7 @@ dependencies = [
 name = "chapter-33-wfc"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -497,7 +497,7 @@ dependencies = [
 name = "chapter-34-vaults"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -508,7 +508,7 @@ dependencies = [
 name = "chapter-35-vaults2"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -519,7 +519,7 @@ dependencies = [
 name = "chapter-36-layers"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -530,7 +530,7 @@ dependencies = [
 name = "chapter-37-layers2"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -541,7 +541,7 @@ dependencies = [
 name = "chapter-38-rooms"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -552,7 +552,7 @@ dependencies = [
 name = "chapter-39-halls"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -563,7 +563,7 @@ dependencies = [
 name = "chapter-40-doors"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -574,7 +574,7 @@ dependencies = [
 name = "chapter-41-camera"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -586,7 +586,7 @@ name = "chapter-45-raws1"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -598,7 +598,7 @@ name = "chapter-46-raws2"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -610,7 +610,7 @@ name = "chapter-47-town1"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -622,7 +622,7 @@ name = "chapter-48-town2"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -634,7 +634,7 @@ name = "chapter-49-town3"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -646,7 +646,7 @@ name = "chapter-50-stats"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -659,7 +659,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -672,7 +672,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -685,7 +685,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -698,7 +698,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -711,7 +711,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.6.2",
  "serde",
  "serde_json",
  "specs",
@@ -724,7 +724,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -737,7 +737,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -750,7 +750,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -763,7 +763,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -776,7 +776,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -789,7 +789,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -802,7 +802,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -815,7 +815,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -828,7 +828,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -841,7 +841,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -854,7 +854,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -867,7 +867,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -880,7 +880,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -893,7 +893,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -906,7 +906,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.6.1",
  "serde",
  "serde_json",
  "specs",
@@ -939,9 +939,9 @@ dependencies = [
 
 [[package]]
 name = "const-random"
-version = "0.1.6"
+version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b641a8c9867e341f3295564203b1c250eb8ce6cb6126e007941f78c4d2ed7fe"
+checksum = "2f1af9ac737b2dd2d577701e59fd09ba34822f6f2ebdb30a7647405d9e55e16a"
 dependencies = [
  "const-random-macro",
  "proc-macro-hack",
@@ -949,12 +949,12 @@ dependencies = [
 
 [[package]]
 name = "const-random-macro"
-version = "0.1.6"
+version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c750ec12b83377637110d5a57f5ae08e895b06c4b16e2bdbf1a94ef717428c59"
+checksum = "25e4c606eb459dd29f7c57b2e0879f2b6f14ee130918c2b78ccb58a9624e6c7a"
 dependencies = [
+ "getrandom",
  "proc-macro-hack",
- "rand",
 ]
 
 [[package]]
@@ -1205,17 +1205,6 @@ dependencies = [
 
 [[package]]
 name = "gl_generator"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39a23d5e872a275135d66895d954269cf5e8661d234eb1c2480f4ce0d586acbd"
-dependencies = [
- "khronos_api",
- "log",
- "xml-rs",
-]
-
-[[package]]
-name = "gl_generator"
 version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca98bbde17256e02d17336a6bdb5a50f7d0ccacee502e191d3e3d0ec2f96f84a"
@@ -1250,10 +1239,23 @@ dependencies = [
 ]
 
 [[package]]
-name = "glutin"
-version = "0.22.0"
+name = "glow"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e8c40ccddfa5fb8aaad6a152bfa6b17f157d6635928a832211534f87c9877e1"
+checksum = "31aed196700daf16e1241d819ff4a4855a78ee0cddb051948d50b9213deec82f"
+dependencies = [
+ "gl_generator 0.13.1",
+ "js-sys",
+ "slotmap",
+ "wasm-bindgen",
+ "web-sys",
+]
+
+[[package]]
+name = "glutin"
+version = "0.22.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "639246c8838b02a83b9339bd87da3714e73e52ecfaa758e15d761eb77b2290b5"
 dependencies = [
  "android_glue",
  "cgl",
@@ -1270,7 +1272,7 @@ dependencies = [
  "log",
  "objc",
  "osmesa-sys",
- "parking_lot 0.9.0",
+ "parking_lot 0.10.0",
  "wayland-client",
  "winapi 0.3.8",
  "winit",
@@ -1288,37 +1290,37 @@ dependencies = [
 
 [[package]]
 name = "glutin_emscripten_sys"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "245b3fdb08df6ffed7585365851f8404af9c7e2dd4b59f15262e968b6a95a0c7"
+checksum = "80de4146df76e8a6c32b03007bc764ff3249dcaeb4f675d68a06caf1bac363f1"
 
 [[package]]
 name = "glutin_gles2_sys"
-version = "0.1.3"
+version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "89996c30857ae1b4de4b5189abf1ea822a20a9fe9e1c93e5e7b862ff0bdd5cdf"
+checksum = "07e853d96bebcb8e53e445225c3009758c6f5960d44f2543245f6f07b567dae0"
 dependencies = [
- "gl_generator 0.11.0",
+ "gl_generator 0.13.1",
  "objc",
 ]
 
 [[package]]
 name = "glutin_glx_sys"
-version = "0.1.5"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1290a5ca5e46fcfa7f66f949cc9d9194b2cb6f2ed61892c8c2b82343631dba57"
+checksum = "08c243de74d6cf5ea100c788826d2fb9319de315485dd4b310811a663b3809c3"
 dependencies = [
- "gl_generator 0.11.0",
+ "gl_generator 0.13.1",
  "x11-dl",
 ]
 
 [[package]]
 name = "glutin_wgl_sys"
-version = "0.1.3"
+version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f801bbc91efc22dd1c4818a47814fc72bf74d024510451b119381579bfa39021"
+checksum = "a93dba7ee3a0feeac0f437141ff25e71ce2066bcf1a706acab1559ffff94eb6a"
 dependencies = [
- "gl_generator 0.11.0",
+ "gl_generator 0.13.1",
 ]
 
 [[package]]
@@ -1399,9 +1401,9 @@ dependencies = [
 
 [[package]]
 name = "itoa"
-version = "0.4.4"
+version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "501266b7edd0174f8530248f87f99c88fbe60ca4ef3dd486835b8d8d53136f7f"
+checksum = "b8b7a7c0c47db5545ed3fef7468ee7bb5b74691498139e4b3f6a20685dc6dd8e"
 
 [[package]]
 name = "jpeg-decoder"
@@ -1673,9 +1675,9 @@ dependencies = [
 
 [[package]]
 name = "num_cpus"
-version = "1.11.1"
+version = "1.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "76dac5ed2a876980778b8b85f75a71b6cbf0db0b1232ee12f826bccb00d09d72"
+checksum = "46203554f085ff89c235cd12f7075f3233af9b11ed7c9e16dfe2560d03313ce6"
 dependencies = [
  "hermit-abi",
  "libc",
@@ -1765,7 +1767,7 @@ dependencies = [
  "cloudabi",
  "libc",
  "redox_syscall",
- "smallvec 1.1.0",
+ "smallvec 1.2.0",
  "winapi 0.3.8",
 ]
 
@@ -1805,9 +1807,9 @@ version = "0.5.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ecd45702f76d6d3c75a80564378ae228a85f0b59d2f3ed43c91b4a69eb2ebfc5"
 dependencies = [
- "proc-macro2 1.0.7",
+ "proc-macro2 1.0.8",
  "quote 1.0.2",
- "syn 1.0.13",
+ "syn 1.0.14",
 ]
 
 [[package]]
@@ -1821,9 +1823,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.7"
+version = "1.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0319972dcae462681daf4da1adeeaa066e3ebd29c69be96c6abb1259d2ee2bcc"
+checksum = "3acb317c6ff86a4e579dfa00fc5e6cca91ecbb4e7eb2df0468805b674eb88548"
 dependencies = [
  "unicode-xid 0.2.0",
 ]
@@ -1843,7 +1845,7 @@ version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "053a8c8bcc71fcce321828dc897a98ab9760bef03a4fc36693c231e5b3216cfe"
 dependencies = [
- "proc-macro2 1.0.7",
+ "proc-macro2 1.0.8",
 ]
 
 [[package]]
@@ -1937,9 +1939,9 @@ checksum = "2439c63f3f6139d1b57529d16bc3b8bb855230c8efcc5d3a896c8bea7c3b1e84"
 
 [[package]]
 name = "regex"
-version = "1.3.3"
+version = "1.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5508c1941e4e7cb19965abef075d35a9a8b5cdf0846f30b4050e9b55dc55e87"
+checksum = "322cf97724bea3ee221b78fe25ac9c46114ebb51747ad5babd51a2fc6a8235a8"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -1949,9 +1951,9 @@ dependencies = [
 
 [[package]]
 name = "regex-syntax"
-version = "0.6.13"
+version = "0.6.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e734e891f5b408a29efbf8309e656876276f49ab6a6ac208600b4419bd893d90"
+checksum = "b28dfe3fe9badec5dbf0a79a9cccad2cfc2ab5484bdb3e44cbd1ae8b3ba2be06"
 
 [[package]]
 name = "rltk"
@@ -1962,7 +1964,29 @@ dependencies = [
  "byteorder",
  "flate2",
  "gl_generator 0.14.0",
- "glow",
+ "glow 0.3.0-alpha4",
+ "glutin",
+ "image",
+ "lazy_static",
+ "object-pool",
+ "rand",
+ "rand_xorshift",
+ "regex",
+ "serde",
+ "ultraviolet",
+ "wasm-bindgen",
+ "wasm-timer",
+ "web-sys",
+]
+
+[[package]]
+name = "rltk"
+version = "0.6.2"
+dependencies = [
+ "byteorder",
+ "flate2",
+ "gl_generator 0.14.0",
+ "glow 0.4.0",
  "glutin",
  "image",
  "lazy_static",
@@ -1981,7 +2005,7 @@ dependencies = [
 name = "rust_roguelike_tutorial"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.6.1",
  "specs",
  "specs-derive",
 ]
@@ -2073,16 +2097,16 @@ version = "1.0.104"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "128f9e303a5a29922045a830221b8f78ec74a5f544944f3d5984f8ec3895ef64"
 dependencies = [
- "proc-macro2 1.0.7",
+ "proc-macro2 1.0.8",
  "quote 1.0.2",
- "syn 1.0.13",
+ "syn 1.0.14",
 ]
 
 [[package]]
 name = "serde_json"
-version = "1.0.44"
+version = "1.0.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "48c575e0cc52bdd09b47f330f646cf59afc586e9c4e3ccd6fc1f625b8ea1dad7"
+checksum = "eab8f15f15d6c41a154c1b128a22f2dfabe350ef53c40953d84e36155c91192b"
 dependencies = [
  "itoa",
  "ryu",
@@ -2141,9 +2165,9 @@ dependencies = [
 
 [[package]]
 name = "smallvec"
-version = "1.1.0"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44e59e0c9fa00817912ae6e4e6e3c4fe04455e75699d06eedc7d85917ed8e8f4"
+checksum = "5c2fb2ec9bcd216a5b0d0ccf31ab17b5ed1d627960edff65bbe95d3ce221cefc"
 
 [[package]]
 name = "smithay-client-toolkit"
@@ -2218,11 +2242,11 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "1.0.13"
+version = "1.0.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e4ff033220a41d1a57d8125eab57bf5263783dfdcc18688b1dacc6ce9651ef8"
+checksum = "af6f3550d8dff9ef7dc34d384ac6f107e5d31c8f57d9f28e0081503f547ac8f5"
 dependencies = [
- "proc-macro2 1.0.7",
+ "proc-macro2 1.0.8",
  "quote 1.0.2",
  "unicode-xid 0.2.0",
 ]
@@ -2339,9 +2363,9 @@ dependencies = [
  "bumpalo",
  "lazy_static",
  "log",
- "proc-macro2 1.0.7",
+ "proc-macro2 1.0.8",
  "quote 1.0.2",
- "syn 1.0.13",
+ "syn 1.0.14",
  "wasm-bindgen-shared",
 ]
 
@@ -2361,9 +2385,9 @@ version = "0.2.58"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e85031354f25eaebe78bb7db1c3d86140312a911a106b2e29f9cc440ce3e7668"
 dependencies = [
- "proc-macro2 1.0.7",
+ "proc-macro2 1.0.8",
  "quote 1.0.2",
- "syn 1.0.13",
+ "syn 1.0.14",
  "wasm-bindgen-backend",
  "wasm-bindgen-shared",
 ]
@@ -2383,9 +2407,9 @@ dependencies = [
  "anyhow",
  "heck",
  "log",
- "proc-macro2 1.0.7",
+ "proc-macro2 1.0.8",
  "quote 1.0.2",
- "syn 1.0.13",
+ "syn 1.0.14",
  "wasm-bindgen-backend",
  "weedle",
 ]
@@ -2579,9 +2603,9 @@ dependencies = [
 
 [[package]]
 name = "x11-dl"
-version = "2.18.4"
+version = "2.18.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be65e1342a3baae65439cd03306778831a3d133b0d20243a7fb83fd5cf403c58"
+checksum = "2bf981e3a5b3301209754218f962052d4d9ee97e478f4d26d4a6eced34c1fef8"
 dependencies = [
  "lazy_static",
  "libc",
