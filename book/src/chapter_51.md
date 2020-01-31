@@ -543,7 +543,7 @@ pub fn string_to_slot(slot : &str) -> EquipmentSlot {
         "Feet" => EquipmentSlot::Feet, 
         "Hands" => EquipmentSlot::Hands,
         "Melee" => EquipmentSlot::Melee,
-        _ => { println!("Warning: unknown equipment slot type [{}])", slot); EquipmentSlot::Melee }
+        _ => { rltk::console::log(format!("Warning: unknown equipment slot type [{}])", slot)); EquipmentSlot::Melee }
     }
 }
 ```

@@ -89,7 +89,7 @@ impl RawMaster {
                     });
                 }
             } else {
-                println!("{} is marked as templated, but isn't a weapon or armor.", item.name);
+                rltk::console::log(format!("{} is marked as templated, but isn't a weapon or armor.", item.name));
             }
         }
     }
@@ -192,7 +192,7 @@ impl RawMaster {
 
         for (i,item) in self.raws.items.iter().enumerate() {
             if used_names.contains(&item.name) {
-                println!("WARNING -  duplicate item name in raws [{}]", item.name);
+                rltk::console::log(format!("WARNING -  duplicate item name in raws [{}]", item.name));
             }
             self.item_index.insert(item.name.clone(), i);
             used_names.insert(item.name.clone());
@@ -201,14 +201,14 @@ impl RawMaster {
         }
         for (i,mob) in self.raws.mobs.iter().enumerate() {
             if used_names.contains(&mob.name) {
-                println!("WARNING -  duplicate mob name in raws [{}]", mob.name);
+                rltk::console::log(format!("WARNING -  duplicate mob name in raws [{}]", mob.name));
             }
             self.mob_index.insert(mob.name.clone(), i);
             used_names.insert(mob.name.clone());
         }
         for (i,prop) in self.raws.props.iter().enumerate() {
             if used_names.contains(&prop.name) {
-                println!("WARNING -  duplicate prop name in raws [{}]", prop.name);
+                rltk::console::log(format!("WARNING -  duplicate prop name in raws [{}]", prop.name));
             }
             self.prop_index.insert(prop.name.clone(), i);
             used_names.insert(prop.name.clone());
@@ -216,7 +216,7 @@ impl RawMaster {
 
         for spawn in self.raws.spawn_table.iter() {
             if !used_names.contains(&spawn.name) {
-                println!("WARNING - Spawn tables references unspecified entity {}", spawn.name);
+                rltk::console::log(format!("WARNING - Spawn tables references unspecified entity {}", spawn.name));
             }
         }
 
@@ -371,7 +371,7 @@ pub fn string_to_slot(slot : &str) -> EquipmentSlot {
         "Feet" => EquipmentSlot::Feet,
         "Hands" => EquipmentSlot::Hands,
         "Melee" => EquipmentSlot::Melee,
-        _ => { println!("Warning: unknown equipment slot type [{}])", slot); EquipmentSlot::Melee }
+        _ => { rltk::console::log(format!("Warning: unknown equipment slot type [{}])", slot)); EquipmentSlot::Melee }
     }
 }
 
@@ -419,7 +419,7 @@ macro_rules! apply_effects {
                 "slow" => $eb = $eb.with(Slow{ initiative_penalty : effect.1.parse::<f32>().unwrap() }),
                 "damage_over_time" => $eb = $eb.with( DamageOverTime { damage : effect.1.parse::<i32>().unwrap() } ),
                 "target_self" => $eb = $eb.with( AlwaysTargetsSelf{} ),
-                _ => println!("Warning: consumable effect {} not implemented.", effect_name)
+                _ => rltk::console::log(format!("Warning: consumable effect {} not implemented.", effect_name))
             }
         }
     };
@@ -626,7 +626,7 @@ pub fn spawn_named_mob(raws: &RawMaster, ecs : &mut World, key : &str, pos : Spa
                     "Melee" => { skills.skills.insert(Skill::Melee, *sk.1); }
                     "Defense" => { skills.skills.insert(Skill::Defense, *sk.1); }
                     "Magic" => { skills.skills.insert(Skill::Magic, *sk.1); }
-                    _ => { println!("Unknown skill referenced: [{}]", sk.0); }
+                    _ => { rltk::console::log(format!("Unknown skill referenced: [{}]", sk.0)); }
                 }
             }
         }

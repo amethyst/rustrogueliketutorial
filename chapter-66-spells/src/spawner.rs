@@ -151,7 +151,7 @@ pub fn spawn_entity(ecs: &mut World, spawn : &(&usize, &String)) {
         return;
     }
 
-    println!("WARNING: We don't know how to spawn [{}]!", spawn.1);
+    rltk::console::log(format!("WARNING: We don't know how to spawn [{}]!", spawn.1));
 }
 
 pub fn spawn_town_portal(ecs: &mut World) {

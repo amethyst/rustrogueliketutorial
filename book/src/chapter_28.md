@@ -299,7 +299,7 @@ while floor_tile_count  < desired_floor_tiles {
     }
     floor_tile_count = self.map.tiles.iter().filter(|a| **a == TileType::Floor).count();
 }
-println!("{} dwarves gave up their sobriety, of whom {} actually found a wall.", digger_count, active_digger_count);
+rltk::console::log(format!("{} dwarves gave up their sobriety, of whom {} actually found a wall.", digger_count, active_digger_count));
 ```
 
 This implementation expands a lot of things out, and could be *much* shorter - but for clarity, we've left it large and obvious. We've also made a bunch of things into variables that could be constants - it's easier to read, and is designed to be easy to "play" with values. It also prints a status update to the console, showing what happened.

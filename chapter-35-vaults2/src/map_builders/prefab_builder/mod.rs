@@ -194,7 +194,7 @@ impl PrefabBuilder {
                 self.spawn_list.push((idx, "Health Potion".to_string()));
             }
             _ => {
-                println!("Unknown glyph loading map: {}", (ch as u8) as char);
+                rltk::console::log(format!("Unknown glyph loading map: {}", (ch as u8) as char));
             }
         }
     }

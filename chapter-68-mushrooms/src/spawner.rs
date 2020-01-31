@@ -152,7 +152,7 @@ pub fn spawn_entity(ecs: &mut World, spawn : &(&usize, &String)) {
     }
 
     if spawn.1 != "None" {
-        println!("WARNING: We don't know how to spawn [{}]!", spawn.1);
+        rltk::console::log(format!("WARNING: We don't know how to spawn [{}]!", spawn.1));
     }
 }
 

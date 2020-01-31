@@ -19,7 +19,7 @@ mod mushroom_forest;
 use mushroom_forest::*;
 ...
 pub fn level_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator, width: i32, height: i32) -> BuilderChain {
-    println!("Depth: {}", new_depth);
+    rltk::console::log(format!("Depth: {}", new_depth));
     match new_depth {
         1 => town_builder(new_depth, rng, width, height),
         2 => forest_builder(new_depth, rng, width, height),

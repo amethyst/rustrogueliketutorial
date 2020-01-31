@@ -94,7 +94,7 @@ pub fn spawn_named_item(raws: &RawMaster, new_entity : EntityBuilder, key : &str
                     "magic_mapping" => { eb = eb.with(MagicMapper{}) }
                     "food" => { eb = eb.with(ProvidesFood{}) }
                     _ => {
-                        println!("Warning: consumable effect {} not implemented.", effect_name);
+                        rltk::console::log(format!("Warning: consumable effect {} not implemented.", effect_name));
                     }
                 }
             }

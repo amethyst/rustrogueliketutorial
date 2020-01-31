@@ -18,7 +18,7 @@ We'll start by opening up `map_builders/mod.rs` and adding another line to the m
 
 ```rust
 pub fn level_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator, width: i32, height: i32) -> BuilderChain {
-    println!("Depth: {}", new_depth);
+    rltk::console::log(format!("Depth: {}", new_depth));
     match new_depth {
         1 => town_builder(new_depth, rng, width, height),
         2 => forest_builder(new_depth, rng, width, height),
@@ -65,7 +65,7 @@ Once again, we'll add another level into `map_builders/mod.rs`:
 
 ```rust
 pub fn level_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator, width: i32, height: i32) -> BuilderChain {
-    println!("Depth: {}", new_depth);
+    rltk::console::log(format!("Depth: {}", new_depth));
     match new_depth {
         1 => town_builder(new_depth, rng, width, height),
         2 => forest_builder(new_depth, rng, width, height),
@@ -200,7 +200,7 @@ fn char_to_map(&mut self, ch : char, idx: usize, build_data : &mut BuilderMap) {
             build_data.spawn_list.push((idx, "Watch Fire".to_string()));
         }
         _ => {
-            println!("Unknown glyph loading map: {}", (ch as u8) as char);
+            rltk::console::log(format!("Unknown glyph loading map: {}", (ch as u8) as char));
         }
     }
 }
@@ -410,7 +410,7 @@ pub fn load(&mut self, raws : Raws) {
 
     for (i,item) in self.raws.items.iter().enumerate() {
         if used_names.contains(&item.name) {
-            println!("WARNING -  duplicate item name in raws [{}]", item.name);
+            rltk::console::log(format!("WARNING -  duplicate item name in raws [{}]", item.name));
         }
         self.item_index.insert(item.name.clone(), i);
         used_names.insert(item.name.clone());
@@ -430,7 +430,7 @@ pub fn load(&mut self, raws : Raws) {
                     });
                 }
             } else {
-                println!("{} is marked as templated, but isn't a weapon or armor.", item.name);
+                rltk::console::log(format!("{} is marked as templated, but isn't a weapon or armor.", item.name));
             }
         }
     }
@@ -615,7 +615,7 @@ fn append_magic_template(items_to_build : &mut Vec<NewMagicItem>, item : &super:
                 });
             }
         } else {
-            println!("{} is marked as templated, but isn't a weapon or armor.", item.name);
+            rltk::console::log(format!("{} is marked as templated, but isn't a weapon or armor.", item.name));
         }
     }
 }
@@ -718,7 +718,7 @@ pub fn load(&mut self, raws : Raws) {
 
     for (i,item) in self.raws.items.iter().enumerate() {
         if used_names.contains(&item.name) {
-            println!("WARNING -  duplicate item name in raws [{}]", item.name);
+            rltk::console::log(format!("WARNING -  duplicate item name in raws [{}]", item.name));
         }
         self.item_index.insert(item.name.clone(), i);
         used_names.insert(item.name.clone());
@@ -727,14 +727,14 @@ pub fn load(&mut self, raws : Raws) {
     }
     for (i,mob) in self.raws.mobs.iter().enumerate() {
         if used_names.contains(&mob.name) {
-            println!("WARNING -  duplicate mob name in raws [{}]", mob.name);
+            rltk::console::log(format!("WARNING -  duplicate mob name in raws [{}]", mob.name));
         }
         self.mob_index.insert(mob.name.clone(), i);
         used_names.insert(mob.name.clone());
     }
     for (i,prop) in self.raws.props.iter().enumerate() {
         if used_names.contains(&prop.name) {
-            println!("WARNING -  duplicate prop name in raws [{}]", prop.name);
+            rltk::console::log(format!("WARNING -  duplicate prop name in raws [{}]", prop.name));
         }
         self.prop_index.insert(prop.name.clone(), i);
         used_names.insert(prop.name.clone());
@@ -742,7 +742,7 @@ pub fn load(&mut self, raws : Raws) {
 
     for spawn in self.raws.spawn_table.iter() {
         if !used_names.contains(&spawn.name) {
-            println!("WARNING - Spawn tables references unspecified entity {}", spawn.name);
+            rltk::console::log(format!("WARNING - Spawn tables references unspecified entity {}", spawn.name));
         }
     }
 

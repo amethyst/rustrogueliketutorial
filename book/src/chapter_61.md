@@ -74,7 +74,7 @@ if let Some(consumable) = &item_template.consumable {
             "town_portal" => { eb = eb.with(TownPortal{}) }
             "food" => { eb = eb.with(ProvidesFood{}) }
             _ => {
-                println!("Warning: consumable effect {} not implemented.", effect_name);
+                rltk::console::log(format!("Warning: consumable effect {} not implemented.", effect_name));
             }
         }
     }
@@ -295,7 +295,7 @@ impl<'a> System<'a> for MovementSystem {
                     .expect("Unable to insert");
             } else if entity == *player_entity {
                 // It's the player - we have a mess
-                println!("Not implemented yet.");
+                rltk::console::log(format!("Not implemented yet."));
             } else if let Some(pos) = position.get(entity) {
                 let idx = map.xy_idx(pos.x, pos.y);
                 if blockers.get(entity).is_some() {

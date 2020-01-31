@@ -223,7 +223,6 @@ fn use_consumable_hotkey(gs: &mut State, key: i32) -> RunState {
     if (key as usize) < carried_consumables.len() {
         use crate::components::Ranged;
         if let Some(ranged) = gs.ecs.read_storage::<Ranged>().get(carried_consumables[key as usize]) {
-            println!("Entering targeting mode");
             return RunState::ShowTargeting{ range: ranged.range, item: carried_consumables[key as usize] };
         }
         let mut intent = gs.ecs.write_storage::<WantsToUseItem>();

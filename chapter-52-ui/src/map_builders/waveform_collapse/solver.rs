@@ -197,7 +197,7 @@ impl Solver {
             }
 
             if possible_options.is_empty() {
-                println!("Oh no! It's not possible!");
+                rltk::console::log("Oh no! It's not possible!");
                 self.possible = false;
                 return true;
             } else {
