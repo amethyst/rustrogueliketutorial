@@ -66,7 +66,7 @@ pub fn death(ecs: &mut World, effect: &EffectSpawner, target : Entity) {
                 if player_stats.xp >= player_stats.level * 1000 {
                     // We've gone up a level!
                     player_stats.level += 1;
-                    log.entries.insert(0, format!("Congratulations, you are now level {}", player_stats.level));
+                    log.entries.push(format!("Congratulations, you are now level {}", player_stats.level));
                     player_stats.hit_points.max = player_hp_at_level(
                         player_attributes.fitness.base + player_attributes.fitness.modifiers,
                         player_stats.level

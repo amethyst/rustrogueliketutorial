@@ -51,7 +51,7 @@ impl<'a> System<'a> for VisibilitySystem {
                                 if rng.roll_dice(1,24)==1 {
                                     let name = names.get(*e);
                                     if let Some(name) = name {
-                                        log.entries.insert(0, format!("You spotted a {}.", &name.name));
+                                        log.entries.push(format!("You spotted a {}.", &name.name));
                                     }
                                     hidden.remove(*e);
                                 }

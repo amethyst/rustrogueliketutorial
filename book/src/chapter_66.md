@@ -1345,7 +1345,7 @@ for (weaponentity,wielded,melee) in (&entities, &equipped_items, &meleeweapons).
 Then, after `add_effect` for a successful hit we add in the weapon "proccing":
 
 ```rust
-log.entries.insert(0, format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));
+log.entries.push(format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));
 
 // Proc effects
 if let Some(chance) = &weapon_info.proc_chance {

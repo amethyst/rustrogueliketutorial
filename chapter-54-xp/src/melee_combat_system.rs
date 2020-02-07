@@ -110,19 +110,19 @@ impl<'a> System<'a> for MeleeCombatSystem {
                             from_player: entity == *player_entity
                         }
                     ).expect("Unable to insert damage component");
-                    log.entries.insert(0, format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));
+                    log.entries.push(format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));
                     if let Some(pos) = positions.get(wants_melee.target) {
                         particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::ORANGE), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('‼'), 200.0);
                     }
                 } else  if natural_roll == 1 {
                     // Natural 1 miss
-                    log.entries.insert(0, format!("{} considers attacking {}, but misjudges the timing.", name.name, target_name.name));
+                    log.entries.push(format!("{} considers attacking {}, but misjudges the timing.", name.name, target_name.name));
                     if let Some(pos) = positions.get(wants_melee.target) {
                         particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::BLUE), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('‼'), 200.0);
                     }
                 } else {
                     // Miss
-                    log.entries.insert(0, format!("{} attacks {}, but can't connect.", name.name, target_name.name));
+                    log.entries.push(format!("{} attacks {}, but can't connect.", name.name, target_name.name));
                     if let Some(pos) = positions.get(wants_melee.target) {
                         particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::CYAN), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('‼'), 200.0);
                     }

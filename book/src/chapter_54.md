@@ -153,7 +153,7 @@ WriteExpect<'a, GameLog>
     fn run(&mut self, data : Self::SystemData) {
         let (mut stats, mut damage, positions, mut map, entities, player, attributes, mut log) = data;
 ...
-log.entries.insert(0, format!("Congratulations, you are now level {}", player_stats.level));
+log.entries.push(format!("Congratulations, you are now level {}", player_stats.level));
 ```
 
 Now at least we're *telling* the player, rather than just hoping they notice. That's still not much of a victory lap, so lets add some particle effects!

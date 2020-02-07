@@ -560,7 +560,7 @@ pub fn death(ecs: &mut World, effect: &EffectSpawner, target : Entity) {
                 if player_stats.xp >= player_stats.level * 1000 {
                     // We've gone up a level!
                     player_stats.level += 1;
-                    log.entries.insert(0, format!("Congratulations, you are now level {}", player_stats.level));
+                    log.entries.push(format!("Congratulations, you are now level {}", player_stats.level));
                     player_stats.hit_points.max = player_hp_at_level(
                         player_attributes.fitness.base + player_attributes.fitness.modifiers,
                         player_stats.level
@@ -1185,7 +1185,7 @@ impl<'a> System<'a> for TriggerSystem {
                             // We triggered it
                             let name = names.get(*entity_id);
                             if let Some(name) = name {
-                                log.entries.insert(0, format!("{} triggers!", &name.name));
+                                log.entries.push(format!("{} triggers!", &name.name));
                             }
 
                             // Call the effects system
@@ -1417,7 +1417,7 @@ In `hunger_system.rs`, we can replace the `SufferDamage` code with:
 HungerState::Starving => {
     // Inflict damage from hunger
     if entity == *player_entity {
-        log.entries.insert(0, "Your hunger pangs are getting painful! You suffer 1 hp damage.".to_string());
+        log.entries.push("Your hunger pangs are getting painful! You suffer 1 hp damage.".to_string());
     }
     add_effect(
         None,

@@ -69,13 +69,13 @@ fn fire_on_target(ecs: &mut World) -> RunState {
         let mut shoot_store = ecs.write_storage::<WantsToShoot>();
         let names = ecs.read_storage::<Name>();
         if let Some(name) = names.get(target) {
-            log.entries.insert(0, format!("You fire at {}", name.name));
+            log.entries.push(format!("You fire at {}", name.name));
         }
         shoot_store.insert(*player_entity, WantsToShoot{ target }).expect("Insert Fail");
 
         return RunState::Ticking;
     } else {
-        log.entries.insert(0, "You don't have a target selected!".to_string());
+        log.entries.push("You don't have a target selected!".to_string());
         return RunState::AwaitingInput;
     }
 

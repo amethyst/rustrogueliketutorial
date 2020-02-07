@@ -691,7 +691,7 @@ match player {
     None => {
         let victim_name = names.get(entity);
         if let Some(victim_name) = victim_name {
-            log.entries.insert(0, format!("{} is dead", &victim_name.name));
+            log.entries.push(format!("{} is dead", &victim_name.name));
         }
         dead.push(entity)
     }
