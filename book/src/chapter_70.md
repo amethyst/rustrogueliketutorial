@@ -766,9 +766,9 @@ Reaction::Attack => {
         for (weapon, equip) in (&weapons, &equipped).join() {
             if let Some(wrange) = weapon.range {
                 if equip.owner == entity {
-                    println!("Owner found. Ranges: {}/{}", wrange, range);
+                    rltk::console::log(format!("Owner found. Ranges: {}/{}", wrange, range));
                     if wrange >= range as i32 {
-                        println!("Inserting shoot");
+                        rltk::console::log("Inserting shoot");
                         wants_shoot.insert(entity, WantsToShoot{ target: reaction.2 }).expect("Insert fail");
                         done = true;
                     }

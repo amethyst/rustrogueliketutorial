@@ -1441,25 +1441,25 @@ impl Cell {
         }
     }
 
-    unsafe fn remove_walls(&mut self, next : *mut Cell) {
-        let x = self.column - (*(next)).column;
-        let y = self.row - (*(next)).row;
+    fn remove_walls(&mut self, next : &mut Cell) {
+        let x = self.column - next.column;
+        let y = self.row - next.row;
 
         if x == 1 {
             self.walls[LEFT] = false;
-            (*(next)).walls[RIGHT] = false;
+            next.walls[RIGHT] = false;
         }
         else if x == -1 {
             self.walls[RIGHT] = false;
-            (*(next)).walls[LEFT] = false;
+            next.walls[LEFT] = false;
         }
         else if y == 1 {
             self.walls[TOP] = false;
-            (*(next)).walls[BOTTOM] = false;
+            next.walls[BOTTOM] = false;
         }
         else if y == -1 {
             self.walls[BOTTOM] = false;
-            (*(next)).walls[TOP] = false;
+            next.walls[TOP] = false;
         }
     }
 }
@@ -1545,11 +1545,14 @@ impl<'a> Grid<'a> {
                 Some(next) => {
                     self.cells[next].visited = true;
                     self.backtrace.insert(0, self.current);
-                    unsafe {
-                        let next_cell : *mut Cell = &mut self.cells[next];
-                        let current_cell = &mut self.cells[self.current];
-                        current_cell.remove_walls(next_cell);
-                    }
+                    //   __lower_part__      __higher_part_
+                    //   /            \      /            \
+                    // --------cell1------ | cell2-----------
+                    let (lower_part, higher_part) =
+                        self.cells.split_at_mut(std::cmp::max(self.current, next));
+                    let cell1 = &mut lower_part[std::cmp::min(self.current, next)];
+                    let cell2 = &mut higher_part[0];
+                    cell1.remove_walls(cell2);
                     self.current = next;
                 }
                 None => {
@@ -1734,10 +1737,7 @@ impl MetaMapBuilder for WaveformCollapseBuilder {
 }
 
 impl WaveformCollapseBuilder {
-    /// Generic constructor for waveform collapse.
-    /// # Arguments
-    /// * new_depth - the new map depth
-    /// * derive_from - either None, or a boxed MapBuilder, as output by `random_builder`
+    /// Constructor for waveform collapse.
     #[allow(dead_code)]
     pub fn new() -> Box<WaveformCollapseBuilder> {
         Box::new(WaveformCollapseBuilder{})
@@ -1794,9 +1794,7 @@ impl WaveformCollapseBuilder {
 }
 ```
 
-TODO: Text!
-
-Test:
+You can test this with the following code:
 
 ```rust
 let mut builder = BuilderChain::new(new_depth);
@@ -1928,7 +1926,7 @@ impl PrefabBuilder {
                 build_data.spawn_list.push((idx, "Health Potion".to_string()));
             }
             _ => {
-                println!("Unknown glyph loading map: {}", (ch as u8) as char);
+                rltk::console::log(format!("Unknown glyph loading map: {}", (ch as u8) as char));
             }
         }
     }
@@ -1973,21 +1971,16 @@ impl PrefabBuilder {
         }
     }
 
-    fn apply_previous_iteration<F>(&mut self, mut filter: F, _rng: &mut RandomNumberGenerator, build_data : &mut BuilderMap) 
-        where F : FnMut(i32, i32, &(usize, String)) -> bool
+    fn apply_previous_iteration<F>(&mut self, mut filter: F, _rng: &mut RandomNumberGenerator, build_data : &mut BuilderMap)
+        where F : FnMut(i32, i32) -> bool
     {
-        let spawn_clone = build_data.spawn_list.clone();
-        for e in spawn_clone.iter() {
-            let idx = e.0;
-            let x = idx as i32 % build_data.map.width;
-            let y = idx as i32 / build_data.map.width;
-            if filter(x, y, e) {
-                build_data.spawn_list.push(
-                    (idx, e.1.to_string())
-                )
-            }
-        }        
-        build_data.take_snapshot(); 
+        let width = build_data.map.width;
+        build_data.spawn_list.retain(|(idx, _name)| {
+            let x = *idx as i32 % width;
+            let y = *idx as i32 / width;
+            filter(x, y)
+        });
+        build_data.take_snapshot();
     }
 
     #[allow(dead_code)]
@@ -2012,7 +2005,7 @@ impl PrefabBuilder {
         }
 
         // Build the map
-        self.apply_previous_iteration(|x,y,_e| {
+        self.apply_previous_iteration(|x,y| {
             x < chunk_x || x > (chunk_x + section.width as i32) || y < chunk_y || y > (chunk_y + section.height as i32)
         }, rng, build_data);       
 
@@ -2033,7 +2026,7 @@ impl PrefabBuilder {
         use prefab_rooms::*;
 
         // Apply the previous builder, and keep all entities it spawns (for now)
-        self.apply_previous_iteration(|_x,_y,_e| true, rng, build_data);
+        self.apply_previous_iteration(|_x,_y| true, rng, build_data);
 
         // Do we want a vault at all?
         let vault_roll = rng.roll_dice(1, 6) + build_data.map.depth;

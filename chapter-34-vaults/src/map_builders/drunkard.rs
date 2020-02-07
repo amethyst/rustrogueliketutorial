@@ -233,7 +233,7 @@ impl DrunkardsWalkBuilder {
             }
             floor_tile_count = self.map.tiles.iter().filter(|a| **a == TileType::Floor).count();
         }
-        println!("{} dwarves gave up their sobriety, of whom {} actually found a wall.", digger_count, active_digger_count);
+        rltk::console::log(format!("{} dwarves gave up their sobriety, of whom {} actually found a wall.", digger_count, active_digger_count));
 
         // Find all tiles we can reach from the starting point
         let exit_tile = remove_unreachable_areas_returning_most_distant(&mut self.map, start_idx);

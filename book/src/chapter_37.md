@@ -235,11 +235,11 @@ impl RoomExploder {
                     }
                     if did_something { 
                         build_data.take_snapshot();
+                    }
 
-                        for t in build_data.map.tiles.iter_mut() {
-                            if *t == TileType::DownStairs {
-                                *t = TileType::Floor;
-                            }
+                    for t in build_data.map.tiles.iter_mut() {
+                        if *t == TileType::DownStairs {
+                            *t = TileType::Floor;
                         }
                     }
                 }

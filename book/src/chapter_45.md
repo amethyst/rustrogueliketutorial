@@ -182,7 +182,7 @@ Now we need to actually *parse* the JSON into something usable. Just like our `s
 
 ```rust
 let decoder : Raws = serde_json::from_str(&raw_string).expect("Unable to parse JSON");
-println!("{:?}", decoder);
+rltk::console::log(format!("{:?}", decoder));
 ```
 
 (See the cryptic `{:?}`? That's a way to print *debug* information about a structure). This will fail to compile, because we haven't actually implemented `Raws` - the type it is looking for. 
@@ -358,7 +358,7 @@ pub fn spawn_named_item(raws: &RawMaster, new_entity : EntityBuilder, key : &str
                     "ranged" => { eb = eb.with(Ranged{ range: effect.1.parse::<i32>().unwrap() }) },
                     "damage" => { eb = eb.with(InflictsDamage{ damage : effect.1.parse::<i32>().unwrap() }) }
                     _ => {
-                        println!("Warning: consumable effect {} not implemented.", effect_name);
+                        rltk::console::log(format!("Warning: consumable effect {} not implemented.", effect_name));
                     }
                 }
             }
@@ -507,7 +507,7 @@ if let Some(consumable) = &item_template.consumable {
             "magic_mapping" => { eb = eb.with(MagicMapper{}) }
             "food" => { eb = eb.with(ProvidesFood{}) }
             _ => {
-                println!("Warning: consumable effect {} not implemented.", effect_name);
+                rltk::console::log(format!("Warning: consumable effect {} not implemented.", effect_name));
             }
         }
     }
@@ -1047,7 +1047,7 @@ pub fn spawn_entity(ecs: &mut World, spawn : &(&usize, &String)) {
         return;
     }
 
-    println!("WARNING: We don't know how to spawn [{}]!", spawn.1);
+    rltk::console::log(format!("WARNING: We don't know how to spawn [{}]!", spawn.1));
 }
 ```
 

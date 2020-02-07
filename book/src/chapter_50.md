@@ -372,7 +372,7 @@ if let Some(mobskills) = &mob_template.skills {
             "Melee" => { skills.skills.insert(Skill::Melee, *sk.1); }
             "Defense" => { skills.skills.insert(Skill::Defense, *sk.1); }
             "Magic" => { skills.skills.insert(Skill::Magic, *sk.1); }
-            _ => { println!("Unknown skill referenced: [{}]", sk.0); }
+            _ => { rltk::console::log(format!("Unknown skill referenced: [{}]", sk.0)); }
         }
     }
 }

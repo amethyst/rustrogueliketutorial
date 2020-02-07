@@ -427,7 +427,7 @@ fn load_rex_map(&mut self, path: &str) {
                             self.spawns.push((idx, "Health Potion".to_string()));
                         }
                         _ => {
-                            println!("Unknown glyph loading map: {}", (cell.ch as u8) as char);
+                            rltk::console::log(format!("Unknown glyph loading map: {}", (cell.ch as u8) as char));
                         }
                     }
                 }
@@ -624,7 +624,7 @@ fn char_to_map(&mut self, ch : char, idx: usize) {
             self.spawns.push((idx, "Health Potion".to_string()));
         }
         _ => {
-            println!("Unknown glyph loading map: {}", (ch as u8) as char);
+            rltk::console::log(format!("Unknown glyph loading map: {}", (ch as u8) as char));
         }
     }
 }

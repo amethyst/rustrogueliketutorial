@@ -17,10 +17,7 @@ impl MetaMapBuilder for WaveformCollapseBuilder {
 }
 
 impl WaveformCollapseBuilder {
-    /// Generic constructor for waveform collapse.
-    /// # Arguments
-    /// * new_depth - the new map depth
-    /// * derive_from - either None, or a boxed MapBuilder, as output by `random_builder`
+    /// Constructor for waveform collapse.
     #[allow(dead_code)]
     pub fn new() -> Box<WaveformCollapseBuilder> {
         Box::new(WaveformCollapseBuilder{})

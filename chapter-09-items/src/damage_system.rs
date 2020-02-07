@@ -39,7 +39,7 @@ pub fn delete_the_dead(ecs : &mut World) {
                         }
                         dead.push(entity)
                     }
-                    Some(_) => println!("You are dead")
+                    Some(_) => rltk::console::log("You are dead")
                 }
             }
         }

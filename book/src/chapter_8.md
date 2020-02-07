@@ -266,7 +266,10 @@ If you `cargo run` your project now, it looks like this:
 Since we're on look and feel, lets consider enabling an RLTK feature: post-processing to give scanlines and screen burn, for that truly retro feel. It's entirely up to you if you want to use this! In `main.rs`, the initial setup simply replaced the first `init` command with:
 
 ```rust
-let mut context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "resources");
+use rltk::RltkBuilder;
+    let mut context = RltkBuilder::simple80x50()
+        .with_title("Roguelike Tutorial")
+        .build();
 context.with_post_scanlines(true);
 ```
 

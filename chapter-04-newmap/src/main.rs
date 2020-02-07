@@ -43,7 +43,10 @@ impl GameState for State {
 }
 
 fn main() {
-    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "resources");
+    use rltk::RltkBuilder;
+    let context = RltkBuilder::simple80x50()
+        .with_title("Roguelike Tutorial")
+        .build();
     let mut gs = State {
         ecs: World::new()
     };

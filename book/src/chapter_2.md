@@ -48,7 +48,7 @@ It's important to know that ECS is just one way of handling composition. There a
 To start, we want to tell Cargo that we're going to use Specs. Open your `Cargo.toml` file, and change the `dependencies` section to look like this:
 ```toml
 [dependencies]
-rltk = { version = "0.6.1" }
+rltk = { version = "0.6.2" }
 specs = "0.15.0"
 specs-derive = "0.4.0"
 ```
@@ -274,7 +274,10 @@ impl GameState for State {
 }
 
 fn main() {
-    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "resources");
+    use rltk::RltkBuilder;
+    let context = RltkBuilder::simple80x50()
+        .with_title("Roguelike Tutorial")
+        .build();
     let mut gs = State {
         ecs: World::new()
     };
@@ -468,7 +471,10 @@ impl State {
 }
 
 fn main() {
-    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "resources");
+    use rltk::RltkBuilder;
+    let context = RltkBuilder::simple80x50()
+        .with_title("Roguelike Tutorial")
+        .build();
     let mut gs = State {
         ecs: World::new()
     };
@@ -690,7 +696,10 @@ impl State {
 }
 
 fn main() {
-    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "resources");
+    use rltk::RltkBuilder;
+    let context = RltkBuilder::simple80x50()
+        .with_title("Roguelike Tutorial")
+        .build();
     let mut gs = State {
         ecs: World::new()
     };

@@ -7,6 +7,6 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rltk = { version = "0.6.1" }
+rltk = { version = "0.6.2" }
 specs = "0.15.0"
 specs-derive = "0.4.0"

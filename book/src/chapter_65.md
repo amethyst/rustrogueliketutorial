@@ -154,7 +154,6 @@ impl<'a> System<'a> for EncumbranceSystem {
                 totals.weight += item.weight_lbs;
                 totals.initiative += item.initiative_penalty;
                 if let Some(attr) = attrbonus.get(entity) {
-                    println!("Attr! {:?}", attr);
                     totals.might += attr.might.unwrap_or(0);
                     totals.fitness += attr.fitness.unwrap_or(0);
                     totals.quickness += attr.quickness.unwrap_or(0);

@@ -585,7 +585,7 @@ macro_rules! apply_effects {
                 "particle" => $eb = $eb.with(parse_particle(&effect.1)),
                 "remove_curse" => $eb = $eb.with(ProvidesRemoveCurse{}),
                 "identify" => $eb = $eb.with(ProvidesIdentification{}),
-                _ => println!("Warning: consumable effect {} not implemented.", effect_name)
+                _ => rltk::console::log(format!("Warning: consumable effect {} not implemented.", effect_name))
             }
         }
     };
@@ -833,7 +833,7 @@ macro_rules! apply_effects {
                 "identify" => $eb = $eb.with(ProvidesIdentification{}),
                 "slow" => $eb = $eb.with(Slow{ initiative_penalty : effect.1.parse::<f32>().unwrap() }),
                 "damage_over_time" => $eb = $eb.with( DamageOverTime { damage : effect.1.parse::<i32>().unwrap() } ),
-                _ => println!("Warning: consumable effect {} not implemented.", effect_name)
+                _ => rltk::console::log(format!("Warning: consumable effect {} not implemented.", effect_name))
             }
         }
     };

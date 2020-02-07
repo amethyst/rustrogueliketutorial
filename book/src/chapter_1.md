@@ -139,7 +139,7 @@ Go ahead and make sure that your name is correct! Next, we're going to ask Cargo
 
 ```toml
 [dependencies]
-rltk = { version = "0.6.1" }
+rltk = { version = "0.6.2" }
 ```
 
 We're telling it that the package is named `rltk`, and is available in Cargo - so we just have to give it a version. You can do `cargo search rltk` to see the latest version at any time, or go to [the crate webpage](https://crates.io/crates/rltk).
@@ -162,7 +162,10 @@ impl GameState for State {
 }
 
 fn main() {
-    let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "resources");
+    use rltk::RltkBuilder;
+    let context = RltkBuilder::simple80x50()
+        .with_title("Roguelike Tutorial")
+        .build();
     let gs = State{ };
     rltk::main_loop(context, gs);
 }
@@ -190,7 +193,10 @@ If you're new to Rust, you are probably wondering what exactly the `Hello Rust` 
 5. `ctx.cls();` says "call the `cls` function provided by the variable `ctx`. `cls` is a common abbreviation for "clear the screen" - we're telling our *context* that it should clear the virtual terminal. It's a good idea to do this at the beginning of a frame, unless you specifically don't want to.
 6. `ctx.print(1, 1, "Hello Rust World");` is asking the *context* to *print* "Hello Rust World" at the location (1,1).
 7. Now we get to `fn main()`. *Every* program has a `main` function: it tells the operating system where to start the program.
-8. `let context = Rltk::init_simple8x8(80, 50, "Hello Rust World", "resources");` is an example of calling a *function* from inside a `struct` - where that struct doesn't take a "self" function. In other languages, this would be called a *constructor*. We're calling the function `init_simple8x8` (which is a helper provided by RLTK to make a terminal using an 8 pixels by 8 pixels font). We ask that the console dimensions be 80 characters wide, by 50 characters high. The window title is "Hello Rust World". "resources" tells the program where to find the `resources` folder we setup earlier.
+8. `use rltk::RltkBuilder;
+    let context = RltkBuilder::simple80x50()
+        .with_title("Roguelike Tutorial")
+        .build();` is an example of calling a *function* from inside a `struct` - where that struct doesn't take a "self" function. In other languages, this would be called a *constructor*. We're calling the function `init_simple8x8` (which is a helper provided by RLTK to make a terminal using an 8 pixels by 8 pixels font). We ask that the console dimensions be 80 characters wide, by 50 characters high. The window title is "Hello Rust World". "resources" tells the program where to find the `resources` folder we setup earlier.
 9. `let gs = State{ };` is an example of a *variable* assignment (see [The Rust Book](https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html)). We're making a new variable called `gs` (short for "game state"), and setting it to be a copy of the `State` struct we defined above.
 10. `rltk::main_loop(context, gs);` calls into the `rltk` namespace, activating a function called `main_loop`. It needs both the `context` and the `GameState` we made earlier - so we pass those along. RLTK tries to take some of the complexity of running a GUI/game application away, and provides this wrapper. The function now takes over control of the program, and will call your `tick` function (see above) every time the program "ticks" - that is, finishes one cycle and moves to the next. This can happen 60 or more times per second!
 
