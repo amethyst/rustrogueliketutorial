@@ -614,6 +614,164 @@ pub fn get_event_count<T: ToString>(event: T) -> i32 {
 
 This is similar to how we are storing the log: it's a "lazy static", with a mutex safety wrapper. Inside is a `HashMap`, indexed by event name and containing a counter. `record_event` adds an event to the running total (or creates a new one if it doesn't exist). `get_event_count` returns either 0, or the total of the named counter.
 
+In `main.rs`, find the main loop handler for `RunState::AwaitingInput` - and we'll extend it to count the number of turns the player has survived:
+
+```rust
+RunState::AwaitingInput => {
+    newrunstate = player_input(self, ctx);
+    if newrunstate != RunState::AwaitingInput {
+        crate::gamelog::record_event("Turn", 1);
+    }
+}
+```
+
+We should also clear the counter state at the end of `generate_world_map`:
+
+```rust
+fn generate_world_map(&mut self, new_depth : i32, offset: i32) {
+    self.mapgen_index = 0;
+    self.mapgen_timer = 0.0;
+    self.mapgen_history.clear();
+    let map_building_info = map::level_transition(&mut self.ecs, new_depth, offset);
+    if let Some(history) = map_building_info {
+        self.mapgen_history = history;
+    } else {
+        map::thaw_level_entities(&mut self.ecs);
+    }
+
+    gamelog::clear_log();
+    gamelog::Logger::new()
+        .append("Welcome to")
+        .color(rltk::CYAN)
+        .append("Rusty Roguelike")
+        .log();
+
+    gamelog::clear_events();
+}
+```
+
+To demonstrate that it works, let's display the number of turns the player survived on their death screen. In `gui.rs`, open the function `game_over` and add a turn counter:
+
+```rust
+pub fn game_over(ctx : &mut Rltk) -> GameOverResult {
+    ctx.print_color_centered(15, RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK), "Your journey has ended!");
+    ctx.print_color_centered(17, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), "One day, we'll tell you all about how you did.");
+    ctx.print_color_centered(18, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), "That day, sadly, is not in this chapter..");
+
+    ctx.print_color_centered(19, RGB::named(rltk::WHITE), RGB::named(rltk::BLACK), &format!("You lived for {} turns.", crate::gamelog::get_event_count("Turn")));
+
+    ctx.print_color_centered(21, RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK), "Press any key to return to the menu.");
+
+    match ctx.key {
+        None => GameOverResult::NoSelection,
+        Some(_) => GameOverResult::QuitToMenu
+    }
+}
+```
+
+If you `cargo run` now, your turns are counted. Here's the results of a run in which I tried to get killed:
+
+![c71-s3.jpg](c71-s3.jpg)
+
+## Bracket Goes Quantity Surveying
+
+This is a very flexible system: you can count pretty much anything you like, from anywhere! Let's log how much damage the player takes throughout their game. Open `src/effects/damage.rs` and modify the function `inflict_damage`:
+
+```rust
+pub fn inflict_damage(ecs: &mut World, damage: &EffectSpawner, target: Entity) {
+    let mut pools = ecs.write_storage::<Pools>();
+    let player_entity = ecs.fetch::<Entity>();
+    if let Some(pool) = pools.get_mut(target) {
+        if !pool.god_mode {
+            if let Some(creator) = damage.creator {
+                if creator == target { 
+                    return; 
+                }
+            }
+            if let EffectType::Damage{amount} = damage.effect_type {
+                pool.hit_points.current -= amount;
+                add_effect(None, EffectType::Bloodstain, Targets::Single{target});
+                add_effect(None, 
+                    EffectType::Particle{ 
+                        glyph: rltk::to_cp437('‼'),
+                        fg : rltk::RGB::named(rltk::ORANGE),
+                        bg : rltk::RGB::named(rltk::BLACK),
+                        lifespan: 200.0
+                    }, 
+                    Targets::Single{target}
+                );
+                if target == *player_entity {
+                    crate::gamelog::record_event("Damage Taken", amount);
+                }
+                if damage.creator == *player_entity {
+                    crate::gamelog::record_event("Damage Inflicted", amount);
+                }
+
+                if pool.hit_points.current < 1 {
+                    add_effect(damage.creator, EffectType::EntityDeath, Targets::Single{target});
+                }
+            }
+        }
+    }
+}
+```
+
+We'll again modify `gui.rs`'s `game_over` function to display damage taken:
+
+```rust
+pub fn inflict_damage(ecs: &mut World, damage: &EffectSpawner, target: Entity) {
+    let mut pools = ecs.write_storage::<Pools>();
+    let player_entity = ecs.fetch::<Entity>();
+    if let Some(pool) = pools.get_mut(target) {
+        if !pool.god_mode {
+            if let Some(creator) = damage.creator {
+                if creator == target { 
+                    return; 
+                }
+            }
+            if let EffectType::Damage{amount} = damage.effect_type {
+                pool.hit_points.current -= amount;
+                add_effect(None, EffectType::Bloodstain, Targets::Single{target});
+                add_effect(None, 
+                    EffectType::Particle{ 
+                        glyph: rltk::to_cp437('‼'),
+                        fg : rltk::RGB::named(rltk::ORANGE),
+                        bg : rltk::RGB::named(rltk::BLACK),
+                        lifespan: 200.0
+                    }, 
+                    Targets::Single{target}
+                );
+                if target == *player_entity {
+                    crate::gamelog::record_event("Damage Taken", amount);
+                }
+                if let Some(creator) = damage.creator {
+                    if creator == *player_entity {
+                        crate::gamelog::record_event("Damage Inflicted", amount);
+                    }
+                }
+
+                if pool.hit_points.current < 1 {
+                    add_effect(damage.creator, EffectType::EntityDeath, Targets::Single{target});
+                }
+            }
+        }
+    }
+}
+```
+
+Dying now shows you how much damage you suffered throughout your run:
+
+![c71-s4.jpg](c71-s4.jpg)
+
+You can, of course, extend this to your heart's content. Pretty much everything quantifiable is now trackable, should you so desire. To round off the chapter, we'll add some minimal *achievements*.
+
+### Saving and Loading Counters
+
+
+
+## Achievements
+
+
 
 ---
 

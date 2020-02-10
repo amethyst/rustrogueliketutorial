@@ -192,6 +192,9 @@ impl GameState for State {
             }
             RunState::AwaitingInput => {
                 newrunstate = player_input(self, ctx);
+                if newrunstate != RunState::AwaitingInput {
+                    crate::gamelog::record_event("Turn", 1);
+                }
             }
             RunState::Ticking => {
                 let mut should_change_target = false;
@@ -511,6 +514,8 @@ impl State {
             .color(rltk::CYAN)
             .append("Rusty Roguelike")
             .log();
+
+        gamelog::clear_events();
     }
 }
 
