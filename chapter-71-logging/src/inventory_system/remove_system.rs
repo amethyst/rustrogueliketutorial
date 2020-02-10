@@ -22,9 +22,7 @@ impl<'a> System<'a> for ItemRemoveSystem {
             if cursed.get(to_remove.item).is_some() {
                 crate::gamelog::Logger::new()
                     .append("You cannot remove")
-                    .color(rltk::CYAN)
-                    .append(&names.get(to_remove.item).unwrap().name)
-                    .color(rltk::WHITE)
+                    .item_name(&names.get(to_remove.item).unwrap().name)
                     .append(" - it is cursed.")
                     .log();
             } else {

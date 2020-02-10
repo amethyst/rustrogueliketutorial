@@ -119,17 +119,11 @@ impl<'a> System<'a> for MeleeCombatSystem {
                         Targets::Single{ target: wants_melee.target }
                     );
                     crate::gamelog::Logger::new()
-                        .color(rltk::YELLOW)
-                        .append(&name.name)
-                        .color(rltk::WHITE)
+                        .npc_name(&name.name)
                         .append("hits")
-                        .color(rltk::YELLOW)
-                        .append(&target_name.name)
-                        .color(rltk::WHITE)
+                        .npc_name(&target_name.name)
                         .append("for")
-                        .color(rltk::RED)
-                        .append(format!("{}", damage))
-                        .color(rltk::WHITE)
+                        .damage(damage)
                         .append("hp.")
                         .log();
 

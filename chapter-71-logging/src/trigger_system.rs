@@ -32,9 +32,7 @@ impl<'a> System<'a> for TriggerSystem {
                             let name = names.get(*entity_id);
                             if let Some(name) = name {
                                 crate::gamelog::Logger::new()
-                                    .color(rltk::RED)
-                                    .append(&name.name)
-                                    .color(rltk::WHITE)
+                                    .item_name(&name.name)
                                     .append("triggers!")
                                     .log();
                             }

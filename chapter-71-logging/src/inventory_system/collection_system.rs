@@ -29,8 +29,7 @@ impl<'a> System<'a> for ItemCollectionSystem {
             if pickup.collected_by == *player_entity {
                 crate::gamelog::Logger::new()
                     .append("You pick up the")
-                    .color(rltk::CYAN)
-                    .append(
+                    .item_name(
                         super::obfuscate_name(pickup.item, &names, &magic_items, &obfuscated_names, &dm)
                     )
                     .log();

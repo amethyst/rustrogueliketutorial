@@ -53,8 +53,7 @@ impl<'a> System<'a> for VisibilitySystem {
                                         if let Some(name) = name {
                                             crate::gamelog::Logger::new()
                                                 .append("You spotted:")
-                                                .color(rltk::RED)
-                                                .append(&name.name)
+                                                .npc_name(&name.name)
                                                 .log();
                                         }
                                         hidden.remove(*e);

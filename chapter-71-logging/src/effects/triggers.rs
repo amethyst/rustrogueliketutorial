@@ -8,9 +8,7 @@ pub fn item_trigger(creator : Option<Entity>, item: Entity, targets : &Targets, 
         if c.charges < 1 {
             // Cancel
             crate::gamelog::Logger::new()
-                .color(rltk::CYAN)
-                .append(&ecs.read_storage::<Name>().get(item).unwrap().name)
-                .color(rltk::WHITE)
+                .item_name(&ecs.read_storage::<Name>().get(item).unwrap().name)
                 .append("is out of charges!")
                 .log();
             return;
@@ -126,8 +124,7 @@ fn event_trigger(creator : Option<Entity>, entity: Entity, targets : &Targets, e
         let names = ecs.read_storage::<Name>();
         crate::gamelog::Logger::new()
             .append("You eat the")
-            .color(rltk::CYAN)
-            .append(&names.get(entity).unwrap().name)
+            .item_name(&names.get(entity).unwrap().name)
             .log();
         did_something = true;
     }

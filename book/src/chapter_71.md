@@ -433,6 +433,79 @@ Once you've made all the changes, you can `cargo run` your game - and see a brig
 
 ![c71-s2.jpg](c71-s2.jpg)
 
+## Making common logging tasks easier
+
+While going through the code, upading log entries - a lot of commonalities appeared. It would be good to enforce some style consistency (and reduce the amount of typing required). We'll add some methods to our log builder (in `src/gamelog/builder.rs`) to help:
+
+```rust
+pub fn npc_name<T: ToString>(mut self, text : T) -> Self {
+    self.fragments.push(
+        LogFragment{
+            color : RGB::named(rltk::YELLOW),
+            text : text.to_string()
+        }
+    );
+    self
+}
+
+pub fn item_name<T: ToString>(mut self, text : T) -> Self {
+    self.fragments.push(
+        LogFragment{
+            color : RGB::named(rltk::CYAN),
+            text : text.to_string()
+        }
+    );
+    self
+}
+
+pub fn damage(mut self, damage: i32) -> Self {
+    self.fragments.push(
+        LogFragment{
+            color : RGB::named(rltk::RED),
+            text : format!("{}", damage).to_string()
+        }
+    );
+    self
+}
+```
+
+Now we can go through and update some of the log entry code again, using the easier syntax. For example, in `src\ai\quipping.rs` we can replace:
+
+```rust
+crate::gamelog::Logger::new()
+    .color(rltk::YELLOW)
+    .append(&name.name)
+    .color(rltk::WHITE)
+    .append("says")
+    .color(rltk::CYAN)
+    .append(&quip.available[quip_index])
+    .log();
+```
+
+with:
+
+```rust
+crate::gamelog::Logger::new()
+    .npc_name(&name.name)
+    .append("says")
+    .npc_name(&quip.available[quip_index])
+    .log();
+```
+
+Or in `melee_combat_system.rs`, one can greatly shorted the damage announcement:
+
+```rust
+crate::gamelog::Logger::new()
+    .npc_name(&name.name)
+    .append("hits")
+    .npc_name(&target_name.name)
+    .append("for")
+    .damage(damage)
+    .append("hp.")
+    .log();
+```
+
+Once again, I've gone through the project source code and applied these enhancements.
 
 ---
 

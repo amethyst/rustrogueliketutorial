@@ -32,4 +32,34 @@ impl Logger {
     pub fn log(self) {
         append_entry(self.fragments)
     }
+
+    pub fn npc_name<T: ToString>(mut self, text : T) -> Self {
+        self.fragments.push(
+            LogFragment{
+                color : RGB::named(rltk::YELLOW),
+                text : text.to_string()
+            }
+        );
+        self
+    }
+
+    pub fn item_name<T: ToString>(mut self, text : T) -> Self {
+        self.fragments.push(
+            LogFragment{
+                color : RGB::named(rltk::CYAN),
+                text : text.to_string()
+            }
+        );
+        self
+    }
+
+    pub fn damage(mut self, damage: i32) -> Self {
+        self.fragments.push(
+            LogFragment{
+                color : RGB::named(rltk::RED),
+                text : format!("{}", damage).to_string()
+            }
+        );
+        self
+    }
 }

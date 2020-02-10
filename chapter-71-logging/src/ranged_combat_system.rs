@@ -144,17 +144,11 @@ impl<'a> System<'a> for RangedCombatSystem {
                         Targets::Single{ target: wants_shoot.target }
                     );
                     crate::gamelog::Logger::new()
-                        .color(rltk::CYAN)
-                        .append(&name.name)
-                        .color(rltk::WHITE)
+                        .npc_name(&name.name)
                         .append("hits")
-                        .color(rltk::CYAN)
-                        .append(&target_name.name)
-                        .color(rltk::WHITE)
+                        .npc_name(&target_name.name)
                         .append("for")
-                        .color(rltk::RED)
-                        .append(format!("{}", damage))
-                        .color(rltk::WHITE)
+                        .damage(damage)
                         .append("hp.")
                         .log();
 
@@ -180,13 +174,9 @@ impl<'a> System<'a> for RangedCombatSystem {
                 } else  if natural_roll == 1 {
                     // Natural 1 miss
                     crate::gamelog::Logger::new()
-                        .color(rltk::CYAN)
-                        .append(&name.name)
-                        .color(rltk::WHITE)
+                        .npc_name(&name.name)
                         .append("considers attacking")
-                        .color(rltk::CYAN)
-                        .append(&target_name.name)
-                        .color(rltk::WHITE)
+                        .npc_name(&target_name.name)
                         .append("but misjudges the timing!")
                         .log();
                     add_effect(
@@ -197,12 +187,9 @@ impl<'a> System<'a> for RangedCombatSystem {
                 } else {
                     // Miss
                     crate::gamelog::Logger::new()
-                        .color(rltk::CYAN)
-                        .append(&name.name)
-                        .color(rltk::WHITE)
+                        .npc_name(&name.name)
                         .append("attacks")
-                        .color(rltk::CYAN)
-                        .append(&target_name.name)
+                        .npc_name(&target_name.name)
                         .color(rltk::WHITE)
                         .append("but can't connect.")
                         .log();
