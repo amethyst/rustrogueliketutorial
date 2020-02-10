@@ -431,7 +431,7 @@ You should have a pretty good understanding of the changes requires by now. If y
 
 Once you've made all the changes, you can `cargo run` your game - and see a brightly colored log:
 
-[c71-s2.jpg](c72-s2.jpg)
+![c71-s2.jpg](c72-s2.jpg)
 
 
 ---
