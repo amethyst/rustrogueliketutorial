@@ -1,12 +1,12 @@
 extern crate rltk;
-use rltk::{ RGB, Rltk, Console, Point, VirtualKeyCode };
+use rltk::{ RGB, Rltk, Console, Point, VirtualKeyCode, TextBlock };
 extern crate specs;
 use specs::prelude::*;
 use super::{Pools, gamelog::GameLog, Map, Name, State, InBackpack,
     Viewshed, RunState, Equipped, HungerClock, HungerState, rex_assets::RexAssets,
     Hidden, camera, Attributes, Attribute, Consumable, VendorMode, Item, Vendor,
     MagicItem, MagicItemClass, ObfuscatedName, CursedItem, MasterDungeonMap,
-    StatusEffect, Duration, KnownSpells, Weapon, Target };
+    StatusEffect, Duration, KnownSpells, Weapon, Target, gamelog };
 
 pub fn get_item_color(ecs : &World, item : Entity) -> RGB {
     let dm = ecs.fetch::<crate::map::MasterDungeonMap>();
@@ -246,12 +246,15 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     }
 
     // Draw the log
-    let log = ecs.fetch::<GameLog>();
+    /*let log = ecs.fetch::<GameLog>();
     let mut y = 46;
     for s in log.entries.iter().rev() {
         if y < 59 { ctx.print(2, y, s); }
         y += 1;
-    }
+    }*/
+    let mut block = TextBlock::new(1, 46, 79, 58);
+    block.print(&gamelog::log_display());
+    block.render(&mut ctx.consoles[0].console);
 
     draw_tooltips(ecs, ctx);
 }
