@@ -47,6 +47,7 @@ I'd also like to take a moment to thank everyone who has sent me kind words, con
 * Ben Gamble
 * Boyd Trolinger
 * Brian Bucklew
+* Caleb M.
 * Chad Thorenson
 * Crocodylus Pontifex (great name!)
 * David Hagerty
