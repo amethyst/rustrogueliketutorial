@@ -50,7 +50,7 @@ match item_heals {
     Some(healer) => {
         stats.hp = i32::min(stats.max_hp, stats.hp + healer.heal_amount);
         if entity == *player_entity {
-            gamelog.entries.insert(0, format!("You drink the {}, healing {} hp.", names.get(useitem.item).unwrap().name, healer.heal_amount));
+            gamelog.entries.push(format!("You drink the {}, healing {} hp.", names.get(useitem.item).unwrap().name, healer.heal_amount));
         }
     }
 }
@@ -273,7 +273,7 @@ match item_damages {
             if entity == *player_entity {
                 let mob_name = names.get(*mob).unwrap();
                 let item_name = names.get(useitem.item).unwrap();
-                gamelog.entries.insert(0, format!("You use {} on {}, inflicting {} hp.", item_name.name, mob_name.name, damage.damage));
+                gamelog.entries.push(format!("You use {} on {}, inflicting {} hp.", item_name.name, mob_name.name, damage.damage));
             }
 
             used_item = true;
@@ -382,7 +382,7 @@ match item_heals {
             if let Some(stats) = stats {
                 stats.hp = i32::min(stats.max_hp, stats.hp + healer.heal_amount);
                 if entity == *player_entity {
-                    gamelog.entries.insert(0, format!("You use the {}, healing {} hp.", names.get(useitem.item).unwrap().name, healer.heal_amount));
+                    gamelog.entries.push(format!("You use the {}, healing {} hp.", names.get(useitem.item).unwrap().name, healer.heal_amount));
                 }
             }                        
         }
@@ -403,7 +403,7 @@ match item_damages {
             if entity == *player_entity {
                 let mob_name = names.get(*mob).unwrap();
                 let item_name = names.get(useitem.item).unwrap();
-                gamelog.entries.insert(0, format!("You use {} on {}, inflicting {} hp.", item_name.name, mob_name.name, damage.damage));
+                gamelog.entries.push(format!("You use {} on {}, inflicting {} hp.", item_name.name, mob_name.name, damage.damage));
             }
 
             used_item = true;
@@ -478,7 +478,7 @@ let mut add_confusion = Vec::new();
                 if entity == *player_entity {
                     let mob_name = names.get(*mob).unwrap();
                     let item_name = names.get(useitem.item).unwrap();
-                    gamelog.entries.insert(0, format!("You use {} on {}, confusing them.", item_name.name, mob_name.name));
+                    gamelog.entries.push(format!("You use {} on {}, confusing them.", item_name.name, mob_name.name));
                 }
             }
         }

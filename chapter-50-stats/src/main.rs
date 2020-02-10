@@ -340,7 +340,7 @@ impl State {
 
         // Notify the player and give them some health
         let mut gamelog = self.ecs.fetch_mut::<gamelog::GameLog>();
-        gamelog.entries.insert(0, "You descend to the next level.".to_string());
+        gamelog.entries.push("You descend to the next level.".to_string());
     }
 
     fn game_over_cleanup(&mut self) {

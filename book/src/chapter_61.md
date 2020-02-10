@@ -112,10 +112,10 @@ So that marks the effect. Now we need to make it function! Open up `inventory_sy
 // If its a town portal...
 if let Some(_townportal) = town_portal.get(useitem.item) {
     if map.depth == 1 {
-        gamelog.entries.insert(0, "You are already in town, so the scroll does nothing.".to_string());
+        gamelog.entries.push("You are already in town, so the scroll does nothing.".to_string());
     } else {
         used_item = true;
-        gamelog.entries.insert(0, "You are telported back to town!".to_string());
+        gamelog.entries.push("You are telported back to town!".to_string());
         *runstate = RunState::TownPortal;
     }
 }

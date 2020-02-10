@@ -32,7 +32,7 @@ impl<'a> System<'a> for BystanderAI {
                 if !quip.available.is_empty() && viewshed.visible_tiles.contains(&player_pos) && rng.roll_dice(1,6)==1 {
                     let name = names.get(entity);
                     let quip_index = if quip.available.len() == 1 { 0 } else { (rng.roll_dice(1, quip.available.len() as i32)-1) as usize };
-                    gamelog.entries.insert(0,
+                    gamelog.entries.push(
                         format!("{} says \"{}\"", name.unwrap().name, quip.available[quip_index])
                     );
                     quip.available.remove(quip_index);

@@ -947,7 +947,7 @@ if xp_gain != 0 || gold_gain != 0.0 {
     if player_stats.xp >= player_stats.level * 1000 {
         // We've gone up a level!
         player_stats.level += 1;
-        log.entries.insert(0, format!("Congratulations, you are now level {}", player_stats.level));
+        log.entries.push(format!("Congratulations, you are now level {}", player_stats.level));
 
         // Improve a random attribute
         let mut rng = ecs.fetch_mut::<rltk::RandomNumberGenerator>();
@@ -955,19 +955,19 @@ if xp_gain != 0 || gold_gain != 0.0 {
         match attr_to_boost {
             1 => {
                 player_attributes.might.base += 1;
-                log.entries.insert(0, "You feel stronger!".to_string());
+                log.entries.push("You feel stronger!".to_string());
             }
             2 => {
                 player_attributes.fitness.base += 1;
-                log.entries.insert(0, "You feel healthier!".to_string());
+                log.entries.push("You feel healthier!".to_string());
             }
             3 => {
                 player_attributes.quickness.base += 1;
-                log.entries.insert(0, "You feel quicker!".to_string());
+                log.entries.push("You feel quicker!".to_string());
             }
             _ => {
                 player_attributes.intelligence.base += 1;
-                log.entries.insert(0, "You feel smarter!".to_string());
+                log.entries.push("You feel smarter!".to_string());
             }
         }
 

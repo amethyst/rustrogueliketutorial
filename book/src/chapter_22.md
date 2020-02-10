@@ -232,7 +232,7 @@ impl<'a> System<'a> for TriggerSystem {
                             // We triggered it                            
                             let name = names.get(*entity_id);
                             if let Some(name) = name {
-                                log.entries.insert(0, format!("{} triggers!", &name.name));
+                                log.entries.push(format!("{} triggers!", &name.name));
                             }
 
                             hidden.remove(*entity_id); // The trap is no longer hidden
@@ -362,7 +362,7 @@ impl<'a> System<'a> for TriggerSystem {
                             // We triggered it                            
                             let name = names.get(*entity_id);
                             if let Some(name) = name {
-                                log.entries.insert(0, format!("{} triggers!", &name.name));
+                                log.entries.push(format!("{} triggers!", &name.name));
                             }
 
                             hidden.remove(*entity_id); // The trap is no longer hidden
@@ -451,7 +451,7 @@ impl<'a> System<'a> for VisibilitySystem {
                                 if rng.roll_dice(1,24)==1 {
                                     let name = names.get(*e);
                                     if let Some(name) = name {
-                                        log.entries.insert(0, format!("You spotted a {}.", &name.name));
+                                        log.entries.push(format!("You spotted a {}.", &name.name));
                                     }
                                     hidden.remove(*e);
                                 }

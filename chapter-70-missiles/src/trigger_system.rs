@@ -32,7 +32,7 @@ impl<'a> System<'a> for TriggerSystem {
                             // We triggered it
                             let name = names.get(*entity_id);
                             if let Some(name) = name {
-                                log.entries.insert(0, format!("{} triggers!", &name.name));
+                                log.entries.push(format!("{} triggers!", &name.name));
                             }
 
                             // Call the effects system

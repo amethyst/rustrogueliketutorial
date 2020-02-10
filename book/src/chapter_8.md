@@ -88,7 +88,7 @@ In `main.rs` we add a `mod gamelog;` line, and insert it as a resource with `gs.
 let log = ecs.fetch::<GameLog>();
 
 let mut y = 44;
-for s in log.entries.iter() {
+for s in log.entries.iter().rev() {
     if y < 49 { ctx.print(2, y, s); }
     y += 1;
 }
@@ -131,9 +131,9 @@ impl<'a> System<'a> for MeleeCombatSystem {
                     let damage = i32::max(0, stats.power - target_stats.defense);
 
                     if damage == 0 {
-                        log.entries.insert(0, format!("{} is unable to hurt {}", &name.name, &target_name.name));
+                        log.entries.push(format!("{} is unable to hurt {}", &name.name, &target_name.name));
                     } else {
-                        log.entries.insert(0, format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));
+                        log.entries.push(format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));
                         inflict_damage.insert(wants_melee.target, SufferDamage{ amount: damage }).expect("Unable to do damage");                        
                     }
                 }
@@ -170,7 +170,7 @@ pub fn delete_the_dead(ecs : &mut World) {
                     None => {
                         let victim_name = names.get(entity);
                         if let Some(victim_name) = victim_name {
-                            log.entries.insert(0, format!("{} is dead", &victim_name.name));
+                            log.entries.push(format!("{} is dead", &victim_name.name));
                         }
                         dead.push(entity)
                     }

@@ -50,7 +50,7 @@ impl<'a> System<'a> for DamageSystem {
             if player_stats.xp >= player_stats.level * 1000 {
                 // We've gone up a level!
                 player_stats.level += 1;
-                log.entries.insert(0, format!("Congratulations, you are now level {}", player_stats.level));
+                log.entries.push(format!("Congratulations, you are now level {}", player_stats.level));
                 player_stats.hit_points.max = player_hp_at_level(
                     player_attributes.fitness.base + player_attributes.fitness.modifiers,
                     player_stats.level
@@ -96,7 +96,7 @@ pub fn delete_the_dead(ecs : &mut World) {
                     None => {
                         let victim_name = names.get(entity);
                         if let Some(victim_name) = victim_name {
-                            log.entries.insert(0, format!("{} is dead", &victim_name.name));
+                            log.entries.push(format!("{} is dead", &victim_name.name));
                         }
                         dead.push(entity)
                     }

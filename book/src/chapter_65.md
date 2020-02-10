@@ -192,7 +192,7 @@ impl<'a> System<'a> for EncumbranceSystem {
                         // Overburdened
                         pool.total_initiative_penalty += 4.0;
                         if *entity == *player {
-                            gamelog.entries.insert(0, "You are overburdened, and suffering an initiative penalty.".to_string());
+                            gamelog.entries.push("You are overburdened, and suffering an initiative penalty.".to_string());
                         }
                     }
                 }
@@ -283,7 +283,7 @@ pub fn item_trigger(creator : Option<Entity>, item: Entity, targets : &Targets, 
         if c.charges < 1 {
             // Cancel
             let mut gamelog = ecs.fetch_mut::<GameLog>();
-            gamelog.entries.insert(0, format!("{} is out of charges!", ecs.read_storage::<Name>().get(item).unwrap().name));
+            gamelog.entries.push(format!("{} is out of charges!", ecs.read_storage::<Name>().get(item).unwrap().name));
             return;
         } else {
             c.charges -= 1;

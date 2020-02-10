@@ -317,7 +317,7 @@ impl State {
 
         // Notify the player
         let mut gamelog = self.ecs.fetch_mut::<gamelog::GameLog>();
-        gamelog.entries.insert(0, "You change level.".to_string());
+        gamelog.entries.push("You change level.".to_string());
     }
 
     fn game_over_cleanup(&mut self) {

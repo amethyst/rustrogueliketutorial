@@ -854,8 +854,7 @@ impl<'a> System<'a> for ItemCollectionSystem {
             dirty.insert(pickup.collected_by, EquipmentChanged{}).expect("Unable to insert");
 
             if pickup.collected_by == *player_entity {
-                gamelog.entries.insert(
-                    0, 
+                gamelog.entries.push(
                     format!(
                         "You pick up the {}.", 
                         obfuscate_name(pickup.item, &names, &magic_items, &obfuscated_names, &dm)
@@ -905,8 +904,7 @@ impl<'a> System<'a> for ItemDropSystem {
             dirty.insert(entity, EquipmentChanged{}).expect("Unable to insert");
 
             if entity == *player_entity {
-                gamelog.entries.insert(
-                    0, 
+                gamelog.entries.push(
                     format!(
                         "You drop the {}.",
                         obfuscate_name(to_drop.item, &names, &magic_items, &obfuscated_names, &dm)

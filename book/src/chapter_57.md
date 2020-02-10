@@ -255,27 +255,27 @@ impl<'a> System<'a> for HungerSystem {
                         clock.state = HungerState::Normal;
                         clock.duration = 200;
                         if entity == *player_entity {
-                            log.entries.insert(0, "You are no longer well fed.".to_string());
+                            log.entries.push("You are no longer well fed.".to_string());
                         }
                     }
                     HungerState::Normal => {
                         clock.state = HungerState::Hungry;
                         clock.duration = 200;
                         if entity == *player_entity {
-                            log.entries.insert(0, "You are hungry.".to_string());
+                            log.entries.push("You are hungry.".to_string());
                         }
                     }
                     HungerState::Hungry => {
                         clock.state = HungerState::Starving;
                         clock.duration = 200;
                         if entity == *player_entity {
-                            log.entries.insert(0, "You are starving!".to_string());
+                            log.entries.push("You are starving!".to_string());
                         }
                     }
                     HungerState::Starving => {
                         // Inflict damage from hunger
                         if entity == *player_entity {
-                            log.entries.insert(0, "Your hunger pangs are getting painful! You suffer 1 hp damage.".to_string());
+                            log.entries.push("Your hunger pangs are getting painful! You suffer 1 hp damage.".to_string());
                         }
                         inflict_damage.insert(entity, SufferDamage{ amount: 1, from_player: false }).expect("Unable to do damage");  
                     }
@@ -456,7 +456,7 @@ impl<'a> System<'a> for QuipSystem {
                     if quip.available.len() == 1 { 0 } 
                     else { (rng.roll_dice(1, quip.available.len() as i32)-1) as usize };
                 
-                gamelog.entries.insert(0,
+                gamelog.entries.push(
                     format!("{} says \"{}\"", name.name, quip.available[quip_index])
                 );
                 quip.available.remove(quip_index);

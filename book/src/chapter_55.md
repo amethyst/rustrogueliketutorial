@@ -303,7 +303,7 @@ fn goto_previous_level(&mut self) {
 
     // Notify the player and give them some health
     let mut gamelog = self.ecs.fetch_mut::<gamelog::GameLog>();
-    gamelog.entries.insert(0, "You ascend to the previous level.".to_string());
+    gamelog.entries.push("You ascend to the previous level.".to_string());
 }
 ```
 
@@ -328,7 +328,7 @@ pub fn try_previous_level(ecs: &mut World) -> bool {
         true
     } else {
         let mut gamelog = ecs.fetch_mut::<GameLog>();
-        gamelog.entries.insert(0, "There is no way up from here.".to_string());
+        gamelog.entries.push("There is no way up from here.".to_string());
         false
     }
 }
@@ -421,7 +421,7 @@ fn goto_level(&mut self, offset: i32) {
 
     // Notify the player
     let mut gamelog = self.ecs.fetch_mut::<gamelog::GameLog>();
-    gamelog.entries.insert(0, "You change level.".to_string());
+    gamelog.entries.push("You change level.".to_string());
 }
 ```
 

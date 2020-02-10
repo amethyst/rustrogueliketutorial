@@ -52,9 +52,9 @@ impl<'a> System<'a> for MeleeCombatSystem {
                     let damage = i32::max(0, (stats.power + offensive_bonus) - (target_stats.defense + defensive_bonus));
 
                     if damage == 0 {
-                        log.entries.insert(0, format!("{} is unable to hurt {}", &name.name, &target_name.name));
+                        log.entries.push(format!("{} is unable to hurt {}", &name.name, &target_name.name));
                     } else {
-                        log.entries.insert(0, format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));
+                        log.entries.push(format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));
                         inflict_damage.insert(wants_melee.target, SufferDamage{ amount: damage }).expect("Unable to do damage");
                     }
                 }

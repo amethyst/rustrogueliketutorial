@@ -110,7 +110,7 @@ impl<'a> System<'a> for MeleeCombatSystem {
                         EffectType::Damage{ amount: damage },
                         Targets::Single{ target: wants_melee.target }
                     );
-                    log.entries.insert(0, format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));
+                    log.entries.push(format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));
 
                     // Proc effects
                     if let Some(chance) = &weapon_info.proc_chance {
@@ -133,7 +133,7 @@ impl<'a> System<'a> for MeleeCombatSystem {
 
                 } else  if natural_roll == 1 {
                     // Natural 1 miss
-                    log.entries.insert(0, format!("{} considers attacking {}, but misjudges the timing.", name.name, target_name.name));
+                    log.entries.push(format!("{} considers attacking {}, but misjudges the timing.", name.name, target_name.name));
                     add_effect(
                         None,
                         EffectType::Particle{ glyph: rltk::to_cp437('‼'), fg: rltk::RGB::named(rltk::BLUE), bg : rltk::RGB::named(rltk::BLACK), lifespan: 200.0 },
@@ -141,7 +141,7 @@ impl<'a> System<'a> for MeleeCombatSystem {
                     );
                 } else {
                     // Miss
-                    log.entries.insert(0, format!("{} attacks {}, but can't connect.", name.name, target_name.name));
+                    log.entries.push(format!("{} attacks {}, but can't connect.", name.name, target_name.name));
                     add_effect(
                         None,
                         EffectType::Particle{ glyph: rltk::to_cp437('‼'), fg: rltk::RGB::named(rltk::CYAN), bg : rltk::RGB::named(rltk::BLACK), lifespan: 200.0 },

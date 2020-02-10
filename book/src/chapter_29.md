@@ -322,7 +322,7 @@ fn generate_maze(&mut self, generator : &mut MazeBuilder) {
         match next {
             Some(next) => {
                 self.cells[next].visited = true;
-                self.backtrace.insert(0, self.current);
+                self.backtrace.push(self.current);
                 //   __lower_part__      __higher_part_
                 //   /            \      /            \
                 // --------cell1------ | cell2-----------
@@ -421,7 +421,7 @@ fn generate_maze(&mut self, generator : &mut MazeBuilder) {
         match next {
             Some(next) => {
                 self.cells[next].visited = true;
-                self.backtrace.insert(0, self.current);
+                self.backtrace.push(self.current);
                 unsafe {
                     let next_cell : *mut Cell = &mut self.cells[next];
                     let current_cell = &mut self.cells[self.current];

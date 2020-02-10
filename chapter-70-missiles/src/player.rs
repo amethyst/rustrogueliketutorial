@@ -69,13 +69,13 @@ fn fire_on_target(ecs: &mut World) -> RunState {
         let mut shoot_store = ecs.write_storage::<WantsToShoot>();
         let names = ecs.read_storage::<Name>();
         if let Some(name) = names.get(target) {
-            log.entries.insert(0, format!("You fire at {}", name.name));
+            log.entries.push(format!("You fire at {}", name.name));
         }
         shoot_store.insert(*player_entity, WantsToShoot{ target }).expect("Insert Fail");
 
         return RunState::Ticking;
     } else {
-        log.entries.insert(0, "You don't have a target selected!".to_string());
+        log.entries.push("You don't have a target selected!".to_string());
         return RunState::AwaitingInput;
     }
 
@@ -218,7 +218,7 @@ pub fn try_next_level(ecs: &mut World) -> bool {
         true
     } else {
         let mut gamelog = ecs.fetch_mut::<GameLog>();
-        gamelog.entries.insert(0, "There is no way down from here.".to_string());
+        gamelog.entries.push("There is no way down from here.".to_string());
         false
     }
 }
@@ -231,7 +231,7 @@ pub fn try_previous_level(ecs: &mut World) -> bool {
         true
     } else {
         let mut gamelog = ecs.fetch_mut::<GameLog>();
-        gamelog.entries.insert(0, "There is no way up from here.".to_string());
+        gamelog.entries.push("There is no way up from here.".to_string());
         false
     }
 }
@@ -252,7 +252,7 @@ fn get_item(ecs: &mut World) {
     }
 
     match target_item {
-        None => gamelog.entries.insert(0, "There is nothing here to pick up.".to_string()),
+        None => gamelog.entries.push("There is nothing here to pick up.".to_string()),
         Some(item) => {
             let mut pickup = ecs.write_storage::<WantsToPickupItem>();
             pickup.insert(*player_entity, WantsToPickupItem{ collected_by: *player_entity, item }).expect("Unable to insert want to pickup");
@@ -367,7 +367,7 @@ fn use_spell_hotkey(gs: &mut State, key: i32) -> RunState {
             }
         } else {
             let mut gamelog = gs.ecs.fetch_mut::<GameLog>();
-            gamelog.entries.insert(0, "You don't have enough mana to cast that!".to_string());
+            gamelog.entries.push("You don't have enough mana to cast that!".to_string());
         }
     }
 

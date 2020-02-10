@@ -250,7 +250,7 @@ We'll start by showing a heart when you drink a healing potion. In the *healing*
 ```rust
 stats.hp = i32::min(stats.max_hp, stats.hp + healer.heal_amount);
 if entity == *player_entity {
-    gamelog.entries.insert(0, format!("You use the {}, healing {} hp.", names.get(useitem.item).unwrap().name, healer.heal_amount));
+    gamelog.entries.push(format!("You use the {}, healing {} hp.", names.get(useitem.item).unwrap().name, healer.heal_amount));
 }
 used_item = true;
 
@@ -262,7 +262,7 @@ if let Some(pos) = pos {
 
 We can use a similar effect for confusion - only with a magenta question mark. In the *confusion* section:
 ```rust
-gamelog.entries.insert(0, format!("You use {} on {}, confusing them.", item_name.name, mob_name.name));
+gamelog.entries.push(format!("You use {} on {}, confusing them.", item_name.name, mob_name.name));
 
 let pos = positions.get(*mob);
 if let Some(pos) = pos {
@@ -273,7 +273,7 @@ if let Some(pos) = pos {
 We should also use a particle to indicate that damage was inflicted. In the *damage* section of the system:
 
 ```rust
-gamelog.entries.insert(0, format!("You use {} on {}, inflicting {} hp.", item_name.name, mob_name.name, damage.damage));
+gamelog.entries.push(format!("You use {} on {}, inflicting {} hp.", item_name.name, mob_name.name, damage.damage));
 
 let pos = positions.get(*mob);
 if let Some(pos) = pos {

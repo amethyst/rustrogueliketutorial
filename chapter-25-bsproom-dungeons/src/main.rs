@@ -341,7 +341,7 @@ impl State {
         // Notify the player and give them some health
         let player_entity = self.ecs.fetch::<Entity>();
         let mut gamelog = self.ecs.fetch_mut::<gamelog::GameLog>();
-        gamelog.entries.insert(0, "You descend to the next level, and take a moment to heal.".to_string());
+        gamelog.entries.push("You descend to the next level, and take a moment to heal.".to_string());
         let mut player_health_store = self.ecs.write_storage::<CombatStats>();
         let player_health = player_health_store.get_mut(*player_entity);
         if let Some(player_health) = player_health {
