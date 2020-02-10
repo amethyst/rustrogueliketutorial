@@ -72,5 +72,6 @@
     - [Mushrooms](./chapter_68.md)
     - [More Shrooms](./chapter_69.md)
     - [Ranged Combat](./chapter_70.md)
+    - [Logging](./chapter_71.md)
 - [Contributors](./contributors.md)
 - [Licensing](./license.md)

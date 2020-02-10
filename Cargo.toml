@@ -78,7 +78,8 @@ members = [
     "chapter-67-dragon",
     "chapter-68-mushrooms",
     "chapter-69-mushrooms2",
-    "chapter-70-missiles"
+    "chapter-70-missiles",
+    "chapter-71-logging"
     ]
 
 [profile.dev]
