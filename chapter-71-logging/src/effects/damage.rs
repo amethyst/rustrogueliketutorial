@@ -4,7 +4,6 @@ use crate::components::{Pools, Player, Attributes, Confusion, SerializeMe, Durat
     Name, EquipmentChanged, Slow, DamageOverTime, Skills, OnDeath, Position};
 use crate::map::Map;
 use crate::gamesystem::{player_hp_at_level, mana_at_level};
-use crate::gamelog::GameLog;
 use crate::specs::saveload::{MarkedBuilder, SimpleMarker};
 
 pub fn inflict_damage(ecs: &mut World, damage: &EffectSpawner, target: Entity) {
@@ -53,7 +52,7 @@ pub fn death(ecs: &mut World, effect: &EffectSpawner, target : Entity) {
         let mut map_mut = ecs.fetch_mut::<Map>();
         map_mut.blocked[pos as usize] = false;
         std::mem::drop(map_mut);
-    }    
+    }
 
     if let Some(source) = effect.creator {
         if ecs.read_storage::<Player>().get(source).is_some() {
@@ -63,7 +62,6 @@ pub fn death(ecs: &mut World, effect: &EffectSpawner, target : Entity) {
             }
 
             if xp_gain != 0 || gold_gain != 0.0 {
-                let mut log = ecs.fetch_mut::<GameLog>();
                 let mut player_stats = pools.get_mut(source).unwrap();
                 let mut player_attributes = attributes.get_mut(source).unwrap();
                 player_stats.xp += xp_gain;
@@ -71,7 +69,11 @@ pub fn death(ecs: &mut World, effect: &EffectSpawner, target : Entity) {
                 if player_stats.xp >= player_stats.level * 1000 {
                     // We've gone up a level!
                     player_stats.level += 1;
-                    log.entries.push(format!("Congratulations, you are now level {}", player_stats.level));
+                    crate::gamelog::Logger::new()
+                        .color(rltk::MAGENTA)
+                        .append("Congratulations, you are now level")
+                        .append(format!("{}", player_stats.level))
+                        .log();
 
                     // Improve a random attribute
                     let mut rng = ecs.fetch_mut::<rltk::RandomNumberGenerator>();
@@ -79,19 +81,19 @@ pub fn death(ecs: &mut World, effect: &EffectSpawner, target : Entity) {
                     match attr_to_boost {
                         1 => {
                             player_attributes.might.base += 1;
-                            log.entries.push("You feel stronger!".to_string());
+                            crate::gamelog::Logger::new().color(rltk::GREEN).append("You feel stronger!").log();
                         }
                         2 => {
                             player_attributes.fitness.base += 1;
-                            log.entries.push("You feel healthier!".to_string());
+                            crate::gamelog::Logger::new().color(rltk::GREEN).append("You feel healthier!").log();
                         }
                         3 => {
                             player_attributes.quickness.base += 1;
-                            log.entries.push("You feel quicker!".to_string());
+                            crate::gamelog::Logger::new().color(rltk::GREEN).append("You feel quicker!").log();
                         }
                         _ => {
                             player_attributes.intelligence.base += 1;
-                            log.entries.push("You feel smarter!".to_string());
+                            crate::gamelog::Logger::new().color(rltk::GREEN).append("You feel smarter!").log();
                         }
                     }
 

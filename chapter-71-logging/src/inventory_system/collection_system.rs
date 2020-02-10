@@ -1,5 +1,5 @@
 use specs::prelude::*;
-use super::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, EquipmentChanged,
+use super::{WantsToPickupItem, Name, InBackpack, Position, EquipmentChanged,
     MagicItem, ObfuscatedName, MasterDungeonMap };
 
 pub struct ItemCollectionSystem {}
@@ -7,7 +7,6 @@ pub struct ItemCollectionSystem {}
 impl<'a> System<'a> for ItemCollectionSystem {
     #[allow(clippy::type_complexity)]
     type SystemData = ( ReadExpect<'a, Entity>,
-                        WriteExpect<'a, GameLog>,
                         WriteStorage<'a, WantsToPickupItem>,
                         WriteStorage<'a, Position>,
                         ReadStorage<'a, Name>,
@@ -19,7 +18,7 @@ impl<'a> System<'a> for ItemCollectionSystem {
                       );
 
     fn run(&mut self, data : Self::SystemData) {
-        let (player_entity, mut gamelog, mut wants_pickup, mut positions, names,
+        let (player_entity, mut wants_pickup, mut positions, names,
             mut backpack, mut dirty, magic_items, obfuscated_names, dm) = data;
 
         for pickup in wants_pickup.join() {
@@ -28,12 +27,13 @@ impl<'a> System<'a> for ItemCollectionSystem {
             dirty.insert(pickup.collected_by, EquipmentChanged{}).expect("Unable to insert");
 
             if pickup.collected_by == *player_entity {
-                gamelog.entries.push(
-                    format!(
-                        "You pick up the {}.", 
+                crate::gamelog::Logger::new()
+                    .append("You pick up the")
+                    .color(rltk::CYAN)
+                    .append(
                         super::obfuscate_name(pickup.item, &names, &magic_items, &obfuscated_names, &dm)
                     )
-                );
+                    .log();
             }
         }
 

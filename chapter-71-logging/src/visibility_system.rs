@@ -1,6 +1,6 @@
 extern crate specs;
 use specs::prelude::*;
-use super::{Viewshed, Position, Map, Player, Hidden, BlocksVisibility, gamelog::GameLog, Name};
+use super::{Viewshed, Position, Map, Player, Hidden, BlocksVisibility, Name};
 extern crate rltk;
 use rltk::{field_of_view, Point};
 
@@ -15,13 +15,12 @@ impl<'a> System<'a> for VisibilitySystem {
                         ReadStorage<'a, Player>,
                         WriteStorage<'a, Hidden>,
                         WriteExpect<'a, rltk::RandomNumberGenerator>,
-                        WriteExpect<'a, GameLog>,
                         ReadStorage<'a, Name>,
                         ReadStorage<'a, BlocksVisibility>);
 
     fn run(&mut self, data : Self::SystemData) {
         let (mut map, entities, mut viewshed, pos, player,
-            mut hidden, mut rng, mut log, names, blocks_visibility) = data;
+            mut hidden, mut rng, names, blocks_visibility) = data;
 
         map.view_blocked.clear();
         for (block_pos, _block) in (&pos, &blocks_visibility).join() {
@@ -52,7 +51,11 @@ impl<'a> System<'a> for VisibilitySystem {
                                     if rng.roll_dice(1,24)==1 {
                                         let name = names.get(*e);
                                         if let Some(name) = name {
-                                            log.entries.push(format!("You spotted a {}.", &name.name));
+                                            crate::gamelog::Logger::new()
+                                                .append("You spotted:")
+                                                .color(rltk::RED)
+                                                .append(&name.name)
+                                                .log();
                                         }
                                         hidden.remove(*e);
                                     }

@@ -1,5 +1,5 @@
 use specs::prelude::*;
-use super::{Name, InBackpack, Position, gamelog::GameLog, WantsToDropItem, EquipmentChanged,
+use super::{Name, InBackpack, Position, WantsToDropItem, EquipmentChanged,
     MagicItem, ObfuscatedName, MasterDungeonMap};
 
 pub struct ItemDropSystem {}
@@ -7,7 +7,6 @@ pub struct ItemDropSystem {}
 impl<'a> System<'a> for ItemDropSystem {
     #[allow(clippy::type_complexity)]
     type SystemData = ( ReadExpect<'a, Entity>,
-                        WriteExpect<'a, GameLog>,
                         Entities<'a>,
                         WriteStorage<'a, WantsToDropItem>,
                         ReadStorage<'a, Name>,
@@ -20,7 +19,7 @@ impl<'a> System<'a> for ItemDropSystem {
                       );
 
     fn run(&mut self, data : Self::SystemData) {
-        let (player_entity, mut gamelog, entities, mut wants_drop, names, mut positions,
+        let (player_entity, entities, mut wants_drop, names, mut positions,
             mut backpack, mut dirty, magic_items, obfuscated_names, dm) = data;
 
         for (entity, to_drop) in (&entities, &wants_drop).join() {
@@ -35,12 +34,13 @@ impl<'a> System<'a> for ItemDropSystem {
             dirty.insert(entity, EquipmentChanged{}).expect("Unable to insert");
 
             if entity == *player_entity {
-                gamelog.entries.push(
-                    format!(
-                        "You pick up the {}.", 
+                crate::gamelog::Logger::new()
+                    .append("You drop the")
+                    .color(rltk::CYAN)
+                    .append(
                         super::obfuscate_name(to_drop.item, &names, &magic_items, &obfuscated_names, &dm)
                     )
-                );
+                    .log();
             }
         }
 

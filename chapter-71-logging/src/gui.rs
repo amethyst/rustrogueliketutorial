@@ -2,7 +2,7 @@ extern crate rltk;
 use rltk::{ RGB, Rltk, Console, Point, VirtualKeyCode, TextBlock };
 extern crate specs;
 use specs::prelude::*;
-use super::{Pools, gamelog::GameLog, Map, Name, State, InBackpack,
+use super::{Pools, Map, Name, State, InBackpack,
     Viewshed, RunState, Equipped, HungerClock, HungerState, rex_assets::RexAssets,
     Hidden, camera, Attributes, Attribute, Consumable, VendorMode, Item, Vendor,
     MagicItem, MagicItemClass, ObfuscatedName, CursedItem, MasterDungeonMap,

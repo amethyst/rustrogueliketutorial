@@ -1,6 +1,6 @@
 extern crate specs;
 use specs::prelude::*;
-use super::{EntityMoved, Position, EntryTrigger, Map, Name, gamelog::GameLog,
+use super::{EntityMoved, Position, EntryTrigger, Map, Name,
     effects::*, AreaOfEffect};
 
 pub struct TriggerSystem {}
@@ -13,12 +13,11 @@ impl<'a> System<'a> for TriggerSystem {
                         ReadStorage<'a, EntryTrigger>,
                         ReadStorage<'a, Name>,
                         Entities<'a>,
-                        WriteExpect<'a, GameLog>,
                         ReadStorage<'a, AreaOfEffect>);
 
     fn run(&mut self, data : Self::SystemData) {
         let (map, mut entity_moved, position, entry_trigger, 
-            names, entities, mut log, area_of_effect) = data;
+            names, entities, area_of_effect) = data;
 
         // Iterate the entities that moved and their final position
         for (entity, mut _entity_moved, pos) in (&entities, &mut entity_moved, &position).join() {
@@ -32,7 +31,12 @@ impl<'a> System<'a> for TriggerSystem {
                             // We triggered it
                             let name = names.get(*entity_id);
                             if let Some(name) = name {
-                                log.entries.push(format!("{} triggers!", &name.name));
+                                crate::gamelog::Logger::new()
+                                    .color(rltk::RED)
+                                    .append(&name.name)
+                                    .color(rltk::WHITE)
+                                    .append("triggers!")
+                                    .log();
                             }
 
                             // Call the effects system

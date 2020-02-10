@@ -467,8 +467,7 @@ impl State {
         self.generate_world_map(current_depth + offset, offset);
 
         // Notify the player
-        let mut gamelog = self.ecs.fetch_mut::<gamelog::GameLog>();
-        gamelog.entries.push("You change level.".to_string());
+        gamelog::Logger::new().append("You change level.").log();
     }
 
     fn game_over_cleanup(&mut self) {
@@ -622,7 +621,6 @@ fn main() {
     gs.ecs.insert(RunState::MapGeneration{} );
     gs.ecs.insert(particle_system::ParticleBuilder::new());
     gs.ecs.insert(rex_assets::RexAssets::new());
-    gs.ecs.insert(gamelog::GameLog{ entries : vec!["Welcome to Rusty Roguelike".to_string()] });
 
     gs.generate_world_map(1, 0);
 

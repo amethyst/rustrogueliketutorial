@@ -1,8 +1,9 @@
 extern crate specs;
 use specs::prelude::*;
-use super::{Attributes, Skills, WantsToShoot, Name, gamelog::GameLog,
+use super::{Attributes, Skills, WantsToShoot, Name, 
     HungerClock, HungerState, Pools, skill_bonus,
-    Skill, Equipped, Weapon, EquipmentSlot, WeaponAttribute, Wearable, NaturalAttackDefense,
+    Skill, Equipped, Weapon, EquipmentSlot, WeaponAttribute, 
+    Wearable, NaturalAttackDefense,
     effects::*, Map, Position};
 use rltk::{to_cp437, RGB, Point};
 
@@ -11,7 +12,6 @@ pub struct RangedCombatSystem {}
 impl<'a> System<'a> for RangedCombatSystem {
     #[allow(clippy::type_complexity)]
     type SystemData = ( Entities<'a>,
-                        WriteExpect<'a, GameLog>,
                         WriteStorage<'a, WantsToShoot>,
                         ReadStorage<'a, Name>,
                         ReadStorage<'a, Attributes>,
@@ -28,7 +28,7 @@ impl<'a> System<'a> for RangedCombatSystem {
                       );
 
     fn run(&mut self, data : Self::SystemData) {
-        let (entities, mut log, mut wants_shoot, names, attributes, skills,
+        let (entities, mut wants_shoot, names, attributes, skills,
             hunger_clock, pools, mut rng, equipped_items, weapon, wearables, natural,
             positions, map) = data;
 
@@ -143,7 +143,20 @@ impl<'a> System<'a> for RangedCombatSystem {
                         EffectType::Damage{ amount: damage },
                         Targets::Single{ target: wants_shoot.target }
                     );
-                    log.entries.push(format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));
+                    crate::gamelog::Logger::new()
+                        .color(rltk::CYAN)
+                        .append(&name.name)
+                        .color(rltk::WHITE)
+                        .append("hits")
+                        .color(rltk::CYAN)
+                        .append(&target_name.name)
+                        .color(rltk::WHITE)
+                        .append("for")
+                        .color(rltk::RED)
+                        .append(format!("{}", damage))
+                        .color(rltk::WHITE)
+                        .append("hp.")
+                        .log();
 
                     // Proc effects
                     if let Some(chance) = &weapon_info.proc_chance {
@@ -166,7 +179,16 @@ impl<'a> System<'a> for RangedCombatSystem {
 
                 } else  if natural_roll == 1 {
                     // Natural 1 miss
-                    log.entries.push(format!("{} considers attacking {}, but misjudges the timing.", name.name, target_name.name));
+                    crate::gamelog::Logger::new()
+                        .color(rltk::CYAN)
+                        .append(&name.name)
+                        .color(rltk::WHITE)
+                        .append("considers attacking")
+                        .color(rltk::CYAN)
+                        .append(&target_name.name)
+                        .color(rltk::WHITE)
+                        .append("but misjudges the timing!")
+                        .log();
                     add_effect(
                         None,
                         EffectType::Particle{ glyph: rltk::to_cp437('‼'), fg: rltk::RGB::named(rltk::BLUE), bg : rltk::RGB::named(rltk::BLACK), lifespan: 200.0 },
@@ -174,7 +196,16 @@ impl<'a> System<'a> for RangedCombatSystem {
                     );
                 } else {
                     // Miss
-                    log.entries.push(format!("{} attacks {}, but can't connect.", name.name, target_name.name));
+                    crate::gamelog::Logger::new()
+                        .color(rltk::CYAN)
+                        .append(&name.name)
+                        .color(rltk::WHITE)
+                        .append("attacks")
+                        .color(rltk::CYAN)
+                        .append(&target_name.name)
+                        .color(rltk::WHITE)
+                        .append("but can't connect.")
+                        .log();
                     add_effect(
                         None,
                         EffectType::Particle{ glyph: rltk::to_cp437('‼'), fg: rltk::RGB::named(rltk::CYAN), bg : rltk::RGB::named(rltk::BLACK), lifespan: 200.0 },
