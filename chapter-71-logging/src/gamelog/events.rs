@@ -30,3 +30,14 @@ pub fn get_event_count<T: ToString>(event: T) -> i32 {
         0
     }
 }
+
+pub fn clone_events() -> HashMap<String, i32> {
+    EVENTS.lock().unwrap().clone()
+}
+
+pub fn load_events(events : HashMap<String, i32>) {
+    EVENTS.lock().unwrap().clear();
+    events.iter().for_each(|(k,v)| {
+        EVENTS.lock().unwrap().insert(k.to_string(), *v);
+    });
+}

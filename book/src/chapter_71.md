@@ -1,4 +1,4 @@
-# Improved Logging and Achievements
+# Improved Logging and Counting Achievement
 
 ---
 
@@ -763,15 +763,66 @@ Dying now shows you how much damage you suffered throughout your run:
 
 ![c71-s4.jpg](c71-s4.jpg)
 
-You can, of course, extend this to your heart's content. Pretty much everything quantifiable is now trackable, should you so desire. To round off the chapter, we'll add some minimal *achievements*.
+You can, of course, extend this to your heart's content. Pretty much everything quantifiable is now trackable, should you so desire.
 
 ### Saving and Loading Counters
 
+Add two more functions to `src/gamelog/events.rs`:
 
+```rust
+pub fn clone_events() -> HashMap<String, i32> {
+    EVENTS.lock().unwrap().clone()
+}
 
-## Achievements
+pub fn load_events(events : HashMap<String, i32>) {
+    EVENTS.lock().unwrap().clear();
+    events.iter().for_each(|(k,v)| {
+        EVENTS.lock().unwrap().insert(k.to_string(), *v);
+    });
+}
+```
 
+Now open `components.rs`, and modify `DMSerializationHelper`:
 
+```rust
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct DMSerializationHelper {
+    pub map : super::map::MasterDungeonMap,
+    pub log : Vec<Vec<crate::gamelog::LogFragment>>,
+    pub events : HashMap<String, i32>
+}
+```
+
+Then in `saveload_system.rs`, we can include the cloned events in our serialization:
+
+```rust
+let savehelper2 = ecs
+    .create_entity()
+    .with(DMSerializationHelper{ 
+        map : dungeon_master, 
+        log: crate::gamelog::clone_log(), 
+        events : crate::gamelog::clone_events() 
+    })
+    .marked::<SimpleMarker<SerializeMe>>()
+    .build();
+```
+
+And import the events when we de-serialize:
+
+```rust
+for (e,h) in (&entities, &helper2).join() {
+    let mut dungeonmaster = ecs.write_resource::<super::map::MasterDungeonMap>();
+    *dungeonmaster = h.map.clone();
+    deleteme2 = Some(e);
+    crate::gamelog::restore_log(&mut h.log.clone());
+    crate::gamelog::load_events(h.events.clone());
+}
+```
+
+## Wrap-Up
+
+We now have nicely colored logs, and counters of the player's achievement. This leaves us one step shy of Steam (or XBOX) style achievements - which we will cover in a coming chapter.
+ 
 
 ---
 
