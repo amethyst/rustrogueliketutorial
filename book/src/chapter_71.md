@@ -507,6 +507,76 @@ crate::gamelog::Logger::new()
 
 Once again, I've gone through the project source code and applied these enhancements.
 
+## Saving and Loading the Log
+
+To make saving and loading the log easier, we'll add two helper functions to `gamelog/logstore.rs`:
+
+```rust
+pub fn clone_log() -> Vec<Vec<crate::gamelog::LogFragment>> {
+    LOG.lock().unwrap().clone()
+}
+
+pub fn restore_log(log : &mut Vec<Vec<crate::gamelog::LogFragment>>) {
+    LOG.lock().unwrap().clear();
+    LOG.lock().unwrap().append(log);
+}
+```
+
+The first provides a cloned copy of the log. The second empties the log, and appends a new one. You need to open up `gamelog/mod.rs` and add these to the exported functions list:
+
+```rust
+pub use logstore::{clear_log, log_display, clone_log, restore_log};
+```
+
+While you're here, we need to add some derivations to the `LogFragment` structure:
+
+```rust
+use serde::{Serialize, Deserialize};
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct LogFragment {
+    pub color : RGB,
+    pub text : String
+}
+```
+
+Now open `components.rs`, and modify the `DMSerializationHelper` structure to include a log:
+
+```rust
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct DMSerializationHelper {
+    pub map : super::map::MasterDungeonMap,
+    pub log : Vec<Vec<crate::gamelog::LogFragment>>
+}
+```
+
+Open `saveload_system.rs`, and we'll include the log when we serialize the map:
+
+```rust
+let savehelper2 = ecs
+    .create_entity()
+    .with(DMSerializationHelper{ map : dungeon_master, log: crate::gamelog::clone_log() })
+    .marked::<SimpleMarker<SerializeMe>>()
+    .build();
+```
+
+And when we de-serialize the map, we'll also restore the log:
+
+```rust
+for (e,h) in (&entities, &helper2).join() {
+    let mut dungeonmaster = ecs.write_resource::<super::map::MasterDungeonMap>();
+    *dungeonmaster = h.map.clone();
+    deleteme2 = Some(e);
+    crate::gamelog::restore_log(&mut h.log.clone());
+}
+```
+
+That's all there is to saving/loading the log: it works well with Serde (it may be a bit slow on full JSON), but it works well.
+
+## Counting Events
+
+
+
 ---
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-71-logging)**
