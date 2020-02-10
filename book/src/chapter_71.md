@@ -575,6 +575,44 @@ That's all there is to saving/loading the log: it works well with Serde (it may 
 
 ## Counting Events
 
+As a step towards achievements, we need to be able to count relevant events. Make a new file, `src/gamelog/events.rs`, and paste in the following:
+
+```rust
+use std::collections::HashMap;
+use std::sync::Mutex;
+
+lazy_static! {
+    static ref EVENTS : Mutex<HashMap<String, i32>> = Mutex::new(HashMap::new());
+}
+
+pub fn clear_events() {
+    EVENTS.lock().unwrap().clear();
+}
+
+pub fn record_event<T: ToString>(event: T, n : i32) {
+    let event_name = event.to_string();
+    let mut events_lock = EVENTS.lock();
+    let mut events = events_lock.as_mut().unwrap();
+    if let Some(e) = events.get_mut(&event_name) {
+        *e += n;
+    } else {
+        events.insert(event_name, n);
+    }
+}
+
+pub fn get_event_count<T: ToString>(event: T) -> i32 {
+    let event_name = event.to_string();
+    let events_lock = EVENTS.lock();
+    let events = events_lock.unwrap();
+    if let Some(e) = events.get(&event_name) {
+        *e
+    } else {
+        0
+    }
+}
+```
+
+This is similar to how we are storing the log: it's a "lazy static", with a mutex safety wrapper. Inside is a `HashMap`, indexed by event name and containing a counter. `record_event` adds an event to the running total (or creates a new one if it doesn't exist). `get_event_count` returns either 0, or the total of the named counter.
 
 
 ---
