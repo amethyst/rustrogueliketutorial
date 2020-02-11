@@ -66,6 +66,15 @@ If you `cargo run` now, you'll see a much easier to read log section:
 
 ![c72-s1.jpg](c72-s1.jpg)
 
+## Let's Clean Up the GUI Code
+
+Since we're working on the GUI, now would be a good time to clean it up. It would be nice to add some mouse support, too. We'll start by turning `gui.rs` into a multi-file module. It's huge, so breaking it up is a win in-and-of itself! Make a new folder, `src/gui` and *move* the `gui.rs` file into it. Then rename that file `mod.rs`. The game will work as before.
+
+Then we do some rearranging:
+
+* Make a new file, `item_render.rs`. Add `mod item_render; pub use item_render::*;` to `mod.rs`, and move the functions `get_item_color` and `get_item_display_name` into it.
+* RLTK now supports drawing hollow boxes, so we can delete the `draw_hollow_box` function. Replace calls to `draw_hollow_box(ctx, ...)` with `ctx.draw_hollow_box(...)`.
+
 ---
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-71-logging)**

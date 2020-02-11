@@ -1,83 +1,12 @@
-extern crate rltk;
 use rltk::{ RGB, Rltk, Console, Point, VirtualKeyCode, TextBlock };
-extern crate specs;
 use specs::prelude::*;
 use super::{Pools, Map, Name, State, InBackpack,
     Viewshed, RunState, Equipped, HungerClock, HungerState, rex_assets::RexAssets,
     Hidden, camera, Attributes, Attribute, Consumable, VendorMode, Item, Vendor,
-    MagicItem, MagicItemClass, ObfuscatedName, CursedItem, MasterDungeonMap,
-    StatusEffect, Duration, KnownSpells, Weapon, Target, gamelog };
-
-pub fn get_item_color(ecs : &World, item : Entity) -> RGB {
-    let dm = ecs.fetch::<crate::map::MasterDungeonMap>();
-    if let Some(name) = ecs.read_storage::<Name>().get(item) {
-        if ecs.read_storage::<CursedItem>().get(item).is_some() && dm.identified_items.contains(&name.name) {
-            return RGB::from_f32(1.0, 0.0, 0.0);
-        }
-    }
-
-    if let Some(magic) = ecs.read_storage::<MagicItem>().get(item) {
-        match magic.class {
-            MagicItemClass::Common => return RGB::from_f32(0.5, 1.0, 0.5),
-            MagicItemClass::Rare => return RGB::from_f32(0.0, 1.0, 1.0),
-            MagicItemClass::Legendary => return RGB::from_f32(0.71, 0.15, 0.93)
-        }
-    }
-    RGB::from_f32(1.0, 1.0, 1.0)
-}
-
-pub fn get_item_display_name(ecs: &World, item : Entity) -> String {
-    if let Some(name) = ecs.read_storage::<Name>().get(item) {
-        if ecs.read_storage::<MagicItem>().get(item).is_some() {
-            let dm = ecs.fetch::<crate::map::MasterDungeonMap>();
-            if dm.identified_items.contains(&name.name) {
-                if let Some(c) = ecs.read_storage::<Consumable>().get(item) {
-                    if c.max_charges > 1 {
-                        format!("{} ({})", name.name.clone(), c.charges).to_string()
-                    } else {
-                        name.name.clone()
-                    }
-                } else {
-                    name.name.clone()
-                }
-            } else if let Some(obfuscated) = ecs.read_storage::<ObfuscatedName>().get(item) {
-                obfuscated.name.clone()
-            } else {
-                "Unidentified magic item".to_string()
-            }
-        } else {
-            name.name.clone()
-        }
-
-    } else {
-        "Nameless item (bug)".to_string()
-    }
-}
-
-pub fn draw_hollow_box(
-    console: &mut Rltk,
-    sx: i32,
-    sy: i32,
-    width: i32,
-    height: i32,
-    fg: RGB,
-    bg: RGB,
-) {
-    use rltk::to_cp437;
-
-    console.set(sx, sy, fg, bg, to_cp437('┌'));
-    console.set(sx + width, sy, fg, bg, to_cp437('┐'));
-    console.set(sx, sy + height, fg, bg, to_cp437('└'));
-    console.set(sx + width, sy + height, fg, bg, to_cp437('┘'));
-    for x in sx + 1..sx + width {
-        console.set(x, sy, fg, bg, to_cp437('─'));
-        console.set(x, sy + height, fg, bg, to_cp437('─'));
-    }
-    for y in sy + 1..sy + height {
-        console.set(sx, y, fg, bg, to_cp437('│'));
-        console.set(sx + width, y, fg, bg, to_cp437('│'));
-    }
-}
+    ObfuscatedName, CursedItem, MasterDungeonMap,
+    StatusEffect, Duration, KnownSpells, Weapon, gamelog };
+mod item_render;
+pub use item_render::*;
 
 fn draw_attribute(name : &str, attribute : &Attribute, y : i32, ctx: &mut Rltk) {
     let black = RGB::named(rltk::BLACK);
@@ -99,10 +28,10 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     let white = RGB::named(rltk::WHITE);
     let yellow = RGB::named(rltk::YELLOW);
 
-    draw_hollow_box(ctx, 0, 0, 79, 59, box_gray, black); // Overall box
-    draw_hollow_box(ctx, 0, 0, 49, 45, box_gray, black); // Map box
-    draw_hollow_box(ctx, 0, 45, 79, 14, box_gray, black); // Log box
-    draw_hollow_box(ctx, 49, 0, 30, 8, box_gray, black); // Top-right panel
+    ctx.draw_hollow_box(0, 0, 79, 59, box_gray, black); // Overall box
+    ctx.draw_hollow_box(0, 0, 49, 45, box_gray, black); // Map box
+    ctx.draw_hollow_box(0, 45, 79, 14, box_gray, black); // Log box
+    ctx.draw_hollow_box(49, 0, 30, 8, box_gray, black); // Top-right panel
 
     // Draw box connectors
     ctx.set(0, 45, box_gray, black, to_cp437('├'));
