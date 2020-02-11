@@ -34,7 +34,7 @@ ctx.cls();
 I ran into some problems with the `TextBlock` component and multiple consoles, so I wrote a replacement. In `src/gamelog/logstore.rs` we remove the `display_log` function and add a replacement:
 
 ```rust
-pub fn print_log(mut console: &mut Box<dyn Console>, pos: Point) {
+pub fn print_log(console: &mut Box<dyn Console>, pos: Point) {
     let mut y = pos.y;
     let mut x = pos.x;
     LOG.lock().unwrap().iter().rev().take(6).for_each(|log| {
@@ -72,15 +72,21 @@ Since we're working on the GUI, now would be a good time to clean it up. It woul
 
 Then we do some rearranging:
 
-* Make a new file, `item_render.rs`. Add `mod item_render; pub use item_render::*;` to `mod.rs`, and move the functions `get_item_color` and `get_item_display_name` into it.
+* Make a new file, `gui/item_render.rs`. Add `mod item_render; pub use item_render::*;` to `gui/mod.rs`, and move the functions `get_item_color` and `get_item_display_name` into it.
 * RLTK now supports drawing hollow boxes, so we can delete the `draw_hollow_box` function. Replace calls to `draw_hollow_box(ctx, ...)` with `ctx.draw_hollow_box(...)`.
+* Make a new file, `gui/hud.rs`. Add `mod hud; pub use hud::*;` to `gui/mod.rs`. Move the following functions into it: `draw_attribute`, `draw_ui`.
+* Make a new file, `gui/tooltips.rs`. Add `mod tooltips; pub use tooltips::*;` to `gui/mod.rs`. Move the `Tooltip` struct and implementation into it, along with the function `draw_tooltips`. You'll have to make that function `pub`.
+
+There's a lot of import cleanup, also. I recommend referring to the [source code](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-72-textlayers) if you aren't sure what's needed.
+
+The game should run as it did before: but your compile times have improved (especially on incremental builds)!
 
 ---
 
-**The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-71-logging)**
+**The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-72-textlayers)**
 
 
-[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-71-logging)
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-72-textlayers)
 ---
 
 Copyright (C) 2019, Herbert Wolverson.

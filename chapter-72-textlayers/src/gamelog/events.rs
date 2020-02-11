@@ -12,7 +12,7 @@ pub fn clear_events() {
 pub fn record_event<T: ToString>(event: T, n : i32) {
     let event_name = event.to_string();
     let mut events_lock = EVENTS.lock();
-    let mut events = events_lock.as_mut().unwrap();
+    let events = events_lock.as_mut().unwrap();
     if let Some(e) = events.get_mut(&event_name) {
         *e += n;
     } else {

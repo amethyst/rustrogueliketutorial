@@ -14,7 +14,7 @@ pub fn clear_log() {
     LOG.lock().unwrap().clear();
 }
 
-pub fn print_log(mut console: &mut Box<dyn Console>, pos: Point) {
+pub fn print_log(console: &mut Box<dyn Console>, pos: Point) {
     let mut y = pos.y;
     let mut x = pos.x;
     LOG.lock().unwrap().iter().rev().take(6).for_each(|log| {
