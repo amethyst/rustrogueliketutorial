@@ -35,7 +35,6 @@ pub mod hunger_system;
 pub mod rex_assets;
 pub mod trigger_system;
 pub mod map_builders;
-pub mod camera;
 pub mod raws;
 mod gamesystem;
 pub use gamesystem::*;

@@ -86,6 +86,13 @@ There's a lot of import cleanup, also. I recommend referring to the [source code
 
 The game should run as it did before: but your compile times have improved (especially on incremental builds)!
 
+## While we're cleaning up - the camera
+
+It's bugged me for a couple of chapters that `camera.rs` isn't in the `map` module. Let's move it there. Move the file into the `map` folder. Add the line `pub mod camera;` to `map/mod.rs`. This leaves a few references to cleanup:
+
+* Remove `pub mod camera;` from `main.rs`.
+* Change `use super::` to `use crate::` in `map/camera.rs`.
+
 ---
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-72-textlayers)**

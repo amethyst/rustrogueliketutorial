@@ -10,6 +10,7 @@ mod themes;
 pub use themes::*;
 mod dungeon;
 pub use dungeon::{MasterDungeonMap, level_transition, freeze_level_entities, thaw_level_entities};
+pub mod camera;
 
 #[derive(Default, Serialize, Deserialize, Clone)]
 pub struct Map {
