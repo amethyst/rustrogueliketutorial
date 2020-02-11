@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use crate::{Map,Position,Renderable,Hidden,TileSize,Target};
-use rltk::{Point, Rltk, Console, RGB};
+use rltk::prelude::*;
 use crate::map::tile_glyph;
 
 pub fn get_screen_bounds(ecs: &World, _ctx:  &mut Rltk) -> (i32, i32, i32, i32) {
@@ -22,6 +22,7 @@ pub fn get_screen_bounds(ecs: &World, _ctx:  &mut Rltk) -> (i32, i32, i32, i32) 
 const SHOW_BOUNDARIES : bool = false;
 
 pub fn render_camera(ecs: &World, ctx : &mut Rltk) {
+    let mut draw_batch = DrawBatch::new();
     let map = ecs.fetch::<Map>();
     let (min_x, max_x, min_y, max_y) = get_screen_bounds(ecs, ctx);
 
@@ -36,10 +37,18 @@ pub fn render_camera(ecs: &World, ctx : &mut Rltk) {
                 let idx = map.xy_idx(tx, ty);
                 if map.revealed_tiles[idx] {
                     let (glyph, fg, bg) = tile_glyph(idx, &*map);
-                    ctx.set(x as i32+1, y as i32+1, fg, bg, glyph);
+                    draw_batch.set(
+                        Point::new(x+1, y+1),
+                        ColorPair::new(fg, bg),
+                        glyph
+                    );
                 }
             } else if SHOW_BOUNDARIES {
-                ctx.set(x as i32+1, y as i32+1, RGB::named(rltk::GRAY), RGB::named(rltk::BLACK), rltk::to_cp437('·'));
+                draw_batch.set(
+                    Point::new(x+1, y+1),
+                    ColorPair::new(RGB::named(rltk::GRAY), RGB::named(rltk::BLACK)),
+                    to_cp437('·')
+                );
             }
         }
     }
@@ -66,7 +75,11 @@ pub fn render_camera(ecs: &World, ctx : &mut Rltk) {
                         let entity_screen_x = (cx + pos.x) - min_x;
                         let entity_screen_y = (cy + pos.y) - min_y;
                         if entity_screen_x > 0 && entity_screen_x < map_width && entity_screen_y > 0 && entity_screen_y < map_height {
-                            ctx.set(entity_screen_x + 1, entity_screen_y + 1, render.fg, render.bg, render.glyph);
+                            draw_batch.set(
+                                Point::new(entity_screen_x + 1, entity_screen_y + 1),
+                                ColorPair::new(render.fg, render.bg),
+                                render.glyph
+                            );
                         }
                     }
                 }
@@ -77,7 +90,11 @@ pub fn render_camera(ecs: &World, ctx : &mut Rltk) {
                 let entity_screen_x = pos.x - min_x;
                 let entity_screen_y = pos.y - min_y;
                 if entity_screen_x > 0 && entity_screen_x < map_width && entity_screen_y > 0 && entity_screen_y < map_height {
-                    ctx.set(entity_screen_x + 1, entity_screen_y + 1, render.fg, render.bg, render.glyph);
+                    draw_batch.set(
+                        Point::new(entity_screen_x + 1, entity_screen_y + 1),
+                        ColorPair::new(render.fg, render.bg),
+                        render.glyph
+                    );
                 }
             }
         }
@@ -85,10 +102,20 @@ pub fn render_camera(ecs: &World, ctx : &mut Rltk) {
         if targets.get(*entity).is_some() {
             let entity_screen_x = pos.x - min_x;
             let entity_screen_y = pos.y - min_y;
-            ctx.set(entity_screen_x , entity_screen_y + 1, rltk::RGB::named(rltk::RED), rltk::RGB::named(rltk::YELLOW), rltk::to_cp437('['));
-            ctx.set(entity_screen_x +2, entity_screen_y + 1, rltk::RGB::named(rltk::RED), rltk::RGB::named(rltk::YELLOW), rltk::to_cp437(']'));
+            draw_batch.set(
+                Point::new(entity_screen_x , entity_screen_y + 1),
+                ColorPair::new(RGB::named(rltk::RED), RGB::named(rltk::YELLOW)),
+                to_cp437('[')
+            );
+            draw_batch.set(
+                Point::new(entity_screen_x +2, entity_screen_y + 1),
+                ColorPair::new(RGB::named(rltk::RED), RGB::named(rltk::YELLOW)),
+                to_cp437(']')
+            );
         }
     }
+
+    draw_batch.submit(0);
 }
 
 pub fn render_debug_map(map : &Map, ctx : &mut Rltk) {

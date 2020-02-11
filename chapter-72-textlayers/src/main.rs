@@ -45,8 +45,6 @@ pub mod effects;
 #[macro_use]
 extern crate lazy_static;
 
-
-
 const SHOW_MAPGEN_VISUALIZER : bool = false;
 
 #[derive(PartialEq, Copy, Clone)]
@@ -460,6 +458,8 @@ impl GameState for State {
             *runwriter = newrunstate;
         }
         damage_system::delete_the_dead(&mut self.ecs);
+
+        rltk::render_draw_buffer(ctx);
     }
 }
 
