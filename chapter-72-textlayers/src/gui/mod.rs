@@ -24,4 +24,6 @@ mod cheat_menu;
 pub use cheat_menu::*;
 mod vendor_menu;
 pub use vendor_menu::*;
+mod menus;
+pub use menus::*;
 

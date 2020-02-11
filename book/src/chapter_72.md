@@ -522,6 +522,20 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
 }
 ```
 
+## Batching the menus
+
+There's a lot of shared functionality between our various menus that could be combined into helper functions. With batching in mind, we'll first build a new module `gui/menus.rs` to hold the common functionality:
+
+```rust
+
+```
+
+Don't forget to modify `gui/mod.rs` to expose the functionality:
+
+```rust
+mod menus;
+pub use menus::*;
+```
 
 ---
 
