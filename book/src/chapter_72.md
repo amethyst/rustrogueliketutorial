@@ -10,8 +10,9 @@
 
 ---
 
+The default 8x8 font can get quite hard to read for large blocks of text, especially when combined with post-processing effects. RLTK's graphical console modes (basically everything except `curses`) supports displaying multiple consoles on the same screen, optionally with different fonts. RLTK ships with a VGA font (8x16), which is *much* easier to read. We'll use that, *but only for the log*.
 
-Initialization with a second layer in a VGA font is easy (see RLTK example 2 for details):
+Initialization with a second layer in a VGA font is easy (see RLTK example 2 for details). Expand the builder code in `main.rs`:
 
 ```rust
 let mut context = RltkBuilder::simple(80, 60)
@@ -21,7 +22,7 @@ let mut context = RltkBuilder::simple(80, 60)
     .build();
 ```
 
-The main loop's "clear screen" needs to be expanded to clear both layers. In `main.rs`:
+The main loop's "clear screen" needs to be expanded to clear both layers. In `main.rs` (the `tick` function), we have a bit of code we haven't touched in 70 chapters - clearing the screen at the beginning of a frame. Now we want to clear both consoles:
 
 ```rust
 ctx.set_active_console(1);
@@ -30,7 +31,7 @@ ctx.set_active_console(0);
 ctx.cls();
 ```
 
-In `src/gamelog/logstore.rs` we remove the `display_log` function and add a replacement:
+I ran into some problems with the `TextBlock` component and multiple consoles, so I wrote a replacement. In `src/gamelog/logstore.rs` we remove the `display_log` function and add a replacement:
 
 ```rust
 pub fn print_log(mut console: &mut Box<dyn Console>, pos: Point) {
@@ -54,14 +55,16 @@ And correct the exports in `src/gamelog/mod.rs`:
 pub use logstore::{clear_log, clone_log, restore_log, print_log};
 ```
 
-Change the log render in `gui.rs`:
+Since the new code handles rendering, it's very easy to draw the log file! Change the log render in `gui.rs`:
 
 ```rust
 // Draw the log
 gamelog::print_log(&mut ctx.consoles[1].console, Point::new(1, 23));
 ```
 
-And - screenshot - we have big log text.
+If you `cargo run` now, you'll see a much easier to read log section:
+
+![c72-s1.jpg](c72-s1.jpg)
 
 ---
 
