@@ -246,15 +246,7 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     }
 
     // Draw the log
-    /*let log = ecs.fetch::<GameLog>();
-    let mut y = 46;
-    for s in log.entries.iter().rev() {
-        if y < 59 { ctx.print(2, y, s); }
-        y += 1;
-    }*/
-    let mut block = TextBlock::new(1, 46, 79, 58);
-    block.print(&gamelog::log_display());
-    block.render(&mut ctx.consoles[0].console);
+    gamelog::print_log(&mut ctx.consoles[1].console, Point::new(1, 23));
 
     draw_tooltips(ecs, ctx);
 }

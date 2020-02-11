@@ -3,7 +3,7 @@ mod builder;
 pub use builder::*;
 mod logstore;
 use logstore::*;
-pub use logstore::{clear_log, log_display, clone_log, restore_log};
+pub use logstore::{clear_log, clone_log, restore_log, print_log};
 use serde::{Serialize, Deserialize};
 mod events;
 pub use events::*;
