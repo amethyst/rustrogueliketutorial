@@ -80,7 +80,8 @@ members = [
     "chapter-69-mushrooms2",
     "chapter-70-missiles",
     "chapter-71-logging",
-    "chapter-72-textlayers"
+    "chapter-72-textlayers",
+    "chapter-73-systems"
     ]
 
 [profile.dev]

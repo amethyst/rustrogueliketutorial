@@ -74,5 +74,6 @@
     - [Ranged Combat](./chapter_70.md)
     - [Logging](./chapter_71.md)
     - [Text Layers](./chapter_72.md)
+    - [Systems/Dispatch](./chapter_73.md)
 - [Contributors](./contributors.md)
 - [Licensing](./license.md)
