@@ -527,7 +527,42 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
 There's a lot of shared functionality between our various menus that could be combined into helper functions. With batching in mind, we'll first build a new module `gui/menus.rs` to hold the common functionality:
 
 ```rust
+use rltk::prelude::*;
 
+pub fn menu_box<T: ToString>(draw_batch: &mut DrawBatch, x: i32, y: i32, width: i32, title: T) {
+    draw_batch.draw_box(
+        Rect::with_size(x, y-2, 31, width), 
+        ColorPair::new(RGB::named(rltk::WHITE), RGB::named(rltk::BLACK))
+    );
+    draw_batch.print_color(
+        Point::new(18, y-2), 
+        &title.to_string(),
+        ColorPair::new(RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK))
+    );
+}
+
+pub fn menu_option<T:ToString>(draw_batch: &mut DrawBatch, x: i32, y: i32, hotkey: u8, text: T) {
+    draw_batch.set(
+        Point::new(x, y), 
+        ColorPair::new(RGB::named(rltk::WHITE), RGB::named(rltk::BLACK)),
+        rltk::to_cp437('(')
+    );
+    draw_batch.set(
+        Point::new(x+1, y), 
+        ColorPair::new(RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK)),
+        hotkey
+    );
+    draw_batch.set(
+        Point::new(x+2, y), 
+        ColorPair::new(RGB::named(rltk::WHITE), RGB::named(rltk::BLACK)), 
+        rltk::to_cp437(')')
+    );
+    draw_batch.print_color(
+        Point::new(x+5, y), 
+        &text.to_string(),
+        ColorPair::new(RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK))
+    );
+}
 ```
 
 Don't forget to modify `gui/mod.rs` to expose the functionality:
@@ -536,6 +571,848 @@ Don't forget to modify `gui/mod.rs` to expose the functionality:
 mod menus;
 pub use menus::*;
 ```
+
+### Cheat Menu
+
+With the new helper, the `gui/cheat_menur.rs` file is an easy refactor:
+
+```rust
+use rltk::prelude::*;
+use crate::State;
+use super::{menu_option, menu_box};
+
+#[derive(PartialEq, Copy, Clone)]
+pub enum CheatMenuResult { NoResponse, Cancel, TeleportToExit, Heal, Reveal, GodMode }
+
+pub fn show_cheat_mode(_gs : &mut State, ctx : &mut Rltk) -> CheatMenuResult {
+    let mut draw_batch = DrawBatch::new();
+    let count = 4;
+    let mut y = (25 - (count / 2)) as i32;
+    menu_box(&mut draw_batch, 15, y, (count+3) as i32, "Cheating!");
+    draw_batch.print_color(
+        Point::new(18, y+count as i32+1),
+        "ESCAPE to cancel",
+        ColorPair::new(RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK))
+    );
+
+    menu_option(&mut draw_batch, 17, y, rltk::to_cp437('T'), "Teleport to next level");
+    y += 1;
+    menu_option(&mut draw_batch, 17, y, rltk::to_cp437('H'), "Heal all wounds");
+    y += 1;
+    menu_option(&mut draw_batch, 17, y, rltk::to_cp437('R'), "Reveal the map");
+    y += 1;
+    menu_option(&mut draw_batch, 17, y, rltk::to_cp437('G'), "God Mode (No Death)");
+
+    draw_batch.submit(6000);
+
+    match ctx.key {
+        None => CheatMenuResult::NoResponse,
+        Some(key) => {
+            match key {
+                VirtualKeyCode::T => CheatMenuResult::TeleportToExit,
+                VirtualKeyCode::H => CheatMenuResult::Heal,
+                VirtualKeyCode::R => CheatMenuResult::Reveal,
+                VirtualKeyCode::G => CheatMenuResult::GodMode,
+                VirtualKeyCode::Escape => CheatMenuResult::Cancel,
+                _ => CheatMenuResult::NoResponse
+            }
+        }
+    }
+}
+```
+
+### Drop Item Menu
+
+For the various item menus, another helper is useful to reduce duplicated code. In `gui/menus.rs` add the following:
+
+```rust
+pub fn item_result_menu<S: ToString>(
+    draw_batch: &mut DrawBatch,
+    title: S,
+    count: usize,
+    items: &[(Entity, String)],
+    key: Option<VirtualKeyCode>
+) -> (ItemMenuResult, Option<Entity>) {
+
+    let mut y = (25 - (count / 2)) as i32;
+    draw_batch.draw_box(
+        Rect::with_size(15, y-2, 31, (count+3) as i32), 
+        ColorPair::new(RGB::named(rltk::WHITE), RGB::named(rltk::BLACK))
+    );
+    draw_batch.print_color(
+        Point::new(18, y-2), 
+        &title.to_string(),
+        ColorPair::new(RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK))
+    );
+    draw_batch.print_color(
+        Point::new(18, y+count as i32+1),
+        "ESCAPE to cancel",
+        ColorPair::new(RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK))
+    );
+
+    let mut item_list : Vec<Entity> = Vec::new();
+    let mut j = 0;
+    for item in items {
+        menu_option(draw_batch, 17, y, 97+j as u8, &item.1);
+        item_list.push(item.0);
+        y += 1;
+        j += 1;
+    }
+
+    match key {
+        None => (ItemMenuResult::NoResponse, None),
+        Some(key) => {
+            match key {
+                VirtualKeyCode::Escape => { (ItemMenuResult::Cancel, None) }
+                _ => {
+                    let selection = rltk::letter_to_option(key);
+                    if selection > -1 && selection < count as i32 {
+                        return (ItemMenuResult::Selected, Some(item_list[selection as usize]));
+                    }
+                    (ItemMenuResult::NoResponse, None)
+                }
+            }
+        }
+    }
+}
+```
+
+This is basically a generic version of our other menus that return an `ItemMenuResult`. We can use it to significantly simplify `gui/drop_item_menu.rs`:
+
+```rust
+use rltk::prelude::*;
+use specs::prelude::*;
+use crate::{State, InBackpack};
+use super::{get_item_display_name, ItemMenuResult, item_result_menu};
+
+pub fn drop_item_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
+    let mut draw_batch = DrawBatch::new();
+
+    let player_entity = gs.ecs.fetch::<Entity>();
+    let backpack = gs.ecs.read_storage::<InBackpack>();
+    let entities = gs.ecs.entities();
+
+    let mut items : Vec<(Entity, String)> = Vec::new();
+    (&entities, &backpack).join()
+        .filter(|item| item.1.owner == *player_entity )
+        .for_each(|item| {
+            items.push((item.0, get_item_display_name(&gs.ecs, item.0)))
+        });
+
+    let result = item_result_menu(
+        &mut draw_batch,
+        "Drop which item?",
+        items.len(),
+        &items,
+        ctx.key
+    );
+    draw_batch.submit(6000);
+    result
+}
+```
+
+### Remove Item Menu
+
+The same helper code makes `gui/remove_item_menu.rs` shorter, also:
+
+```rust
+use rltk::prelude::*;
+use specs::prelude::*;
+use crate::{State, Equipped };
+use super::{get_item_display_name, ItemMenuResult, item_result_menu};
+
+pub fn remove_item_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
+    let mut draw_batch = DrawBatch::new();
+
+    let player_entity = gs.ecs.fetch::<Entity>();
+    let backpack = gs.ecs.read_storage::<Equipped>();
+    let entities = gs.ecs.entities();
+
+    let mut items : Vec<(Entity, String)> = Vec::new();
+    (&entities, &backpack).join()
+        .filter(|item| item.1.owner == *player_entity )
+        .for_each(|item| {
+            items.push((item.0, get_item_display_name(&gs.ecs, item.0)))
+        });
+
+    let result = item_result_menu(
+        &mut draw_batch,
+        "Remove which item?",
+        items.len(),
+        &items,
+        ctx.key
+    );
+    draw_batch.submit(6000);
+    result
+}
+```
+
+### Inventory Menu
+
+Once again, our helper greatly simplifies the inventory menu. We can replace `gui/inventory_menu.rs` with:
+
+```rust
+use rltk::prelude::*;
+use specs::prelude::*;
+use crate::{State, InBackpack };
+use super::{get_item_display_name, item_result_menu};
+
+#[derive(PartialEq, Copy, Clone)]
+pub enum ItemMenuResult { Cancel, NoResponse, Selected }
+
+pub fn show_inventory(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
+    let player_entity = gs.ecs.fetch::<Entity>();
+    let backpack = gs.ecs.read_storage::<InBackpack>();
+    let entities = gs.ecs.entities();
+
+    let mut draw_batch = DrawBatch::new();
+
+    let mut items : Vec<(Entity, String)> = Vec::new();
+    (&entities, &backpack).join()
+        .filter(|item| item.1.owner == *player_entity )
+        .for_each(|item| {
+            items.push((item.0, get_item_display_name(&gs.ecs, item.0)))
+        });
+
+    let result = item_result_menu(
+        &mut draw_batch,
+        "Inventory",
+        items.len(),
+        &items,
+        ctx.key
+    );
+    draw_batch.submit(6000);
+    result
+}
+```
+
+### Identify Menu
+
+The helper is somewhat useful in shortening the `gui/identify_menu.rs` also - but the complex filter is still rather long. Replace the file contents with the following:
+
+```rust
+use rltk::prelude::*;
+use specs::prelude::*;
+use crate::{Name, State, InBackpack, Equipped, MasterDungeonMap, Item, ObfuscatedName };
+use super::{get_item_display_name, item_result_menu, ItemMenuResult};
+
+pub fn identify_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
+    let mut draw_batch = DrawBatch::new();
+
+    let player_entity = gs.ecs.fetch::<Entity>();
+    let equipped = gs.ecs.read_storage::<Equipped>();
+    let backpack = gs.ecs.read_storage::<InBackpack>();
+    let entities = gs.ecs.entities();
+    let item_components = gs.ecs.read_storage::<Item>();
+    let names = gs.ecs.read_storage::<Name>();
+    let dm = gs.ecs.fetch::<MasterDungeonMap>();
+    let obfuscated = gs.ecs.read_storage::<ObfuscatedName>();
+
+    let mut items : Vec<(Entity, String)> = Vec::new();
+    (&entities, &item_components).join()
+        .filter(|(item_entity,_item)| {
+            let mut keep = false;
+            if let Some(bp) = backpack.get(*item_entity) {
+                if bp.owner == *player_entity {
+                    if let Some(name) = names.get(*item_entity) {
+                        if obfuscated.get(*item_entity).is_some() && !dm.identified_items.contains(&name.name) {
+                            keep = true;
+                        }
+                    }
+                }
+            }
+            // It's equipped, so we know it's cursed
+            if let Some(equip) = equipped.get(*item_entity) {
+                if equip.owner == *player_entity {
+                    if let Some(name) = names.get(*item_entity) {
+                        if obfuscated.get(*item_entity).is_some() && !dm.identified_items.contains(&name.name) {
+                            keep = true;
+                        }
+                    }
+                }
+            }
+            keep
+        })
+        .for_each(|item| {
+            items.push((item.0, get_item_display_name(&gs.ecs, item.0)))
+        });
+
+    let result = item_result_menu(
+        &mut draw_batch,
+        "Inventory",
+        items.len(),
+        &items,
+        ctx.key
+    );
+    draw_batch.submit(6000);
+    result
+}
+```
+
+### Remove Curse Menu
+
+The remove curse menu is very similar to the identification menu, so the same principles apply. Replace `gui/remove_curse_menu.rs` with:
+
+```rust
+use rltk::prelude::*;
+use specs::prelude::*;
+use crate::{Name, State, InBackpack, Equipped, MasterDungeonMap, CursedItem, Item };
+use super::{get_item_display_name, item_result_menu, ItemMenuResult};
+
+pub fn remove_curse_menu(gs : &mut State, ctx : &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
+    let player_entity = gs.ecs.fetch::<Entity>();
+    let equipped = gs.ecs.read_storage::<Equipped>();
+    let backpack = gs.ecs.read_storage::<InBackpack>();
+    let entities = gs.ecs.entities();
+    let item_components = gs.ecs.read_storage::<Item>();
+    let cursed = gs.ecs.read_storage::<CursedItem>();
+    let names = gs.ecs.read_storage::<Name>();
+    let dm = gs.ecs.fetch::<MasterDungeonMap>();
+
+    let mut draw_batch = DrawBatch::new();
+
+    let mut items : Vec<(Entity, String)> = Vec::new();
+    (&entities, &item_components, &cursed).join()
+        .filter(|(item_entity,_item,_cursed)| {
+            let mut keep = false;
+            if let Some(bp) = backpack.get(*item_entity) {
+                if bp.owner == *player_entity {
+                    if let Some(name) = names.get(*item_entity) {
+                        if dm.identified_items.contains(&name.name) {
+                            keep = true;
+                        }
+                    }
+                }
+            }
+            // It's equipped, so we know it's cursed
+            if let Some(equip) = equipped.get(*item_entity) {
+                if equip.owner == *player_entity {
+                    keep = true;
+                }
+            }
+            keep
+        })
+        .for_each(|item| {
+            items.push((item.0, get_item_display_name(&gs.ecs, item.0)))
+        });
+
+    let result = item_result_menu(
+        &mut draw_batch,
+        "Inventory",
+        items.len(),
+        &items,
+        ctx.key
+    );
+    draw_batch.submit(6000);
+    result
+}
+```
+
+### Game Over Menu
+
+The game over menu is a simple `ctx` to `DrawBatch` port. In `gui/game_over_menu.rs`:
+
+```rust
+use rltk::prelude::*;
+
+#[derive(PartialEq, Copy, Clone)]
+pub enum GameOverResult { NoSelection, QuitToMenu }
+
+pub fn game_over(ctx : &mut Rltk) -> GameOverResult {
+    let mut draw_batch = DrawBatch::new();
+    draw_batch.print_color_centered(
+        15, 
+        "Your journey has ended!",
+        ColorPair::new(RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK))
+    );
+    draw_batch.print_color_centered(
+        17, 
+        "One day, we'll tell you all about how you did.",
+        ColorPair::new(RGB::named(rltk::WHITE), RGB::named(rltk::BLACK))
+    );
+    draw_batch.print_color_centered(
+        18, 
+        "That day, sadly, is not in this chapter..",
+        ColorPair::new(RGB::named(rltk::WHITE), RGB::named(rltk::BLACK))
+    );
+
+    draw_batch.print_color_centered(
+        19,
+        &format!("You lived for {} turns.", crate::gamelog::get_event_count("Turn")),
+        ColorPair::new(RGB::named(rltk::WHITE), RGB::named(rltk::BLACK))
+    );
+    draw_batch.print_color_centered(
+        20,
+        &format!("You suffered {} points of damage.", crate::gamelog::get_event_count("Damage Taken")),
+        ColorPair::new(RGB::named(rltk::RED), RGB::named(rltk::BLACK))
+    );
+    draw_batch.print_color_centered(
+        21,
+        &format!("You inflicted {} points of damage.", crate::gamelog::get_event_count("Damage Inflicted")),
+        ColorPair::new(RGB::named(rltk::RED), RGB::named(rltk::BLACK)));
+
+    draw_batch.print_color_centered(
+        23,
+        "Press any key to return to the menu.",
+        ColorPair::new(RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK))
+    );
+
+    draw_batch.submit(6000);
+
+    match ctx.key {
+        None => GameOverResult::NoSelection,
+        Some(_) => GameOverResult::QuitToMenu
+    }
+}
+```
+
+### Ranged Targeting Menu
+
+`gui/ranged_target.rs` is another simple conversion:
+
+```rust
+use rltk::prelude::*;
+use specs::prelude::*;
+use crate::{State, camera, Viewshed };
+use super::ItemMenuResult;
+
+pub fn ranged_target(gs : &mut State, ctx : &mut Rltk, range : i32) -> (ItemMenuResult, Option<Point>) {
+    let (min_x, max_x, min_y, max_y) = camera::get_screen_bounds(&gs.ecs, ctx);
+    let player_entity = gs.ecs.fetch::<Entity>();
+    let player_pos = gs.ecs.fetch::<Point>();
+    let viewsheds = gs.ecs.read_storage::<Viewshed>();
+
+    let mut draw_batch = DrawBatch::new();
+
+    draw_batch.print_color(
+        Point::new(5, 0), 
+        "Select Target:",
+        ColorPair::new(RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK))
+    );
+
+    // Highlight available target cells
+    let mut available_cells = Vec::new();
+    let visible = viewsheds.get(*player_entity);
+    if let Some(visible) = visible {
+        // We have a viewshed
+        for idx in visible.visible_tiles.iter() {
+            let distance = rltk::DistanceAlg::Pythagoras.distance2d(*player_pos, *idx);
+            if distance <= range as f32 {
+                let screen_x = idx.x - min_x;
+                let screen_y = idx.y - min_y;
+                if screen_x > 1 && screen_x < (max_x - min_x)-1 && screen_y > 1 && screen_y < (max_y - min_y)-1 {
+                    draw_batch.set_bg(Point::new(screen_x, screen_y), RGB::named(rltk::BLUE));
+                    available_cells.push(idx);
+                }
+            }
+        }
+    } else {
+        return (ItemMenuResult::Cancel, None);
+    }
+
+    // Draw mouse cursor
+    let mouse_pos = ctx.mouse_pos();
+    let mut mouse_map_pos = mouse_pos;
+    mouse_map_pos.0 += min_x - 1;
+    mouse_map_pos.1 += min_y - 1;
+    let mut valid_target = false;
+    for idx in available_cells.iter() { if idx.x == mouse_map_pos.0 && idx.y == mouse_map_pos.1 { valid_target = true; } }
+    if valid_target {
+        draw_batch.set_bg(Point::new(mouse_pos.0, mouse_pos.1), RGB::named(rltk::CYAN));
+        if ctx.left_click {
+            return (ItemMenuResult::Selected, Some(Point::new(mouse_map_pos.0, mouse_map_pos.1)));
+        }
+    } else {
+        draw_batch.set_bg(Point::new(mouse_pos.0, mouse_pos.1), RGB::named(rltk::RED));
+        if ctx.left_click {
+            return (ItemMenuResult::Cancel, None);
+        }
+    }
+
+    draw_batch.submit(5000);
+
+    (ItemMenuResult::NoResponse, None)
+}
+```
+
+### Main Menu
+
+The `gui/main_menu.rs` file is another simple conversion:
+
+```rust
+use rltk::prelude::*;
+use crate::{State, RunState, rex_assets::RexAssets };
+
+#[derive(PartialEq, Copy, Clone)]
+pub enum MainMenuSelection { NewGame, LoadGame, Quit }
+
+#[derive(PartialEq, Copy, Clone)]
+pub enum MainMenuResult { NoSelection{ selected : MainMenuSelection }, Selected{ selected: MainMenuSelection } }
+
+pub fn main_menu(gs : &mut State, ctx : &mut Rltk) -> MainMenuResult {
+    let mut draw_batch = DrawBatch::new();
+    let save_exists = crate::saveload_system::does_save_exist();
+    let runstate = gs.ecs.fetch::<RunState>();
+    let assets = gs.ecs.fetch::<RexAssets>();
+    ctx.render_xp_sprite(&assets.menu, 0, 0);
+
+    draw_batch.draw_double_box(Rect::with_size(24, 18, 31, 10), ColorPair::new(RGB::named(rltk::WHEAT), RGB::named(rltk::BLACK)));
+
+    draw_batch.print_color_centered(20, "Rust Roguelike Tutorial", ColorPair::new(RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK)));
+    draw_batch.print_color_centered(21, "by Herbert Wolverson", ColorPair::new(RGB::named(rltk::CYAN), RGB::named(rltk::BLACK)));
+    draw_batch.print_color_centered(22, "Use Up/Down Arrows and Enter", ColorPair::new(RGB::named(rltk::GRAY), RGB::named(rltk::BLACK)));
+
+    let mut y = 24;
+    if let RunState::MainMenu{ menu_selection : selection } = *runstate {
+        if selection == MainMenuSelection::NewGame {
+            draw_batch.print_color_centered(y, "Begin New Game", ColorPair::new(RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK)));
+        } else {
+            draw_batch.print_color_centered(y, "Begin New Game", ColorPair::new(RGB::named(rltk::WHITE), RGB::named(rltk::BLACK)));
+        }
+        y += 1;
+
+        if save_exists {
+            if selection == MainMenuSelection::LoadGame {
+                draw_batch.print_color_centered(y, "Load Game", ColorPair::new(RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK)));
+            } else {
+                draw_batch.print_color_centered(y, "Load Game", ColorPair::new(RGB::named(rltk::WHITE), RGB::named(rltk::BLACK)));
+            }
+            y += 1;
+        }
+
+        if selection == MainMenuSelection::Quit {
+            draw_batch.print_color_centered(y, "Quit", ColorPair::new(RGB::named(rltk::MAGENTA), RGB::named(rltk::BLACK)));
+        } else {
+            draw_batch.print_color_centered(y, "Quit", ColorPair::new(RGB::named(rltk::WHITE), RGB::named(rltk::BLACK)));
+        }
+
+        draw_batch.submit(6000);
+
+        match ctx.key {
+            None => return MainMenuResult::NoSelection{ selected: selection },
+            Some(key) => {
+                match key {
+                    VirtualKeyCode::Escape => { return MainMenuResult::NoSelection{ selected: MainMenuSelection::Quit } }
+                    VirtualKeyCode::Up => {
+                        let mut newselection;
+                        match selection {
+                            MainMenuSelection::NewGame => newselection = MainMenuSelection::Quit,
+                            MainMenuSelection::LoadGame => newselection = MainMenuSelection::NewGame,
+                            MainMenuSelection::Quit => newselection = MainMenuSelection::LoadGame
+                        }
+                        if newselection == MainMenuSelection::LoadGame && !save_exists {
+                            newselection = MainMenuSelection::NewGame;
+                        }
+                        return MainMenuResult::NoSelection{ selected: newselection }
+                    }
+                    VirtualKeyCode::Down => {
+                        let mut newselection;
+                        match selection {
+                            MainMenuSelection::NewGame => newselection = MainMenuSelection::LoadGame,
+                            MainMenuSelection::LoadGame => newselection = MainMenuSelection::Quit,
+                            MainMenuSelection::Quit => newselection = MainMenuSelection::NewGame
+                        }
+                        if newselection == MainMenuSelection::LoadGame && !save_exists {
+                            newselection = MainMenuSelection::Quit;
+                        }
+                        return MainMenuResult::NoSelection{ selected: newselection }
+                    }
+                    VirtualKeyCode::Return => return MainMenuResult::Selected{ selected : selection },
+                    _ => return MainMenuResult::NoSelection{ selected: selection }
+                }
+            }
+        }
+    }
+
+    MainMenuResult::NoSelection { selected: MainMenuSelection::NewGame }
+}
+```
+
+### Vendor Menus
+
+The vendor menus system takes a little more work, but not much. Our helpers aren't that useful here:
+
+```rust
+use rltk::prelude::*;
+use specs::prelude::*;
+use crate::{Name, State, InBackpack, VendorMode, Vendor, Item };
+use super::{get_item_display_name, get_item_color, menu_box};
+
+#[derive(PartialEq, Copy, Clone)]
+pub enum VendorResult { NoResponse, Cancel, Sell, BuyMode, SellMode, Buy }
+
+fn vendor_sell_menu(gs : &mut State, ctx : &mut Rltk, _vendor : Entity, _mode : VendorMode) -> (VendorResult, Option<Entity>, Option<String>, Option<f32>) {
+    let mut draw_batch = DrawBatch::new();
+    let player_entity = gs.ecs.fetch::<Entity>();
+    let names = gs.ecs.read_storage::<Name>();
+    let backpack = gs.ecs.read_storage::<InBackpack>();
+    let items = gs.ecs.read_storage::<Item>();
+    let entities = gs.ecs.entities();
+
+    let inventory = (&backpack, &names).join().filter(|item| item.0.owner == *player_entity );
+    let count = inventory.count();
+
+    let mut y = (25 - (count / 2)) as i32;
+    menu_box(&mut draw_batch, 15, y, (count+3) as i32, "Sell Which Item? (space to switch to buy mode)");
+    draw_batch.print_color(
+        Point::new(18, y+count as i32+1),
+        "ESCAPE to cancel",
+        ColorPair::new(RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK))
+    );
+
+    let mut equippable : Vec<Entity> = Vec::new();
+    let mut j = 0;
+    for (entity, _pack, item) in (&entities, &backpack, &items).join().filter(|item| item.1.owner == *player_entity ) {
+        draw_batch.set(Point::new(17, y), ColorPair::new(RGB::named(rltk::WHITE), RGB::named(rltk::BLACK)), rltk::to_cp437('('));
+        draw_batch.set(Point::new(18, y), ColorPair::new(RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK)), 97+j as u8);
+        draw_batch.set(Point::new(19, y), ColorPair::new(RGB::named(rltk::WHITE), RGB::named(rltk::BLACK)), rltk::to_cp437(')'));
+
+        draw_batch.print_color(
+            Point::new(21, y), 
+            &get_item_display_name(&gs.ecs, entity),
+            ColorPair::new(get_item_color(&gs.ecs, entity), RGB::from_f32(0.0, 0.0, 0.0))
+        );
+        draw_batch.print(Point::new(50, y), &format!("{:.1} gp", item.base_value * 0.8));
+        equippable.push(entity);
+        y += 1;
+        j += 1;
+    }
+
+    draw_batch.submit(6000);
+
+    match ctx.key {
+        None => (VendorResult::NoResponse, None, None, None),
+        Some(key) => {
+            match key {
+                VirtualKeyCode::Space => { (VendorResult::BuyMode, None, None, None) }
+                VirtualKeyCode::Escape => { (VendorResult::Cancel, None, None, None) }
+                _ => {
+                    let selection = rltk::letter_to_option(key);
+                    if selection > -1 && selection < count as i32 {
+                        return (VendorResult::Sell, Some(equippable[selection as usize]), None, None);
+                    }
+                    (VendorResult::NoResponse, None, None, None)
+                }
+            }
+        }
+    }
+}
+
+fn vendor_buy_menu(gs : &mut State, ctx : &mut Rltk, vendor : Entity, _mode : VendorMode) -> (VendorResult, Option<Entity>, Option<String>, Option<f32>) {
+    use crate::raws::*;
+    let mut draw_batch = DrawBatch::new();
+
+    let vendors = gs.ecs.read_storage::<Vendor>();
+
+    let inventory = crate::raws::get_vendor_items(&vendors.get(vendor).unwrap().categories, &RAWS.lock().unwrap());
+    let count = inventory.len();
+
+    let mut y = (25 - (count / 2)) as i32;
+    menu_box(&mut draw_batch, 15, y, (count+3) as i32, "Buy Which Item? (space to switch to sell mode)");
+    draw_batch.print_color(
+        Point::new(18, y+count as i32+1),
+        "ESCAPE to cancel",
+        ColorPair::new(RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK))
+    );
+
+    for (j,sale) in inventory.iter().enumerate() {
+        draw_batch.set(Point::new(17, y), ColorPair::new(RGB::named(rltk::WHITE), RGB::named(rltk::BLACK)), rltk::to_cp437('('));
+        draw_batch.set(Point::new(18, y), ColorPair::new(RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK)), 97+j as u8);
+        draw_batch.set(Point::new(19, y), ColorPair::new(RGB::named(rltk::WHITE), RGB::named(rltk::BLACK)), rltk::to_cp437(')'));
+
+        draw_batch.print(Point::new(21, y), &sale.0);
+        draw_batch.print(Point::new(50, y), &format!("{:.1} gp", sale.1 * 1.2));
+        y += 1;
+    }
+
+    draw_batch.submit(6000);
+
+    match ctx.key {
+        None => (VendorResult::NoResponse, None, None, None),
+        Some(key) => {
+            match key {
+                VirtualKeyCode::Space => { (VendorResult::SellMode, None, None, None) }
+                VirtualKeyCode::Escape => { (VendorResult::Cancel, None, None, None) }
+                _ => {
+                    let selection = rltk::letter_to_option(key);
+                    if selection > -1 && selection < count as i32 {
+                        return (VendorResult::Buy, None, Some(inventory[selection as usize].0.clone()), Some(inventory[selection as usize].1));
+                    }
+                    (VendorResult::NoResponse, None, None, None)
+                }
+            }
+        }
+    }
+}
+
+pub fn show_vendor_menu(gs : &mut State, ctx : &mut Rltk, vendor : Entity, mode : VendorMode) -> (VendorResult, Option<Entity>, Option<String>, Option<f32>) {
+    match mode {
+        VendorMode::Buy => vendor_buy_menu(gs, ctx, vendor, mode),
+        VendorMode::Sell => vendor_sell_menu(gs, ctx, vendor, mode)
+    }
+}
+```
+
+### Tooltips
+
+`gui/tooltip.rs` is relatively easy also:
+
+```rust
+use rltk::prelude::*;
+use specs::prelude::*;
+use crate::{Pools, Map, Name, Hidden, camera, Attributes, StatusEffect, Duration };
+use super::get_item_display_name;
+
+struct Tooltip {
+    lines : Vec<String>
+}
+
+impl Tooltip {
+    fn new() -> Tooltip {
+        Tooltip { lines : Vec::new() }
+    }
+
+    fn add<S:ToString>(&mut self, line : S) {
+        self.lines.push(line.to_string());
+    }
+
+    fn width(&self) -> i32 {
+        let mut max = 0;
+        for s in self.lines.iter() {
+            if s.len() > max {
+                max = s.len();
+            }
+        }
+        max as i32 + 2i32
+    }
+
+    fn height(&self) -> i32 { self.lines.len() as i32 + 2i32 }
+
+    fn render(&self, draw_batch : &mut DrawBatch, x : i32, y : i32) {
+        let box_gray : RGB = RGB::from_hex("#999999").expect("Oops");
+        let light_gray : RGB = RGB::from_hex("#DDDDDD").expect("Oops");
+        let white = RGB::named(rltk::WHITE);
+        let black = RGB::named(rltk::BLACK);
+        draw_batch.draw_box(Rect::with_size(x, y, self.width()-1, self.height()-1), ColorPair::new(white, box_gray));
+        for (i,s) in self.lines.iter().enumerate() {
+            let col = if i == 0 { white } else { light_gray };
+            draw_batch.print_color(Point::new(x+1, y+i as i32+1), &s, ColorPair::new(col, black));
+        }
+    }
+}
+
+pub fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
+    let mut draw_batch = DrawBatch::new();
+
+    let (min_x, _max_x, min_y, _max_y) = camera::get_screen_bounds(ecs, ctx);
+    let map = ecs.fetch::<Map>();
+    let hidden = ecs.read_storage::<Hidden>();
+    let attributes = ecs.read_storage::<Attributes>();
+    let pools = ecs.read_storage::<Pools>();
+
+    let mouse_pos = ctx.mouse_pos();
+    let mut mouse_map_pos = mouse_pos;
+    mouse_map_pos.0 += min_x - 1;
+    mouse_map_pos.1 += min_y - 1;
+    if mouse_pos.0 < 1 || mouse_pos.0 > 49 || mouse_pos.1 < 1 || mouse_pos.1 > 40 {
+        return;
+    }
+    if mouse_map_pos.0 >= map.width-1 || mouse_map_pos.1 >= map.height-1 || mouse_map_pos.0 < 1 || mouse_map_pos.1 < 1
+    {
+        return;
+    }
+    if !map.in_bounds(rltk::Point::new(mouse_map_pos.0, mouse_map_pos.1)) { return; }
+    let mouse_idx = map.xy_idx(mouse_map_pos.0, mouse_map_pos.1);
+    if !map.visible_tiles[mouse_idx] { return; }
+
+    let mut tip_boxes : Vec<Tooltip> = Vec::new();
+    for entity in map.tile_content[mouse_idx].iter().filter(|e| hidden.get(**e).is_none()) {
+        let mut tip = Tooltip::new();
+        tip.add(get_item_display_name(ecs, *entity));
+
+        // Comment on attributes
+        let attr = attributes.get(*entity);
+        if let Some(attr) = attr {
+            let mut s = "".to_string();
+            if attr.might.bonus < 0 { s += "Weak. " };
+            if attr.might.bonus > 0 { s += "Strong. " };
+            if attr.quickness.bonus < 0 { s += "Clumsy. " };
+            if attr.quickness.bonus > 0 { s += "Agile. " };
+            if attr.fitness.bonus < 0 { s += "Unheathy. " };
+            if attr.fitness.bonus > 0 { s += "Healthy." };
+            if attr.intelligence.bonus < 0 { s += "Unintelligent. "};
+            if attr.intelligence.bonus > 0 { s += "Smart. "};
+            if s.is_empty() {
+                s = "Quite Average".to_string();
+            }
+            tip.add(s);
+        }
+
+        // Comment on pools
+        let stat = pools.get(*entity);
+        if let Some(stat) = stat {
+            tip.add(format!("Level: {}", stat.level));
+        }
+
+        // Status effects
+        let statuses = ecs.read_storage::<StatusEffect>();
+        let durations = ecs.read_storage::<Duration>();
+        let names = ecs.read_storage::<Name>();
+        for (status, duration, name) in (&statuses, &durations, &names).join() {
+            if status.target == *entity {
+                tip.add(format!("{} ({})", name.name, duration.turns));
+            }
+        }
+
+        tip_boxes.push(tip);
+    }
+
+    if tip_boxes.is_empty() { return; }
+
+    let box_gray : RGB = RGB::from_hex("#999999").expect("Oops");
+    let white = RGB::named(rltk::WHITE);
+
+    let arrow;
+    let arrow_x;
+    let arrow_y = mouse_pos.1;
+    if mouse_pos.0 < 40 {
+        // Render to the left
+        arrow = to_cp437('→');
+        arrow_x = mouse_pos.0 - 1;
+    } else {
+        // Render to the right
+        arrow = to_cp437('←');
+        arrow_x = mouse_pos.0 + 1;
+    }
+    draw_batch.set(Point::new(arrow_x, arrow_y), ColorPair::new(white, box_gray), arrow);
+
+    let mut total_height = 0;
+    for tt in tip_boxes.iter() {
+        total_height += tt.height();
+    }
+
+    let mut y = mouse_pos.1 - (total_height / 2);
+    while y + (total_height/2) > 50 {
+        y -= 1;
+    }
+
+    for tt in tip_boxes.iter() {
+        let x = if mouse_pos.0 < 40 {
+            mouse_pos.0 - (1 + tt.width())
+        } else {
+            mouse_pos.0 + (1 + tt.width())
+        };
+        tt.render(&mut draw_batch, x, y);
+        y += tt.height();
+    }
+
+    draw_batch.submit(7000);
+}
+```
+
+## Wrap-Up
+
+This chapter has been a little painful, but we've got our rendering using the new batching system - and nicely rendered larger log text. We'll build on this in future chapters, when we tackle systems (and concurrency).
 
 ---
 
