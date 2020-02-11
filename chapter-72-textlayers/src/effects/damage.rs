@@ -1,7 +1,7 @@
 use specs::prelude::*;
 use super::*;
 use crate::components::{Pools, Player, Attributes, Confusion, SerializeMe, Duration, StatusEffect, 
-    Name, EquipmentChanged, Slow, DamageOverTime, Skills, OnDeath, Position};
+    Name, EquipmentChanged, Slow, DamageOverTime, Skills };
 use crate::map::Map;
 use crate::gamesystem::{player_hp_at_level, mana_at_level};
 use crate::specs::saveload::{MarkedBuilder, SimpleMarker};

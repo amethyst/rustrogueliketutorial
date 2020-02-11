@@ -1,4 +1,4 @@
-use super::{WantsToPickupItem, Name, InBackpack, Position, gamelog, WantsToUseItem,
+use super::{WantsToPickupItem, Name, InBackpack, Position, WantsToUseItem,
     WantsToDropItem, Map, AreaOfEffect, Equippable, Equipped, WantsToRemoveItem, EquipmentChanged,
     IdentifiedItem, Item, ObfuscatedName, MagicItem, MasterDungeonMap, CursedItem, WantsToCastSpell };
 
