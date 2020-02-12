@@ -44,6 +44,7 @@ mod movement_system;
 pub mod effects;
 #[macro_use]
 extern crate lazy_static;
+mod systems;
 
 const SHOW_MAPGEN_VISUALIZER : bool = false;
 
@@ -79,11 +80,14 @@ pub struct State {
     mapgen_next_state : Option<RunState>,
     mapgen_history : Vec<Map>,
     mapgen_index : usize,
-    mapgen_timer : f32
+    mapgen_timer : f32,
+    dispatcher : Box<dyn systems::UnifiedDispatcher + 'static>
 }
 
 impl State {
     fn run_systems(&mut self) {
+        self.dispatcher.run_now(&mut self.ecs);
+
         let mut mapindex = MapIndexingSystem{};
         mapindex.run_now(&self.ecs);
         let mut vis = VisibilitySystem{};
@@ -534,7 +538,8 @@ fn main() {
         mapgen_next_state : Some(RunState::MainMenu{ menu_selection: gui::MainMenuSelection::NewGame }),
         mapgen_index : 0,
         mapgen_history: Vec::new(),
-        mapgen_timer: 0.0
+        mapgen_timer: 0.0,
+        dispatcher: systems::build()
     };
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();

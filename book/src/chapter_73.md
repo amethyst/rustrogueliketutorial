@@ -10,6 +10,18 @@
 
 ---
 
+Specs provides a really nice dispatcher system: it can automatically employ concurrency, making your game really zoom. So why aren't we using it? Web Assembly! WASM doesn't support threading in the same way as every other platform, and a Specs application compiled with a dispatcher to WASM dies hard on the first attempt to dispatch the systems. It isn't really fair on desktop applications to suffer from this. Also, the current `run_systems` isn't at all nice to look at:
+
+```rust
+fn run_systems(&mut self) {
+    let mut mapindex = MapIndexingSystem{};
+    mapindex.run_now(&self.ecs);
+    let mut vis = VisibilitySystem{};
+    vis.run_now(&self.ecs);
+    ... // MANY more
+```
+
+So the goal of this chapter is to build an interface that detects WASM, and falls back to a single-threaded dispatcher. If WASM isn't around, we'd like to use the Specs dispatcher. We'd also like a nicer interface to our systems!
 
 
 ---

@@ -940,6 +940,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "chapter-73-systems"
+version = "0.1.0"
+dependencies = [
+ "lazy_static",
+ "regex",
+ "rltk",
+ "serde",
+ "serde_json",
+ "specs",
+ "specs-derive",
+]
+
+[[package]]
 name = "cloudabi"
 version = "0.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
