@@ -1,7 +1,6 @@
 extern crate specs;
 use specs::prelude::*;
-use super::{Viewshed, Position, Map, Player, Hidden, BlocksVisibility, Name};
-extern crate rltk;
+use crate::{Viewshed, Position, Map, Player, Hidden, BlocksVisibility, Name};
 use rltk::{field_of_view, Point};
 
 pub struct VisibilitySystem {}

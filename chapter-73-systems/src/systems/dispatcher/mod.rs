@@ -1,5 +1,4 @@
-use crate::map_indexing_system::MapIndexingSystem;
-use crate::visibility_system::VisibilitySystem;
+use super::*;
 use specs::prelude::*;
 
 macro_rules! build_dispatcher {
@@ -33,6 +32,7 @@ impl<'a> UnifiedDispatcher for SingleThreadedDispatcher<'a> {
             for sys in self.systems.iter_mut() {
                 sys.run_now(&*ecs);
             }
+            crate::effects::run_effects_queue(&mut *ecs);
         }
     }
 }
@@ -45,7 +45,31 @@ impl SingleThreadedDispatcher<'_> {
 
         build_dispatcher!(dispatch,
             (MapIndexingSystem, "map_index", &[]),
-            (VisibilitySystem, "visibility", &[])
+            (VisibilitySystem, "visibility", &[]),
+            (EncumbranceSystem, "encumbrance", &[]),
+            (InitiativeSystem, "initiative", &[]),
+            (TurnStatusSystem, "turnstatus", &[]),
+            (QuipSystem, "quips", &[]),
+            (AdjacentAI, "adjacent", &[]),
+            (VisibleAI, "visible", &[]),
+            (ApproachAI, "approach", &[]),
+            (FleeAI, "flee", &[]),
+            (ChaseAI, "chase", &[]),
+            (DefaultMoveAI, "default_move", &[]),
+            (MovementSystem, "movement", &[]),
+            (TriggerSystem, "triggers", &[]),
+            (MeleeCombatSystem, "melee", &[]),
+            (RangedCombatSystem, "ranged", &[]),
+            (ItemCollectionSystem, "pickup", &[]),
+            (ItemEquipOnUse, "equip", &[]),
+            (ItemUseSystem, "use", &[]),
+            (SpellUseSystem, "spells", &[]),
+            (ItemIdentificationSystem, "itemid", &[]),
+            (ItemDropSystem, "drop", &[]),
+            (ItemRemoveSystem, "remove", &[]),
+            (HungerSystem, "hunger", &[]),
+            (ParticleSpawnSystem, "particle_spawn", &[]),
+            (LightingSystem, "lighting", &[])
         );
 
         dispatch

@@ -1,5 +1,5 @@
 use specs::prelude::*;
-use super::{ Rltk, ParticleLifetime, Position, Renderable };
+use crate::{ Rltk, ParticleLifetime, Position, Renderable };
 use rltk::RGB;
 
 pub fn update_particles(ecs : &mut World, ctx : &Rltk) {

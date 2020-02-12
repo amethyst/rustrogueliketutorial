@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use super::*;
-use crate::particle_system::ParticleBuilder;
+use crate::systems::particle_system::ParticleBuilder;
 use crate::map::Map;
 use crate::components::{ParticleAnimation, ParticleLifetime, Renderable, Position};
 

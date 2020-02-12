@@ -14,33 +14,17 @@ mod player;
 use player::*;
 mod rect;
 pub use rect::Rect;
-mod visibility_system;
-use visibility_system::VisibilitySystem;
-mod map_indexing_system;
-use map_indexing_system::MapIndexingSystem;
-mod melee_combat_system;
-use melee_combat_system::MeleeCombatSystem;
-mod ranged_combat_system;
-use ranged_combat_system::RangedCombatSystem;
 mod damage_system;
 mod gui;
 mod gamelog;
 mod spawner;
-mod inventory_system;
-use inventory_system::{ ItemCollectionSystem, ItemUseSystem, ItemDropSystem, ItemRemoveSystem, SpellUseSystem };
 pub mod saveload_system;
 pub mod random_table;
-pub mod particle_system;
-pub mod hunger_system;
 pub mod rex_assets;
-pub mod trigger_system;
 pub mod map_builders;
 pub mod raws;
 mod gamesystem;
 pub use gamesystem::*;
-mod lighting_system;
-mod ai;
-mod movement_system;
 pub mod effects;
 #[macro_use]
 extern crate lazy_static;
@@ -87,61 +71,6 @@ pub struct State {
 impl State {
     fn run_systems(&mut self) {
         self.dispatcher.run_now(&mut self.ecs);
-
-        let mut mapindex = MapIndexingSystem{};
-        mapindex.run_now(&self.ecs);
-        let mut vis = VisibilitySystem{};
-        vis.run_now(&self.ecs);
-        let mut encumbrance = ai::EncumbranceSystem{};
-        encumbrance.run_now(&self.ecs);
-        let mut initiative = ai::InitiativeSystem{};
-        initiative.run_now(&self.ecs);
-        let mut turnstatus = ai::TurnStatusSystem{};
-        turnstatus.run_now(&self.ecs);
-        let mut quipper = ai::QuipSystem{};
-        quipper.run_now(&self.ecs);
-        let mut adjacent = ai::AdjacentAI{};
-        adjacent.run_now(&self.ecs);
-        let mut visible = ai::VisibleAI{};
-        visible.run_now(&self.ecs);
-        let mut approach = ai::ApproachAI{};
-        approach.run_now(&self.ecs);
-        let mut flee = ai::FleeAI{};
-        flee.run_now(&self.ecs);
-        let mut chase = ai::ChaseAI{};
-        chase.run_now(&self.ecs);
-        let mut defaultmove = ai::DefaultMoveAI{};
-        defaultmove.run_now(&self.ecs);
-        let mut moving = movement_system::MovementSystem{};
-        moving.run_now(&self.ecs);
-        let mut triggers = trigger_system::TriggerSystem{};
-        triggers.run_now(&self.ecs);
-        let mut melee = MeleeCombatSystem{};
-        melee.run_now(&self.ecs);
-        let mut ranged = RangedCombatSystem{};
-        ranged.run_now(&self.ecs);
-        let mut pickup = ItemCollectionSystem{};
-        pickup.run_now(&self.ecs);
-        let mut itemequip = inventory_system::ItemEquipOnUse{};
-        itemequip.run_now(&self.ecs);
-        let mut itemuse = ItemUseSystem{};
-        itemuse.run_now(&self.ecs);
-        let mut spelluse = SpellUseSystem{};
-        spelluse.run_now(&self.ecs);
-        let mut item_id = inventory_system::ItemIdentificationSystem{};
-        item_id.run_now(&self.ecs);
-        let mut drop_items = ItemDropSystem{};
-        drop_items.run_now(&self.ecs);
-        let mut item_remove = ItemRemoveSystem{};
-        item_remove.run_now(&self.ecs);
-        let mut hunger = hunger_system::HungerSystem{};
-        hunger.run_now(&self.ecs);
-        effects::run_effects_queue(&mut self.ecs);
-        let mut particles = particle_system::ParticleSpawnSystem{};
-        particles.run_now(&self.ecs);
-        let mut lighting = lighting_system::LightingSystem{};
-        lighting.run_now(&self.ecs);
-
         self.ecs.maintain();
     }
 }
@@ -159,7 +88,7 @@ impl GameState for State {
         ctx.cls();
         ctx.set_active_console(0);
         ctx.cls();
-        particle_system::update_particles(&mut self.ecs, ctx);
+        systems::particle_system::update_particles(&mut self.ecs, ctx);
 
         match newrunstate {
             RunState::MainMenu{..} => {}
@@ -633,7 +562,7 @@ fn main() {
     let player_entity = spawner::player(&mut gs.ecs, 0, 0);
     gs.ecs.insert(player_entity);
     gs.ecs.insert(RunState::MapGeneration{} );
-    gs.ecs.insert(particle_system::ParticleBuilder::new());
+    gs.ecs.insert(systems::particle_system::ParticleBuilder::new());
     gs.ecs.insert(rex_assets::RexAssets::new());
 
     gs.generate_world_map(1, 0);
