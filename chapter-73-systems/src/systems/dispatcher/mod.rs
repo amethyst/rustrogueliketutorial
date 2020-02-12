@@ -1,6 +1,12 @@
+//#[macro_use]
+//mod single_thread;
+
 #[macro_use]
-mod single_thread;
-pub use single_thread::*;
+mod multi_thread;
+
+//pub use single_thread::*;
+pub use multi_thread::*;
+
 use specs::prelude::World;
 use super::*;
 
