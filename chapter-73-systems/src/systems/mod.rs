@@ -26,5 +26,5 @@ mod lighting_system;
 use lighting_system::LightingSystem;
 
 pub fn build() -> Box<dyn UnifiedDispatcher + 'static> {
-    Box::new(dispatcher::SingleThreadedDispatcher::new())
+    dispatcher::new()
 }
