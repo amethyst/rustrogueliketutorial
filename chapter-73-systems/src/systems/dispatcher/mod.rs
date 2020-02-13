@@ -16,7 +16,7 @@ use specs::prelude::World;
 use super::*;
 
 pub trait UnifiedDispatcher {
-    fn run_now<'a>(&mut self, ecs : *mut World);
+    fn run_now(&mut self, ecs : *mut World);
 }
 
 construct_dispatcher!(
