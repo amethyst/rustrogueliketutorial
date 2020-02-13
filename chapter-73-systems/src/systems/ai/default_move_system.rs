@@ -11,14 +11,13 @@ impl<'a> System<'a> for DefaultMoveAI {
         WriteStorage<'a, MoveMode>,
         ReadStorage<'a, Position>,
         WriteExpect<'a, Map>,
-        WriteExpect<'a, rltk::RandomNumberGenerator>,
         WriteStorage<'a, ApplyMove>,
         Entities<'a>
     );
 
     fn run(&mut self, data : Self::SystemData) {
         let (mut turns, mut move_mode, positions, mut map,
-            mut rng, mut apply_move, entities) = data;
+            mut apply_move, entities) = data;
 
         let mut turn_done : Vec<Entity> = Vec::new();
         for (entity, pos, mut mode, _myturn) in
@@ -32,7 +31,7 @@ impl<'a> System<'a> for DefaultMoveAI {
                 Movement::Random => {
                     let mut x = pos.x;
                     let mut y = pos.y;
-                    let move_roll = rng.roll_dice(1, 5);
+                    let move_roll = crate::rng::roll_dice(1, 5);
                     match move_roll {
                         1 => x -= 1,
                         2 => x += 1,
@@ -66,8 +65,8 @@ impl<'a> System<'a> for DefaultMoveAI {
                             mode.mode = Movement::RandomWaypoint{ path : None };
                         }
                     } else {
-                        let target_x = rng.roll_dice(1, map.width-2);
-                        let target_y = rng.roll_dice(1, map.height-2);
+                        let target_x = crate::rng::roll_dice(1, map.width-2);
+                        let target_y = crate::rng::roll_dice(1, map.height-2);
                         let idx = map.xy_idx(target_x, target_y);
                         if tile_walkable(map.tiles[idx]) {
                             let path = rltk::a_star_search(

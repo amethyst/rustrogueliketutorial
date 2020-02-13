@@ -1,18 +1,17 @@
 use super::{InitialMapBuilder, MetaMapBuilder, BuilderMap, TileType};
-use rltk::RandomNumberGenerator;
 
 pub struct CellularAutomataBuilder {}
 
 impl InitialMapBuilder for CellularAutomataBuilder {
     #[allow(dead_code)]
-    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap) {
-        self.build(rng, build_data);
+    fn build_map(&mut self, build_data : &mut BuilderMap) {
+        self.build(build_data);
     }
 }
 
 impl MetaMapBuilder for CellularAutomataBuilder {
     #[allow(dead_code)]
-    fn build_map(&mut self, _rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap) {
+    fn build_map(&mut self, build_data : &mut BuilderMap) {
         self.apply_iteration(build_data);
     }
 }
@@ -53,11 +52,11 @@ impl CellularAutomataBuilder {
     }
 
     #[allow(clippy::map_entry)]
-    fn build(&mut self, rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+    fn build(&mut self, build_data : &mut BuilderMap) {
         // First we completely randomize the map, setting 55% of it to be floor.
         for y in 1..build_data.map.height-1 {
             for x in 1..build_data.map.width-1 {
-                let roll = rng.roll_dice(1, 100);
+                let roll = crate::rng::roll_dice(1, 100);
                 let idx = build_data.map.xy_idx(x, y);
                 if roll > 55 { build_data.map.tiles[idx] = TileType::Floor }
                 else { build_data.map.tiles[idx] = TileType::Wall }

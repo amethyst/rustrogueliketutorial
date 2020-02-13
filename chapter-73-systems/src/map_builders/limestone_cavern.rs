@@ -3,9 +3,8 @@ use super::{BuilderChain, DrunkardsWalkBuilder, XStart, YStart, AreaStartingPosi
     DLABuilder, PrefabBuilder, CellularAutomataBuilder, AreaEndingPosition,
     BspDungeonBuilder, RoomSorter, RoomSort, NearestCorridors, RoomExploder, RoomDrawer,
     RoomBasedSpawner, XEnd, YEnd};
-use rltk::RandomNumberGenerator;
 
-pub fn limestone_cavern_builder(new_depth: i32, _rng: &mut rltk::RandomNumberGenerator, width: i32, height: i32) -> BuilderChain {
+pub fn limestone_cavern_builder(new_depth: i32, width: i32, height: i32) -> BuilderChain {
     let mut chain = BuilderChain::new(new_depth, width, height, "Limestone Caverns");
     chain.start_with(DrunkardsWalkBuilder::winding_passages());
     chain.with(AreaStartingPosition::new(XStart::CENTER, YStart::CENTER));
@@ -17,7 +16,7 @@ pub fn limestone_cavern_builder(new_depth: i32, _rng: &mut rltk::RandomNumberGen
     chain
 }
 
-pub fn limestone_deep_cavern_builder(new_depth: i32, _rng: &mut rltk::RandomNumberGenerator, width: i32, height: i32) -> BuilderChain {
+pub fn limestone_deep_cavern_builder(new_depth: i32, width: i32, height: i32) -> BuilderChain {
     let mut chain = BuilderChain::new(new_depth, width, height, "Deep Limestone Caverns");
     chain.start_with(DLABuilder::central_attractor());
     chain.with(AreaStartingPosition::new(XStart::LEFT, YStart::TOP));
@@ -28,7 +27,7 @@ pub fn limestone_deep_cavern_builder(new_depth: i32, _rng: &mut rltk::RandomNumb
     chain
 }
 
-pub fn limestone_transition_builder(new_depth: i32, _rng: &mut rltk::RandomNumberGenerator, width: i32, height: i32) -> BuilderChain {
+pub fn limestone_transition_builder(new_depth: i32, width: i32, height: i32) -> BuilderChain {
     let mut chain = BuilderChain::new(new_depth, width, height, "Dwarf Fort - Upper Reaches");
     chain.start_with(CellularAutomataBuilder::new());
     chain.with(AreaStartingPosition::new(XStart::CENTER, YStart::CENTER));
@@ -46,8 +45,8 @@ pub fn limestone_transition_builder(new_depth: i32, _rng: &mut rltk::RandomNumbe
 pub struct CaveDecorator {}
 
 impl MetaMapBuilder for CaveDecorator {
-    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap)  {
-        self.build(rng, build_data);
+    fn build_map(&mut self, build_data : &mut BuilderMap)  {
+        self.build(build_data);
     }
 }
 
@@ -57,13 +56,13 @@ impl CaveDecorator {
         Box::new(CaveDecorator{})
     }
 
-    fn build(&mut self, rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+    fn build(&mut self, build_data : &mut BuilderMap) {
         let old_map = build_data.map.clone();
         for (idx,tt) in build_data.map.tiles.iter_mut().enumerate() {
             // Gravel Spawning
-            if *tt == TileType::Floor && rng.roll_dice(1, 6)==1 {
+            if *tt == TileType::Floor && crate::rng::roll_dice(1, 6)==1 {
                 *tt = TileType::Gravel;
-            } else if *tt == TileType::Floor && rng.roll_dice(1, 10)==1 {
+            } else if *tt == TileType::Floor && crate::rng::roll_dice(1, 10)==1 {
                 // Spawn passable pools
                 *tt = TileType::ShallowWater;
             } else if *tt == TileType::Wall {
@@ -78,7 +77,7 @@ impl CaveDecorator {
                 if neighbors == 2 {
                     *tt = TileType::DeepWater;
                 } else if neighbors == 1 {
-                    let roll = rng.roll_dice(1, 4);
+                    let roll = crate::rng::roll_dice(1, 4);
                     match roll {
                         1 => *tt = TileType::Stalactite,
                         2 => *tt = TileType::Stalagmite,
@@ -95,8 +94,8 @@ impl CaveDecorator {
 pub struct CaveTransition {}
 
 impl MetaMapBuilder for CaveTransition {
-    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap)  {
-        self.build(rng, build_data);
+    fn build_map(&mut self, build_data : &mut BuilderMap)  {
+        self.build(build_data);
     }
 }
 
@@ -106,7 +105,7 @@ impl CaveTransition {
         Box::new(CaveTransition{})
     }
 
-    fn build(&mut self, rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+    fn build(&mut self, build_data : &mut BuilderMap) {
         build_data.map.depth = 5;
         build_data.take_snapshot();
 
@@ -118,7 +117,7 @@ impl CaveTransition {
         builder.with(NearestCorridors::new());
         builder.with(RoomExploder::new());
         builder.with(RoomBasedSpawner::new());
-        builder.build_map(rng);
+        builder.build_map();
 
         // Add the history to our history
         for h in builder.build_data.history.iter() {

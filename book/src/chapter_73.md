@@ -475,7 +475,9 @@ const SHOW_FPS : bool = true;
 At the very end of `tick`, where you submit the render batch - add the following line:
 
 ```rust
-ctx.print(1, 59, &format!("FPS: {}", ctx.fps));
+if SHOW_FPS {
+    ctx.print(1, 59, &format!("FPS: {}", ctx.fps));
+}
 ```
 
 If you `cargo run` now, you'll have an FPS counter at the bottom of the screen. On my system, it pretty much always reads `60`. If you'd like to see how fast it *can* go, we need to turn off `vsync`. This is an easy change to the RLTK initialization in the `main` function:
@@ -493,7 +495,42 @@ Now it shows my frame-rate in the 200 region!
 
 ## Threading the RNG
 
+The `RandomNumberGenerator` being a writable resource is the single biggest cause of not being able to access concurrency in our system. It's used all over the place, and systems have to wait for one another to generate random numbers. We *could* simply use a local RNG whenever we need random numbers - but then we'd lose the ability to set a *random seed* (more on that in a future chapter!). Instead, we'll make a *global* random number generator and protect it with a mutex - so the program can get random numbers from the same source.
 
+Let's make a new file, `src/rng.rs`. Add a `pub mod rng;` to `main.rs`, and we'll flesh out the random number wrapper as a `lazy_static`. We'll protect it with a `Mutex`, so it can be safely used from multiple threads:
+
+```rust
+use std::sync::Mutex;
+use rltk::prelude::*;
+
+lazy_static! {
+    static ref RNG: Mutex<RandomNumberGenerator> =
+        Mutex::new(RandomNumberGenerator::new());
+}
+
+pub fn reseed(seed: u64) {
+    *RNG.lock().unwrap() = RandomNumberGenerator::seeded(seed);
+}
+
+pub fn roll_dice(n:i32, die_type: i32) -> i32 {
+    RNG.lock().unwrap().roll_dice(n, die_type)
+}
+
+pub fn range(min: i32, max: i32) -> i32
+{
+    RNG.lock().unwrap().range(min, max)
+}
+```
+
+Now go into `main.rs`'s `main` function, and delete the line:
+
+```rust
+gs.ecs.insert(rltk::RandomNumberGenerator::new());
+```
+
+The game will now crash whenever it tries to access the RNG resource! So we need to search the whole program finding times we've used the RNG - and replace them all with `crate::rng::roll_dice` or `crate::rng::range`. Otherwise, the syntax remains the same. This is a *big* change, of mostly the same code. See [the source](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-73-systems) for a working version. (A nice side-effect is that we're no longer passing `rng` everywhere in the map builders; they are a lot cleaner!)
+
+With that dependency resolved, we're now able to operate with a bit more concurrency. Your FPS should have improved, and if you watch in a process monitor we are a bit more threaded.
 
 ---
 

@@ -29,6 +29,7 @@ pub mod effects;
 #[macro_use]
 extern crate lazy_static;
 mod systems;
+pub mod rng;
 
 const SHOW_MAPGEN_VISUALIZER : bool = false;
 const SHOW_FPS : bool = true;
@@ -394,7 +395,9 @@ impl GameState for State {
         damage_system::delete_the_dead(&mut self.ecs);
 
         rltk::render_draw_buffer(ctx);
-        ctx.print(1, 59, &format!("FPS: {}", ctx.fps));
+        if SHOW_FPS {
+            ctx.print(1, 59, &format!("FPS: {}", ctx.fps));
+        }
     }
 }
 
@@ -561,7 +564,6 @@ fn main() {
     gs.ecs.insert(map::MasterDungeonMap::new());
     gs.ecs.insert(Map::new(1, 64, 64, "New Map"));
     gs.ecs.insert(Point::new(0, 0));
-    gs.ecs.insert(rltk::RandomNumberGenerator::new());
     let player_entity = spawner::player(&mut gs.ecs, 0, 0);
     gs.ecs.insert(player_entity);
     gs.ecs.insert(RunState::MapGeneration{} );

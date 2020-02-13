@@ -2,9 +2,8 @@ use super::{BuilderChain, XStart, YStart, AreaStartingPosition, RoomSorter, Room
     CullUnreachable, VoronoiSpawning, BspDungeonBuilder, DistantExit, BspCorridors,
     CorridorSpawner, RoomDrawer, BuilderMap, MetaMapBuilder, DLABuilder, TileType,
     AreaEndingPosition, XEnd, YEnd};
-use rltk::RandomNumberGenerator;
 
-pub fn dwarf_fort_builder(new_depth: i32, _rng: &mut rltk::RandomNumberGenerator, width: i32, height: i32) -> BuilderChain {
+pub fn dwarf_fort_builder(new_depth: i32, width: i32, height: i32) -> BuilderChain {
     let mut chain = BuilderChain::new(new_depth, width, height, "Dwarven Fortress");
     chain.start_with(BspDungeonBuilder::new());
     chain.with(RoomSorter::new(RoomSort::CENTRAL));
@@ -25,8 +24,8 @@ pub fn dwarf_fort_builder(new_depth: i32, _rng: &mut rltk::RandomNumberGenerator
 pub struct DragonsLair {}
 
 impl MetaMapBuilder for DragonsLair {
-    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap)  {
-        self.build(rng, build_data);
+    fn build_map(&mut self, build_data : &mut BuilderMap)  {
+        self.build(build_data);
     }
 }
 
@@ -36,13 +35,13 @@ impl DragonsLair {
         Box::new(DragonsLair{})
     }
 
-    fn build(&mut self, rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+    fn build(&mut self, build_data : &mut BuilderMap) {
         build_data.map.depth = 7;
         build_data.take_snapshot();
 
         let mut builder = BuilderChain::new(6, build_data.width, build_data.height, "New Map");
         builder.start_with(DLABuilder::insectoid());
-        builder.build_map(rng);
+        builder.build_map();
 
         // Add the history to our history
         for h in builder.build_data.history.iter() {
@@ -63,8 +62,8 @@ impl DragonsLair {
 pub struct DragonSpawner {}
 
 impl MetaMapBuilder for DragonSpawner {
-    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap)  {
-        self.build(rng, build_data);
+    fn build_map(&mut self, build_data : &mut BuilderMap)  {
+        self.build(build_data);
     }
 }
 
@@ -74,7 +73,7 @@ impl DragonSpawner {
         Box::new(DragonSpawner{})
     }
 
-    fn build(&mut self, _rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+    fn build(&mut self, build_data : &mut BuilderMap) {
         // Find a central location that isn't occupied
         let seed_x = build_data.map.width / 2;
         let seed_y = build_data.map.height / 2;

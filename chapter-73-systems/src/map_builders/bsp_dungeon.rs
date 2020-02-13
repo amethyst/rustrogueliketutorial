@@ -1,5 +1,4 @@
 use super::{InitialMapBuilder, BuilderMap, Rect, TileType};
-use rltk::RandomNumberGenerator;
 
 pub struct BspDungeonBuilder {
     rects: Vec<Rect>,
@@ -7,8 +6,8 @@ pub struct BspDungeonBuilder {
 
 impl InitialMapBuilder for BspDungeonBuilder {
     #[allow(dead_code)]
-    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap) {
-        self.build(rng, build_data);
+    fn build_map(&mut self, build_data : &mut BuilderMap) {
+        self.build(build_data);
     }
 }
 
@@ -20,7 +19,7 @@ impl BspDungeonBuilder {
         })
     }
 
-    fn build(&mut self, rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+    fn build(&mut self, build_data : &mut BuilderMap) {
         let mut rooms : Vec<Rect> = Vec::new();
         self.rects.clear();
         self.rects.push( Rect::new(2, 2, build_data.map.width-5, build_data.map.height-5) ); // Start with a single map-sized rectangle
@@ -31,8 +30,8 @@ impl BspDungeonBuilder {
         // room in there, we place it and add it to the rooms list.
         let mut n_rooms = 0;
         while n_rooms < 240 {
-            let rect = self.get_random_rect(rng);
-            let candidate = self.get_random_sub_rect(rect, rng);
+            let rect = self.get_random_rect();
+            let candidate = self.get_random_sub_rect(rect);
 
             if self.is_possible(candidate, &build_data, &rooms) {
                 //apply_room_to_map(&mut build_data.map, &candidate);
@@ -58,22 +57,22 @@ impl BspDungeonBuilder {
         self.rects.push(Rect::new( rect.x1 + half_width, rect.y1 + half_height, half_width, half_height ));
     }
 
-    fn get_random_rect(&mut self, rng : &mut RandomNumberGenerator) -> Rect {
+    fn get_random_rect(&mut self) -> Rect {
         if self.rects.len() == 1 { return self.rects[0]; }
-        let idx = (rng.roll_dice(1, self.rects.len() as i32)-1) as usize;
+        let idx = (crate::rng::roll_dice(1, self.rects.len() as i32)-1) as usize;
         self.rects[idx]
     }
 
-    fn get_random_sub_rect(&self, rect : Rect, rng : &mut RandomNumberGenerator) -> Rect {
+    fn get_random_sub_rect(&self, rect : Rect) -> Rect {
         let mut result = rect;
         let rect_width = i32::abs(rect.x1 - rect.x2);
         let rect_height = i32::abs(rect.y1 - rect.y2);
 
-        let w = i32::max(3, rng.roll_dice(1, i32::min(rect_width, 20))-1) + 1;
-        let h = i32::max(3, rng.roll_dice(1, i32::min(rect_height, 20))-1) + 1;
+        let w = i32::max(3, crate::rng::roll_dice(1, i32::min(rect_width, 20))-1) + 1;
+        let h = i32::max(3, crate::rng::roll_dice(1, i32::min(rect_height, 20))-1) + 1;
 
-        result.x1 += rng.roll_dice(1, 6)-1;
-        result.y1 += rng.roll_dice(1, 6)-1;
+        result.x1 += crate::rng::roll_dice(1, 6)-1;
+        result.y1 += crate::rng::roll_dice(1, 6)-1;
         result.x2 = result.x1 + w;
         result.y2 = result.y1 + h;
 

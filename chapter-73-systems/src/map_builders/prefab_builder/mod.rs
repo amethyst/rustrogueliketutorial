@@ -1,5 +1,4 @@
 use super::{InitialMapBuilder, MetaMapBuilder, BuilderMap, TileType, Position};
-use rltk::RandomNumberGenerator;
 pub mod prefab_levels;
 pub mod prefab_sections;
 pub mod prefab_rooms;
@@ -20,15 +19,15 @@ pub struct PrefabBuilder {
 }
 
 impl MetaMapBuilder for PrefabBuilder {
-    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap)  {
-        self.build(rng, build_data);
+    fn build_map(&mut self, build_data : &mut BuilderMap)  {
+        self.build(build_data);
     }
 }
 
 impl InitialMapBuilder for PrefabBuilder {
     #[allow(dead_code)]
-    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap) {
-        self.build(rng, build_data);
+    fn build_map(&mut self, build_data : &mut BuilderMap) {
+        self.build(build_data);
     }
 }
 
@@ -68,12 +67,12 @@ impl PrefabBuilder {
         })
     }
 
-    fn build(&mut self, rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+    fn build(&mut self, build_data : &mut BuilderMap) {
         match self.mode {
             PrefabMode::RexLevel{template} => self.load_rex_map(&template, build_data),
             PrefabMode::Constant{level} => self.load_ascii_map(&level, build_data),
-            PrefabMode::Sectional{section} => self.apply_sectional(&section, rng, build_data),
-            PrefabMode::RoomVaults => self.apply_room_vaults(rng, build_data)
+            PrefabMode::Sectional{section} => self.apply_sectional(&section, build_data),
+            PrefabMode::RoomVaults => self.apply_room_vaults(build_data)
         }
         build_data.take_snapshot();
     }
@@ -172,7 +171,7 @@ impl PrefabBuilder {
         }
     }
 
-    fn apply_previous_iteration<F>(&mut self, mut filter: F, _rng: &mut RandomNumberGenerator, build_data : &mut BuilderMap)
+    fn apply_previous_iteration<F>(&mut self, mut filter: F, build_data : &mut BuilderMap)
         where F : FnMut(i32, i32) -> bool
     {
         let width = build_data.map.width;
@@ -185,7 +184,7 @@ impl PrefabBuilder {
     }
 
     #[allow(dead_code)]
-    fn apply_sectional(&mut self, section : &prefab_sections::PrefabSection, rng: &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+    fn apply_sectional(&mut self, section : &prefab_sections::PrefabSection, build_data : &mut BuilderMap) {
         use prefab_sections::*;
 
         let string_vec = PrefabBuilder::read_ascii_to_vec(section.template);
@@ -208,7 +207,7 @@ impl PrefabBuilder {
         // Build the map
         self.apply_previous_iteration(|x,y| {
             x < chunk_x || x > (chunk_x + section.width as i32) || y < chunk_y || y > (chunk_y + section.height as i32)
-        }, rng, build_data);
+        }, build_data);
 
         let mut i = 0;
         for ty in 0..section.height {
@@ -223,14 +222,14 @@ impl PrefabBuilder {
         build_data.take_snapshot();
     }
 
-    fn apply_room_vaults(&mut self, rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+    fn apply_room_vaults(&mut self, build_data : &mut BuilderMap) {
         use prefab_rooms::*;
 
         // Apply the previous builder, and keep all entities it spawns (for now)
-        self.apply_previous_iteration(|_x,_y| true, rng, build_data);
+        self.apply_previous_iteration(|_x,_y| true, build_data);
 
         // Do we want a vault at all?
-        let vault_roll = rng.roll_dice(1, 6) + build_data.map.depth;
+        let vault_roll = crate::rng::roll_dice(1, 6) + build_data.map.depth;
         if vault_roll < 4 { return; }
 
         // Note that this is a place-holder and will be moved out of this function
@@ -244,12 +243,12 @@ impl PrefabBuilder {
 
         if possible_vaults.is_empty() { return; } // Bail out if there's nothing to build
 
-        let n_vaults = i32::min(rng.roll_dice(1, 3), possible_vaults.len() as i32);
+        let n_vaults = i32::min(crate::rng::roll_dice(1, 3), possible_vaults.len() as i32);
         let mut used_tiles : HashSet<usize> = HashSet::new();
 
         for _i in 0..n_vaults {
 
-            let vault_index = if possible_vaults.len() == 1 { 0 } else { (rng.roll_dice(1, possible_vaults.len() as i32)-1) as usize };
+            let vault_index = if possible_vaults.len() == 1 { 0 } else { (crate::rng::roll_dice(1, possible_vaults.len() as i32)-1) as usize };
             let vault = possible_vaults[vault_index];
 
             // We'll make a list of places in which the vault could fit
@@ -293,7 +292,7 @@ impl PrefabBuilder {
             }
 
             if !vault_positions.is_empty() {
-                let pos_idx = if vault_positions.len()==1 { 0 } else { (rng.roll_dice(1, vault_positions.len() as i32)-1) as usize };
+                let pos_idx = if vault_positions.len()==1 { 0 } else { (crate::rng::roll_dice(1, vault_positions.len() as i32)-1) as usize };
                 let pos = &vault_positions[pos_idx];
 
                 let chunk_x = pos.x;

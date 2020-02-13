@@ -44,7 +44,6 @@ pub fn delete_the_dead(ecs : &mut World) {
         let mut carried = ecs.write_storage::<InBackpack>();
         let mut positions = ecs.write_storage::<Position>();
         let loot_tables = ecs.read_storage::<LootTable>();
-        let mut rng = ecs.write_resource::<rltk::RandomNumberGenerator>();
         for victim in dead.iter() {
             let pos = positions.get(*victim);
             for (entity, equipped) in (&entities, &equipped).join() {
@@ -67,7 +66,6 @@ pub fn delete_the_dead(ecs : &mut World) {
             if let Some(table) = loot_tables.get(*victim) {
                 let drop_finder = crate::raws::get_item_drop(
                     &crate::raws::RAWS.lock().unwrap(),
-                    &mut rng,
                     &table.table
                 );
                 if let Some(tag) = drop_finder {
@@ -103,9 +101,8 @@ pub fn delete_the_dead(ecs : &mut World) {
     for victim in dead.iter() {
         let death_effects = ecs.read_storage::<OnDeath>();
         if let Some(death_effect) = death_effects.get(*victim) {
-            let mut rng = ecs.fetch_mut::<rltk::RandomNumberGenerator>();
             for effect in death_effect.abilities.iter() {
-                if rng.roll_dice(1,100) <= (effect.chance * 100.0) as i32 {
+                if crate::rng::roll_dice(1,100) <= (effect.chance * 100.0) as i32 {
                     let map = ecs.fetch::<Map>();
                     if let Some(pos) = ecs.read_storage::<Position>().get(*victim) {
                         let spell_entity = crate::raws::find_spell_entity(ecs, &effect.spell).unwrap();

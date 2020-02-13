@@ -1,6 +1,5 @@
 use super::{MetaMapBuilder, BuilderMap, TileType};
 use crate::map;
-use rltk::RandomNumberGenerator;
 
 #[allow(dead_code)]
 pub enum XEnd { LEFT, CENTER, RIGHT }
@@ -14,8 +13,8 @@ pub struct AreaEndingPosition {
 }
 
 impl MetaMapBuilder for AreaEndingPosition {
-    fn build_map(&mut self, rng: &mut rltk::RandomNumberGenerator, build_data : &mut BuilderMap)  {
-        self.build(rng, build_data);
+    fn build_map(&mut self, build_data : &mut BuilderMap)  {
+        self.build(build_data);
     }
 }
 
@@ -27,7 +26,7 @@ impl AreaEndingPosition {
         })
     }
 
-    fn build(&mut self, _rng : &mut RandomNumberGenerator, build_data : &mut BuilderMap) {
+    fn build(&mut self, build_data : &mut BuilderMap) {
         let seed_x;
         let seed_y;
 

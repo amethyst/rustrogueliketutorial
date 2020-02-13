@@ -606,9 +606,8 @@ pub fn spawn_named_mob(raws: &RawMaster, ecs : &mut World, key : &str, pos : Spa
             total_weight : 0.0,
             total_initiative_penalty : 0.0,
             gold : if let Some(gold) = &mob_template.gold {
-                    let mut rng = rltk::RandomNumberGenerator::new();
                     let (n, d, b) = parse_dice_string(&gold);
-                    (rng.roll_dice(n, d) + b) as f32
+                    (crate::rng::roll_dice(n, d) + b) as f32
                 } else {
                     0.0
                 },
@@ -856,14 +855,14 @@ pub fn get_spawn_table_for_depth(raws: &RawMaster, depth: i32) -> MasterTable {
     rt
 }
 
-pub fn get_item_drop(raws: &RawMaster, rng : &mut rltk::RandomNumberGenerator, table: &str) -> Option<String> {
+pub fn get_item_drop(raws: &RawMaster, table: &str) -> Option<String> {
     if raws.loot_index.contains_key(table) {
         let mut rt = RandomTable::new();
         let available_options = &raws.raws.loot_tables[raws.loot_index[table]];
         for item in available_options.drops.iter() {
             rt.add(item.name.clone(), item.weight);
         }
-        let result =rt.roll(rng);
+        let result =rt.roll();
         return Some(result);
     }
 
