@@ -532,6 +532,10 @@ The game will now crash whenever it tries to access the RNG resource! So we need
 
 With that dependency resolved, we're now able to operate with a bit more concurrency. Your FPS should have improved, and if you watch in a process monitor we are a bit more threaded.
 
+## Wrap-Up
+
+This chapter has greatly cleaned up our systems handling. It's faster, leaner and better looking - at the expense of a couple of `unsafe` blocks (well-managed), and a nasty macro. We've also made `RNG` a global, but safely wrapped it in a mutex. The result? The game runs at 1,300 FPS in release mode on my system, and is now benefiting from Specs' amazing threading capabilities. Even in single-threaded mode, it runs at a decent 1,100 FPS (on my system: a core i7).
+
 ---
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-73-systems)**
