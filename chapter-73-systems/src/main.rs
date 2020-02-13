@@ -31,6 +31,7 @@ extern crate lazy_static;
 mod systems;
 
 const SHOW_MAPGEN_VISUALIZER : bool = false;
+const SHOW_FPS : bool = true;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum VendorMode { Buy, Sell }
@@ -393,6 +394,7 @@ impl GameState for State {
         damage_system::delete_the_dead(&mut self.ecs);
 
         rltk::render_draw_buffer(ctx);
+        ctx.print(1, 59, &format!("FPS: {}", ctx.fps));
     }
 }
 
@@ -460,6 +462,7 @@ fn main() {
         .with_title("Roguelike Tutorial")
         .with_font("vga8x16.png", 8, 16)
         .with_sparse_console(80, 30, "vga8x16.png")
+        .with_vsync(false)
         .build();
     context.with_post_scanlines(true);
     let mut gs = State {

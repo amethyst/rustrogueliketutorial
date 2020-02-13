@@ -462,7 +462,37 @@ We could keep enumerating through all of them, but that's a good illustration. F
 4. `InitiativeSystem` also locks the RNG, so it has to wait until Encumbrance is done.
 5. `TurnStatusSystem` locks `MyTurn` - and so does `InitiativeSystem`. So it will have to wait until that system is done.
 
-In other words: we aren't really multi-threading all that much yet! We are benefitting from efficiency gains by using Specs' dispatcher - so we've gained *some* benefit.
+In other words: we aren't really multi-threading all that much yet! We are benefitting from efficiency gains by using Specs' dispatcher - so we've gained *some* benefit (it certainly feels faster in debug mode on my local computer!).
+
+## Quantifying "feels faster"
+
+Let's add a framerate indicator to the screen, so we *know* if what we are doing is helping. We'll make it optional, as a compile-time flag (much like map debug displays). Next to the map flag in `main.rs`, add:
+
+```rust
+const SHOW_FPS : bool = true;
+```
+
+At the very end of `tick`, where you submit the render batch - add the following line:
+
+```rust
+ctx.print(1, 59, &format!("FPS: {}", ctx.fps));
+```
+
+If you `cargo run` now, you'll have an FPS counter at the bottom of the screen. On my system, it pretty much always reads `60`. If you'd like to see how fast it *can* go, we need to turn off `vsync`. This is an easy change to the RLTK initialization in the `main` function:
+
+```rust
+let mut context = RltkBuilder::simple(80, 60)
+    .with_title("Roguelike Tutorial")
+    .with_font("vga8x16.png", 8, 16)
+    .with_sparse_console(80, 30, "vga8x16.png")
+    .with_vsync(false)
+    .build();
+```
+
+Now it shows my frame-rate in the 200 region!
+
+## Threading the RNG
+
 
 
 ---
