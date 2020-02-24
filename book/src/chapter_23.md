@@ -660,7 +660,7 @@ This was an interesting chapter to write, because the objective is to finish wit
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-23-generic-map)**
 
 
-[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-23-generic-map/). There isn't a lot of point, since refactoring aims to *not* change the visible result!
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](https://bfnightly.bracketproductions.com/rustbook/wasm/chapter-23-generic-map/). There isn't a lot of point, since refactoring aims to *not* change the visible result!
 ---
 
 Copyright (C) 2019, Herbert Wolverson.

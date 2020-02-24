@@ -802,7 +802,7 @@ And there we have it: a status effects system that is nice and generic, and a sy
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-65-items)**
 
 
-[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-65-items)
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](https://bfnightly.bracketproductions.com/rustbook/wasm/chapter-65-items)
 ---
 
 Copyright (C) 2019, Herbert Wolverson.

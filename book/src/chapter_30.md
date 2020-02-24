@@ -442,7 +442,7 @@ This chapter has introduced another, very flexible, map builder for your arsenal
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-30-dla)**
 
 
-[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-30-dla/)
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](https://bfnightly.bracketproductions.com/rustbook/wasm/chapter-30-dla/)
 ---
 
 Copyright (C) 2019, Herbert Wolverson.

@@ -572,7 +572,7 @@ So we've added an equal chance of straight-line corridors and nearest-neighbor c
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-39-halls)**
 
 
-[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-39-halls/)
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](https://bfnightly.bracketproductions.com/rustbook/wasm/chapter-39-halls/)
 ---
 
 Copyright (C) 2019, Herbert Wolverson.

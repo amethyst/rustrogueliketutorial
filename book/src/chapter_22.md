@@ -472,7 +472,7 @@ If you `cargo run` now, you can walk around - and sometimes spot traps. Monsters
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-22-simpletraps)**
 
 
-[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-22-simpletraps/)
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](https://bfnightly.bracketproductions.com/rustbook/wasm/chapter-22-simpletraps/)
 ---
 
 Copyright (C) 2019, Herbert Wolverson.

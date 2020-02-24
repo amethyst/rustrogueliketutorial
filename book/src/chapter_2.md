@@ -48,8 +48,8 @@ It's important to know that ECS is just one way of handling composition. There a
 To start, we want to tell Cargo that we're going to use Specs. Open your `Cargo.toml` file, and change the `dependencies` section to look like this:
 ```toml
 [dependencies]
-rltk = { version = "0.6.2" }
-specs = "0.15.0"
+rltk = { version = "0.7.0" }
+specs = "0.16.1"
 specs-derive = "0.4.0"
 ```
 
@@ -740,7 +740,7 @@ This chapter was a lot to digest, but provides a really solid base on which to b
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-02-helloecs)**
 
-[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-02-helloecs/)
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](https://bfnightly.bracketproductions.com/rustbook/wasm/chapter-02-helloecs/)
 
 ---
 

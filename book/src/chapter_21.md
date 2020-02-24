@@ -124,7 +124,7 @@ If you `cargo run` now, it looks better:
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-21-rexmenu)**
 
 
-[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-21-rexmenu/)
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](https://bfnightly.bracketproductions.com/rustbook/wasm/chapter-21-rexmenu/)
 ---
 
 Copyright (C) 2019, Herbert Wolverson.

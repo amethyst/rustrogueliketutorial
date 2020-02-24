@@ -74,7 +74,7 @@ CALL :Stage chapter-73-systems
 
 REM Publish or perish
 cd book\book\wasm
-pscp -r * herbert@172.16.10.193:/var/www/bfnightly/rustbook/wasm
+pscp -r * herbert@vps.bracketproductions.com:/var/www/bfnightly/rustbook/wasm
 cd ..\..\..
 
 EXIT /B 0

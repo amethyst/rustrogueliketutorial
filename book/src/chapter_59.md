@@ -466,7 +466,7 @@ Another level down (more improvements are possible; they are *always* possible),
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-59-caverns2)**
 
 
-[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-59-caverns2)
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](https://bfnightly.bracketproductions.com/rustbook/wasm/chapter-59-caverns2)
 ---
 
 Copyright (C) 2019, Herbert Wolverson.

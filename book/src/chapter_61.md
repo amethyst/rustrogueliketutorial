@@ -543,7 +543,7 @@ In this chapter, we started creating town portals - and wound up with a generic 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-61-townportal)**
 
 
-[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-61-townportal)
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](https://bfnightly.bracketproductions.com/rustbook/wasm/chapter-61-townportal)
 ---
 
 Copyright (C) 2019, Herbert Wolverson.

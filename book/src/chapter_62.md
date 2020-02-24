@@ -931,7 +931,7 @@ This gets us the basics of the item identification mini-game. We've not touched 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-62-magictems)**
 
 
-[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-62-magicitems)
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](https://bfnightly.bracketproductions.com/rustbook/wasm/chapter-62-magicitems)
 ---
 
 Copyright (C) 2019, Herbert Wolverson.

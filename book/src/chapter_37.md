@@ -910,7 +910,7 @@ So we now have **2,288 possible builder combinations**, just from the last few c
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-37-layers2)**
 
 
-[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-37-layers2/)
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](https://bfnightly.bracketproductions.com/rustbook/wasm/chapter-37-layers2/)
 ---
 
 Copyright (C) 2019, Herbert Wolverson.

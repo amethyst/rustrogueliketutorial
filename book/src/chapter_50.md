@@ -530,7 +530,7 @@ We're capturing the relevant stats during their building, and calling the new fu
 
 In `components.rs`, delete `CombatStats`. You'll want to delete it in `main.rs` and `saveload_system.rs` as well. Watch your IDE paint the town red - we've used that quite a bit! Since we're enacting a new D&D-like system, it has to be done... this also gives us a chance to look at the places in which we're actually *using* it, and make some informed decisions.
 
-If you don't want to follow all of these changes directly, or get confused (it happens to all of us!), the [source code for this chapter](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-50-stats) has the working versions.
+If you don't want to follow all of these changes directly, or get confused (it happens to all of us!), the [source code for this chapter](https://bfnightly.bracketproductions.com/rustbook/wasm/chapter-50-stats) has the working versions.
 
 Here are the simpler changes:
 
@@ -767,7 +767,7 @@ We've now implemented game stats and a simple D&D-like melee system. There's sti
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-50-stats)**
 
 
-[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-50-stats)
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](https://bfnightly.bracketproductions.com/rustbook/wasm/chapter-50-stats)
 ---
 
 Copyright (C) 2019, Herbert Wolverson.

@@ -166,8 +166,8 @@ That's a bit of a mouthful, but it displays menu options and lets you select the
 
 ```toml
 [dependencies]
-rltk = { version = "0.6.2", features = ["serde"] }
-specs = { version = "0.15.0", features = ["serde"] }
+rltk = { version = "0.7.0", features = ["serde"] }
+specs = { version = "0.16.1", features = ["serde"] }
 specs-derive = "0.4.0"
 serde= { version = "1.0.93", features = ["derive"] }
 serde_json = "1.0.39"
@@ -669,7 +669,7 @@ This has been a long chapter, with quite heavy content. The great news is that w
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-11-loadsave)**
 
-[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-11-loadsave/)
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](https://bfnightly.bracketproductions.com/rustbook/wasm/chapter-11-loadsave/)
 
 ---
 

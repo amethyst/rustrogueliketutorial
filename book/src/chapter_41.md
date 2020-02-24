@@ -628,7 +628,7 @@ And - we're done! In this chapter, we've made it possible to have any size of ma
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-41-camera)**
 
 
-[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-41-camera)
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](https://bfnightly.bracketproductions.com/rustbook/wasm/chapter-41-camera)
 ---
 
 Copyright (C) 2019, Herbert Wolverson.

@@ -505,7 +505,7 @@ In this chapter, we've built a maze. It's a guaranteed solvable maze, so there's
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-29-mazes)**
 
 
-[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-29-mazes/)
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](https://bfnightly.bracketproductions.com/rustbook/wasm/chapter-29-mazes/)
 ---
 
 Copyright (C) 2019, Herbert Wolverson.

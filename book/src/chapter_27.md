@@ -347,7 +347,7 @@ The best way to test this is to uncomment out the `random_builder` code (and com
 
 [Voronoi Diagrams](https://en.wikipedia.org/wiki/Voronoi_diagram#targetText=In%20mathematics%2C%20a%20Voronoi%20diagram,specific%20subset%20of%20the%20plane.) are a wonderfully useful piece of math. Given a group of points, it builds a diagram of regions surrounding each point (which could be random, or might mean something; that's the beauty of math, it's up to you!) - with no empty space. We'd like to do something similar for our maps: subdivide the map into random regions, and spawn *inside* those regions. Fortunately, RLTK provides a type of *noise* to help with that: cellular noise.
 
-First of all, what *is* noise. "Noise" in this case doesn't refer to the loud heavy metal you accidentally pipe out of your patio speakers at 2am while wondering what a stereo receiver you found in your new house does (true story...); it refers to random data - like the noise on old analog TVs if you didn't tune to a station (ok, I'm showing my age there). Like most things random, there's lots of ways to make it not-really-random and group it into useful patterns. A noise library provides lots of types of noise. [Perlin/Simplex noise](http://bfnightly.bracketproductions.com/wasmtest/ex12/) makes really good approximations of landscapes. White noise looks like someone randomly threw paint at a piece of paper. *Cellular Noise* randomly places points on a grid, and then plots Voronoi diagrams around them. We're interested in the latter.
+First of all, what *is* noise. "Noise" in this case doesn't refer to the loud heavy metal you accidentally pipe out of your patio speakers at 2am while wondering what a stereo receiver you found in your new house does (true story...); it refers to random data - like the noise on old analog TVs if you didn't tune to a station (ok, I'm showing my age there). Like most things random, there's lots of ways to make it not-really-random and group it into useful patterns. A noise library provides lots of types of noise. [Perlin/Simplex noise](https://bfnightly.bracketproductions.com/wasmtest/ex12/) makes really good approximations of landscapes. White noise looks like someone randomly threw paint at a piece of paper. *Cellular Noise* randomly places points on a grid, and then plots Voronoi diagrams around them. We're interested in the latter.
 
 This is a somewhat complicated way to do things, so we'll take it a step at a time. Lets start by adding a structure to store generated areas into our `CellularAutomataBuilder` structure:
 
@@ -459,7 +459,7 @@ We've made a pretty nice map generator, and fixed our dependency upon rooms. Cel
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-27-cellular-automata)**
 
 
-[Run this chapter's example with web assembly, in your browser (WebGL2 required)](http://bfnightly.bracketproductions.com/rustbook/wasm/chapter-27-cellular-automata/)
+[Run this chapter's example with web assembly, in your browser (WebGL2 required)](https://bfnightly.bracketproductions.com/rustbook/wasm/chapter-27-cellular-automata/)
 ---
 
 Copyright (C) 2019, Herbert Wolverson.
