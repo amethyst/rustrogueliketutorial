@@ -84,8 +84,8 @@ impl<'a> System<'a> for MonsterAI {
                     &mut *map
                 );
                 if path.success && path.steps.len()>1 {
-                    pos.x = path.steps[1] % map.width;
-                    pos.y = path.steps[1] / map.width;
+                    pos.x = path.steps[1] as i32 % map.width;
+                    pos.y = path.steps[1] as i32 / map.width;
                     viewshed.dirty = true;
                 }
             }
