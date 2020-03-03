@@ -67,7 +67,7 @@ impl<'a> System<'a> for MonsterAI {
     #[allow(clippy::type_complexity)]
     type SystemData = ( WriteExpect<'a, Map>,
                         ReadExpect<'a, Point>,
-                        WriteStorage<'a, Viewshed>, 
+                        WriteStorage<'a, Viewshed>,
                         ReadStorage<'a, Monster>,
                         ReadStorage<'a, Name>,
                         WriteStorage<'a, Position>);
@@ -79,8 +79,8 @@ impl<'a> System<'a> for MonsterAI {
             if viewshed.visible_tiles.contains(&*player_pos) {
                 console::log(&format!("{} shouts insults", name.name));
                 let path = rltk::a_star_search(
-                    map.xy_idx(pos.x, pos.y) as i32, 
-                    map.xy_idx(player_pos.x, player_pos.y) as i32, 
+                    map.xy_idx(pos.x, pos.y) as i32,
+                    map.xy_idx(player_pos.x, player_pos.y) as i32,
                     &mut *map
                 );
                 if path.success && path.steps.len()>1 {
