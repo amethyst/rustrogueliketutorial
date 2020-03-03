@@ -461,12 +461,13 @@ let mut wants_to_melee = ecs.write_storage::<WantsToMelee>();
 
 ...
 
-for (entity, mut viewshed,_monster,mut pos) in (&entities, &mut viewshed, &monster, &mut position).join() {
-    let distance = rltk::DistanceAlg::Pythagoras.distance2d(Point::new(pos.x, pos.y), *player_pos);
-    if distance < 1.5 {
-        wants_to_melee.insert(entity, WantsToMelee{ target: *player_entity }).expect("Unable to insert attack");
-    } else if viewshed.visible_tiles.contains(&*player_pos) {
-        ...
+for potential_target in map.tile_content[destination_idx].iter() {
+    let target = combat_stats.get(*potential_target);
+    if let Some(_target) = target {
+        wants_to_melee.insert(entity, WantsToMelee{ target: *potential_target }).expect("Add target failed");
+        return;
+    }
+}
 ```
 
 We'll need a `melee_combat_system` to handle Melee:
