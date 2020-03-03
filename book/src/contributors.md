@@ -38,6 +38,7 @@ The following people have contributed to this project:
 * [Vojta7](https://github.com/vojta7) found a broken module reference and fixed it for me. He also found numerous typos in the WFC section and fixed them, too.
 * [skierpage](https://github.com/skierpage) fixed a lot of typos in chapter 2.
 * [Mark McCaskey](https://github.com/MarkMcCaskey) provided a logging system that doesn't suck!
+* [Thibaut](https://github.com/thibautRe) helped me fix some example code in chapter 7.
 
 ## Supporters
 
@@ -47,6 +48,7 @@ I'd also like to take a moment to thank everyone who has sent me kind words, con
 * Ben Gamble
 * Boyd Trolinger
 * Brian Bucklew
+* Caleb C.
 * Caleb M.
 * Chad Thorenson
 * Crocodylus Pontifex (great name!)
@@ -60,11 +62,15 @@ I'd also like to take a moment to thank everyone who has sent me kind words, con
 * Josh Isaak
 * Kenton Hamaluik
 * KnightDave
+* Kris Shamloo
+* Matthew Bradford
 * Mark Rowe
+* Neikos
 * Noah
 * Oliver Uvman
 * Oskar Edgren
 * Pat LaBine
+* Pedro Probst
 * Pete Bevin
 * Rafin de Castro
 * Russel Myers
@@ -76,6 +82,7 @@ I'd also like to take a moment to thank everyone who has sent me kind words, con
 * Teague Lasser
 * Tom Leys
 * Tommi Sinuvuo
+* Torben Clasen
 
 If I've missed your contribution, please let me know!
 
