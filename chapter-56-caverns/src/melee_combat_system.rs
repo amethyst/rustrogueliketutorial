@@ -104,12 +104,7 @@ impl<'a> System<'a> for MeleeCombatSystem {
 
                     let damage = i32::max(0, base_damage + attr_damage_bonus + skill_hit_bonus +
                         skill_damage_bonus + weapon_damage_bonus);
-                    inflict_damage.insert(wants_melee.target,
-                        SufferDamage{
-                            amount: damage,
-                            from_player: entity == *player_entity
-                        }
-                    ).expect("Unable to insert damage component");
+                    SufferDamage::new_damage(&mut inflict_damage, wants_melee.target, damage, entity == *player_entity);
                     log.entries.push(format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));
                     if let Some(pos) = positions.get(wants_melee.target) {
                         particle_builder.request(pos.x, pos.y, rltk::RGB::named(rltk::ORANGE), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('‼'), 200.0);

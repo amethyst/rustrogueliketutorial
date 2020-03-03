@@ -123,7 +123,7 @@ impl<'a> System<'a> for HungerSystem {
                             if entity == *player_entity {
                                 log.entries.push("Your hunger pangs are getting painful! You suffer 1 hp damage.".to_string());
                             }
-                            inflict_damage.insert(entity, SufferDamage{ amount: 1 }).expect("Unable to do damage");  
+                            SufferDamage::new_damage(&mut inflict_damage, entity, 1);  
                         }
                     }
                 }

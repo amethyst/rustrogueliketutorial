@@ -39,8 +39,18 @@ Now we should support actually *gaining* experience. We should start by tracking
 ```rust
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct SufferDamage {
-    pub amount : i32,
-    pub from_player: bool
+    pub amount : Vec<(i32, bool)>,
+}
+
+impl SufferDamage {
+    pub fn new_damage(store: &mut WriteStorage<SufferDamage>, victim: Entity, amount: i32, from_player: bool) {
+        if let Some(suffering) = store.get_mut(victim) {
+            suffering.amount.push((amount, from_player));
+        } else {
+            let dmg = SufferDamage { amount : vec![(amount, from_player)] };
+            store.insert(victim, dmg).expect("Unable to insert damage");
+        }
+    }
 }
 ```
 
@@ -64,12 +74,7 @@ ReadExpect<'a, Entity>
 Then we make the `from_player` conditional upon the attacking entity matching the player (all the way down on line 105):
 
 ```rust
-inflict_damage.insert(wants_melee.target, 
-    SufferDamage{ 
-        amount: damage,
-        from_player: entity == *player_entity
-    }
-).expect("Unable to insert damage component");
+SufferDamage::new_damage(&mut inflict_damage, wants_melee.target, damage, from_player: entity == *player_entity);
 ```
 
 So that takes care of knowing where damage *came from*. We can now modify `damage_system.rs` to actually grant XP. Here's the updated system:
@@ -99,15 +104,17 @@ impl<'a> System<'a> for DamageSystem {
         let mut xp_gain = 0;
 
         for (entity, mut stats, damage) in (&entities, &mut stats, &damage).join() {
-            stats.hit_points.current -= damage.amount;
-            let pos = positions.get(entity);
-            if let Some(pos) = pos {
-                let idx = map.xy_idx(pos.x, pos.y);
-                map.bloodstains.insert(idx);
-            }
+            for dmg in damage.amount.iter() {
+                stats.hit_points.current -= dmg.0;
+                let pos = positions.get(entity);
+                if let Some(pos) = pos {
+                    let idx = map.xy_idx(pos.x, pos.y);
+                    map.bloodstains.insert(idx);
+                }
 
-            if stats.hit_points.current < 1 && damage.from_player {
-                xp_gain += stats.level * 100;
+                if stats.hit_points.current < 1 && dmg.1 {
+                    xp_gain += stats.level * 100;
+                }
             }
         }
 

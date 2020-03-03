@@ -27,18 +27,19 @@ impl<'a> System<'a> for DamageSystem {
         let mut gold_gain = 0.0f32;
 
         for (entity, mut stats, damage) in (&entities, &mut stats, &damage).join() {
-            if !stats.god_mode {
-                stats.hit_points.current -= damage.amount;
-            }
-            let pos = positions.get(entity);
-            if let Some(pos) = pos {
-                let idx = map.xy_idx(pos.x, pos.y);
-                map.bloodstains.insert(idx);
-            }
+            for dmg in damage.amount.iter() {
+                if !stats.god_mode {
+                    stats.hit_points.current -= dmg.0;
+                }
+                let pos = positions.get(entity);
+                if let Some(pos) = pos {
+                    let idx = map.xy_idx(pos.x, pos.y);
+                    map.bloodstains.insert(idx);
+                }
 
-            if stats.hit_points.current < 1 && damage.from_player {
-                xp_gain += stats.level * 100;
-                gold_gain += stats.gold;
+                if stats.hit_points.current < 1 && dmg.1 {
+                    xp_gain += stats.level * 100;
+                }
             }
         }
 

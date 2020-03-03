@@ -168,7 +168,7 @@ We need to set `god_mode` to false in `spawner.rs` and `raws/rawmaster.rs` funct
 ...
 for (entity, mut stats, damage) in (&entities, &mut stats, &damage).join() {
     if !stats.god_mode {
-        stats.hit_points.current -= damage.amount;
+        stats.hit_points.current -= damage.amount.iter().sum::<i32>();
     }
     ...
 ```

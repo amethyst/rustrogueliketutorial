@@ -158,12 +158,7 @@ pub enum EffectType {
 Notice that we're not storing the victim or the originator - those are covered in the *source* and *target* parts of the message. Now we search our code to see where we use `SufferDamage` components. The most important users are the hunger system, melee system, item use system and trigger system: they can all cause damage to occur. Open up `melee_combat_system.rs` and find the following line (it's line 106 in my source code):
 
 ```rust
-inflict_damage.insert(wants_melee.target,
-    SufferDamage{
-        amount: damage,
-        from_player: entity == *player_entity
-    }
-).expect("Unable to insert damage component");
+SufferDamage::new_damage(&mut inflict_damage, wants_melee.target, damage, from_player: entity == *player_entity);
 ```
 
 We can replace this with a call to insert into the queue:
@@ -181,7 +176,7 @@ We can also remove all references to `inflict_damage` from the system, since we 
 We should do the same for `trigger_system.rs`. We can replace the following line:
 
 ```rust
- inflict_damage.insert(entity, SufferDamage{ amount: damage.damage, from_player: false }).expect("Unable to do damage");
+SufferDamage::new_damage(&mut inflict_damage, entity, damage.damage, false);
 ```
 
 With:
@@ -209,7 +204,7 @@ pub fn run_effects_queue(ecs : &mut World) {
         if let Some(effect) = effect {
             // target_applicator(ecs, &effect); // Uncomment when we write this!
         } else {
-            break;        
+            break;
         }
     }
 }

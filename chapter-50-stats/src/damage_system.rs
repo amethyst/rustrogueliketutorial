@@ -15,7 +15,7 @@ impl<'a> System<'a> for DamageSystem {
         let (mut stats, mut damage, positions, mut map, entities) = data;
 
         for (entity, mut stats, damage) in (&entities, &mut stats, &damage).join() {
-            stats.hit_points.current -= damage.amount;
+            stats.hit_points.current -= damage.amount.iter().sum::<i32>();
             let pos = positions.get(entity);
             if let Some(pos) = pos {
                 let idx = map.xy_idx(pos.x, pos.y);
