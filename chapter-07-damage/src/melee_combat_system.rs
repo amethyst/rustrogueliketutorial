@@ -28,7 +28,7 @@ impl<'a> System<'a> for MeleeCombatSystem {
                         console::log(&format!("{} is unable to hurt {}", &name.name, &target_name.name));
                     } else {
                         console::log(&format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));
-                        inflict_damage.insert(wants_melee.target, SufferDamage{ amount: damage }).expect("Unable to do damage");
+                        SufferDamage::new_damage(&mut inflict_damage, wants_melee.target, damage);
                     }
                 }
             }

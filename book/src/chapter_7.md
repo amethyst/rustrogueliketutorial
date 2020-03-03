@@ -440,21 +440,36 @@ If you `cargo run` this, you'll see that you can walk up to a mob and try to mov
 
 # Player attacking and killing things
 
-We're going to do this in an ECS way, so there's a bit of boilerplate. In `components.rs`, we make a couple of new components:
+We're going to do this in an ECS way, so there's a bit of boilerplate. In `components.rs`, we add a component indicating an intent to attack:
 
 ```rust
 #[derive(Component, Debug, ConvertSaveload, Clone)]
 pub struct WantsToMelee {
     pub target : Entity
 }
+```
 
+We also want to track incoming damage. It's possible that you will suffer damage from more than one source in a turn, and Specs doesn't like it at all when you try and have more than one component of the same type on an entity. There are two possible approaches here: make the damage an entity itself (and track the victim), or make damage a *vector*. The latter seems the easier approach; so we'll make a `SufferDamage` component to track the damage - and attach/implement a method to make using it easy:
+
+```rust
 #[derive(Component, Debug)]
 pub struct SufferDamage {
-    pub amount : i32
+    pub amount : Vec<i32>
+}
+
+impl SufferDamage {
+    pub fn new_damage(store: &mut WriteStorage<SufferDamage>, victim: Entity, amount: i32) {
+        if let Some(suffering) = store.get_mut(victim) {
+            suffering.amount.push(amount);
+        } else {
+            let dmg = SufferDamage { amount : vec![amount] };
+            store.insert(victim, dmg).expect("Unable to insert damage");
+        }
+    }
 }
 ```
 
-(Don't forget to register them in `main.rs`!). We modify the player's movement command to create a component for the player when he/she/it wants to attack someone:
+(Don't forget to register them in `main.rs`!). We modify the player's movement command to create a component (using the `new_damage` method we created; if damage exists, it appends it) for the player when he/she/it wants to attack someone:
 
 ```rust
 let mut wants_to_melee = ecs.write_storage::<WantsToMelee>();
@@ -464,7 +479,7 @@ let mut wants_to_melee = ecs.write_storage::<WantsToMelee>();
 for potential_target in map.tile_content[destination_idx].iter() {
     let target = combat_stats.get(*potential_target);
     if let Some(_target) = target {
-        wants_to_melee.insert(entity, WantsToMelee{ target: *potential_target }).expect("Add target failed");
+        SufferDamage::new_damage(&mut inflict_damage, wants_melee.target, damage);
         return;
     }
 }
@@ -502,7 +517,7 @@ impl<'a> System<'a> for MeleeCombatSystem {
                         console::log(&format!("{} is unable to hurt {}", &name.name, &target_name.name));
                     } else {
                         console::log(&format!("{} hits {}, for {} hp.", &name.name, &target_name.name, damage));
-                        inflict_damage.insert(wants_melee.target, SufferDamage{ amount: damage }).expect("Unable to do damage");
+                        SufferDamage::new_damage(&mut inflict_damage, wants_melee.target, damage);
                     }
                 }
             }
@@ -513,7 +528,7 @@ impl<'a> System<'a> for MeleeCombatSystem {
 }
 ```
 
-And we'll need a `damage_system` to apply the damage (we're separating it out, because damage could come from any number of sources!):
+And we'll need a `damage_system` to apply the damage (we're separating it out, because damage could come from any number of sources!). We use an iterator to *sum* the damage, ensuring that it is all applied:
 
 ```rust
 extern crate specs;
@@ -530,7 +545,7 @@ impl<'a> System<'a> for DamageSystem {
         let (mut stats, mut damage) = data;
 
         for (mut stats, damage) in (&mut stats, &damage).join() {
-            stats.hp -= damage.amount;
+            stats.hp -= damage.amount.iter().sum::<i32>();
         }
 
         damage.clear();
