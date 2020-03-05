@@ -10,7 +10,7 @@
 
 ---
 
-So far, we've used a very traditional rendering style for the map. Hash symbols for walls, periods for floors. It looks pretty nice, but games like *Dwarf Fortress* do a lovely job of using codepage 437's line-drawing characters to make the walls of the dungeon look smooth. This short chapter will show how to use a `bitmask` to calculate appropriate walls, and render them appropriately. As usual, we'll start from the code from the previous chapter (chapter 1.14).
+So far, we've used a very traditional rendering style for the map. Hash symbols for walls, periods for floors. It looks pretty nice, but games like *Dwarf Fortress* do a lovely job of using codepage 437's line-drawing characters to make the walls of the dungeon look smooth. This short chapter will show how to use a `bitmask` to calculate appropriate walls and render them appropriately. As usual, we'll start with our previous code from the end of Section 1.
 
 ## Counting neighbors to build our bitset
 
@@ -58,9 +58,9 @@ fn wall_glyph(map : &Map, x: i32, y:i32) -> u8 {
 
 Lets step through this function:
 1. If we are at the map bounds, we aren't going to risk stepping outside of them - so we return a `#` symbol (ASCII 35).
-2. Now we create an 8-bit unsigned integer to act as our `bitmask`. We're interested in setting individual bits, and only need four of them - so an 8-bit number is perfect.
+2. Now we create an 8-bit unsigned integer to act as our `bitmask`. We're interested in setting individual bits and only need four of them - so an 8-bit number is perfect.
 3. Next, we check each of the 4 directions and add to the mask. We're adding numbers corresponding to each of the first four bits in binary - so 1,2,4,8. This means that our final number will store whether or not we have each of the four possible neighbors. For example, a value of 3 means that we have neighbors to the north and south.
-4. Then we match on the resulting mask bit, and return the appropriate line-drawing character from the [codepage 437 character set](http://dwarffortresswiki.org/index.php/Character_table)
+4. Then we match on the resulting mask bit and return the appropriate line-drawing character from the [codepage 437 character set](http://dwarffortresswiki.org/index.php/Character_table)
 
 This function in turn calls `is_revealed_and_wall`, so we'll write that too! It's very simple:
 
@@ -70,7 +70,7 @@ fn is_revealed_and_wall(map: &Map, x: i32, y: i32) -> bool {
     map.tiles[idx] == TileType::Wall && map.revealed_tiles[idx]
 }
 ```
-It simply checks to see if a tile is revealed, and if it is a wall - if both are true, it returns true - otherwise it returns false.
+It simply checks to see if a tile is revealed and if it is a wall. If both are true, it returns true - otherwise it returns false.
 
 If you `cargo run` the project now, you get a nicer looking set of walls:
 
