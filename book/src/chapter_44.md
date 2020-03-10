@@ -126,7 +126,7 @@ None! It would be nice to have once tiles are done, but fully voicing a modern R
 
 ### Technical Description
 
-The game will be written in Rust, using [RLTK_RS](https://github.com/thebracket/rltk_rs) for its back-end. It will support all the platforms on which Rust can compile and link to OpenGL, including Web Assembly for browser-based play.
+The game will be written in Rust, using [rltk_rs](https://github.com/thebracket/bracket-lib) for its back-end. It will support all the platforms on which Rust can compile and link to OpenGL, including Web Assembly for browser-based play.
 
 ### Marketing and Funding
 
