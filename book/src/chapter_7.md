@@ -478,23 +478,27 @@ impl SufferDamage {
 }
 ```
 
-(Don't forget to register them in `main.rs`!). We modify the player's movement command to create a component (using the `new_damage` method we created; if damage exists, it appends it) for the player when he/she/it wants to attack someone:
+(Don't forget to register them in `main.rs`!). We modify the player's movement command to create a component indicating the intention to attack (attaching a `wants_to_melee` to the *attacker*):
 
 ```rust
+let entities = ecs.entities();
 let mut wants_to_melee = ecs.write_storage::<WantsToMelee>();
 
-...
+for (entity, _player, pos, viewshed) in (&entities, &players, &mut positions, &mut viewsheds).join() {
+    if pos.x + delta_x < 1 || pos.x + delta_x > map.width-1 || pos.y + delta_y < 1 || pos.y + delta_y > map.height-1 { return; }
+    let destination_idx = map.xy_idx(pos.x + delta_x, pos.y + delta_y);
 
-for potential_target in map.tile_content[destination_idx].iter() {
-    let target = combat_stats.get(*potential_target);
-    if let Some(_target) = target {
-        SufferDamage::new_damage(&mut inflict_damage, wants_melee.target, damage);
-        return;
+    for potential_target in map.tile_content[destination_idx].iter() {
+        let target = combat_stats.get(*potential_target);
+        if let Some(_target) = target {
+            wants_to_melee.insert(entity, WantsToMelee{ target: *potential_target }).expect("Add target failed");
+            return;
+        }
     }
 }
 ```
 
-We'll need a `melee_combat_system` to handle Melee:
+We'll need a `melee_combat_system` to handle Melee. This uses the `new_damage` system we created to ensure that multiple sources of damage may be applied in one turn:
 
 ```rust
 use specs::prelude::*;
