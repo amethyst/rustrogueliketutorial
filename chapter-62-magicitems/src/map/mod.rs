@@ -1,4 +1,3 @@
-extern crate rltk;
 use rltk::{ BaseMap, Algorithm2D, Point };
 extern crate specs;
 use specs::prelude::*;

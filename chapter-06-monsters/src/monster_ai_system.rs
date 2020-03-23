@@ -1,7 +1,6 @@
 extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Monster, Name};
-extern crate rltk;
 use rltk::{Point, console};
 
 pub struct MonsterAI {}

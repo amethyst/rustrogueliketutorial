@@ -19,7 +19,6 @@ This chapter starts with the code from chapter 4.
 We'll keep map-related functions and data together, to keep things clear as we make an ever-more-complicated game. The bulk of this is creating a new `Map` structure, and moving our helper functions to its implementation.
 
 ```rust
-extern crate rltk;
 use rltk::{ RGB, Rltk, Console, RandomNumberGenerator };
 use super::{Rect};
 use std::cmp::{max, min};
@@ -235,7 +234,6 @@ So going back to `visibility_system.rs`, we now have what we need to request a v
 extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Position, Map};
-extern crate rltk;
 use rltk::{field_of_view, Point};
 
 pub struct VisibilitySystem {}
@@ -374,7 +372,6 @@ This will render a black screen, because we're never setting any tiles to be rev
 extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Position, Map, Player};
-extern crate rltk;
 use rltk::{field_of_view, Point};
 
 pub struct VisibilitySystem {}

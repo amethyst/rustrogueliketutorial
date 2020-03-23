@@ -1,5 +1,4 @@
 extern crate serde;
-extern crate rltk;
 use rltk::{Console, GameState, Rltk, Point};
 extern crate specs;
 use specs::prelude::*;

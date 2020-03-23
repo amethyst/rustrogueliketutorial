@@ -408,7 +408,6 @@ Since the `visibility_system` already handles *revealing* tiles, why not make it
 extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Position, Map, Player, Hidden, gamelog::GameLog};
-extern crate rltk;
 use rltk::{field_of_view, Point};
 
 pub struct VisibilitySystem {}

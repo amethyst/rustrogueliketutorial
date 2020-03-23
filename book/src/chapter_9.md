@@ -45,7 +45,6 @@ One monster per room, always in the middle, makes for rather boring play. We als
 To that end, we're going to make a new file `spawner.rs`:
 
 ```rust
-extern crate rltk;
 use rltk::{ RGB, RandomNumberGenerator };
 extern crate specs;
 use specs::prelude::*;

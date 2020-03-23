@@ -28,7 +28,6 @@ Then we'll go through and change every reference to 80*50 to `MAPCOUNT`, and ref
 We'll create a new file, `gui.rs` to hold our code. We'll go with a really minimal start:
 
 ```rust
-extern crate rltk;
 use rltk::{ RGB, Rltk, Console };
 extern crate specs;
 use specs::prelude::*;
@@ -52,7 +51,6 @@ If we `cargo run` now, we'll see that the map has shrunk - and we have a white b
 It would help the player out to know how much health they have left. Fortunately, RLTK provides a convenient helper for this. We'll need to obtain the player's health from the ECS, and render it. This is pretty easy, and you should be comfortable with it by now. The code looks like this:
 
 ```rust
-extern crate rltk;
 use rltk::{ RGB, Rltk, Console };
 extern crate specs;
 use specs::prelude::*;

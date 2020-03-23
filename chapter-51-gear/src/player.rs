@@ -1,4 +1,3 @@
-extern crate rltk;
 use rltk::{VirtualKeyCode, Rltk, Point};
 extern crate specs;
 use specs::prelude::*;

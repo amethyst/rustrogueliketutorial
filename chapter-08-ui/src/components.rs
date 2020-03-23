@@ -1,7 +1,6 @@
 extern crate specs;
 use specs::prelude::*;
 extern crate specs_derive;
-extern crate rltk;
 use rltk::{RGB};
 
 #[derive(Component)]

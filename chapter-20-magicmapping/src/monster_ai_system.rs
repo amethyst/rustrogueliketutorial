@@ -1,7 +1,6 @@
 extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Monster, Map, Position, WantsToMelee, RunState, Confusion, particle_system::ParticleBuilder};
-extern crate rltk;
 use rltk::{Point};
 
 pub struct MonsterAI {}

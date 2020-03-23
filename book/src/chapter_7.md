@@ -58,7 +58,6 @@ Pretty straight-forward: we evaluate each possible exit, and add it to the `exit
 extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Monster, Name, Map, Position};
-extern crate rltk;
 use rltk::{Point, console};
 
 pub struct MonsterAI {}
@@ -610,7 +609,6 @@ Now we modify the `monster_ai_system`. There's a bit of clean-up here, and the "
 extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Monster, Map, Position, WantsToMelee};
-extern crate rltk;
 use rltk::{Point};
 
 pub struct MonsterAI {}
