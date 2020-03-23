@@ -530,7 +530,7 @@ Alright! Now we can *add* the `Confused` status to anything. We should update th
 }
 ```
 
-If this sees a `Confused` component, it decrements the timer. If the timer hits 0, it removes it. It then returns, making the monster
+If this sees a `Confused` component, it decrements the timer. If the timer hits 0, it removes it. It then returns, making the monster skip its turn.
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-10-ranged)**
 
