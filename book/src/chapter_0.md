@@ -10,7 +10,7 @@
 
 ---
 
-Every year, the fine fellows over at [r/roguelikedev](https://www.reddit.com/r/roguelikedev/new/) run a *Tutorial Tuesday* series - encouraging new programmers to join the ranks of roguelike developers. Most languages end up being represented, and this year (2019) I decided that I'd use it as an excuse to learn Rust. I didn't really want to use `libtcod`, the default engine - so I created my own, [RLTK](https://github.com/thebracket/rltk_rs). My initial entry into the series isn't very good, but I learned a lot from it - you can find it [here](https://github.com/thebracket/rustyroguelike), if you are curious.
+Every year, the fine fellows over at [r/roguelikedev](https://www.reddit.com/r/roguelikedev/new/) run a *Tutorial Tuesday* series - encouraging new programmers to join the ranks of roguelike developers. Most languages end up being represented, and this year (2019) I decided that I'd use it as an excuse to learn Rust. I didn't really want to use `libtcod`, the default engine - so I created my own, [RLTK](https://github.com/thebracket/bracket-lib). My initial entry into the series isn't very good, but I learned a lot from it - you can find it [here](https://github.com/thebracket/rustyroguelike), if you are curious.
 
 The series always points people towards an excellent series of tutorials, using Python and `libtcod`. You can find it [here](http://rogueliketutorials.com/tutorials/tcod/). Section 1 of this tutorial mirrors the structure of this tutorial - and tries to take you from zero (*how do I open a console to say Hello Rust*) to hero (*equipping items to fight foes in a multi-level dungeon*). I'm hoping to continue to extend the series.
 

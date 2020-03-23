@@ -117,7 +117,7 @@ Cargo also supports *extensions* - that is, plugins that make it do even more. T
 
 ### Making a new project
 
-Lets modify the newly created "hello world" project to make use of [RLTK](https://github.com/thebracket/rltk_rs) - the Roguelike Toolkit.
+Lets modify the newly created "hello world" project to make use of [RLTK](https://github.com/thebracket/bracket-lib) - the Roguelike Toolkit.
 
 ## Setup Cargo.toml
 
