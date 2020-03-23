@@ -1,5 +1,4 @@
 use rltk::{VirtualKeyCode, Rltk};
-extern crate specs;
 use specs::prelude::*;
 use std::cmp::{max, min};
 use super::{Position, Player, Viewshed, TileType, State, Map};

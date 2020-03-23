@@ -66,9 +66,9 @@ extern crate specs_derive;
 
 `use rltk::` is shorthand; you *can* type `rltk::Console` every time you want a console; this tells Rust that we'd like to just type `Console` instead. Likewise the `use specs::prelude::*` line is there so we aren't continually typing `specs::prelude::World` when we just want `World`.
 
-The command `#[macro_use]` is a little scarier looking; it just means "the next crate will contain macro code, please use it". This exists to avoid the C++ problem of `#define` commands leaking everywhere and confusing you. Rust is all about being explicit, to avoid confusing yourself later!
+> Old Rust required a scary looking `macro_use` call. You don't need that anymore: you can just directly use the macro.
 
-Finally, we call `extern crate specs_derive`. This crate contains a bunch of helpers to reduce the amount of typing you need. You'll see its benefits shortly. Rust 2018 doesn't require that you use an `extern crate` for *every* crate you use - but if you are including macros, you *have* to use one with `#[macro_use]` - you are telling Rust that you explicitly *want* macros from that crate.
+We need the derivations from Specs' derive component: so we add `use specs_derive::Component;`.
 
 ## Defining a position component
 

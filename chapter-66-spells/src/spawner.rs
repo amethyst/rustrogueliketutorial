@@ -1,12 +1,11 @@
 use rltk::{ RGB, RandomNumberGenerator };
-extern crate specs;
 use specs::prelude::*;
 use super::{Pools, Pool, Player, Renderable, Name, Position, Viewshed, Rect,
     SerializeMe, random_table::RandomTable, HungerClock, HungerState, Map, TileType, raws::*,
     Attribute, Attributes, Skills, Skill, LightSource, Initiative, Faction, EquipmentChanged,
     OtherLevelPosition, MasterDungeonMap, EntryTrigger, TeleportTo, SingleActivation,
     StatusEffect, Duration, AttributeBonus, KnownSpells };
-use crate::specs::saveload::{MarkedBuilder, SimpleMarker};
+use specs::saveload::{MarkedBuilder, SimpleMarker};
 use std::collections::HashMap;
 use crate::{attr_bonus, player_hp_at_level, mana_at_level};
 

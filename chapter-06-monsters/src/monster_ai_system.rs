@@ -1,4 +1,3 @@
-extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Monster, Name};
 use rltk::{Point, console};

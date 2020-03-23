@@ -1,4 +1,3 @@
-extern crate specs;
 use specs::prelude::*;
 use super::{EntityMoved, Position, EntryTrigger, Hidden, Map, Name, gamelog::GameLog,
     InflictsDamage, particle_system::ParticleBuilder, SufferDamage, SingleActivation};

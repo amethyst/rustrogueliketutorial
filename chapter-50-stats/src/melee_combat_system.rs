@@ -1,4 +1,3 @@
-extern crate specs;
 use specs::prelude::*;
 use super::{Attributes, Skills, WantsToMelee, Name, SufferDamage, gamelog::GameLog,
     particle_system::ParticleBuilder, Position, HungerClock, HungerState, Pools, skill_bonus, Skill};

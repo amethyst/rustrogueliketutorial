@@ -4,7 +4,7 @@ use crate::components::{Pools, Player, Attributes, Confusion, SerializeMe, Durat
     Name, EquipmentChanged, Slow, DamageOverTime, Skills, OnDeath, Position};
 use crate::map::Map;
 use crate::gamesystem::{player_hp_at_level, mana_at_level};
-use crate::specs::saveload::{MarkedBuilder, SimpleMarker};
+use specs::saveload::{MarkedBuilder, SimpleMarker};
 
 pub fn inflict_damage(ecs: &mut World, damage: &EffectSpawner, target: Entity) {
     let mut pools = ecs.write_storage::<Pools>();

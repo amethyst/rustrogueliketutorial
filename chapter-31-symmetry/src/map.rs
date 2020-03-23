@@ -1,5 +1,4 @@
 use rltk::{ RGB, Rltk, Console, BaseMap, Algorithm2D, Point };
-extern crate specs;
 use specs::prelude::*;
 use serde::{Serialize, Deserialize};
 use std::collections::HashSet;

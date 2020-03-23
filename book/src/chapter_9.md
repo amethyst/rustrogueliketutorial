@@ -303,7 +303,6 @@ pub struct WantsToPickupItem {
 Next, we'll put together a system to process `WantsToPickupItem` notices. We'll make a new file, `inventory_system.rs`:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use super::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog};
 

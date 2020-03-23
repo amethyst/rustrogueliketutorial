@@ -1,10 +1,9 @@
 use rltk::{ RGB, RandomNumberGenerator };
-extern crate specs;
 use specs::prelude::*;
 use super::{CombatStats, Player, Renderable, Name, Position, Viewshed, Monster, BlocksTile, Rect, Item,
     Consumable, Ranged, ProvidesHealing, map::MAPWIDTH, InflictsDamage, AreaOfEffect, Confusion, SerializeMe,
     random_table::RandomTable, EquipmentSlot, Equippable, MeleePowerBonus, DefenseBonus };
-use crate::specs::saveload::{MarkedBuilder, SimpleMarker};
+use specs::saveload::{MarkedBuilder, SimpleMarker};
 use std::collections::HashMap;
 
 /// Spawns the player and returns his/her entity object.

@@ -1,4 +1,3 @@
-extern crate specs;
 use specs::prelude::*;
 use crate::{EquipmentChanged, Item, InBackpack, Equipped, Pools, Attributes, gamelog::GameLog, AttributeBonus,
     gamesystem::attr_bonus, StatusEffect};

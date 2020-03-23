@@ -1,4 +1,3 @@
-extern crate specs;
 use specs::prelude::*;
 extern crate specs_derive;
 use rltk::{RGB, Point};

@@ -1,4 +1,3 @@
-extern crate specs;
 use specs::prelude::*;
 use crate::{Viewshed, Position, Map, LightSource};
 use rltk::RGB;

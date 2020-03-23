@@ -1,4 +1,3 @@
-extern crate specs;
 use specs::prelude::*;
 use crate::{MyTurn, WantsToApproach, Position, Map, Viewshed, EntityMoved};
 

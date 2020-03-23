@@ -1,5 +1,4 @@
 use rltk::{ RGB, Rltk, Console, Point, VirtualKeyCode };
-extern crate specs;
 use specs::prelude::*;
 use super::{Pools, Player, gamelog::GameLog, Map, Name, Position, State, InBackpack,
     Viewshed, RunState, Equipped, HungerClock, HungerState, rex_assets::RexAssets,

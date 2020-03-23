@@ -5,7 +5,7 @@ use super::{Raws, faction_structs::Reaction};
 use crate::random_table::{MasterTable, RandomTable};
 use crate::{attr_bonus, npc_hp, mana_at_level};
 use regex::Regex;
-use crate::specs::saveload::{MarkedBuilder, SimpleMarker};
+use specs::saveload::{MarkedBuilder, SimpleMarker};
 
 pub fn parse_dice_string(dice : &str) -> (i32, i32, i32) {
     lazy_static! {

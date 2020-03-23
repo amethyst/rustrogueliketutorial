@@ -200,7 +200,6 @@ The other location that features movement is the Monster AI. So in `monster_ai_s
 Lastly, we need a *system* to make triggers actually *do something*. We'll make a new file, `trigger_system.rs`:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use super::{EntityMoved, Position, EntryTrigger, Hidden, Map, Name, gamelog::GameLog};
 

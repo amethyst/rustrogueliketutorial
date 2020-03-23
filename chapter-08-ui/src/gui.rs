@@ -1,5 +1,4 @@
 use rltk::{ RGB, Rltk, Console, Point };
-extern crate specs;
 use specs::prelude::*;
 use super::{CombatStats, Player, gamelog::GameLog, Map, Name, Position};
 

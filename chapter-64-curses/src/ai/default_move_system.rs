@@ -1,4 +1,3 @@
-extern crate specs;
 use specs::prelude::*;
 use crate::{MyTurn, MoveMode, Movement, Position, Map, map::tile_walkable, ApplyMove};
 

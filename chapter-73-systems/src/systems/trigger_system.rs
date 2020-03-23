@@ -1,4 +1,3 @@
-extern crate specs;
 use specs::prelude::*;
 use crate::{EntityMoved, Position, EntryTrigger, Map, Name,
     effects::*, AreaOfEffect};

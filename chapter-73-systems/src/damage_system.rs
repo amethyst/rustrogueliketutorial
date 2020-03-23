@@ -1,4 +1,3 @@
-extern crate specs;
 use specs::prelude::*;
 use super::{Pools, Player, Name, RunState, Position,
     InBackpack, Equipped, LootTable};

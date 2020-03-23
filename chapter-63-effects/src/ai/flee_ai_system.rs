@@ -1,4 +1,3 @@
-extern crate specs;
 use specs::prelude::*;
 use crate::{MyTurn, WantsToFlee, Position, Map, ApplyMove};
 

@@ -1,4 +1,3 @@
-extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Herbivore, Carnivore, Item, Map, Position, WantsToMelee, RunState,
     Confusion, particle_system::ParticleBuilder, EntityMoved};

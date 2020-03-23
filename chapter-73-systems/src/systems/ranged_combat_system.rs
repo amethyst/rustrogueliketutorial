@@ -1,4 +1,3 @@
-extern crate specs;
 use specs::prelude::*;
 use crate::{Attributes, Skills, WantsToShoot, Name, 
     HungerClock, HungerState, Pools, skill_bonus,

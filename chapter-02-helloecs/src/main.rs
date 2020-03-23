@@ -4,8 +4,6 @@ use std::cmp::{max, min};
 #[macro_use]
 extern crate specs_derive;
 
-
-
 #[derive(Component)]
 struct Position {
     x: i32,

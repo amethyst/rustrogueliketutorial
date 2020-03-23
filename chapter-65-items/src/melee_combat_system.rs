@@ -1,4 +1,3 @@
-extern crate specs;
 use specs::prelude::*;
 use super::{Attributes, Skills, WantsToMelee, Name, gamelog::GameLog,
     HungerClock, HungerState, Pools, skill_bonus,

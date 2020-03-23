@@ -1,4 +1,3 @@
-extern crate specs;
 use specs::prelude::*;
 use super::{CombatStats, WantsToMelee, Name, SufferDamage, gamelog::GameLog};
 

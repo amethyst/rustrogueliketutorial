@@ -1,4 +1,3 @@
-extern crate specs;
 use specs::prelude::*;
 use crate::{MyTurn, Faction, Position, Map, raws::Reaction, Viewshed, WantsToFlee,
     WantsToApproach, Chasing, SpecialAbilities, WantsToCastSpell, Name, SpellTemplate,

@@ -1,6 +1,5 @@
 extern crate serde;
 use rltk::{Console, GameState, Rltk, Point};
-extern crate specs;
 use specs::prelude::*;
 use specs::saveload::{SimpleMarker, SimpleMarkerAllocator};
 #[macro_use]

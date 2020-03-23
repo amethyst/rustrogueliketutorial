@@ -1,4 +1,3 @@
-extern crate specs;
 use specs::prelude::*;
 use crate::{MyTurn, Chasing, Position, Map, Viewshed, EntityMoved};
 use std::collections::HashMap;

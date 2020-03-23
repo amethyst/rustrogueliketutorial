@@ -1,4 +1,3 @@
-extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Position, Map, Player, Hidden, gamelog::GameLog, Name};
 use rltk::{field_of_view, Point};

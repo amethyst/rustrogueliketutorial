@@ -1,4 +1,3 @@
-extern crate specs;
 use specs::prelude::*;
 use super::{WantsToPickupItem, Name, InBackpack, Position, gamelog::GameLog, WantsToUseItem,
     Consumable, ProvidesHealing, WantsToDropItem, InflictsDamage, Map, SufferDamage,

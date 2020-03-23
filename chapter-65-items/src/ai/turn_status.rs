@@ -1,4 +1,3 @@
-extern crate specs;
 use specs::prelude::*;
 use crate::{MyTurn, Confusion, RunState, StatusEffect, effects::add_effect, effects::EffectType, effects::Targets};
 use std::collections::HashSet;

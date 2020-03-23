@@ -1,4 +1,3 @@
-extern crate specs;
 use specs::prelude::*;
 use super::{Pools, SufferDamage, Player, Name, gamelog::GameLog, RunState, Position, Map};
 

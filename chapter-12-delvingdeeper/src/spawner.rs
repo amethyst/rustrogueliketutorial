@@ -1,9 +1,8 @@
 use rltk::{ RGB, RandomNumberGenerator };
-extern crate specs;
 use specs::prelude::*;
 use super::{CombatStats, Player, Renderable, Name, Position, Viewshed, Monster, BlocksTile, Rect, Item,
     Consumable, Ranged, ProvidesHealing, map::MAPWIDTH, InflictsDamage, AreaOfEffect, Confusion, SerializeMe};
-use crate::specs::saveload::{MarkedBuilder, SimpleMarker};
+use specs::saveload::{MarkedBuilder, SimpleMarker};
 
 /// Spawns the player and returns his/her entity object.
 pub fn player(ecs : &mut World, player_x : i32, player_y : i32) -> Entity {
