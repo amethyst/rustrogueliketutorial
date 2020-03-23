@@ -52,6 +52,19 @@ fn get_available_exits(&self, idx:usize) -> Vec<(usize, f32)> {
 }
 ```
 
+Providing exits without a distance heuristic will lead to some horrible behaviour (and a crash on future versions of RLTK). So also implement that for your map:
+
+```rust
+impl BaseMap for Map {
+    ...
+    fn get_pathing_distance(&self, idx1:usize, idx2:usize) -> f32 {
+        let w = self.width as usize;
+        let p1 = Point::new(idx1 % w, idx1 / w);
+        let p2 = Point::new(idx2 % w, idx2 / w);
+        rltk::DistanceAlg::Pythagoras.distance2d(p1, p2)
+    }
+```
+
 Pretty straight-forward: we evaluate each possible exit, and add it to the `exits` vector if it can be taken. Next, we modify the main loop in `monster_ai_system`:
 
 ```rust
