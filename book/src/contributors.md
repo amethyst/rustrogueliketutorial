@@ -44,6 +44,7 @@ The following people have contributed to this project:
 * [Rich Churcher](https://github.com/richchurcher) helped me find/fix a few places that forgot to update the initialization code.
 * [Matteo Gugliemetti](https://github.com/MatteoGgl) noticed that I was using `RunState` before I initialized it.
 * [Luca Beltrami](https://github.com/sigfriedmcwild) pointed out that I don't need `extern crate` and `macro_use` anymore.
+* [HammerAndTongs](https://github.com/hammerandtongs) noticed that the A* implementation also needs to implement `get_pathing_distance`.
 
 ## Supporters
 
