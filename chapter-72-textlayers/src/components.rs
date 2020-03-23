@@ -1,5 +1,5 @@
 use specs::prelude::*;
-extern crate specs_derive;
+use specs_derive::*;
 use rltk::{RGB, Point};
 use serde::{Serialize, Deserialize};
 use specs::saveload::{Marker, ConvertSaveload};

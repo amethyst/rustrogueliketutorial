@@ -60,8 +60,7 @@ At the top of `main.rs` we add a few lines of code:
 use rltk::{Console, GameState, Rltk, RGB, VirtualKeyCode};
 use specs::prelude::*;
 use std::cmp::{max, min};
-#[macro_use]
-extern crate specs_derive;
+use specs_derive::Component;
 ```
 
 `use rltk::` is shorthand; you *can* type `rltk::Console` every time you want a console; this tells Rust that we'd like to just type `Console` instead. Likewise the `use specs::prelude::*` line is there so we aren't continually typing `specs::prelude::World` when we just want `World`.
@@ -108,7 +107,7 @@ struct Position {
 }
 ```
 
-What does this do? `#[derive(x)]` is a *macro* that says "from my basic data, please derive the boilerplate needed for *x*"; in this case, the *x* is a `Component`. The macro generates the additional code for you, so you don't have to type it in for every component. It makes it nice and easy to use components! The `#[macro_use] extern crate specs_derive;` from earlier is making use of this; *derive macros* are a special type of macro that implements additional functionality for a structure on your behalf - saving lots of typing.
+What does this do? `#[derive(x)]` is a *macro* that says "from my basic data, please derive the boilerplate needed for *x*"; in this case, the *x* is a `Component`. The macro generates the additional code for you, so you don't have to type it in for every component. It makes it nice and easy to use components! The `#[macro_use] use specs_derive::Component;` from earlier is making use of this; *derive macros* are a special type of macro that implements additional functionality for a structure on your behalf - saving lots of typing.
 
 ## Defining a renderable component
 
@@ -241,8 +240,7 @@ If you've typed all of that in correctly, your `main.rs` now looks like this:
 use rltk::{Console, GameState, Rltk, RGB};
 use specs::prelude::*;
 use std::cmp::{max, min};
-#[macro_use]
-extern crate specs_derive;
+use specs_derive::Component;
 
 #[derive(Component)]
 struct Position {
@@ -410,8 +408,7 @@ So your code now looks like this:
 use rltk::{Console, GameState, Rltk, RGB};
 use specs::prelude::*;
 use std::cmp::{max, min};
-#[macro_use]
-extern crate specs_derive;
+use specs_derive::Component;
 
 #[derive(Component)]
 struct Position {
@@ -605,8 +602,7 @@ The source code for this completed example may be found ready-to-run in `chapter
 use rltk::{Console, GameState, Rltk, RGB, VirtualKeyCode};
 use specs::prelude::*;
 use std::cmp::{max, min};
-#[macro_use]
-extern crate specs_derive;
+use specs_derive::Component;
 
 
 

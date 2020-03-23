@@ -1,4 +1,5 @@
 use specs::prelude::*;
+use specs_derive::*;
 use rltk::{RGB};
 
 #[derive(Component)]

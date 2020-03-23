@@ -1,7 +1,6 @@
 use rltk::{Console, GameState, Rltk, Point};
 use specs::prelude::*;
-#[macro_use]
-extern crate specs_derive;
+
 mod components;
 pub use components::*;
 mod map;

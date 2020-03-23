@@ -1,7 +1,5 @@
 use rltk::{Console, GameState, Rltk, RGB};
 use specs::prelude::*;
-#[macro_use]
-extern crate specs_derive;
 mod components;
 pub use components::*;
 mod map;
@@ -12,8 +10,6 @@ mod rect;
 pub use rect::Rect;
 mod visibility_system;
 use visibility_system::VisibilitySystem;
-
-
 
 pub struct State {
     pub ecs: World

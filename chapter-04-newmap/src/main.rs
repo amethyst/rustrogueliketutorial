@@ -1,7 +1,6 @@
 use rltk::{Console, GameState, Rltk, RGB};
 use specs::prelude::*;
-#[macro_use]
-extern crate specs_derive;
+
 mod components;
 pub use components::*;
 mod map;
@@ -10,8 +9,6 @@ mod player;
 use player::*;
 mod rect;
 pub use rect::Rect;
-
-
 
 pub struct State {
     pub ecs: World

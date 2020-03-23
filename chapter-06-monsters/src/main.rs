@@ -1,7 +1,5 @@
 use rltk::{Console, GameState, Rltk, RGB, Point};
 use specs::prelude::*;
-#[macro_use]
-extern crate specs_derive;
 mod components;
 pub use components::*;
 mod map;
@@ -14,8 +12,6 @@ mod visibility_system;
 use visibility_system::VisibilitySystem;
 mod monster_ai_system;
 use monster_ai_system::MonsterAI;
-
-
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState { Paused, Running }

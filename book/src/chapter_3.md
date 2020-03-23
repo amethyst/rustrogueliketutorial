@@ -182,8 +182,7 @@ The full program now looks like this:
 use rltk::{Console, GameState, Rltk, RGB, VirtualKeyCode};
 use specs::prelude::*;
 use std::cmp::{max, min};
-#[macro_use]
-extern crate specs_derive;
+use specs_derive::*;
 
 
 

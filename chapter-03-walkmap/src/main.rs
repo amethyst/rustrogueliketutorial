@@ -1,10 +1,7 @@
 use rltk::{Console, GameState, Rltk, RGB, VirtualKeyCode};
 use specs::prelude::*;
-#[macro_use]
-extern crate specs_derive;
+use specs_derive::*;
 use std::cmp::{min, max};
-
-
 
 #[derive(Component)]
 struct Position {
