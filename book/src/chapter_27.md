@@ -14,7 +14,7 @@ Sometimes, you need a break from rectangular rooms. You might want a nice, organ
 
 ## Scaffolding
 
-Once again, we're going to take a bunch of code from the previous tutorial and re-use it for the new generator. Create a new file, `map_builders/cellular_automata.rd` and place the following in it:
+Once again, we're going to take a bunch of code from the previous tutorial and re-use it for the new generator. Create a new file, `map_builders/cellular_automata.rs` and place the following in it:
 
 ```rust
 use super::{MapBuilder, Map, Rect, apply_room_to_map, 
@@ -111,7 +111,7 @@ fn build(&mut self) {
 }
 ```
 
-This makes a *mess* of an unusable level. Walls and floors everywhere with no rhyme or reason to them - and utterly unplayable. That's ok, because *cellular automata* is designed to make a level out of noise. It works by iterating each cell, counting the number of neighbors, and turning walls into floors or walls based on density. Here's a working builder:
+This makes a *mess* of an unusable level. Walls and floors everywhere with no rhyme or reason to them - and utterly unplayable. That's ok, because *cellular automata* are designed to make a level out of noise. It works by iterating each cell, counting the number of neighbors, and turning walls into floors or walls based on density. Here's a working builder:
 
 ```rust
 fn build(&mut self) {
@@ -166,7 +166,7 @@ This is actually very simple:
 2. We count from 0 to 9, for 10 iterations of the algorithm.
 3. For each iteration:
     1. We take a copy of the map tiles, placing it into `newtiles`. We do this so we aren't writing to the tiles we are counting, which gives a very odd map.
-    2. We iterate every cell on the map, and count the number of tiles neighboring the tile that are walls.
+    2. We iterate every cell on the map and count the number of tiles neighboring the tile that are walls.
     3. If there are more than 4, or zero, neighboring walls - then the tile (in `newtiles`) becomes a wall. Otherwise, it becomes a floor.
     4. We copy the `newtiles` back into the `map`.
     5. We take a snapshot.
@@ -224,7 +224,7 @@ This is a dense piece of code that does a lot, lets walk through it:
 1. We create a vector called `map_starts` and give it a single value: the tile index on which the player starts. Dijkstra maps can have multiple starting points (distance 0), so this has to be a vector even though there is only one choice.
 2. We ask RLTK to make a Dijkstra Map for us. It has dimensions that match the main map, uses the starts, has read access to the map itself, and we'll stop counting at 200 steps (a safety feature in case of runaways!)
 3. We set an `exit_tile` `tuple` to `0` and `0.0`. The first zero is the tile index of the exit, the second zero is the distance to the exit.
-4. We iterate the map tiles, using Rust's *awesome* enumerate feature. By adding `.enumerate()` to the end of a range iteration, it adds the cell index as the first parameter in a tuple. We then de-structure to obtain both the tile and the index.
+4. We iterate the map tiles, using Rust's *awesome* enumerate feature. By adding `.enumerate()` to the end of a range iteration, it adds the cell index as the first parameter in a tuple. We then destructure to obtain both the tile and the index.
 5. If the tile is a floor,
 6. We obtain the distance to the starting point from the Dijkstra map.
 7. If the distance is the maximum value for an `f32` (a marker the Dijkstra map uses for "unreachable"), then it doesn't need to be a floor at all - nobody can get there. So we turn it into a wall.
@@ -330,7 +330,7 @@ This is similar to the previous spawning code, but not quite the same (although 
 
 1. We obtain a spawn table for the current map depth.
 2. We setup a `HashMap` called `spawn_points`, listing pairs of data (map index and name tag) for everything we've decided to spawn.
-3. We create a new `Vector` of areas, copied from the passed in *slice*. (A slice is a "view" of an array or vector). We're making a new one so we aren't modifying the parent area list. The caller *might* want to use that data for something else, and it's good to avoid changing people's data without asking. Changing data without warning is called a "side effect", and it's good to avoid them in general (unless you actually *want* them).
+3. We create a new `Vector` of areas, copied from the passed in *slice*. (A slice is a "view" of an array or vector). We're making a new one so we aren't modifying the parent area list. The caller *might* want to use that data for something else and it's good to avoid changing people's data without asking. Changing data without warning is called a "side effect" and it's good to avoid them in general (unless you actually *want* them).
 4. We make a new scope, because Rust doesn't like us using the ECS to obtain the random number generator, and then using it later to spawn entities. The scope makes Rust "forget" our first borrow as soon as it ends.
 5. We obtain a random number generator from the ECS.
 6. We calculate the number of entities to spawn. This is the same random function as we used before, but we've added an `i32::min` call: we want the smaller of EITHER the number of available tiles, OR the random calculation. This way, we'll never try to spawn more entities than we have room for.
@@ -345,9 +345,9 @@ The best way to test this is to uncomment out the `random_builder` code (and com
 
 ## Grouped placement in our map - Enter the Voronoi!
 
-[Voronoi Diagrams](https://en.wikipedia.org/wiki/Voronoi_diagram#targetText=In%20mathematics%2C%20a%20Voronoi%20diagram,specific%20subset%20of%20the%20plane.) are a wonderfully useful piece of math. Given a group of points, it builds a diagram of regions surrounding each point (which could be random, or might mean something; that's the beauty of math, it's up to you!) - with no empty space. We'd like to do something similar for our maps: subdivide the map into random regions, and spawn *inside* those regions. Fortunately, RLTK provides a type of *noise* to help with that: cellular noise.
+[Voronoi Diagrams](https://en.wikipedia.org/wiki/Voronoi_diagram#targetText=In%20mathematics%2C%20a%20Voronoi%20diagram,specific%20subset%20of%20the%20plane.) are a wonderfully useful piece of math. Given a group of points, it builds a diagram of regions surrounding each point (which could be random, or might mean something; that's the beauty of math, it's up to you!) - with no empty space. We'd like to do something similar for our maps: subdivide the map into random regions and spawn *inside* those regions. Fortunately, RLTK provides a type of *noise* to help with that: cellular noise.
 
-First of all, what *is* noise. "Noise" in this case doesn't refer to the loud heavy metal you accidentally pipe out of your patio speakers at 2am while wondering what a stereo receiver you found in your new house does (true story...); it refers to random data - like the noise on old analog TVs if you didn't tune to a station (ok, I'm showing my age there). Like most things random, there's lots of ways to make it not-really-random and group it into useful patterns. A noise library provides lots of types of noise. [Perlin/Simplex noise](https://bfnightly.bracketproductions.com/wasmtest/ex12/) makes really good approximations of landscapes. White noise looks like someone randomly threw paint at a piece of paper. *Cellular Noise* randomly places points on a grid, and then plots Voronoi diagrams around them. We're interested in the latter.
+First of all, what *is* noise. "Noise" in this case doesn't refer to the loud heavy metal you accidentally pipe out of your patio speakers at 2am while wondering what a stereo receiver you found in your new house does (true story...); it refers to random data - like the noise on old analog TVs if you didn't tune to a station (ok, I'm showing my age there). Like most things random, there's lots of ways to make it not-really-random and group it into useful patterns. A noise library provides lots of types of noise. [Perlin/Simplex noise](https://bfnightly.bracketproductions.com/wasmtest/ex12/) makes really good approximations of landscapes. White noise looks like someone randomly threw paint at a piece of paper. *Cellular Noise* randomly places points on a grid and then plots Voronoi diagrams around them. We're interested in the latter.
 
 This is a somewhat complicated way to do things, so we'll take it a step at a time. Lets start by adding a structure to store generated areas into our `CellularAutomataBuilder` structure:
 
@@ -429,7 +429,7 @@ fn spawn_entities(&mut self, ecs : &mut World) {
 }
 ```
 
-This is quite simple: it iterates through each area, and calls the new `spawn_region` with the vector of available map tiles for that region.
+This is quite simple: it iterates through each area and calls the new `spawn_region` with the vector of available map tiles for that region.
 
 The game is now quite playable on these new maps:
 
@@ -454,7 +454,7 @@ pub fn random_builder(new_depth: i32) -> Box<dyn MapBuilder> {
 
 ## Wrap-Up
 
-We've made a pretty nice map generator, and fixed our dependency upon rooms. Cellular Automata are a *really* flexible algorithm, and can be used for all kinds of organic looking maps. With a bit of tweaking to the rules, you can make a really large variety of maps.
+We've made a pretty nice map generator and fixed our dependency upon rooms. Cellular Automata are a *really* flexible algorithm and can be used for all kinds of organic looking maps. With a bit of tweaking to the rules, you can make a really large variety of maps.
 
 **The source code for this chapter may be found [here](https://github.com/thebracket/rustrogueliketutorial/tree/master/chapter-27-cellular-automata)**
 
