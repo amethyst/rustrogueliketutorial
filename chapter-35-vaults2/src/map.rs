@@ -138,6 +138,7 @@ fn wall_glyph(map : &Map, x: i32, y:i32) -> u8 {
         12 => { 205 } // Wall to the east and west
         13 => { 202 } // Wall to the east, west, and south
         14 => { 203 } // Wall to the east, west, and north
+        15 => { 206 }  // ╬ Wall on all sides
         _ => { 35 } // We missed one?
     }
 }
