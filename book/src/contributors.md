@@ -40,6 +40,7 @@ The following people have contributed to this project:
 * [Mark McCaskey](https://github.com/MarkMcCaskey) provided a logging system that doesn't suck!
 * [Thibaut](https://github.com/thibautRe) helped me fix some example code in chapter 7.
 * [Matteo Guglielmetti](https://github.com/MatteoGgl) spotted a type error in the chapter 7 code and fixed it for me.
+* [Jubilee](https://github.com/workingjubilee) helped me fix up a bunch of links from `RLTK` to `bracket-lib`.
 
 ## Supporters
 
