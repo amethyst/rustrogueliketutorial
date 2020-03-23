@@ -55,7 +55,6 @@ fn get_available_exits(&self, idx:usize) -> Vec<(usize, f32)> {
 Pretty straight-forward: we evaluate each possible exit, and add it to the `exits` vector if it can be taken. Next, we modify the main loop in `monster_ai_system`:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Monster, Name, Map, Position};
 use rltk::{Point, console};
@@ -181,7 +180,6 @@ gs.ecs.create_entity()
 Lastly, we need to populate the blocked list. We'll probably extend this system later, so we'll go with a nice generic name `map_indexing_system.rs`:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use super::{Map, Position, BlocksTile};
 
@@ -376,7 +374,6 @@ This is also quite simple: it iterates (visits) every vector in the `tile_conten
 Then we'll upgrade the indexing system to index all entities by tile:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use super::{Map, Position, BlocksTile};
 
@@ -487,7 +484,6 @@ for potential_target in map.tile_content[destination_idx].iter() {
 We'll need a `melee_combat_system` to handle Melee:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use super::{CombatStats, WantsToMelee, Name, SufferDamage};
 
@@ -530,7 +526,6 @@ impl<'a> System<'a> for MeleeCombatSystem {
 And we'll need a `damage_system` to apply the damage (we're separating it out, because damage could come from any number of sources!). We use an iterator to *sum* the damage, ensuring that it is all applied:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use super::{CombatStats, SufferDamage};
 
@@ -606,7 +601,6 @@ gs.ecs.insert(player_entity);
 Now we modify the `monster_ai_system`. There's a bit of clean-up here, and the "hurl insults" code is completely replaced with a single component insert:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Monster, Map, Position, WantsToMelee};
 use rltk::{Point};

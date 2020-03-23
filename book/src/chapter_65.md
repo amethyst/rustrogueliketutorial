@@ -100,7 +100,6 @@ Now that the component can be applied to an item, lets put it into the spawn tab
 Finally, we need to make it actually do something. We're doing something very similar in `ai/encumbrance_system.rs` - so that's the natural place to slot it in. We'll add a lot to the system, so here's the whole thing:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use crate::{EquipmentChanged, Item, InBackpack, Equipped, Pools, Attributes, gamelog::GameLog, AttributeBonus,
     gamesystem::attr_bonus};
@@ -409,7 +408,6 @@ pub fn add_confusion(ecs: &mut World, effect: &EffectSpawner, target: Entity) {
 That leaves `ai/effect_status.rs`. We'll change this to no longer worry about durations at all, and simply check for the presence of an effect - and if its *Confusion*, take away the target's turn:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use crate::{MyTurn, Confusion, RunState, StatusEffect};
 use std::collections::HashSet;
@@ -459,7 +457,6 @@ If you `cargo run`, this will work - but there's one glaring problem: once confu
 Here's an interesting conundrum: status effects are there own entities, but don't have an *Initiative*. Turns are relative, since entities can operate at different speeds. So when do we want to handle duration? The answer is *the player's turn*; time may be relative, but from the player's point of view turns are quite well defined. In effect, the rest of the world is speeding up when you are slowed - because we don't want to force the player to sit and be bored while the world chugs around them. Since we are switching to player control in the `ai/initiative_system.rs` - we'll handle it in there:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use crate::{Initiative, Position, MyTurn, Attributes, RunState, Pools, Duration, 
     EquipmentChanged, StatusEffect};

@@ -46,7 +46,6 @@ To that end, we're going to make a new file `spawner.rs`:
 
 ```rust
 use rltk::{ RGB, RandomNumberGenerator };
-extern crate specs;
 use specs::prelude::*;
 use super::{CombatStats, Player, Renderable, Name, Position, Viewshed, Monster, BlocksTile};
 

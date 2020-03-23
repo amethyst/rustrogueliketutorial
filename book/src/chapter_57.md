@@ -101,7 +101,6 @@ The idea behind `MyTurn` components is that if you have the component, then it i
 Now we should make a new - simple - system for handling initiative rolls. Make a new file, `ai/initiative_system.rs`:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use crate::{Initiative, Position, MyTurn, Attributes, RunState};
 
@@ -375,7 +374,6 @@ That takes care of the compilation errors! Now `cargo run` the game. It runs as 
 Right now, we check for *confusion* in the `monster_ai_system` - and actually forgot about it in bystanders, vendors and animals. Rather than copy/pasting the code everywhere, we should use this as an opportunity to create a system to handle status effect turn skipping, and clean up the other systems to benefit. Make a new file, `ai/turn_status.rs`:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use crate::{MyTurn, Confusion, RunState};
 
@@ -431,7 +429,6 @@ This shows the new pattern we are using: systems do one thing, and can remove `M
 Remember when we added bandits, we gave them some commentary to say for flavor? You may have noticed that they aren't actually speaking! That's because we handled quipping in the bystander AI - rather than as a general concept. Let's move the quipping into its own system. Make a new file, `ai/quipping.rs`:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use crate::{gamelog::GameLog, Quips, Name, MyTurn, Viewshed};
 
@@ -681,7 +678,6 @@ So, given the name of `my_faction` and the other entity's faction (`their_factio
 Pretty much every AI needs to know how to handle an adjacent entity. It might be an enemy (to attack or run away from), someone to ignore, etc. - but it needs to be handled. Rather than handling it separately in every AI module, lets build a common system to handle it. Let's make a new file, `ai/adjacent_ai_system.rs` (and add a `mod` and `pub use` entry for it in `ai/mod.rs` like the others):
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use crate::{MyTurn, Faction, Position, Map, raws::Reaction, WantsToMelee};
 
@@ -864,7 +860,6 @@ These are intended to indicate what the AI would like to do: either approach a t
 We'll make another new system, `ai/visible_ai_system.rs` (and add it to `mod` and `pub use` in `ai/mod.rs`):
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use crate::{MyTurn, Faction, Position, Map, raws::Reaction, Viewshed, WantsToFlee, WantsToApproach};
 
@@ -947,7 +942,6 @@ visible.run_now(&self.ecs);
 Now that we're flagging a desire to approach a tile (for whatever reason; currently because the occupant deserves a whacking), we can write a very simple system to handle this. Make a new file, `ai/approach_ai_system.rs` (and `mod`/`pub use` it in `ai/mod.rs`):
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use crate::{MyTurn, WantsToApproach, Position, Map, Viewshed, EntityMoved};
 
@@ -1013,7 +1007,6 @@ approach.run_now(&self.ecs);
 We'll also want to implement a system for fleeing, mostly based on the fleeing code from our Animal AI. Make a new file, `flee_ai_system.rs` (and remember `mod` and `pub use` in `ai/mod.rs`):
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use crate::{MyTurn, WantsToFlee, Position, Map, Viewshed, EntityMoved};
 
@@ -1163,7 +1156,6 @@ match mob_template.movement.as_ref() {
 Now, we need a new system to handle "default" (i.e. we've tried everything else) movement. Make a new file, `ai/default_move_system.rs` (don't forget to `mod` and `pub use` it in `ai/mod.rs`!):
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use crate::{MyTurn, MoveMode, Movement, Position, Map, Viewshed, EntityMoved};
 
@@ -1347,7 +1339,6 @@ Unfortunately, we're storing an `Entity` - so we need some extra boilerplate to 
 Now we can modify our `visible_ai_system.rs` file to add a `Chasing` component whenever it wants to chase after a target. There's a lot of small changes, so I've included the whole file:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use crate::{MyTurn, Faction, Position, Map, raws::Reaction, Viewshed, WantsToFlee, 
     WantsToApproach, Chasing};
@@ -1424,7 +1415,6 @@ fn evaluate(idx : usize, map : &Map, factions : &ReadStorage<Faction>, my_factio
 That's a great start: when going after an NPC, we'll automatically start chasing them. Now, lets make a new system to handle chasing; create `ai/chase_ai_system.rs` (and `mod`, `pub use` in `ai/mod.rs`):
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use crate::{MyTurn, Chasing, Position, Map, Viewshed, EntityMoved};
 use std::collections::HashMap;
@@ -1590,7 +1580,6 @@ We're currently spending a *lot* of CPU cycles on events far from the player. Pe
 Let's open up `initiative_system.rs` and modify it to check the distance to the player, and not have a turn if they are far away:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use crate::{Initiative, Position, MyTurn, Attributes, RunState};
 

@@ -113,7 +113,6 @@ gs.ecs.create_entity()
 Now we make a system for monster thought. We'll make a new file, `monster_ai_system.rs`. We'll give it some basically non-existent intelligence:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Position, Map, Monster};
 use rltk::{field_of_view, Point, console};
@@ -243,7 +242,6 @@ ppos.y = pos.y;
 We can then use that in our `monster_ai_system`. Here's a working version:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Monster};
 use rltk::{Point, console};
@@ -311,7 +309,6 @@ for (i,room) in map.rooms.iter().skip(1).enumerate() {
 Now we adjust the `monster_ai_system` to include the monster's name. The new AI looks like this:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Monster, Name};
 use rltk::{Point};

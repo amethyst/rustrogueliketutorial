@@ -80,7 +80,6 @@ SufferDamage::new_damage(&mut inflict_damage, wants_melee.target, damage, from_p
 So that takes care of knowing where damage *came from*. We can now modify `damage_system.rs` to actually grant XP. Here's the updated system:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use super::{Pools, SufferDamage, Player, Name, gamelog::GameLog, RunState, Position, Map,
     InBackpack, Equipped, LootTable, Attributes};

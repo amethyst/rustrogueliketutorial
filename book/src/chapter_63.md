@@ -1146,7 +1146,6 @@ pub fn trigger(creator : Option<Entity>, trigger: Entity, targets : &Targets, ec
 Now that we have a framework in place, we can get into `trigger_system.rs`. Just like the item effects, it can be simplified greatly; we really just need to check that an activation happened - and call the events system:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use super::{EntityMoved, Position, EntryTrigger, Map, Name, gamelog::GameLog,
     effects::*, AreaOfEffect};

@@ -322,7 +322,6 @@ We'll also add it to the Bear Trap function in `spawner.rs`:
 Now we modify the `trigger_system` to apply it. Note that we remove the entities *after* looping through them, to avoid confusing our iterators.
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use super::{EntityMoved, Position, EntryTrigger, Hidden, Map, Name, gamelog::GameLog, 
     InflictsDamage, particle_system::ParticleBuilder, SufferDamage, SingleActivation};
@@ -405,7 +404,6 @@ We have a pretty functional trap system now, but it's *annoying* to randomly tak
 Since the `visibility_system` already handles *revealing* tiles, why not make it potentially reveal hidden things, too? Here's the code for `visibility_system.rs`:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Position, Map, Player, Hidden, gamelog::GameLog};
 use rltk::{field_of_view, Point};

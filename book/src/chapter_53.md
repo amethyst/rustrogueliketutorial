@@ -939,7 +939,6 @@ match mob_template.ai.as_ref() {
 Now we'll make a new *system* to handle their AI, putting it into the file: `animal_ai_system.rs`:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Herbivore, Carnivore, Item, Map, Position, WantsToMelee, RunState, 
     Confusion, particle_system::ParticleBuilder, EntityMoved};

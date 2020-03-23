@@ -43,6 +43,7 @@ The following people have contributed to this project:
 * [Jubilee](https://github.com/workingjubilee) helped me fix up a bunch of links from `RLTK` to `bracket-lib`, and a bunch of typos.
 * [Rich Churcher](https://github.com/richchurcher) helped me find/fix a few places that forgot to update the initialization code.
 * [Matteo Gugliemetti](https://github.com/MatteoGgl) noticed that I was using `RunState` before I initialized it.
+* [Luca Beltrami](https://github.com/sigfriedmcwild) pointed out that I don't need `extern crate` and `macro_use` anymore.
 
 ## Supporters
 

@@ -384,7 +384,6 @@ pub struct WantsToShoot {
 We'll also want to make a new system, and store it in `ranged_combat_system.rs`. It's basically a cut-and-paste of the `melee_combat_system`, but looking for `WantsToShoot` instead:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use super::{Attributes, Skills, WantsToShoot, Name, gamelog::GameLog,
     HungerClock, HungerState, Pools, skill_bonus,

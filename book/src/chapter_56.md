@@ -517,7 +517,6 @@ build_data.map.outdoors = false;
 Lastly, we need a *system* to actually calculate the lighting. Make a new file, `lighting_system.rs`:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Position, Map, LightSource};
 use rltk::RGB;

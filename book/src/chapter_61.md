@@ -263,7 +263,6 @@ pub struct ApplyTeleport {
 To handle these, let's make a new system file - `movement_system.rs`:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use super::{Map, Position, BlocksTile, ApplyMove, ApplyTeleport, OtherLevelPosition, EntityMoved,
     Viewshed};

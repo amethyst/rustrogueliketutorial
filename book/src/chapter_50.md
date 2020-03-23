@@ -615,7 +615,6 @@ So now that we've defined how it *should* work, we can start implementing it. Un
 Here's a replacement `melee_combat_system.rs` that does what we described:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use super::{Attributes, Skills, WantsToMelee, Name, SufferDamage, gamelog::GameLog,
     particle_system::ParticleBuilder, Position, HungerClock, HungerState, Pools, skill_bonus, Skill};

@@ -160,7 +160,6 @@ Player is getting quite complicated now - that's good, it shows what an ECS is g
 We'll start by defining a *system* to take care of this for us. We want this to be generic, so it works for anything that can benefit from knowing what it can see. We create a new file, `visibility_system.rs`:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Position};
 
@@ -231,7 +230,6 @@ impl BaseMap for Map {
 So going back to `visibility_system.rs`, we now have what we need to request a viewshed from RLTK. We extend our `visibility_system.rs` file to look like this:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Position, Map};
 use rltk::{field_of_view, Point};
@@ -369,7 +367,6 @@ pub fn draw_map(ecs: &World, ctx : &mut Rltk) {
 This will render a black screen, because we're never setting any tiles to be revealed! So now we extend the `VisibilitySystem` to know how to mark tiles as revealed. To do this, it has to check to see if an entity is the player - and if it is, it updates the map's revealed status:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use super::{Viewshed, Position, Map, Player};
 use rltk::{field_of_view, Point};

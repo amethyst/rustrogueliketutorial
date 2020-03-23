@@ -1479,7 +1479,6 @@ if let Some(ability_list) = &mob_template.abilities {
 Now that we've created the component, we should give monsters a chance to use their new-found abilities. The `visible_ai_system` can easily be modified for this:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use crate::{MyTurn, Faction, Position, Map, raws::Reaction, Viewshed, WantsToFlee,
     WantsToApproach, Chasing, SpecialAbilities, WantsToCastSpell, Name, SpellTemplate};

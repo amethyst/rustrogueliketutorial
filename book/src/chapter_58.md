@@ -149,7 +149,6 @@ eb = eb.with(EquipmentChanged{});
 Now, we'll make a new system to calculate this. Make a new file, `ai/encumbrance_system.rs` (and include `mod` and `pub use` statements in `ai/mod.rs`):
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use crate::{EquipmentChanged, Item, InBackpack, Equipped, Pools, Attributes, gamelog::GameLog};
 use std::collections::HashMap;

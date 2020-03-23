@@ -29,7 +29,6 @@ We'll create a new file, `gui.rs` to hold our code. We'll go with a really minim
 
 ```rust
 use rltk::{ RGB, Rltk, Console };
-extern crate specs;
 use specs::prelude::*;
 
 pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
@@ -52,7 +51,6 @@ It would help the player out to know how much health they have left. Fortunately
 
 ```rust
 use rltk::{ RGB, Rltk, Console };
-extern crate specs;
 use specs::prelude::*;
 use super::{CombatStats, Player};
 
@@ -101,7 +99,6 @@ If you `cargo run` the project now, you'll see something like this:
 In our `melee_combat_system`, we add `gamelog::GameLog` to our imports from `super`, add a read/write accessor for the log (`WriteExpect<'a, GameLog>,`), and extend the destructuring to include it: `let (entities, mut log, mut wants_melee, names, combat_stats, mut inflict_damage) = data;`. Then it's just a matter of replacing the `print!` macros with inserting into the game log. Here's the resultant code:
 
 ```rust
-extern crate specs;
 use specs::prelude::*;
 use super::{CombatStats, WantsToMelee, Name, SufferDamage, gamelog::GameLog};
 
