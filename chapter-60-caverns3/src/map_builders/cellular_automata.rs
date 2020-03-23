@@ -48,7 +48,7 @@ impl CellularAutomataBuilder {
             }
         }
 
-        build_data.map.tiles = newtiles.clone();
+        build_data.map.tiles = newtiles;
         build_data.take_snapshot();
     }
 

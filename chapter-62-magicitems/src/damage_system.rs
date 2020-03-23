@@ -23,7 +23,7 @@ impl<'a> System<'a> for DamageSystem {
         let (mut stats, mut damage, positions, mut map, entities, player, attributes,
             mut log, mut particles, player_pos) = data;
         let mut xp_gain = 0;
-        let mut gold_gain = 0.0f32;
+        let gold_gain = 0.0f32;
 
         for (entity, mut stats, damage) in (&entities, &mut stats, &damage).join() {
             for dmg in damage.amount.iter() {

@@ -1,5 +1,5 @@
 use specs::prelude::*;
-use super::{HungerClock, RunState, HungerState, SufferDamage, gamelog::GameLog, MyTurn};
+use super::{HungerClock, HungerState, SufferDamage, gamelog::GameLog, MyTurn};
 
 pub struct HungerSystem {}
 

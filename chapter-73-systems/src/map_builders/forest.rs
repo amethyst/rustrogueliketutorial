@@ -71,7 +71,7 @@ impl YellowBrickRoad {
         let end_idx = build_data.map.xy_idx(end_x, end_y);
 
         build_data.map.populate_blocked();
-        let path = rltk::a_star_search(start_idx, end_idx, &mut build_data.map);
+        let path = rltk::a_star_search(start_idx, end_idx, &build_data.map);
         if !path.success {
             panic!("No valid path for the road");
         }

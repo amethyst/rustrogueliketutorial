@@ -26,6 +26,7 @@ impl<'a> System<'a> for DamageSystem {
         let mut gold_gain = 0.0f32;
 
         for (entity, mut stats, damage) in (&entities, &mut stats, &damage).join() {
+            gold_gain += stats.gold;
             for dmg in damage.amount.iter() {
                 stats.hit_points.current -= dmg.0;
                 let pos = positions.get(entity);

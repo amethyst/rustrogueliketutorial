@@ -250,7 +250,7 @@ impl TownBuilder {
             nearest_roads.sort_by(|a,b| a.1.partial_cmp(&b.1).unwrap());
 
             let destination = nearest_roads[0].0;
-            let path = rltk::a_star_search(*door_idx, destination, &mut build_data.map);
+            let path = rltk::a_star_search(*door_idx, destination, &build_data.map);
             if path.success {
                 for step in path.steps.iter() {
                     let idx = *step as usize;
