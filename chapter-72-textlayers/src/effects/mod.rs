@@ -20,8 +20,8 @@ lazy_static! {
 pub enum EffectType { 
     Damage { amount : i32 },
     Bloodstain,
-    Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
-    ParticleProjectile { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32, speed: f32, path: Vec<Point> },
+    Particle { glyph: rltk::FontCharType, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
+    ParticleProjectile { glyph: rltk::FontCharType, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32, speed: f32, path: Vec<Point> },
     EntityDeath,
     ItemUse { item: Entity },
     SpellUse { spell: Entity },

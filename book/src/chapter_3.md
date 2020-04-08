@@ -196,7 +196,7 @@ struct Position {
 
 #[derive(Component)]
 struct Renderable {
-    glyph: u8,
+    glyph: rltk::FontCharType,
     fg: RGB,
     bg: RGB,
 }

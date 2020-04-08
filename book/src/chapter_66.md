@@ -411,7 +411,7 @@ This is *very* similar to the `ItemUseSystem`, but takes `WantsToCastSpell` as i
 pub enum EffectType { 
     Damage { amount : i32 },
     Bloodstain,
-    Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
+    Particle { glyph: rltk::FontCharType, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
     EntityDeath,
     ItemUse { item: Entity },
     SpellUse { spell: Entity },
@@ -599,7 +599,7 @@ That creates the component (you should be used to this by now!), so we also need
 pub enum EffectType { 
     Damage { amount : i32 },
     Bloodstain,
-    Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
+    Particle { glyph: rltk::FontCharType, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
     EntityDeath,
     ItemUse { item: Entity },
     SpellUse { spell: Entity },
@@ -847,7 +847,7 @@ So now `Slow` and `DamageOverTime` are recognized as effects in the various raw 
 pub enum EffectType { 
     Damage { amount : i32 },
     Bloodstain,
-    Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
+    Particle { glyph: rltk::FontCharType, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
     EntityDeath,
     ItemUse { item: Entity },
     SpellUse { spell: Entity },

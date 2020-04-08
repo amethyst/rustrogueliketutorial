@@ -652,7 +652,7 @@ That's enough to actually animate the particles and still have them vanish when 
 #[derive(Debug)]
 pub enum EffectType { 
     ...
-    ParticleProjectile { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32, speed: f32, path: Vec<Point> },
+    ParticleProjectile { glyph: rltk::FontCharType, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32, speed: f32, path: Vec<Point> },
     ...
 ```
 

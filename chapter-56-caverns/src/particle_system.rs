@@ -25,7 +25,7 @@ struct ParticleRequest {
     y: i32,
     fg: RGB,
     bg: RGB,
-    glyph: u8,
+    glyph: rltk::FontCharType,
     lifetime: f32
 }
 
@@ -39,7 +39,7 @@ impl ParticleBuilder {
         ParticleBuilder{ requests : Vec::new() }
     }
 
-    pub fn request(&mut self, x:i32, y:i32, fg: RGB, bg:RGB, glyph: u8, lifetime: f32) {
+    pub fn request(&mut self, x:i32, y:i32, fg: RGB, bg:RGB, glyph: rltk::FontCharType, lifetime: f32) {
         self.requests.push(
             ParticleRequest{
                 x, y, fg, bg, glyph, lifetime

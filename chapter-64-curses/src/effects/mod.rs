@@ -18,7 +18,7 @@ lazy_static! {
 pub enum EffectType { 
     Damage { amount : i32 },
     Bloodstain,
-    Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
+    Particle { glyph: rltk::FontCharType, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
     EntityDeath,
     ItemUse { item: Entity },
     WellFed,

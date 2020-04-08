@@ -704,7 +704,7 @@ There's nothing new here: we're going to show a particle effect, and we've attac
 pub enum EffectType { 
     Damage { amount : i32 },
     Bloodstain,
-    Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
+    Particle { glyph: rltk::FontCharType, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
     EntityDeath,
     ItemUse { item: Entity },
     WellFed,

@@ -116,7 +116,7 @@ A second part of putting a character on the screen is *what character should we 
 ```rust
 #[derive(Component)]
 struct Renderable {
-    glyph: u8,
+    glyph: rltk::FontCharType,
     fg: RGB,
     bg: RGB,
 }
@@ -250,7 +250,7 @@ struct Position {
 
 #[derive(Component)]
 struct Renderable {
-    glyph: u8,
+    glyph: rltk::FontCharType,
     fg: RGB,
     bg: RGB,
 }
@@ -418,7 +418,7 @@ struct Position {
 
 #[derive(Component)]
 struct Renderable {
-    glyph: u8,
+    glyph: rltk::FontCharType,
     fg: RGB,
     bg: RGB,
 }
@@ -614,7 +614,7 @@ struct Position {
 
 #[derive(Component)]
 struct Renderable {
-    glyph: u8,
+    glyph: rltk::FontCharType,
     fg: RGB,
     bg: RGB,
 }

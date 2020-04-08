@@ -759,7 +759,7 @@ You've probably noticed by now that when you walk over a potion, it renders over
 ```rust
 #[derive(Component)]
 pub struct Renderable {
-    pub glyph: u8,
+    pub glyph: rltk::FontCharType,
     pub fg: RGB,
     pub bg: RGB,
     pub render_order : i32

@@ -416,7 +416,7 @@ We'll start in `effects/mod.rs` and extend `EffectType` to include particles:
 pub enum EffectType { 
     Damage { amount : i32 },
     Bloodstain,
-    Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 }
+    Particle { glyph: rltk::FontCharType, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 }
 }
 ```
 
@@ -511,7 +511,7 @@ So we're missing some important stuff, still: when you kill a monster, it should
 pub enum EffectType { 
     Damage { amount : i32 },
     Bloodstain,
-    Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
+    Particle { glyph: rltk::FontCharType, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
     EntityDeath
 }
 ```
@@ -703,7 +703,7 @@ Now that we've cleaned up inventory management into its own system, it's time to
 pub enum EffectType { 
     Damage { amount : i32 },
     Bloodstain,
-    Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
+    Particle { glyph: rltk::FontCharType, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
     EntityDeath,
     ItemUse { item: Entity },
 }
@@ -823,7 +823,7 @@ We'll start with food. Any item with a `ProvidesFood` component tag sets the eat
 pub enum EffectType { 
     Damage { amount : i32 },
     Bloodstain,
-    Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
+    Particle { glyph: rltk::FontCharType, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
     EntityDeath,
     ItemUse { item: Entity },
     WellFed,
@@ -934,7 +934,7 @@ Healing is a more generic effect, and it's likely that we'll use it in multiple 
 pub enum EffectType { 
     Damage { amount : i32 },
     Bloodstain,
-    Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
+    Particle { glyph: rltk::FontCharType, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
     EntityDeath,
     ItemUse { item: Entity },
     WellFed,
@@ -1027,7 +1027,7 @@ Confusion needs to be handled in a similar manner to hunger. We add an event typ
 pub enum EffectType { 
     Damage { amount : i32 },
     Bloodstain,
-    Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
+    Particle { glyph: rltk::FontCharType, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
     EntityDeath,
     ItemUse { item: Entity },
     WellFed,
@@ -1097,7 +1097,7 @@ Now that we've got a working system for items (it's really flexible; you can mix
 pub enum EffectType { 
     Damage { amount : i32 },
     Bloodstain,
-    Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
+    Particle { glyph: rltk::FontCharType, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
     EntityDeath,
     ItemUse { item: Entity },
     WellFed,
@@ -1213,7 +1213,7 @@ There's only one trigger we haven't already implemented as an effect: teleportat
 pub enum EffectType { 
     Damage { amount : i32 },
     Bloodstain,
-    Particle { glyph: u8, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
+    Particle { glyph: rltk::FontCharType, fg : rltk::RGB, bg: rltk::RGB, lifespan: f32 },
     EntityDeath,
     ItemUse { item: Entity },
     WellFed,
