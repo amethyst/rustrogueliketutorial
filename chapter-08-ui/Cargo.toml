@@ -9,4 +9,4 @@ edition = "2018"
 [dependencies]
 rltk = { path = "C:/Users/herbe/Documents/LearnRust/rltk_rs/rltk" }
 specs = "0.16.1"
-specs-derive = "0.4.0"
+specs-derive = "0.4.1"

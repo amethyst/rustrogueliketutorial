@@ -50,7 +50,7 @@ To start, we want to tell Cargo that we're going to use Specs. Open your `Cargo.
 [dependencies]
 rltk = { path = "C:/Users/herbe/Documents/LearnRust/rltk_rs/rltk" }
 specs = "0.16.1"
-specs-derive = "0.4.0"
+specs-derive = "0.4.1"
 ```
 
 This is pretty straightforward: we're telling Rust that we still want to use RLTK, and we're also asking for specs (the version number is current at the time of writing; you can check for new ones by typing `cargo search specs`). We're also adding `specs-derive` - which provides some helper code to reduce the amount of boilerplate typing you have to do.
