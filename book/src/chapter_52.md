@@ -38,6 +38,7 @@ In `main.rs`, the first thing our `main` function does is to bootstrap RLTK. We 
 ```rust
 use rltk::RltkBuilder;
     let mut context = RltkBuilder::simple(80, 60)
+        .unwrap()
         .with_title("Roguelike Tutorial")
         .build()?;
 ```

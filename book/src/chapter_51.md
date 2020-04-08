@@ -16,7 +16,7 @@ In the last chapter, we moved to a d20-style (D&D-like) combat system and attrib
 
 We're going to find it very helpful to be able to read a string containing a D&D dice specification (e.g. `20d6+4`) and turn it into computer-friendly numbers. We'll use this a lot when reading the raw files, so we'll put it in there - but make it public in case we need it somewhere else.
 
-Parsing out bit of text like that is a perfect job for *regular expressions*. These are supported in Rust via a crate, so we have to open up our `cargo.toml` and add `regex = "1.3.1"` to our `[dependencies]` section. Actually *teaching* regular expressions would be a book unto itself; it's a hugely complicated (and powerful) system, and has a tendency to look like a cat walked on your keyboard. Here's a regular expression that parses a `1d20+4` type of string:
+Parsing out bit of text like that is a perfect job for *regular expressions*. These are supported in Rust via a crate, so we have to open up our `cargo.toml` and add `regex = "1.3.6"` to our `[dependencies]` section. Actually *teaching* regular expressions would be a book unto itself; it's a hugely complicated (and powerful) system, and has a tendency to look like a cat walked on your keyboard. Here's a regular expression that parses a `1d20+4` type of string:
 
 ```regexp
 (\d+)d(\d+)([\+\-]\d+)?

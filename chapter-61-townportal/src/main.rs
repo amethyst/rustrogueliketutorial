@@ -449,6 +449,7 @@ impl State {
 fn main() -> rltk::BError {
     use rltk::RltkBuilder;
     let mut context = RltkBuilder::simple(80, 60)
+        .unwrap()
         .with_title("Roguelike Tutorial")
         .build()?;
     context.with_post_scanlines(true);
