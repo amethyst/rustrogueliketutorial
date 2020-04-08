@@ -183,7 +183,7 @@ fn is_revealed_and_wall(map: &Map, x: i32, y: i32) -> bool {
     map.tiles[idx] == TileType::Wall && map.revealed_tiles[idx]
 }
 
-fn wall_glyph(map : &Map, x: i32, y:i32) -> u8 {
+fn wall_glyph(map : &Map, x: i32, y:i32) -> rltk::FontCharType {
     if x < 1 || x > map.width-2 || y < 1 || y > map.height-2 as i32 { return 35; }
     let mut mask : u8 = 0;
 

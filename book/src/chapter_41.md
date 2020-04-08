@@ -157,7 +157,7 @@ fn get_tile_glyph(idx: usize, map : &Map) -> (u8, RGB, RGB) {
 This is very similar to the code from `draw_map` we wrote ages ago, but instead of drawing to the map it returns a glyph, foreground and background colors. It still handles bloodstains, greying out areas that you can't see, and calls `wall_glyph` for nice walls. We've simply copied `wall_glyph` over from `map.rs`:
 
 ```rust
-fn wall_glyph(map : &Map, x: i32, y:i32) -> u8 {
+fn wall_glyph(map : &Map, x: i32, y:i32) -> rltk::FontCharType {
     if x < 1 || x > map.width-2 || y < 1 || y > map.height-2 as i32 { return 35; }
     let mut mask : u8 = 0;
 
