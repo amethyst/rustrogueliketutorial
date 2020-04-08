@@ -19,7 +19,7 @@ This chapter starts with the code from chapter 4.
 We'll keep map-related functions and data together, to keep things clear as we make an ever-more-complicated game. The bulk of this is creating a new `Map` structure, and moving our helper functions to its implementation.
 
 ```rust
-use rltk::{ RGB, Rltk, Console, RandomNumberGenerator };
+use rltk::{ RGB, Rltk, RandomNumberGenerator };
 use super::{Rect};
 use std::cmp::{max, min};
 

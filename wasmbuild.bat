@@ -1,6 +1,6 @@
 @ECHO OFF
 
-cargo build --release --target wasm32-unknown-unknown --all
+REM cargo build --release --target wasm32-unknown-unknown --all
 
 CALL :Stage chapter-01-hellorust
 CALL :Stage chapter-02-helloecs

@@ -1,4 +1,4 @@
-use rltk::{ RGB, Rltk, Console, RandomNumberGenerator };
+use rltk::{ RGB, Rltk, RandomNumberGenerator };
 use super::{Rect};
 use std::cmp::{max, min};
 
