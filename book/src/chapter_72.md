@@ -19,7 +19,7 @@ let mut context = RltkBuilder::simple(80, 60)
     .with_title("Roguelike Tutorial")
     .with_font("vga8x16.png", 8, 16)
     .with_sparse_console(80, 30, "vga8x16.png")
-    .build();
+    .build()?;
 ```
 
 The main loop's "clear screen" needs to be expanded to clear both layers. In `main.rs` (the `tick` function), we have a bit of code we haven't touched in 70 chapters - clearing the screen at the beginning of a frame. Now we want to clear both consoles:

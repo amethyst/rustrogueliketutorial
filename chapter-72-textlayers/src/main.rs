@@ -525,7 +525,7 @@ fn main() -> rltk::BError {
         .with_title("Roguelike Tutorial")
         .with_font("vga8x16.png", 8, 16)
         .with_sparse_console(80, 30, "vga8x16.png")
-        .build();
+        .build()?;
     context.with_post_scanlines(true);
     let mut gs = State {
         ecs: World::new(),
