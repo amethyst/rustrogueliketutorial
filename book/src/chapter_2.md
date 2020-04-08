@@ -48,7 +48,7 @@ It's important to know that ECS is just one way of handling composition. There a
 To start, we want to tell Cargo that we're going to use Specs. Open your `Cargo.toml` file, and change the `dependencies` section to look like this:
 ```toml
 [dependencies]
-rltk = { git = "https://github.com/thebracket/bracket-lib/" }
+rltk = { version = "0.8.0" }
 specs = "0.16.1"
 specs-derive = "0.4.1"
 ```
