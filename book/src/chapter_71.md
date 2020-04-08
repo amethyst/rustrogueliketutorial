@@ -97,7 +97,7 @@ That lets us greatly simplify displaying the log. Open `gui.rs`, and find the lo
 // Draw the log
 let mut block = TextBlock::new(1, 46, 79, 58);
 block.print(&gamelog::log_display());
-block.render(&mut ctx.consoles[0].console);
+block.render(&mut rltk::BACKEND_INTERNAL.lock().consoles[0].console);
 ```
 
 This specifies the exact location of the log text block, as an RLTK `TextBlock` object. Then it prints the results of `log_display()` to the block, and renders it onto console zero (the console we are using).

@@ -59,7 +59,7 @@ Since the new code handles rendering, it's very easy to draw the log file! Chang
 
 ```rust
 // Draw the log
-gamelog::print_log(&mut ctx.consoles[1].console, Point::new(1, 23));
+gamelog::print_log(&mut rltk::BACKEND_INTERNAL.lock().consoles[1].console, Point::new(1, 23));
 ```
 
 If you `cargo run` now, you'll see a much easier to read log section:
@@ -515,7 +515,7 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     y += consumables(ecs, &mut draw_batch, &player_entity, y);
     spells(ecs, &mut draw_batch, &player_entity, y);
     status(ecs, &mut draw_batch, &player_entity);
-    gamelog::print_log(&mut ctx.consoles[1].console, Point::new(1, 23));
+    gamelog::print_log(&mut rltk::BACKEND_INTERNAL.lock().consoles[1].console, Point::new(1, 23));
     draw_tooltips(ecs, ctx);
 
     draw_batch.submit(5000);
