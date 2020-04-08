@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rltk = { path = "C:/Users/herbe/Documents/LearnRust/rltk_rs/rltk" }
+rltk = { git = "https://github.com/thebracket/bracket-lib/" }
 specs = "0.16.1"
 specs-derive = "0.4.1"
 

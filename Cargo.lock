@@ -101,6 +101,7 @@ checksum = "0d8c1fef690941d3e7788d328517591fecc684c084084702d6ff1641e993699a"
 [[package]]
 name = "bracket-algorithm-traits"
 version = "0.7.0"
+source = "git+https://github.com/thebracket/bracket-lib/#034257a416a3ce659d3baca2cab26cab62336107"
 dependencies = [
  "bracket-geometry",
  "smallvec 1.2.0",
@@ -109,6 +110,7 @@ dependencies = [
 [[package]]
 name = "bracket-color"
 version = "0.7.0"
+source = "git+https://github.com/thebracket/bracket-lib/#034257a416a3ce659d3baca2cab26cab62336107"
 dependencies = [
  "byteorder",
  "lazy_static",
@@ -119,6 +121,7 @@ dependencies = [
 [[package]]
 name = "bracket-geometry"
 version = "0.7.0"
+source = "git+https://github.com/thebracket/bracket-lib/#034257a416a3ce659d3baca2cab26cab62336107"
 dependencies = [
  "serde",
  "ultraviolet",
@@ -127,6 +130,7 @@ dependencies = [
 [[package]]
 name = "bracket-lib"
 version = "0.7.0"
+source = "git+https://github.com/thebracket/bracket-lib/#034257a416a3ce659d3baca2cab26cab62336107"
 dependencies = [
  "bracket-algorithm-traits",
  "bracket-color",
@@ -140,6 +144,7 @@ dependencies = [
 [[package]]
 name = "bracket-noise"
 version = "0.7.0"
+source = "git+https://github.com/thebracket/bracket-lib/#034257a416a3ce659d3baca2cab26cab62336107"
 dependencies = [
  "bracket-random",
 ]
@@ -147,6 +152,7 @@ dependencies = [
 [[package]]
 name = "bracket-pathfinding"
 version = "0.7.0"
+source = "git+https://github.com/thebracket/bracket-lib/#034257a416a3ce659d3baca2cab26cab62336107"
 dependencies = [
  "bracket-algorithm-traits",
  "bracket-geometry",
@@ -156,6 +162,7 @@ dependencies = [
 [[package]]
 name = "bracket-random"
 version = "0.7.0"
+source = "git+https://github.com/thebracket/bracket-lib/#034257a416a3ce659d3baca2cab26cab62336107"
 dependencies = [
  "lazy_static",
  "rand",
@@ -167,6 +174,7 @@ dependencies = [
 [[package]]
 name = "bracket-terminal"
 version = "0.7.0"
+source = "git+https://github.com/thebracket/bracket-lib/#034257a416a3ce659d3baca2cab26cab62336107"
 dependencies = [
  "bracket-color",
  "bracket-geometry",
@@ -2067,6 +2075,7 @@ checksum = "b28dfe3fe9badec5dbf0a79a9cccad2cfc2ab5484bdb3e44cbd1ae8b3ba2be06"
 [[package]]
 name = "rltk"
 version = "0.7.0"
+source = "git+https://github.com/thebracket/bracket-lib/#034257a416a3ce659d3baca2cab26cab62336107"
 dependencies = [
  "bracket-lib",
 ]
