@@ -271,7 +271,7 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     y += consumables(ecs, &mut draw_batch, &player_entity, y);
     spells(ecs, &mut draw_batch, &player_entity, y);
     status(ecs, &mut draw_batch, &player_entity);
-    gamelog::print_log(&mut ctx.consoles[1].console, Point::new(1, 23));
+    gamelog::print_log(&mut rltk::BACKEND_INTERNAL.lock().consoles[1].console, Point::new(1, 23));
     draw_tooltips(ecs, ctx);
 
     draw_batch.submit(5000);

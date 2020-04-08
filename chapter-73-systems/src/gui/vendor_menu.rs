@@ -29,7 +29,7 @@ fn vendor_sell_menu(gs : &mut State, ctx : &mut Rltk, _vendor : Entity, _mode : 
     let mut j = 0;
     for (entity, _pack, item) in (&entities, &backpack, &items).join().filter(|item| item.1.owner == *player_entity ) {
         draw_batch.set(Point::new(17, y), ColorPair::new(RGB::named(rltk::WHITE), RGB::named(rltk::BLACK)), rltk::to_cp437('('));
-        draw_batch.set(Point::new(18, y), ColorPair::new(RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK)), 97+j as u8);
+        draw_batch.set(Point::new(18, y), ColorPair::new(RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK)), 97+j as rltk::FontCharType);
         draw_batch.set(Point::new(19, y), ColorPair::new(RGB::named(rltk::WHITE), RGB::named(rltk::BLACK)), rltk::to_cp437(')'));
 
         draw_batch.print_color(
@@ -82,7 +82,7 @@ fn vendor_buy_menu(gs : &mut State, ctx : &mut Rltk, vendor : Entity, _mode : Ve
 
     for (j,sale) in inventory.iter().enumerate() {
         draw_batch.set(Point::new(17, y), ColorPair::new(RGB::named(rltk::WHITE), RGB::named(rltk::BLACK)), rltk::to_cp437('('));
-        draw_batch.set(Point::new(18, y), ColorPair::new(RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK)), 97+j as u8);
+        draw_batch.set(Point::new(18, y), ColorPair::new(RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK)), 97+j as rltk::FontCharType);
         draw_batch.set(Point::new(19, y), ColorPair::new(RGB::named(rltk::WHITE), RGB::named(rltk::BLACK)), rltk::to_cp437(')'));
 
         draw_batch.print(Point::new(21, y), &sale.0);

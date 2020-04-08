@@ -19,7 +19,7 @@ pub fn print_log(console: &mut Box<dyn Console>, pos: Point) {
     let mut x = pos.x;
     LOG.lock().unwrap().iter().rev().take(6).for_each(|log| {
         log.iter().for_each(|frag| {
-            console.print_color(x, y, frag.color, RGB::named(rltk::BLACK), &frag.text);
+            console.print_color(x, y, frag.color.to_rgba(1.0), RGBA::named(rltk::BLACK), &frag.text);
             x += frag.text.len() as i32;
             x += 1;
         });

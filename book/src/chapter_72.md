@@ -541,7 +541,7 @@ pub fn menu_box<T: ToString>(draw_batch: &mut DrawBatch, x: i32, y: i32, width: 
     );
 }
 
-pub fn menu_option<T:ToString>(draw_batch: &mut DrawBatch, x: i32, y: i32, hotkey: u8, text: T) {
+pub fn menu_option<T:ToString>(draw_batch: &mut DrawBatch, x: i32, y: i32, hotkey: rltk::FontCharType, text: T) {
     draw_batch.set(
         Point::new(x, y), 
         ColorPair::new(RGB::named(rltk::WHITE), RGB::named(rltk::BLACK)),
@@ -653,7 +653,7 @@ pub fn item_result_menu<S: ToString>(
     let mut item_list : Vec<Entity> = Vec::new();
     let mut j = 0;
     for item in items {
-        menu_option(draw_batch, 17, y, 97+j as u8, &item.1);
+        menu_option(draw_batch, 17, y, 97+j as rltk::FontCharType, &item.1);
         item_list.push(item.0);
         y += 1;
         j += 1;
@@ -1164,7 +1164,7 @@ fn vendor_sell_menu(gs : &mut State, ctx : &mut Rltk, _vendor : Entity, _mode : 
     let mut j = 0;
     for (entity, _pack, item) in (&entities, &backpack, &items).join().filter(|item| item.1.owner == *player_entity ) {
         draw_batch.set(Point::new(17, y), ColorPair::new(RGB::named(rltk::WHITE), RGB::named(rltk::BLACK)), rltk::to_cp437('('));
-        draw_batch.set(Point::new(18, y), ColorPair::new(RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK)), 97+j as u8);
+        draw_batch.set(Point::new(18, y), ColorPair::new(RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK)), 97+j as rltk::FontCharType);
         draw_batch.set(Point::new(19, y), ColorPair::new(RGB::named(rltk::WHITE), RGB::named(rltk::BLACK)), rltk::to_cp437(')'));
 
         draw_batch.print_color(
@@ -1217,7 +1217,7 @@ fn vendor_buy_menu(gs : &mut State, ctx : &mut Rltk, vendor : Entity, _mode : Ve
 
     for (j,sale) in inventory.iter().enumerate() {
         draw_batch.set(Point::new(17, y), ColorPair::new(RGB::named(rltk::WHITE), RGB::named(rltk::BLACK)), rltk::to_cp437('('));
-        draw_batch.set(Point::new(18, y), ColorPair::new(RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK)), 97+j as u8);
+        draw_batch.set(Point::new(18, y), ColorPair::new(RGB::named(rltk::YELLOW), RGB::named(rltk::BLACK)), 97+j as rltk::FontCharType);
         draw_batch.set(Point::new(19, y), ColorPair::new(RGB::named(rltk::WHITE), RGB::named(rltk::BLACK)), rltk::to_cp437(')'));
 
         draw_batch.print(Point::new(21, y), &sale.0);

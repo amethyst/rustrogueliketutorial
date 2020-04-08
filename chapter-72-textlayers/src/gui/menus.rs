@@ -14,7 +14,7 @@ pub fn menu_box<T: ToString>(draw_batch: &mut DrawBatch, x: i32, y: i32, width: 
     );
 }
 
-pub fn menu_option<T:ToString>(draw_batch: &mut DrawBatch, x: i32, y: i32, hotkey: u8, text: T) {
+pub fn menu_option<T:ToString>(draw_batch: &mut DrawBatch, x: i32, y: i32, hotkey: rltk::FontCharType, text: T) {
     draw_batch.set(
         Point::new(x, y), 
         ColorPair::new(RGB::named(rltk::WHITE), RGB::named(rltk::BLACK)),
@@ -64,7 +64,7 @@ pub fn item_result_menu<S: ToString>(
     let mut item_list : Vec<Entity> = Vec::new();
     let mut j = 0;
     for item in items {
-        menu_option(draw_batch, 17, y, 97+j as u8, &item.1);
+        menu_option(draw_batch, 17, y, 97+j as rltk::FontCharType, &item.1);
         item_list.push(item.0);
         y += 1;
         j += 1;
