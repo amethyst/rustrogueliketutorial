@@ -203,7 +203,7 @@ pub fn level_builder(new_depth: i32, rng: &mut rltk::RandomNumberGenerator, widt
 In `map/themes.rs`, we'll tell this level to also be limestone themed:
 
 ```rust
-pub fn tile_glyph(idx: usize, map : &Map) -> (u8, RGB, RGB) {
+pub fn tile_glyph(idx: usize, map : &Map) -> (rltk::FontCharType, RGB, RGB) {
 let (glyph, mut fg, mut bg) = match map.depth {
     4 => get_limestone_cavern_glyph(idx, map),
     3 => get_limestone_cavern_glyph(idx, map),

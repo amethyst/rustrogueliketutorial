@@ -66,7 +66,7 @@ We've used split themes before (for entering the fortress), so it shouldn't be a
 We can update `tile_glyph` to look like this:
 
 ```rust
-pub fn tile_glyph(idx: usize, map : &Map) -> (u8, RGB, RGB) {
+pub fn tile_glyph(idx: usize, map : &Map) -> (rltk::FontCharType, RGB, RGB) {
     let (glyph, mut fg, mut bg) = match map.depth {
         7 => {
             let x = idx as i32 % map.width;
@@ -95,7 +95,7 @@ pub fn tile_glyph(idx: usize, map : &Map) -> (u8, RGB, RGB) {
 The `get_mushroom_glyph` function is basically the same as `get_forest_glyph`, but changed to look more like a mushroom grove from the game Dwarf Fortress (yay, Plump Helmets!):
 
 ```rust
-fn get_mushroom_glyph(idx:usize, map: &Map) -> (u8, RGB, RGB) {
+fn get_mushroom_glyph(idx:usize, map: &Map) -> (rltk::FontCharType, RGB, RGB) {
     let glyph;
     let fg;
     let bg = RGB::from_f32(0., 0., 0.);

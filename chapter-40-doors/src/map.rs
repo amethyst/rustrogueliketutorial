@@ -1,4 +1,4 @@
-use rltk::{ RGB, Rltk, Console, BaseMap, Algorithm2D, Point };
+use rltk::{ RGB, Rltk, BaseMap, Algorithm2D, Point };
 use specs::prelude::*;
 use serde::{Serialize, Deserialize};
 use std::collections::HashSet;

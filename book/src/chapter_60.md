@@ -15,7 +15,7 @@ The design document talks about the caverns giving way to a carefully hewn dwarv
 Let's start with the *theme*. We want to split the map between the limestone cavern look, and the dungeon look - so we add a new entry to `themes.rs`'s `tile_glyph` function that does just that:
 
 ```rust
-pub fn tile_glyph(idx: usize, map : &Map) -> (u8, RGB, RGB) {
+pub fn tile_glyph(idx: usize, map : &Map) -> (rltk::FontCharType, RGB, RGB) {
     let (glyph, mut fg, mut bg) = match map.depth {
         5 => {
             let x = idx as i32 % map.width;

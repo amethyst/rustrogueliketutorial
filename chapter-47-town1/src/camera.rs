@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use super::{Map,TileType,Position,Renderable,Hidden};
-use rltk::{Point, Rltk, Console, RGB};
+use rltk::{Point, Rltk, RGB};
 
 pub fn get_screen_bounds(ecs: &World, ctx : &mut Rltk) -> (i32, i32, i32, i32) {
     let player_pos = ecs.fetch::<Point>();
@@ -100,7 +100,7 @@ pub fn render_debug_map(map : &Map, ctx : &mut Rltk) {
     }
 }
 
-fn get_tile_glyph(idx: usize, map : &Map) -> (u8, RGB, RGB) {
+fn get_tile_glyph(idx: usize, map : &Map) -> (rltk::FontCharType, RGB, RGB) {
     let glyph;
     let mut fg;
     let mut bg = RGB::from_f32(0., 0., 0.);

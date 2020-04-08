@@ -187,7 +187,7 @@ We've replaced all the costs of `1.0` with a call to our `tile_cost` function, a
 We also need to be able to render these tile types, so we open up `camera.rs` and add them to the `match` statement in `get_tile_glyph`:
 
 ```rust
-fn get_tile_glyph(idx: usize, map : &Map) -> (u8, RGB, RGB) {
+fn get_tile_glyph(idx: usize, map : &Map) -> (rltk::FontCharType, RGB, RGB) {
     let glyph;
     let mut fg;
     let mut bg = RGB::from_f32(0., 0., 0.);

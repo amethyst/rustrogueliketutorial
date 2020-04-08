@@ -1,7 +1,7 @@
 use super::{Map, TileType};
 use rltk::RGB;
 
-pub fn tile_glyph(idx: usize, map : &Map) -> (u8, RGB, RGB) {
+pub fn tile_glyph(idx: usize, map : &Map) -> (rltk::FontCharType, RGB, RGB) {
     let (glyph, mut fg, mut bg) = match map.depth {
         2 => get_forest_glyph(idx, map),
         _ => get_tile_glyph_default(idx, map)
@@ -16,7 +16,7 @@ pub fn tile_glyph(idx: usize, map : &Map) -> (u8, RGB, RGB) {
     (glyph, fg, bg)
 }
 
-fn get_forest_glyph(idx:usize, map: &Map) -> (u8, RGB, RGB) {
+fn get_forest_glyph(idx:usize, map: &Map) -> (rltk::FontCharType, RGB, RGB) {
     let glyph;
     let fg;
     let bg = RGB::from_f32(0., 0., 0.);
@@ -37,7 +37,7 @@ fn get_forest_glyph(idx:usize, map: &Map) -> (u8, RGB, RGB) {
     (glyph, fg, bg)
 }
 
-fn get_tile_glyph_default(idx: usize, map : &Map) -> (u8, RGB, RGB) {
+fn get_tile_glyph_default(idx: usize, map : &Map) -> (rltk::FontCharType, RGB, RGB) {
     let glyph;
     let fg;
     let bg = RGB::from_f32(0., 0., 0.);

@@ -1,6 +1,6 @@
 use specs::prelude::*;
 use super::{Map,Position,Renderable,Hidden,TileSize};
-use rltk::{Point, Rltk, Console, RGB};
+use rltk::{Point, Rltk, RGB};
 use crate::map::tile_glyph;
 
 pub fn get_screen_bounds(ecs: &World, _ctx:  &mut Rltk) -> (i32, i32, i32, i32) {

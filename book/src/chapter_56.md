@@ -141,7 +141,7 @@ This gets you a playable map! The monster choices aren't so good, but it works. 
 The cavern layout is a good start, but it doesn't *look* like a limestone cavern yet. Open up `map/themes.rs` and we'll rectify that! We'll start by modifying `get_tile_glyph` to know about this level:
 
 ```rust
-pub fn tile_glyph(idx: usize, map : &Map) -> (u8, RGB, RGB) {
+pub fn tile_glyph(idx: usize, map : &Map) -> (rltk::FontCharType, RGB, RGB) {
 let (glyph, mut fg, mut bg) = match map.depth {
     3 => get_limestone_cavern_glyph(idx, map),
     2 => get_forest_glyph(idx, map),
@@ -152,7 +152,7 @@ let (glyph, mut fg, mut bg) = match map.depth {
 Now we need to write `get_limestone_cavern_glyph`. We want it to look like a limestone cavern. Here's what I came up with (maybe the more artistically inclined can help!):
 
 ```rust
-fn get_limestone_cavern_glyph(idx:usize, map: &Map) -> (u8, RGB, RGB) {
+fn get_limestone_cavern_glyph(idx:usize, map: &Map) -> (rltk::FontCharType, RGB, RGB) {
     let glyph;
     let fg;
     let bg = RGB::from_f32(0., 0., 0.);
@@ -479,7 +479,7 @@ Notice that we're making `outdoors` the default mode - so lighting won't suddenl
 Now, we'll adjust `map/themes.rs` to handle lighting. We're deliberately not darkening entities (so you can still spot them), just the map tiles:
 
 ```rust
-pub fn tile_glyph(idx: usize, map : &Map) -> (u8, RGB, RGB) {
+pub fn tile_glyph(idx: usize, map : &Map) -> (rltk::FontCharType, RGB, RGB) {
     let (glyph, mut fg, mut bg) = match map.depth {
         3 => get_limestone_cavern_glyph(idx, map),
         2 => get_forest_glyph(idx, map),
