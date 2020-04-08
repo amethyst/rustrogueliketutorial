@@ -57,7 +57,7 @@ This is pretty straightforward: we're telling Rust that we still want to use RLT
 
 At the top of `main.rs` we add a few lines of code:
 ```rust
-use rltk::{Console, GameState, Rltk, RGB, VirtualKeyCode};
+use rltk::{GameState, Rltk, RGB, VirtualKeyCode};
 use specs::prelude::*;
 use std::cmp::{max, min};
 use specs_derive::Component;
@@ -237,7 +237,7 @@ With that in place, *any* entity that has both a `Position` and a `Renderable` w
 If you've typed all of that in correctly, your `main.rs` now looks like this:
 
 ```rust
-use rltk::{Console, GameState, Rltk, RGB};
+use rltk::{GameState, Rltk, RGB};
 use specs::prelude::*;
 use std::cmp::{max, min};
 use specs_derive::Component;
@@ -405,7 +405,7 @@ The nice thing is that this will run *all* systems we register into our dispatch
 
 So your code now looks like this:
 ```rust
-use rltk::{Console, GameState, Rltk, RGB};
+use rltk::{GameState, Rltk, RGB};
 use specs::prelude::*;
 use std::cmp::{max, min};
 use specs_derive::Component;
@@ -599,7 +599,7 @@ If you run your program (with `cargo run`), you now have a keyboard controlled `
 The source code for this completed example may be found ready-to-run in `chapter-02-helloecs`. It looks like this:
 
 ```rust
-use rltk::{Console, GameState, Rltk, RGB, VirtualKeyCode};
+use rltk::{GameState, Rltk, RGB, VirtualKeyCode};
 use specs::prelude::*;
 use std::cmp::{max, min};
 use specs_derive::Component;

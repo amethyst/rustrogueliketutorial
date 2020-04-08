@@ -1,4 +1,4 @@
-use rltk::{Console, GameState, Rltk, RGB, VirtualKeyCode};
+use rltk::{GameState, Rltk, RGB, VirtualKeyCode};
 use specs::prelude::*;
 use specs_derive::*;
 use std::cmp::{min, max};

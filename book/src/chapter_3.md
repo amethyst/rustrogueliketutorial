@@ -181,7 +181,7 @@ Run the program (`cargo run`) now, and you have a player in a map - and can move
 The full program now looks like this:
 
 ```rust
-use rltk::{Console, GameState, Rltk, RGB, VirtualKeyCode};
+use rltk::{GameState, Rltk, RGB, VirtualKeyCode};
 use specs::prelude::*;
 use std::cmp::{max, min};
 use specs_derive::*;
