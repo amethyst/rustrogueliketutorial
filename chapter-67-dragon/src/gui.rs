@@ -1,4 +1,4 @@
-use rltk::{ RGB, Rltk, Console, Point, VirtualKeyCode };
+use rltk::{ RGB, Rltk, Point, VirtualKeyCode };
 use specs::prelude::*;
 use super::{Pools, gamelog::GameLog, Map, Name, State, InBackpack,
     Viewshed, RunState, Equipped, HungerClock, HungerState, rex_assets::RexAssets,
