@@ -166,7 +166,7 @@ That's a bit of a mouthful, but it displays menu options and lets you select the
 
 ```toml
 [dependencies]
-rltk = { version = "0.7.0", features = ["serde"] }
+rltk = { path = "C:/Users/herbe/Documents/LearnRust/rltk_rs/rltk", features = ["serde"] }
 specs = { version = "0.16.1", features = ["serde"] }
 specs-derive = "0.4.0"
 serde= { version = "1.0.93", features = ["derive"] }

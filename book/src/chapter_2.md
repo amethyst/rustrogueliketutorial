@@ -48,7 +48,7 @@ It's important to know that ECS is just one way of handling composition. There a
 To start, we want to tell Cargo that we're going to use Specs. Open your `Cargo.toml` file, and change the `dependencies` section to look like this:
 ```toml
 [dependencies]
-rltk = { version = "0.7.0" }
+rltk = { path = "C:/Users/herbe/Documents/LearnRust/rltk_rs/rltk" }
 specs = "0.16.1"
 specs-derive = "0.4.0"
 ```
@@ -271,11 +271,11 @@ impl GameState for State {
     }
 }
 
-fn main() {
+fn main() -> rltk::BError {
     use rltk::RltkBuilder;
     let context = RltkBuilder::simple80x50()
         .with_title("Roguelike Tutorial")
-        .build();
+        .build()?;
     let mut gs = State {
         ecs: World::new()
     };
@@ -304,7 +304,7 @@ fn main() {
         .build();
     }
 
-    rltk::main_loop(context, gs);
+    rltk::main_loop(context, gs)
 }
 ```
 
@@ -467,11 +467,11 @@ impl State {
     }
 }
 
-fn main() {
+fn main() -> rltk::BError {
     use rltk::RltkBuilder;
     let context = RltkBuilder::simple80x50()
         .with_title("Roguelike Tutorial")
-        .build();
+        .build()?;
     let mut gs = State {
         ecs: World::new()
     };
@@ -502,7 +502,7 @@ fn main() {
         .build();
     }
 
-    rltk::main_loop(context, gs);
+    rltk::main_loop(context, gs)
 }
 ```
 
@@ -691,11 +691,11 @@ impl State {
     }
 }
 
-fn main() {
+fn main() -> rltk::BError {
     use rltk::RltkBuilder;
     let context = RltkBuilder::simple80x50()
         .with_title("Roguelike Tutorial")
-        .build();
+        .build()?;
     let mut gs = State {
         ecs: World::new()
     };
@@ -728,7 +728,7 @@ fn main() {
         .build();
     }
 
-    rltk::main_loop(context, gs);
+    rltk::main_loop(context, gs)
 }
 ```
 

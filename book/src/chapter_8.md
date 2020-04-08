@@ -264,7 +264,7 @@ Since we're on look and feel, lets consider enabling an RLTK feature: post-proce
 use rltk::RltkBuilder;
     let mut context = RltkBuilder::simple80x50()
         .with_title("Roguelike Tutorial")
-        .build();
+        .build()?;
 context.with_post_scanlines(true);
 ```
 

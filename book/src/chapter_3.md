@@ -322,11 +322,11 @@ impl State {
     }
 }
 
-fn main() {
+fn main() -> rltk::BError {
     use rltk::RltkBuilder;
     let context = RltkBuilder::simple80x50()
         .with_title("Roguelike Tutorial")
-        .build();
+        .build()?;
     let mut gs = State {
         ecs: World::new()
     };
@@ -347,7 +347,7 @@ fn main() {
         .with(Player{})
         .build();
 
-    rltk::main_loop(context, gs);
+    rltk::main_loop(context, gs)
 }
 ```
 

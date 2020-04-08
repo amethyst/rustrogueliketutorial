@@ -228,11 +228,11 @@ Currently, the player always starts in the center of the map - which with the ne
 Our `main.rs` file also requires adjustments, to accept the new format. We change our `main` function in `main.rs` to:
 
 ```rust
-fn main() {
+fn main() -> rltk::BError {
     use rltk::RltkBuilder;
     let context = RltkBuilder::simple80x50()
         .with_title("Roguelike Tutorial")
-        .build();
+        .build()?;
     let mut gs = State {
         ecs: World::new()
     };
@@ -255,7 +255,7 @@ fn main() {
         .with(Player{})
         .build();
 
-    rltk::main_loop(context, gs);
+    rltk::main_loop(context, gs)
 }
 ```
 

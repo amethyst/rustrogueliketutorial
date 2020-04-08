@@ -54,7 +54,7 @@ This is basically the same as the other mushroom builder, but without the prefab
 ```rust
 gs.generate_world_map(8, 0);
 
-rltk::main_loop(context, gs);
+rltk::main_loop(context, gs)
 ```
 
 And `cargo run`, you get a pretty passable level. It's retained the mob spawns from our previous level, because we carefully included them in our spawn level ranges.
