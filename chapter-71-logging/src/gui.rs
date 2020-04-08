@@ -252,7 +252,7 @@ pub fn draw_ui(ecs: &World, ctx : &mut Rltk) {
     }*/
     let mut block = TextBlock::new(1, 46, 79, 58);
     block.print(&gamelog::log_display());
-    block.render(&mut ctx.consoles[0].console);
+    block.render(&mut rltk::BACKEND_INTERNAL.lock().consoles[0].console);
 
     draw_tooltips(ecs, ctx);
 }
