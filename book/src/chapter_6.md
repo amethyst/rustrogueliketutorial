@@ -65,7 +65,7 @@ let mut rng = rltk::RandomNumberGenerator::new();
 for room in map.rooms.iter().skip(1) {
     let (x,y) = room.center();
 
-    let glyph : u8;
+    let glyph : rltk::FontCharType;
     let roll = rng.roll_dice(1, 2);
     match roll {
         1 => { glyph = rltk::to_cp437('g') }
@@ -284,7 +284,7 @@ We also register it in `main.rs`, which you should be comfortable with by now! W
 for (i,room) in map.rooms.iter().skip(1).enumerate() {
     let (x,y) = room.center();
 
-    let glyph : u8;
+    let glyph : rltk::FontCharType;
     let name : String;
     let roll = rng.roll_dice(1, 2);
     match roll {

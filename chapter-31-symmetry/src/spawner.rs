@@ -117,7 +117,7 @@ fn spawn_entity(ecs: &mut World, spawn : &(&usize, &String)) {
 fn orc(ecs: &mut World, x: i32, y: i32) { monster(ecs, x, y, rltk::to_cp437('o'), "Orc"); }
 fn goblin(ecs: &mut World, x: i32, y: i32) { monster(ecs, x, y, rltk::to_cp437('g'), "Goblin"); }
 
-fn monster<S : ToString>(ecs: &mut World, x: i32, y: i32, glyph : u8, name : S) {
+fn monster<S : ToString>(ecs: &mut World, x: i32, y: i32, glyph : rltk::FontCharType, name : S) {
     ecs.create_entity()
         .with(Position{ x, y })
         .with(Renderable{

@@ -1,4 +1,4 @@
-use rltk::{Console, GameState, Rltk, RGB, Point};
+use rltk::{GameState, Rltk, RGB, Point};
 use specs::prelude::*;
 mod components;
 pub use components::*;
@@ -135,7 +135,7 @@ fn main() -> rltk::BError {
     for (i,room) in map.rooms.iter().skip(1).enumerate() {
         let (x,y) = room.center();
 
-        let glyph : u8;
+        let glyph : rltk::FontCharType;
         let name : String;
         let roll = rng.roll_dice(1, 2);
         match roll {

@@ -1577,14 +1577,14 @@ Now we need a couple of new components (in `components.rs`, and registered in `m
 ```rust
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct SpawnParticleLine {
-    pub glyph : u8,
+    pub glyph : rltk::FontCharType,
     pub color : RGB,
     pub lifetime_ms : f32
 }
 
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct SpawnParticleBurst {
-    pub glyph : u8,
+    pub glyph : rltk::FontCharType,
     pub color : RGB,
     pub lifetime_ms : f32
 }

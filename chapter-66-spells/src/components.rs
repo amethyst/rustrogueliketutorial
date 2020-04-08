@@ -390,14 +390,14 @@ pub struct ParticleLifetime {
 
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct SpawnParticleLine {
-    pub glyph : u8,
+    pub glyph : rltk::FontCharType,
     pub color : RGB,
     pub lifetime_ms : f32
 }
 
 #[derive(Component, Serialize, Deserialize, Clone)]
 pub struct SpawnParticleBurst {
-    pub glyph : u8,
+    pub glyph : rltk::FontCharType,
     pub color : RGB,
     pub lifetime_ms : f32
 }
