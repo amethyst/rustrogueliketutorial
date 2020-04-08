@@ -107,9 +107,9 @@ impl BaseMap for Map {
         }
     }
 
-    fn get_available_exits(&self, idx:usize) -> Vec<(usize, f32)> {
+    fn get_available_exits(&self, idx:usize) -> rltk::SmallVec<[(usize, f32); 10]> {
         const DIAGONAL_COST : f32 = 1.5;
-        let mut exits : Vec<(usize, f32)> = Vec::new();
+        let mut exits = rltk::SmallVec::new();
         let x = idx as i32 % self.width;
         let y = idx as i32 / self.width;
         let tt = self.tiles[idx as usize];
