@@ -263,13 +263,6 @@ pub struct Rect {
 }
 ```
 
-Lastly, we should extend the game saving code to dump the map to the console:
-
-```rust
-let data = serde_json::to_string(&*self.ecs.fetch::<Map>()).unwrap();
-println!("{}", data);
-```
-
 If you `cargo run` the project now, when you hit escape it will dump a huge blob of JSON data to the console. That's the game map!
 
 # Saving entity state
