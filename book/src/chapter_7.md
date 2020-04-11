@@ -619,7 +619,7 @@ Now we modify the `monster_ai_system`. There's a bit of clean-up here, and the "
 
 ```rust
 use specs::prelude::*;
-use super::{Viewshed, Monster, Map, Position, WantsToMelee};
+use super::{Viewshed, Monster, Map, Position, WantsToMelee, RunState};
 use rltk::{Point};
 
 pub struct MonsterAI {}
@@ -629,6 +629,7 @@ impl<'a> System<'a> for MonsterAI {
     type SystemData = ( WriteExpect<'a, Map>,
                         ReadExpect<'a, Point>,
                         ReadExpect<'a, Entity>,
+                        ReadExpect<'a, RunState>,
                         Entities<'a>,
                         WriteStorage<'a, Viewshed>,
                         ReadStorage<'a, Monster>,
@@ -774,21 +775,21 @@ Lastly, we modify `monster_ai_system` to only run if the state is `MonsterTurn` 
 
 ```rust
 impl<'a> System<'a> for MonsterAI {
-#[allow(clippy::type_complexity)]
-type SystemData = ( WriteExpect<'a, Map>,
-                    ReadExpect<'a, Point>,
-                    ReadExpect<'a, Entity>,
-                    ReadExpect<'a, RunState>,
-                    Entities<'a>,
-                    WriteStorage<'a, Viewshed>, 
-                    ReadStorage<'a, Monster>,
-                    WriteStorage<'a, Position>,
-                    WriteStorage<'a, WantsToMelee>);
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( WriteExpect<'a, Map>,
+                        ReadExpect<'a, Point>,
+                        ReadExpect<'a, Entity>,
+                        ReadExpect<'a, RunState>,
+                        Entities<'a>,
+                        WriteStorage<'a, Viewshed>,
+                        ReadStorage<'a, Monster>,
+                        WriteStorage<'a, Position>,
+                        WriteStorage<'a, WantsToMelee>);
 
-fn run(&mut self, data : Self::SystemData) {
-    let (mut map, player_pos, player_entity, runstate, entities, mut viewshed, monster, mut position, mut wants_to_melee) = data;
+    fn run(&mut self, data : Self::SystemData) {
+        let (mut map, player_pos, player_entity, runstate, entities, mut viewshed, monster, mut position, mut wants_to_melee) = data;
 
-    if *runstate != RunState::MonsterTurn { return; }
+        if *runstate != RunState::MonsterTurn { return; }
 ```
 
 If you `cargo run` the project, it now behaves as you'd expect: the player moves, and things he/she kills die before they can respond.
