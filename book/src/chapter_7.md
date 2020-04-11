@@ -411,7 +411,7 @@ impl<'a> System<'a> for MapIndexingSystem {
             if let Some(_p) = _p {
                 map.blocked[idx] = true;
             }
-            
+
             // Push the entity to the appropriate index slot. It's a Copy
             // type, so we don't need to clone it (we want to avoid moving it out of the ECS!)
             map.tile_content[idx].push(entity);
@@ -728,7 +728,7 @@ fn tick(&mut self, ctx : &mut Rltk) {
             let runstate = self.ecs.fetch::<RunState>();
             newrunstate = *runstate;
         }
-        
+
         match newrunstate {
             RunState::PreRun => {
                 self.run_systems();
@@ -790,6 +790,26 @@ impl<'a> System<'a> for MonsterAI {
         let (mut map, player_pos, player_entity, runstate, entities, mut viewshed, monster, mut position, mut wants_to_melee) = data;
 
         if *runstate != RunState::MonsterTurn { return; }
+```
+
+Don't forget to make sure that all of the systems are now in `run_systems` (in `main.rs`):
+
+```rust
+impl State {
+    fn run_systems(&mut self) {
+        let mut vis = VisibilitySystem{};
+        vis.run_now(&self.ecs);
+        let mut mob = MonsterAI{};
+        mob.run_now(&self.ecs);
+        let mut mapindex = MapIndexingSystem{};
+        mapindex.run_now(&self.ecs);
+        let mut melee = MeleeCombatSystem{};
+        melee.run_now(&self.ecs);
+        let mut damage = DamageSystem{};
+        damage.run_now(&self.ecs);
+        self.ecs.maintain();
+    }
+}
 ```
 
 If you `cargo run` the project, it now behaves as you'd expect: the player moves, and things he/she kills die before they can respond.

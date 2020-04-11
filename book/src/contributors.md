@@ -47,6 +47,7 @@ The following people have contributed to this project:
 * [HammerAndTongs](https://github.com/hammerandtongs) noticed that the A* implementation also needs to implement `get_pathing_distance`.
 * [mdtro](https://github.com/mdtro) found a problem with the Chapter 7 code.
 * [pprobst](https://github.com/pprobst) noticed that tool-tips were revealing hidden monsters.
+* [Ben Doerr](https://github.com/bendoerr) reminded me to remind you to run the new systems created in chapter 7.
 
 ## Supporters
 
