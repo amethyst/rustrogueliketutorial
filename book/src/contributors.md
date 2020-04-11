@@ -46,6 +46,7 @@ The following people have contributed to this project:
 * [Luca Beltrami](https://github.com/sigfriedmcwild) pointed out that I don't need `extern crate` and `macro_use` anymore.
 * [HammerAndTongs](https://github.com/hammerandtongs) noticed that the A* implementation also needs to implement `get_pathing_distance`.
 * [mdtro](https://github.com/mdtro) found a problem with the Chapter 7 code.
+* [pprobst](https://github.com/pprobst) noticed that tool-tips were revealing hidden monsters.
 
 ## Supporters
 
