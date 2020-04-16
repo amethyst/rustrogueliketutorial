@@ -40,8 +40,7 @@ mod ai;
 mod movement_system;
 #[macro_use]
 extern crate lazy_static;
-
-
+pub mod spatial;
 
 const SHOW_MAPGEN_VISUALIZER : bool = false;
 

@@ -297,9 +297,8 @@ impl<'a> System<'a> for MovementSystem {
                 rltk::console::log(format!("Not implemented yet."));
             } else if let Some(pos) = position.get(entity) {
                 let idx = map.xy_idx(pos.x, pos.y);
-                if blockers.get(entity).is_some() {
-                    map.blocked[idx] = false;
-                }
+                let dest_idx = map.xy_idx(teleport.dest_x, teleport.dest_y);
+                crate::spatial::move_entity(entity, idx, dest_idx);
                 other_level.insert(entity, OtherLevelPosition{ 
                     x: teleport.dest_x, 
                     y: teleport.dest_y, 
@@ -314,11 +313,7 @@ impl<'a> System<'a> for MovementSystem {
         for (entity, movement, mut pos) in (&entities, &apply_move, &mut position).join() {
             let start_idx = map.xy_idx(pos.x, pos.y);
             let dest_idx = movement.dest_idx as usize;
-            let is_blocking = blockers.get(entity);
-            if is_blocking.is_some() {
-                map.blocked[start_idx] = false;
-                map.blocked[dest_idx] = true;
-            }
+            crate::spatial::move_entity(entity, start_idx, dest_idx);
             pos.x = movement.dest_idx as i32 % map.width;
             pos.y = movement.dest_idx as i32 / map.width;
             if let Some(vs) = viewsheds.get_mut(entity) {
@@ -326,7 +321,7 @@ impl<'a> System<'a> for MovementSystem {
             }
             moved.insert(entity, EntityMoved{}).expect("Unable to insert");
         }
-        apply_move.clear();        
+        apply_move.clear();
     }
 }
 ```

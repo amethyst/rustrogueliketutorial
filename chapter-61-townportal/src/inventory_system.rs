@@ -87,9 +87,7 @@ impl<'a> System<'a> for ItemUseSystem {
                         None => {
                             // Single target in tile
                             let idx = map.xy_idx(target.x, target.y);
-                            for mob in map.tile_content[idx].iter() {
-                                targets.push(*mob);
-                            }
+                            crate::spatial::for_each_tile_content(idx, |mob| targets.push(mob) );
                         }
                         Some(area_effect) => {
                             // AoE
@@ -97,9 +95,7 @@ impl<'a> System<'a> for ItemUseSystem {
                             blast_tiles.retain(|p| p.x > 0 && p.x < map.width-1 && p.y > 0 && p.y < map.height-1 );
                             for tile_idx in blast_tiles.iter() {
                                 let idx = map.xy_idx(tile_idx.x, tile_idx.y);
-                                for mob in map.tile_content[idx].iter() {
-                                    targets.push(*mob);
-                                }
+                                crate::spatial::for_each_tile_content(idx, |mob| targets.push(mob));
                                 particle_builder.request(tile_idx.x, tile_idx.y, rltk::RGB::named(rltk::ORANGE), rltk::RGB::named(rltk::BLACK), rltk::to_cp437('░'), 200.0);
                             }
                         }
