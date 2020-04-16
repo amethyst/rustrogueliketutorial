@@ -39,8 +39,7 @@ mod lighting_system;
 mod ai;
 #[macro_use]
 extern crate lazy_static;
-
-
+pub mod spatial;
 
 const SHOW_MAPGEN_VISUALIZER : bool = true;
 
