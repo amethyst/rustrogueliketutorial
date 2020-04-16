@@ -30,13 +30,12 @@ impl<'a> System<'a> for ApproachAI {
                 &mut *map
             );
             if path.success && path.steps.len()>1 {
-                let mut idx = map.xy_idx(pos.x, pos.y);
-                map.blocked[idx] = false;
+                let idx = map.xy_idx(pos.x, pos.y);
                 pos.x = path.steps[1] as i32 % map.width;
                 pos.y = path.steps[1] as i32 / map.width;
                 entity_moved.insert(entity, EntityMoved{}).expect("Unable to insert marker");
-                idx = map.xy_idx(pos.x, pos.y);
-                map.blocked[idx] = true;
+                let new_idx = map.xy_idx(pos.x, pos.y);
+                crate::spatial::move_entity(entity, idx, new_idx);
                 viewshed.dirty = true;
             }
         }
