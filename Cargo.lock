@@ -844,6 +844,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "chapter-57a-spatial"
+version = "0.1.0"
+dependencies = [
+ "lazy_static",
+ "regex",
+ "rltk",
+ "serde",
+ "serde_json",
+ "specs",
+ "specs-derive",
+]
+
+[[package]]
 name = "chapter-58-itemstats"
 version = "0.1.0"
 dependencies = [

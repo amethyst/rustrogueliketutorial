@@ -59,6 +59,7 @@
     - [Backtracking](./chapter_55.md)
     - [Into the caverns](./chapter_56.md)
     - [Better AI](./chapter_57.md)
+    - [Spatial Indexing Revisited](./chapter_57a.md)
     - [Item Stats and Vendors](./chapter_58.md)
     - [Deep caverns](./chapter_59.md)
     - [Cavern to Dwarf Fort](./chapter_60.md)

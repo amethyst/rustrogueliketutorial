@@ -55,6 +55,7 @@ CALL :Stage chapter-54-xp
 CALL :Stage chapter-55-backtrack
 CALL :Stage chapter-56-caverns
 CALL :Stage chapter-57-ai
+CALL :Stage chapter-57a-spatial
 CALL :Stage chapter-58-itemstats
 CALL :Stage chapter-59-caverns2
 CALL :Stage chapter-60-caverns3
