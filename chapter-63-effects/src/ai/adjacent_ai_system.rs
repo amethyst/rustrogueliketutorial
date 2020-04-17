@@ -55,12 +55,12 @@ impl<'a> System<'a> for AdjacentAI {
 }
 
 fn evaluate(idx : usize, map : &Map, factions : &ReadStorage<Faction>, my_faction : &str, reactions : &mut Vec<(Entity, Reaction)>) {
-    for other_entity in map.tile_content[idx].iter() {
-        if let Some(faction) = factions.get(*other_entity) {
+    crate::spatial::for_each_tile_content(idx, |other_entity| {
+        if let Some(faction) = factions.get(other_entity) {
             reactions.push((
-                *other_entity,
+                other_entity,
                 crate::raws::faction_reaction(my_faction, &faction.name, &crate::raws::RAWS.lock().unwrap())
             ));
         }
-    }
+    });
 }

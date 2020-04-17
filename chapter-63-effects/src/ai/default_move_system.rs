@@ -42,8 +42,8 @@ impl<'a> System<'a> for DefaultMoveAI {
 
                     if x > 0 && x < map.width-1 && y > 0 && y < map.height-1 {
                         let dest_idx = map.xy_idx(x, y);
-                        if !map.blocked[dest_idx] {
-                            apply_move.insert(entity, ApplyMove{ dest_idx : dest_idx })
+                        if !crate::spatial::is_blocked(dest_idx) {
+                            apply_move.insert(entity, ApplyMove{ dest_idx })
                                 .expect("Unable to insert");
                             turn_done.push(entity);
                         }
@@ -54,7 +54,7 @@ impl<'a> System<'a> for DefaultMoveAI {
                     if let Some(path) = path {
                         // We have a target - go there
                         if path.len()>1 {
-                            if !map.blocked[path[1] as usize] {
+                            if !crate::spatial::is_blocked(path[1] as usize) {
                                 apply_move.insert(entity, ApplyMove{ dest_idx : path[1] })
                                     .expect("Unable to insert");
                                 path.remove(0); // Remove the first step in the path

@@ -93,10 +93,10 @@ fn tile_effect_hits_entities(effect: &EffectType) -> bool {
 
 fn affect_tile(ecs: &mut World, effect: &EffectSpawner, tile_idx : i32) {
     if tile_effect_hits_entities(&effect.effect_type) {
-        let content = ecs.fetch::<Map>().tile_content[tile_idx as usize].clone();
+        let content = crate::spatial::get_tile_content_clone(tile_idx as usize);
         content.iter().for_each(|entity| affect_entity(ecs, effect, *entity));
     }
-    
+
     match &effect.effect_type {
         EffectType::Bloodstain => damage::bloodstain(ecs, tile_idx),
         EffectType::Particle{..} => particles::particle_to_tile(ecs, tile_idx, &effect),
