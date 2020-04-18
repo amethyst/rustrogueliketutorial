@@ -300,12 +300,13 @@ fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
     if !map.visible_tiles[mouse_idx] { return; }
 
     let mut tip_boxes : Vec<Tooltip> = Vec::new();
-    for entity in map.tile_content[mouse_idx].iter().filter(|e| hidden.get(**e).is_none()) {
+    crate::spatial::for_each_tile_content(mouse_idx, |entity| {
+        if hidden.get(entity).is_some() { return; }
         let mut tip = Tooltip::new();
-        tip.add(get_item_display_name(ecs, *entity));
+        tip.add(get_item_display_name(ecs, entity));
 
         // Comment on attributes
-        let attr = attributes.get(*entity);
+        let attr = attributes.get(entity);
         if let Some(attr) = attr {
             let mut s = "".to_string();
             if attr.might.bonus < 0 { s += "Weak. " };
@@ -323,7 +324,7 @@ fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
         }
 
         // Comment on pools
-        let stat = pools.get(*entity);
+        let stat = pools.get(entity);
         if let Some(stat) = stat {
             tip.add(format!("Level: {}", stat.level));
         }
@@ -333,13 +334,13 @@ fn draw_tooltips(ecs: &World, ctx : &mut Rltk) {
         let durations = ecs.read_storage::<Duration>();
         let names = ecs.read_storage::<Name>();
         for (status, duration, name) in (&statuses, &durations, &names).join() {
-            if status.target == *entity {
+            if status.target == entity {
                 tip.add(format!("{} ({})", name.name, duration.turns));
             }
         }
 
         tip_boxes.push(tip);
-    }
+    });
 
     if tip_boxes.is_empty() { return; }
 
