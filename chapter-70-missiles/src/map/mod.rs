@@ -16,17 +16,12 @@ pub struct Map {
     pub height : i32,
     pub revealed_tiles : Vec<bool>,
     pub visible_tiles : Vec<bool>,
-    pub blocked : Vec<bool>,
     pub depth : i32,
     pub bloodstains : HashSet<usize>,
     pub view_blocked : HashSet<usize>,
     pub name : String,
     pub outdoors : bool,
     pub light : Vec<rltk::RGB>,
-
-    #[serde(skip_serializing)]
-    #[serde(skip_deserializing)]
-    pub tile_content : Vec<Vec<Entity>>
 }
 
 impl Map {
@@ -37,13 +32,11 @@ impl Map {
     fn is_exit_valid(&self, x:i32, y:i32) -> bool {
         if x < 1 || x > self.width-1 || y < 1 || y > self.height-1 { return false; }
         let idx = self.xy_idx(x, y);
-        !self.blocked[idx]
+        !crate::spatial::is_blocked(idx)
     }
 
     pub fn populate_blocked(&mut self) {
-        for (i,tile) in self.tiles.iter_mut().enumerate() {
-            self.blocked[i] = !tile_walkable(*tile);
-        }
+        crate::spatial::populate_blocked_from_map(self);
     }
 
     pub fn populate_blocked_multi(&mut self, width : i32, height : i32) {
@@ -51,18 +44,18 @@ impl Map {
         for y in 1 .. self.height-1 {
             for x in 1 .. self.width - 1 {
                 let idx = self.xy_idx(x, y);
-                if !self.blocked[idx] {
+                if !crate::spatial::is_blocked(idx) {
                     for cy in 0..height {
                         for cx in 0..width {
                             let tx = x + cx;
                             let ty = y + cy;
                             if tx < self.width-1 && ty < self.height-1 {
                                 let tidx = self.xy_idx(tx, ty);
-                                if self.blocked[tidx] {
-                                    self.blocked[idx] = true;
+                                if crate::spatial::is_blocked(tidx) {
+                                    crate::spatial::set_blocked(idx, true);
                                 }
                             } else {
-                                self.blocked[idx] = true;
+                                crate::spatial::set_blocked(idx, true);
                             }
                         }
                     }
@@ -72,22 +65,19 @@ impl Map {
     }
 
     pub fn clear_content_index(&mut self) {
-        for content in self.tile_content.iter_mut() {
-            content.clear();
-        }
+        crate::spatial::clear();
     }
 
     /// Generates an empty map, consisting entirely of solid walls
     pub fn new<S : ToString>(new_depth : i32, width: i32, height: i32, name: S) -> Map {
         let map_tile_count = (width*height) as usize;
+        crate::spatial::set_size(map_tile_count);
         Map{
             tiles : vec![TileType::Wall; map_tile_count],
             width,
             height,
             revealed_tiles : vec![false; map_tile_count],
             visible_tiles : vec![false; map_tile_count],
-            blocked : vec![false; map_tile_count],
-            tile_content : vec![Vec::new(); map_tile_count],
             depth: new_depth,
             bloodstains: HashSet::new(),
             view_blocked : HashSet::new(),
