@@ -1,48 +1,30 @@
 use specs::prelude::*;
-use super::{Map, Position, BlocksTile, TileSize};
+use super::{Map, Position, BlocksTile, Pools, spatial};
 
 pub struct MapIndexingSystem {}
 
 impl<'a> System<'a> for MapIndexingSystem {
-    type SystemData = ( WriteExpect<'a, Map>,
+    type SystemData = ( ReadExpect<'a, Map>,
                         ReadStorage<'a, Position>,
                         ReadStorage<'a, BlocksTile>,
-                        ReadStorage<'a, TileSize>,
+                        ReadStorage<'a, Pools>,
                         Entities<'a>,);
 
     fn run(&mut self, data : Self::SystemData) {
-        let (mut map, position, blockers, sizes, entities) = data;
+        let (map, position, blockers, pools, entities) = data;
 
-        map.populate_blocked();
-        map.clear_content_index();
+        spatial::clear();
+        spatial::populate_blocked_from_map(&*map);
         for (entity, position) in (&entities, &position).join() {
-            let idx = map.xy_idx(position.x, position.y);
-
-            if let Some(size) = sizes.get(entity) {
-                // Multi-tile
-                for y in position.y .. position.y + size.y {
-                    for x in position.x .. position.x + size.x {
-                        if x > 0 && x < map.width-1 && y > 0 && y < map.height-1 {
-                            let idx = map.xy_idx(x, y);
-                            if blockers.get(entity).is_some() {
-                                map.blocked[idx] = true;
-                            }
-
-                            // Push the entity to the appropriate index slot. It's a Copy
-                            // type, so we don't need to clone it (we want to avoid moving it out of the ECS!)
-                            map.tile_content[idx].push(entity);
-                        }
-                    }
+            let mut alive = true;
+            if let Some(pools) = pools.get(entity) {
+                if pools.hit_points.current < 1 {
+                    alive = false;
                 }
-            } else {
-                // Single Tile
-                if blockers.get(entity).is_some() {
-                    map.blocked[idx] = true;
-                }
-
-                // Push the entity to the appropriate index slot. It's a Copy
-                // type, so we don't need to clone it (we want to avoid moving it out of the ECS!)
-                map.tile_content[idx].push(entity);
+            }
+            if alive {
+                let idx = map.xy_idx(position.x, position.y);
+                spatial::index_entity(entity, idx, blockers.get(entity).is_some());
             }
         }
     }
