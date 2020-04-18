@@ -12,13 +12,13 @@ pub fn inflict_damage(ecs: &mut World, damage: &EffectSpawner, target: Entity) {
             if let EffectType::Damage{amount} = damage.effect_type {
                 pool.hit_points.current -= amount;
                 add_effect(None, EffectType::Bloodstain, Targets::Single{target});
-                add_effect(None, 
-                    EffectType::Particle{ 
+                add_effect(None,
+                    EffectType::Particle{
                         glyph: rltk::to_cp437('‼'),
                         fg : rltk::RGB::named(rltk::ORANGE),
                         bg : rltk::RGB::named(rltk::BLACK),
                         lifespan: 200.0
-                    }, 
+                    },
                     Targets::Single{target}
                 );
 
@@ -43,9 +43,7 @@ pub fn death(ecs: &mut World, effect: &EffectSpawner, target : Entity) {
     let attributes = ecs.read_storage::<Attributes>();
 
     if let Some(pos) = entity_position(ecs, target) {
-        let mut map_mut = ecs.fetch_mut::<Map>();
-        map_mut.blocked[pos as usize] = false;
-        std::mem::drop(map_mut);
+        crate::spatial::remove_entity(target, pos as usize);
     }
 
     if let Some(source) = effect.creator {
