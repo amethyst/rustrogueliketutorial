@@ -509,7 +509,7 @@ RunState::ShowInventory => {
             let item_entity = result.1.unwrap();
             let names = self.ecs.read_storage::<Name>();
             let mut gamelog = self.ecs.fetch_mut::<gamelog::GameLog>();
-            gamelog.entries.push(format!("You try to use {}, but it isn't written yet", names.get(item_entity)         .unwrap().name));
+            gamelog.entries.push(format!("You try to use {}, but it isn't written yet", names.get(item_entity).unwrap().name));
             newrunstate = RunState::AwaitingInput;
         }
     }
