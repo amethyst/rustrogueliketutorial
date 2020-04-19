@@ -119,7 +119,7 @@ We're going to extend the function to spawn multiple monsters per room, with 0 b
 
 ```rust
 pub const MAPWIDTH : usize = 80;
-pub const MAPHEIGHT : usize = 50;
+pub const MAPHEIGHT : usize = 43;
 pub const MAPCOUNT : usize = MAPHEIGHT * MAPWIDTH;
 ```
 
