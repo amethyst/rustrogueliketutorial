@@ -133,9 +133,9 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) -> RunState 
         if pos.x + delta_x < 1 || pos.x + delta_x > map.width-1 || pos.y + delta_y < 1 || pos.y + delta_y > map.height-1 { return RunState::AwaitingInput; }
         let destination_idx = map.xy_idx(pos.x + delta_x, pos.y + delta_y);
 
-        crate::spatial::for_each_tile_content(destination_idx, |potential_target| {
+        result = crate::spatial::for_each_tile_content_with_gamemode(destination_idx, |potential_target| {
             if let Some(_vendor) = vendors.get(potential_target) {
-                result = RunState::ShowVendor{ vendor: potential_target, mode : VendorMode::Sell }
+                return Some(RunState::ShowVendor{ vendor: potential_target, mode : VendorMode::Sell });
             }
 
             let mut hostile = true;
@@ -162,7 +162,7 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) -> RunState 
                 let mut ppos = ecs.write_resource::<Point>();
                 ppos.x = pos.x;
                 ppos.y = pos.y;
-                result = RunState::Ticking;
+                return Some(RunState::Ticking);
             } else {
                 let target = combat_stats.get(potential_target);
                 if let Some(_target) = target {
@@ -178,8 +178,9 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) -> RunState 
                 let glyph = renderables.get_mut(potential_target).unwrap();
                 glyph.glyph = rltk::to_cp437('/');
                 viewshed.dirty = true;
-                result = RunState::Ticking;
+                return Some(RunState::Ticking);
             }
+            None
         });
 
         if !crate::spatial::is_blocked(destination_idx) {
