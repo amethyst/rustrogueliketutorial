@@ -25,24 +25,24 @@ impl<'a> System<'a> for MapIndexingSystem {
                         if x > 0 && x < map.width-1 && y > 0 && y < map.height-1 {
                             let idx = map.xy_idx(x, y);
                             if blockers.get(entity).is_some() {
-                                map.blocked[idx] = true;
+                                crate::spatial::set_blocked(idx, true);
                             }
 
                             // Push the entity to the appropriate index slot. It's a Copy
                             // type, so we don't need to clone it (we want to avoid moving it out of the ECS!)
-                            map.tile_content[idx].push(entity);
+                            crate::spatial::index_entity(entity, idx, true);
                         }
                     }
                 }
             } else {
                 // Single Tile
                 if blockers.get(entity).is_some() {
-                    map.blocked[idx] = true;
+                    crate::spatial::set_blocked(idx, true);
                 }
 
                 // Push the entity to the appropriate index slot. It's a Copy
                 // type, so we don't need to clone it (we want to avoid moving it out of the ECS!)
-                map.tile_content[idx].push(entity);
+                crate::spatial::index_entity(entity, idx, true);
             }
         }
     }

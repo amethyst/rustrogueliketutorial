@@ -27,6 +27,7 @@ pub mod effects;
 extern crate lazy_static;
 mod systems;
 pub mod rng;
+pub mod spatial;
 
 const SHOW_MAPGEN_VISUALIZER : bool = false;
 const SHOW_FPS : bool = true;
