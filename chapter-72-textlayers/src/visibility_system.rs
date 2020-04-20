@@ -43,21 +43,21 @@ impl<'a> System<'a> for VisibilitySystem {
                             map.visible_tiles[idx] = true;
 
                             // Chance to reveal hidden things
-                            for e in map.tile_content[idx].iter() {
-                                let maybe_hidden = hidden.get(*e);
+                            crate::spatial::for_each_tile_content(idx, |e| {
+                                let maybe_hidden = hidden.get(e);
                                 if let Some(_maybe_hidden) = maybe_hidden {
                                     if rng.roll_dice(1,24)==1 {
-                                        let name = names.get(*e);
+                                        let name = names.get(e);
                                         if let Some(name) = name {
                                             crate::gamelog::Logger::new()
                                                 .append("You spotted:")
                                                 .npc_name(&name.name)
                                                 .log();
                                         }
-                                        hidden.remove(*e);
+                                        hidden.remove(e);
                                     }
                                 }
-                            }
+                            });
                         }
                     }
                 }

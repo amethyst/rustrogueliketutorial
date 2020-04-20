@@ -41,6 +41,7 @@ mod movement_system;
 pub mod effects;
 #[macro_use]
 extern crate lazy_static;
+pub mod spatial;
 
 const SHOW_MAPGEN_VISUALIZER : bool = false;
 
