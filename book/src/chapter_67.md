@@ -543,50 +543,47 @@ Fortunately, we can solve a *lot* of this with the `map_indexing_system`. The sy
 
 ```rust
 use specs::prelude::*;
-use super::{Map, Position, BlocksTile, TileSize};
+use super::{Map, Position, BlocksTile, Pools, spatial, TileSize};
 
 pub struct MapIndexingSystem {}
 
 impl<'a> System<'a> for MapIndexingSystem {
-    type SystemData = ( WriteExpect<'a, Map>,
+    #[allow(clippy::type_complexity)]
+    type SystemData = ( ReadExpect<'a, Map>,
                         ReadStorage<'a, Position>,
                         ReadStorage<'a, BlocksTile>,
+                        ReadStorage<'a, Pools>,
                         ReadStorage<'a, TileSize>,
                         Entities<'a>,);
 
     fn run(&mut self, data : Self::SystemData) {
-        let (mut map, position, blockers, sizes, entities) = data;
+        let (map, position, blockers, pools, sizes, entities) = data;
 
-        map.populate_blocked();
-        map.clear_content_index();
+        spatial::clear();
+        spatial::populate_blocked_from_map(&*map);
         for (entity, position) in (&entities, &position).join() {
-            let idx = map.xy_idx(position.x, position.y);
-
-            if let Some(size) = sizes.get(entity) {
-                // Multi-tile
-                for y in position.y .. position.y + size.y {
-                    for x in position.x .. position.x + size.x {
-                        if x > 0 && x < map.width-1 && y > 0 && y < map.height-1 {
-                            let idx = map.xy_idx(x, y);
-                            if blockers.get(entity).is_some() {
-                                map.blocked[idx] = true;
+            let mut alive = true;
+            if let Some(pools) = pools.get(entity) {
+                if pools.hit_points.current < 1 {
+                    alive = false;
+                }
+            }
+            if alive {
+                if let Some(size) = sizes.get(entity) {
+                    // Multi-tile
+                    for y in position.y .. position.y + size.y {
+                        for x in position.x .. position.x + size.x {
+                            if x > 0 && x < map.width-1 && y > 0 && y < map.height-1 {
+                                let idx = map.xy_idx(x, y);
+                                spatial::index_entity(entity, idx, blockers.get(entity).is_some());
                             }
-
-                            // Push the entity to the appropriate index slot. It's a Copy
-                            // type, so we don't need to clone it (we want to avoid moving it out of the ECS!)
-                            map.tile_content[idx].push(entity);
                         }
                     }
+                } else {
+                    // Single tile
+                    let idx = map.xy_idx(position.x, position.y);
+                    spatial::index_entity(entity, idx, blockers.get(entity).is_some());
                 }
-            } else {
-                // Single Tile
-                if blockers.get(entity).is_some() {
-                    map.blocked[idx] = true;
-                }
-
-                // Push the entity to the appropriate index slot. It's a Copy
-                // type, so we don't need to clone it (we want to avoid moving it out of the ECS!)
-                map.tile_content[idx].push(entity);
             }
         }
     }
@@ -849,18 +846,18 @@ pub fn populate_blocked_multi(&mut self, width : i32, height : i32) {
     for y in 1 .. self.height-1 {
         for x in 1 .. self.width - 1 {
             let idx = self.xy_idx(x, y);
-            if !self.blocked[idx] {
+            if !crate::spatial::is_blocked(idx) {
                 for cy in 0..height {
                     for cx in 0..width {
                         let tx = x + cx;
                         let ty = y + cy;
                         if tx < self.width-1 && ty < self.height-1 {
                             let tidx = self.xy_idx(tx, ty);
-                            if self.blocked[tidx] {
-                                self.blocked[idx] = true;
+                            if crate::spatial::is_blocked(tidx) {
+                                crate::spatial::set_blocked(idx, true);
                             }
                         } else {
-                            self.blocked[idx] = true;
+                            crate::spatial::set_blocked(idx, true);
                         }
                     }
                 }
