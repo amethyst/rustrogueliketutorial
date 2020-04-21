@@ -72,6 +72,7 @@ CALL :Stage chapter-70-missiles
 CALL :Stage chapter-71-logging
 CALL :Stage chapter-72-textlayers
 CALL :Stage chapter-73-systems
+CALL :Stage chapter-74-darkcity
 
 REM Publish or perish
 cd book\book\wasm
