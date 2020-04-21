@@ -75,7 +75,7 @@ These are:
 The auto-generated `main.rs` file looks like this:
 
 ```rust
-fn main() -> rltk::BError {
+fn main() {
     println!("Hello, world!");
 }
 ```
