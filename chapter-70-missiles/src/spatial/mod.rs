@@ -1,6 +1,6 @@
 use std::sync::Mutex;
 use specs::prelude::*;
-use crate::{ Map, tile_walkable };
+use crate::{ Map, tile_walkable, RunState };
 
 struct SpatialMap {
     blocked : Vec<(bool, bool)>,
@@ -66,6 +66,19 @@ where F : FnMut(Entity)
     for entity in lock.tile_content[idx].iter() {
         f(entity.0);
     }
+}
+
+pub fn for_each_tile_content_with_gamemode<F>(idx: usize, mut f: F) -> RunState
+where F : FnMut(Entity)->Option<RunState>
+{
+    let lock = SPATIAL_MAP.lock().unwrap();
+    for entity in lock.tile_content[idx].iter() {
+        if let Some(rs) = f(entity.0) {
+            return rs;
+        }
+    }
+
+    RunState::AwaitingInput
 }
 
 pub fn get_tile_content_clone(idx:usize) -> Vec<Entity> {

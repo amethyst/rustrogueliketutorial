@@ -494,7 +494,26 @@ crate::spatial::for_each_tile_content(idx, |mob| targets.push(mob));
 
 ### Fixing player.rs
 
-The function `try_move_player` does a really big query of the spatial indexing system. Replacing it with the new API is mostly a matter of using the new functions, and performing the index check inside the closure. Here's the new function:
+The function `try_move_player` does a really big query of the spatial indexing system. It also sometimes returns mid-calculation, which our API doesn't currently support. We'll add a new function to our `spatial/mod.rs` file to enable this:
+
+```rust
+pub fn for_each_tile_content_with_gamemode<F>(idx: usize, mut f: F) -> RunState
+where F : FnMut(Entity)->Option<RunState>
+{
+    let lock = SPATIAL_MAP.lock().unwrap();
+    for entity in lock.tile_content[idx].iter() {
+        if let Some(rs) = f(entity.0) {
+            return rs;
+        }
+    }
+
+    RunState::AwaitingInput
+}
+```
+
+This function runs like the other one, but accepts an optional game mode from the closure. If the game mode is `Some(x)`, then it returns `x`. If it hasn't received any modes by the end, it returns `AwaitingInput`.
+
+ Replacing it with the new API is mostly a matter of using the new functions, and performing the index check inside the closure. Here's the new function:
 
 ```rust
 pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) -> RunState {
@@ -519,7 +538,7 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) -> RunState 
         if pos.x + delta_x < 1 || pos.x + delta_x > map.width-1 || pos.y + delta_y < 1 || pos.y + delta_y > map.height-1 { return RunState::AwaitingInput; }
         let destination_idx = map.xy_idx(pos.x + delta_x, pos.y + delta_y);
 
-        crate::spatial::for_each_tile_content(destination_idx, |potential_target| {
+        result = crate::spatial::for_each_tile_content_with_gamemode(destination_idx, |potential_target| {
             let mut hostile = true;
             if combat_stats.get(potential_target).is_some() {
                 if let Some(faction) = factions.get(potential_target) {
@@ -544,11 +563,12 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) -> RunState 
                 let mut ppos = ecs.write_resource::<Point>();
                 ppos.x = pos.x;
                 ppos.y = pos.y;
+                return Some(RunState::Ticking);
             } else {
                 let target = combat_stats.get(potential_target);
                 if let Some(_target) = target {
                     wants_to_melee.insert(entity, WantsToMelee{ target: potential_target }).expect("Add target failed");
-                    result = RunState::Ticking;
+                    return Some(RunState::Ticking);
                 }
             }
             let door = doors.get_mut(potential_target);
@@ -559,8 +579,9 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) -> RunState 
                 let glyph = renderables.get_mut(potential_target).unwrap();
                 glyph.glyph = rltk::to_cp437('/');
                 viewshed.dirty = true;
-                result = RunState::Ticking;
+                return Some(RunState::Ticking);
             }
+            None
         });
 
         if !crate::spatial::is_blocked(destination_idx) {
@@ -587,9 +608,12 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) -> RunState 
     for m in swap_entities.iter() {
         let their_pos = positions.get_mut(m.0);
         if let Some(their_pos) = their_pos {
-            // TODO: Swapping
+            let old_idx = map.xy_idx(their_pos.x, their_pos.y);
             their_pos.x = m.1;
             their_pos.y = m.2;
+            let new_idx = map.xy_idx(their_pos.x, their_pos.y);
+            crate::spatial::move_entity(m.0, old_idx, new_idx);
+            result = RunState::Ticking;
         }
     }
 

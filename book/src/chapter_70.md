@@ -257,11 +257,11 @@ fn get_player_target_list(ecs : &mut World) -> Vec<(f32,Entity)> {
                     let tile_idx = map.xy_idx(tile_point.x, tile_point.y);
                     let distance_to_target = rltk::DistanceAlg::Pythagoras.distance2d(*tile_point, rltk::Point::new(player_pos.x, player_pos.y));
                     if distance_to_target < range as f32 {
-                        for possible_target in map.tile_content[tile_idx].iter() {
-                            if *possible_target != *player_entity && factions.get(*possible_target).is_some() {
-                                possible_targets.push((distance_to_target, *possible_target));
+                        crate::spatial::for_each_tile_content(tile_idx, |possible_target| {
+                            if possible_target != *player_entity && factions.get(possible_target).is_some() {
+                                possible_targets.push((distance_to_target, possible_target));
                             }
-                        }
+                        });
                     }
                 }
             }

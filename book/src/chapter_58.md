@@ -689,12 +689,12 @@ let mut swap_entities : Vec<(Entity, i32, i32)> = Vec::new();
 
 for (entity, _player, pos, viewshed) in (&entities, &players, &mut positions, &mut viewsheds).join() {
     if pos.x + delta_x < 1 || pos.x + delta_x > map.width-1 || pos.y + delta_y < 1 || pos.y + delta_y > map.height-1 { return RunState::AwaitingInput; }
-    let destination_idx = map.xy_idx(pos.x + delta_x, pos.y + delta_y);
+        let destination_idx = map.xy_idx(pos.x + delta_x, pos.y + delta_y);
 
-    for potential_target in map.tile_content[destination_idx].iter() {
-        if let Some(_vendor) = vendors.get(*potential_target) {
-            return RunState::ShowVendor{ vendor: *potential_target, mode : VendorMode::Sell }
-        }
+        result = crate::spatial::for_each_tile_content_with_gamemode(destination_idx, |potential_target| {
+            if let Some(_vendor) = vendors.get(potential_target) {
+                return Some(RunState::ShowVendor{ vendor: potential_target, mode : VendorMode::Sell });
+            }
 ...
 ```
 
