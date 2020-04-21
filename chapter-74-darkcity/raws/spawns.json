@@ -73,7 +73,15 @@
     { "name" : "War Axe", "weight" : 7, "min_depth" : 5, "max_depth" : 7 },
     { "name" : "Dwarf-Steel Shirt", "weight" : 1, "min_depth" : 5, "max_depth" : 7 },
     { "name" : "Hand Crossbow", "weight" : 2, "min_depth" : 9, "max_depth" : 11 },
-    { "name" : "Dark Elf", "weight": 10, "min_depth": 10, "max_depth": 11 }
+    { "name" : "Dark Elf", "weight": 10, "min_depth": 10, "max_depth": 11 },
+    { "name" : "Arbat Dark Elf", "weight": 10, "min_depth": 10, "max_depth": 11 },
+    { "name" : "Arbat Dark Elf Leader", "weight": 7, "min_depth": 10, "max_depth": 11 },
+    { "name" : "Arbat Orc Slave", "weight": 14, "min_depth": 10, "max_depth": 11 },
+    { "name" : "Barbo Dark Elf", "weight": 9, "min_depth": 10, "max_depth": 11 },
+    { "name" : "Barbo Goblin Archer", "weight": 13, "min_depth": 10, "max_depth": 11 },
+    { "name" : "Cirro Dark Elf", "weight": 7, "min_depth": 10, "max_depth": 11 },
+    { "name" : "Cirro Dark Priestess", "weight": 6, "min_depth": 10, "max_depth": 11 },
+    { "name" : "Cirro Spider", "weight": 10, "min_depth": 10, "max_depth": 11 }
 ],
 
 "loot_tables" : [
@@ -103,7 +111,10 @@
     { "name" : "Wyrm", "responses": { "Default" : "attack", "Wyrm" : "ignore", "Fungi" : "ignore" }},
     { "name" : "Dwarven Remnant", "responses": { "Default" : "attack", "Player" : "ignore", "Dwarven Remnant" : "ignore" }},
     { "name" : "Fungi", "responses": { "Default" : "attack", "Fungi" : "ignore", "Wyrm" : "ignore" }},
-    { "name" : "DarkElf", "responses" : { "Default" : "attack", "DarkElf" : "ignore" } }
+    { "name" : "DarkElf", "responses" : { "Default" : "attack", "DarkElf" : "ignore" } },
+    { "name" : "DarkElfA", "responses" : { "Default" : "attack", "DarkElfA" : "ignore", "DarkElfB" : "attack", "DarkElfC" : "attack" } },
+    { "name" : "DarkElfB", "responses" : { "Default" : "attack", "DarkElfB" : "ignore", "DarkElfA" : "attack", "DarkElfC" : "attack" } },
+    { "name" : "DarkElfC", "responses" : { "Default" : "attack", "DarkElfC" : "ignore", "DarkElfA" : "attack", "DarkElfB" : "attack" } }
 ],
 
 "items" : [
@@ -1912,6 +1923,157 @@
         "faction" : "DarkElf",
         "gold" : "3d6",
         "level" : 6
+    },
+
+    {
+        "name" : "Arbat Dark Elf",
+        "renderable": {
+            "glyph" : "e",
+            "fg" : "#FFAAAA",
+            "bg" : "#000000",
+            "order" : 1
+        },
+        "blocks_tile" : true,
+        "vision_range" : 8,
+        "movement" : "random_waypoint",
+        "attributes" : {},
+        "equipped" : [ "Scimitar +1", "Buckler", "Drow Chain", "Drow Leggings", "Drow Boots" ],
+        "faction" : "DarkElfA",
+        "gold" : "3d6",
+        "level" : 6
+    },
+
+    {
+        "name" : "Arbat Dark Elf Leader",
+        "renderable": {
+            "glyph" : "E",
+            "fg" : "#FFAAAA",
+            "bg" : "#000000",
+            "order" : 1
+        },
+        "blocks_tile" : true,
+        "vision_range" : 8,
+        "movement" : "random_waypoint",
+        "attributes" : {},
+        "equipped" : [ "Scimitar +2", "Buckler +1", "Drow Chain", "Drow Leggings", "Drow Boots" ],
+        "faction" : "DarkElfA",
+        "gold" : "3d6",
+        "level" : 7
+    },
+
+    {
+        "name" : "Arbat Orc Slave",
+        "renderable": {
+            "glyph" : "o",
+            "fg" : "#FFAAAA",
+            "bg" : "#000000",
+            "order" : 1
+        },
+        "blocks_tile" : true,
+        "vision_range" : 8,
+        "movement" : "static",
+        "attributes" : {},
+        "faction" : "DarkElfA",
+        "gold" : "1d8"
+    },
+
+    {
+        "name" : "Barbo Dark Elf",
+        "renderable": {
+            "glyph" : "e",
+            "fg" : "#FF9900",
+            "bg" : "#000000",
+            "order" : 1
+        },
+        "blocks_tile" : true,
+        "vision_range" : 8,
+        "movement" : "random_waypoint",
+        "attributes" : {},
+        "equipped" : [ "Hand Crossbow +1", "Dagger", "Buckler", "Drow Chain", "Drow Leggings", "Drow Boots" ],
+        "faction" : "DarkElfB",
+        "gold" : "3d6",
+        "level" : 6
+    },
+
+    {
+        "name" : "Barbo Goblin Archer",
+        "renderable": {
+            "glyph" : "g",
+            "fg" : "#FF9900",
+            "bg" : "#000000",
+            "order" : 1
+        },
+        "blocks_tile" : true,
+        "vision_range" : 8,
+        "movement" : "static",
+        "attributes" : {},
+        "faction" : "Cave Goblins",
+        "gold" : "1d6",
+        "equipped" : [ "Shortbow", "Leather Armor", "Leather Boots" ]
+    },
+
+    {
+        "name" : "Cirro Dark Elf",
+        "renderable": {
+            "glyph" : "e",
+            "fg" : "#FF00FF",
+            "bg" : "#000000",
+            "order" : 1
+        },
+        "blocks_tile" : true,
+        "vision_range" : 8,
+        "movement" : "random_waypoint",
+        "attributes" : {},
+        "equipped" : [ "Hand Crossbow", "Scimitar", "Buckler", "Drow Chain", "Drow Leggings", "Drow Boots" ],
+        "faction" : "DarkElfC",
+        "gold" : "3d6",
+        "level" : 7
+    },
+
+    {
+        "name" : "Cirro Dark Priestess",
+        "renderable": {
+            "glyph" : "E",
+            "fg" : "#FF00FF",
+            "bg" : "#000000",
+            "order" : 1
+        },
+        "blocks_tile" : true,
+        "vision_range" : 8,
+        "movement" : "random_waypoint",
+        "attributes" : {},
+        "equipped" : [ "Hand Crossbow", "Scimitar", "Buckler", "Drow Chain", "Drow Leggings", "Drow Boots" ],
+        "faction" : "DarkElfC",
+        "gold" : "3d6",
+        "level" : 8,
+        "abilities" : [
+            { "spell" : "Web", "chance" : 0.2, "range" : 6.0, "min_range" : 3.0 }
+        ]
+    },
+
+    {
+        "name" : "Cirro Spider",
+        "level" : 3,
+        "attributes" : {},
+        "renderable": {
+            "glyph" : "s",
+            "fg" : "#FF00FF",
+            "bg" : "#000000",
+            "order" : 1
+        },
+        "blocks_tile" : true,
+        "vision_range" : 6,
+        "movement" : "static",
+        "natural" : {
+            "armor_class" : 12,
+            "attacks" : [
+                { "name" : "bite", "hit_bonus" : 1, "damage" : "1d12" }
+            ]
+        },
+        "abilities" : [
+            { "spell" : "Web", "chance" : 0.2, "range" : 6.0, "min_range" : 3.0 }
+        ],
+        "faction" : "DarkElfC"
     },
 
     {
