@@ -97,6 +97,7 @@ impl RawMaster {
     fn build_base_magic_item(&self, nmw : &NewMagicItem) -> super::Item {
         let base_item_index = self.item_index[&nmw.name];
         let mut base_item_copy = self.raws.items[base_item_index].clone();
+        base_item_copy.vendor_category = None;
 
         if nmw.bonus == -1 {
             base_item_copy.name = format!("{} -1", nmw.name);
@@ -151,7 +152,7 @@ impl RawMaster {
                 weight : 10 - i32::abs(nmw.bonus),
                 min_depth : 1 + i32::abs((nmw.bonus-1)*3),
                 max_depth : 100,
-                add_map_depth_to_weight : None
+                add_map_depth_to_weight : None,
             });
         }
     }

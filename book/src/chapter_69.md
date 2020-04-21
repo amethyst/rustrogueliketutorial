@@ -623,6 +623,7 @@ fn append_magic_template(items_to_build : &mut Vec<NewMagicItem>, item : &super:
 fn build_base_magic_item(&self, nmw : &NewMagicItem) -> super::Item {
     let base_item_index = self.item_index[&nmw.name];
     let mut base_item_copy = self.raws.items[base_item_index].clone();
+    base_item_copy.vendor_category = None; // Don't sell magic items!
 
     if nmw.bonus == -1 {
         base_item_copy.name = format!("{} -1", nmw.name);
