@@ -167,7 +167,7 @@ RunState::ShowInventory => {
                 newrunstate = RunState::ShowTargeting{ range: is_item_ranged.range, item: item_entity };
             } else {
                 let mut intent = self.ecs.write_storage::<WantsToUseItem>();
-                intent.insert(*self.ecs.fetch::<Entity>(), WantsToUseItem{ item: item_entity }).expect("Unable to insert intent");
+                intent.insert(*self.ecs.fetch::<Entity>(), WantsToUseItem{ item: item_entity, target: None }).expect("Unable to insert intent");
                 newrunstate = RunState::PlayerTurn;
             }
         }
