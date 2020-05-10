@@ -430,7 +430,7 @@ impl<'a> System<'a> for VisibilitySystem {
             if viewshed.dirty {
                 viewshed.dirty = false;
                 viewshed.visible_tiles = field_of_view(Point::new(pos.x, pos.y), viewshed.range, &*map);
-                viewshed.visible_tiles.retain(|p| p.x >= 0 && p.x < map.width-1 && p.y >= 0 && p.y < map.height-1 );
+                viewshed.visible_tiles.retain(|p| p.x >= 0 && p.x < map.width && p.y >= 0 && p.y < map.height );
 
                 // If this is the player, reveal what they can see
                 let _p : Option<&Player> = player.get(ent);
