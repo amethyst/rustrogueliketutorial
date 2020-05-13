@@ -50,6 +50,7 @@ The following people have contributed to this project:
 * [Ben Doerr](https://github.com/bendoerr) reminded me to remind you to run the new systems created in chapter 7.
 * [Charlie Hornsby](https://github.com/chornsby) helped with some text/code inconsistencies in chapter 1.
 * [ddalcino](https://github.com/ddalcino) fixed some FOV issues.
+* [Remi Marchand](https://github.com/Remimstr) helped fix some consistency issues in the text.
 
 ## Supporters
 
