@@ -42,12 +42,6 @@ fn get_available_exits(&self, idx:usize) -> rltk::SmallVec<[(usize, f32); 10]> {
     if self.is_exit_valid(x, y-1) { exits.push((idx-w, 1.0)) };
     if self.is_exit_valid(x, y+1) { exits.push((idx+w, 1.0)) };
 
-    // Diagonals
-    if self.is_exit_valid(x-1, y-1) { exits.push(((idx-w)-1, 1.45)); }
-    if self.is_exit_valid(x+1, y-1) { exits.push(((idx-w)+1, 1.45)); }
-    if self.is_exit_valid(x-1, y+1) { exits.push(((idx+w)-1, 1.45)); }
-    if self.is_exit_valid(x+1, y+1) { exits.push(((idx+w)+1, 1.45)); }
-
     exits
 }
 ```
@@ -255,22 +249,23 @@ Since we already put walls into the blocked list, this should take care of the i
 It would be nice to be able to bypass the monsters - and diagonal movement is a mainstay of roguelikes. So lets go ahead and support it. In `map.rs`'s `get_available_exits` function, we add them:
 
 ```rust
-fn get_available_exits(&self, idx:i32) -> Vec<(i32, f32)> {
-    let mut exits : Vec<(i32, f32)> = Vec::new();
-    let x = idx % self.width;
-    let y = idx / self.width;
+fn get_available_exits(&self, idx:usize) -> rltk::SmallVec<[(usize, f32); 10]> {
+    let mut exits = rltk::SmallVec::new();
+    let x = idx as i32 % self.width;
+    let y = idx as i32 / self.width;
+    let w = self.width as usize;
 
     // Cardinal directions
     if self.is_exit_valid(x-1, y) { exits.push((idx-1, 1.0)) };
     if self.is_exit_valid(x+1, y) { exits.push((idx+1, 1.0)) };
-    if self.is_exit_valid(x, y-1) { exits.push((idx-self.width, 1.0)) };
-    if self.is_exit_valid(x, y+1) { exits.push((idx+self.width, 1.0)) };
+    if self.is_exit_valid(x, y-1) { exits.push((idx-w, 1.0)) };
+    if self.is_exit_valid(x, y+1) { exits.push((idx+w, 1.0)) };
 
     // Diagonals
-    if self.is_exit_valid(x-1, y-1) { exits.push(((idx-self.width)-1, 1.45)); }
-    if self.is_exit_valid(x+1, y-1) { exits.push(((idx-self.width)+1, 1.45)); }
-    if self.is_exit_valid(x-1, y+1) { exits.push(((idx+self.width)-1, 1.45)); }
-    if self.is_exit_valid(x+1, y+1) { exits.push(((idx+self.width)+1, 1.45)); }
+    if self.is_exit_valid(x-1, y-1) { exits.push(((idx-w)-1, 1.45)); }
+    if self.is_exit_valid(x+1, y-1) { exits.push(((idx-w)+1, 1.45)); }
+    if self.is_exit_valid(x-1, y+1) { exits.push(((idx+w)-1, 1.45)); }
+    if self.is_exit_valid(x+1, y+1) { exits.push(((idx+w)+1, 1.45)); }
 
     exits
 }

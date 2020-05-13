@@ -119,7 +119,7 @@ We're going to extend the function to spawn multiple monsters per room, with 0 b
 
 ```rust
 pub const MAPWIDTH : usize = 80;
-pub const MAPHEIGHT : usize = 50;
+pub const MAPHEIGHT : usize = 43;
 pub const MAPCOUNT : usize = MAPHEIGHT * MAPWIDTH;
 ```
 
@@ -509,7 +509,7 @@ RunState::ShowInventory => {
             let item_entity = result.1.unwrap();
             let names = self.ecs.read_storage::<Name>();
             let mut gamelog = self.ecs.fetch_mut::<gamelog::GameLog>();
-            gamelog.entries.push(format!("You try to use {}, but it isn't written yet", names.get(item_entity)         .unwrap().name));
+            gamelog.entries.push(format!("You try to use {}, but it isn't written yet", names.get(item_entity).unwrap().name));
             newrunstate = RunState::AwaitingInput;
         }
     }

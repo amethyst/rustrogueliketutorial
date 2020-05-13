@@ -177,37 +177,7 @@ pub struct Equipped {
 }
 ```
 
-Just like before, we need to register it in `main.rs`, and include it in the serialization and deserialization lists in `saveload_system.rs`. Since this includes an `Entity`, we'll also have a to include wrapper/helper code to make serialization work. The wrapper is a lot like others we've written - it converts `Equipped` into a tuple for save, and back again for loading:
-
-```rust
-// Equipped wrapper
-#[derive(Serialize, Deserialize, Clone)]
-pub struct EquippedData<M>(M, EquipmentSlot);
-
-impl<M: Marker + Serialize> ConvertSaveload<M> for Equipped
-where
-    for<'de> M: Deserialize<'de>,
-{
-    type Data = EquippedData<M>;
-    type Error = NoError;
-
-    fn convert_into<F>(&self, mut ids: F) -> Result<Self::Data, Self::Error>
-    where
-        F: FnMut(Entity) -> Option<M>,
-    {
-        let marker = ids(self.owner).unwrap();
-        Ok(EquippedData(marker, self.slot))
-    }
-
-    fn convert_from<F>(data: Self::Data, mut ids: F) -> Result<Self, Self::Error>
-    where
-        F: FnMut(M) -> Option<Entity>,
-    {
-        let entity = ids(data.0).unwrap();
-        Ok(Equipped{owner: entity, slot : data.1})
-    }
-}
-```
+Just like before, we need to register it in `main.rs`, and include it in the serialization and deserialization lists in `saveload_system.rs`.
 
 ### Actually equipping the item
 
