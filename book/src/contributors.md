@@ -49,6 +49,7 @@ The following people have contributed to this project:
 * [pprobst](https://github.com/pprobst) noticed that tool-tips were revealing hidden monsters.
 * [Ben Doerr](https://github.com/bendoerr) reminded me to remind you to run the new systems created in chapter 7.
 * [Charlie Hornsby](https://github.com/chornsby) helped with some text/code inconsistencies in chapter 1.
+* [ddalcino](https://github.com/ddalcino) fixed some FOV issues.
 
 ## Supporters
 
