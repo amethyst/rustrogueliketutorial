@@ -1,6 +1,7 @@
 # Summary
 
 [Introduction](./chapter_0.md)
+- [Building for the Web](./webbuild.md)
 - [Section 1 - Hello Rust](./chapter_1.md)
     - [Entities and Components](./chapter_2.md)
     - [Walking A Map](./chapter_3.md)
