@@ -77,7 +77,7 @@ fn new_map() -> Vec<TileType> {
 
 There's a fair amount of syntax that we haven't encountered before here, so lets break this down:
 
-1. `fn new_map() -> Vec<TileType>` species a function named `new_map`. It doesn't take any parameters, so it can be called from anywhere.
+1. `fn new_map() -> Vec<TileType>` specifies a function named `new_map`. It doesn't take any parameters, so it can be called from anywhere.
 2. It *returns* a `Vec`. `Vec` is a Rust *Vector* (if you're familiar with C++, it's pretty much exactly the same as a C++ `std::vector`). A vector is like an *array* (see [this Rust by Example chapter](https://doc.rust-lang.org/rust-by-example/primitives/array.html)), which lets you put a bunch of data into a list and access each element. Unlike an *array*, a `Vec` doesn't have a size limit - and the size can change while the program runs. So you can `push` (add) new items, and `remove` them as you go. [Rust by Example has a great chapter on Vectors](https://doc.rust-lang.org/rust-by-example/std/vec.html); it's a good idea to learn about them - they are used *everywhere*.
 3. `let mut map = vec![TileType::Floor; 80*50];` is a confusing looking statement! Lets break it down:
     1. `let mut map` is saying "make a new variable" (`let`), "let me change it" (`mut`) and call it "map".
