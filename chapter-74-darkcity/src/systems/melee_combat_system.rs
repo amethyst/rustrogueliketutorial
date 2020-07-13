@@ -131,7 +131,7 @@ impl<'a> System<'a> for MeleeCombatSystem {
                         //println!("Roll {}, Chance {}", roll, chance);
                         if roll <= (chance * 100.0) as i32 {
                             //println!("Proc!");
-                            let effect_target = if weapon_info.proc_target.unwrap() == "Self" {
+                            let effect_target = if weapon_info.proc_target.as_deref() == Some("Self") {
                                 Targets::Single{ target: entity }
                             } else {
                                 Targets::Single { target : wants_melee.target }
