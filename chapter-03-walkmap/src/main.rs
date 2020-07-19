@@ -67,10 +67,12 @@ fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
     let map = ecs.fetch::<Vec<TileType>>();
 
     for (_player, pos) in (&mut players, &mut positions).join() {
-        let destination_idx = xy_idx(pos.x + delta_x, pos.y + delta_y);
+        let new_x = min(79, max(0, pos.x + delta_x));
+        let new_y = min(49, max(0, pos.y + delta_y));
+        let destination_idx = xy_idx(new_x, new_y);
         if map[destination_idx] != TileType::Wall {
-            pos.x = min(79 , max(0, pos.x + delta_x));
-            pos.y = min(49, max(0, pos.y + delta_y));
+            pos.x = new_x;
+            pos.y = new_y;
         }
     }
 }
