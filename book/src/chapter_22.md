@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 Most roguelikes, like their D&D precursors, feature traps in the dungeon. Walk down an innocent looking hallway, and *oops* - an arrow flies out and hits you. This chapter will implement some simple traps, and then examine some of the game implications they bring.

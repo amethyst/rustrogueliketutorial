@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 Currently, you can advance through multiple dungeon levels - but they all have the same spawns. There's no ramp-up of difficulty as you advance, and no easy-mode to get you through the beginning. This chapter aims to change that.

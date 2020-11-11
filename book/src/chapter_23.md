@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 So far, we've really just had one map design. It's different every time (unless you hit a repeat random seed), which is a great start - but the world of procedural generation leaves so many more possibilities. Over the next few chapters, we'll start building a few different map types.

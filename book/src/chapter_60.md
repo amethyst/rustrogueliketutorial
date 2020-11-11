@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 The design document talks about the caverns giving way to a carefully hewn dwarven fortress - now occupied by vile beasts and a dragon. It would be very jarring to go down a level and suddenly be inside a boxy dwarven fort - so this level will be all about the transition.

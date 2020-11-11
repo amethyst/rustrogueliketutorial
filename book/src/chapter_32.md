@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 We've touched on Voronoi diagrams before, in our spawn placement. In this section, we'll use them to make a map. The algorithm basically subdivides the map into regions, and places walls between them. The result is a bit like a hive. You can play with the distance/adjacency algorithm to adjust the results.

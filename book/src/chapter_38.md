@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 In the last chapter, we abstracted out room *layout* - but kept the actual placement of the rooms the same: they are always rectangles, although this can be mitigated with room explosion and corner rounding. This chapter will add the ability to use rooms of different shapes.

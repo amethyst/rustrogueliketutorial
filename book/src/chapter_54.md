@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 So far, we've delved into the dungeon and really only improved ourselves by finding better gear. Swords, shields and armor with better stats - giving us a chance to survive stronger enemies. That's good, but only half of the equation typically found in roguelikes and RPGs; defeating enemies typically grants *experience points* - and those can be used to better your character.

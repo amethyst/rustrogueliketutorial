@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 Specs provides a really nice dispatcher system: it can automatically employ concurrency, making your game really zoom. So why aren't we using it? Web Assembly! WASM doesn't support threading in the same way as every other platform, and a Specs application compiled with a dispatcher to WASM dies hard on the first attempt to dispatch the systems. It isn't really fair on desktop applications to suffer from this. Also, the current `run_systems` isn't at all nice to look at:

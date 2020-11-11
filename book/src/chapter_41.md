@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 So far, we've firmly tied map size to terminal resolution. You have an 80x50 screen, and use a few lines for the user interface - so everything we've made is 80 tiles wide and 43 tiles high. As you've seen in previous chapters, you can do a *lot* with 3,440 tiles - but sometimes you want more (and sometimes you want less). You may also want a big, open world setting - but we're not going to go there yet! This chapter will start by decoupling the *camera* from the *map*, and then enable map size and screen size to differ. The difficult topic of resizing the user interface will be left for future development.

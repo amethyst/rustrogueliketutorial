@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 A popular method of map generation uses "binary space partition" to sub-divide your map into rectangles of varying size, and then link the resulting rooms together into corridors. You can go a *long* way with this method: Nethack uses it extensively, Dungeon Crawl: Stone Soup uses it sometimes, and my project - One Knight in the Dungeon - uses it for sewer levels. This chapter will use the visualizer from the previous chapter to walk you through using this technique.

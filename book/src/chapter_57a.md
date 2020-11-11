@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 You may have noticed that this chapter is "57A" by filename. Some problems emerged with the spatial indexing system, after the AI changes in chapter 57. Rather than change an already oversized chapter with what is a decent topic in and of itself, I decided that it would be better to insert a section. In this chapter, we're going to revise the `map_indexing_system` and associated data. We have a few goals:

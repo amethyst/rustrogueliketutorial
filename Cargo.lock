@@ -101,11 +101,29 @@ checksum = "0d8c1fef690941d3e7788d328517591fecc684c084084702d6ff1641e993699a"
 [[package]]
 name = "bracket-algorithm-traits"
 version = "0.8.1"
+dependencies = [
+ "bracket-geometry 0.8.1",
+ "smallvec 1.4.2",
+]
+
+[[package]]
+name = "bracket-algorithm-traits"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bec021d386ba4c891ee752738869465aa679b5902c6bcc93ca55532d9a33ab73"
 dependencies = [
- "bracket-geometry",
- "smallvec 1.2.0",
+ "bracket-geometry 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "smallvec 1.4.2",
+]
+
+[[package]]
+name = "bracket-color"
+version = "0.8.1"
+dependencies = [
+ "byteorder",
+ "lazy_static",
+ "parking_lot 0.10.2",
+ "serde",
 ]
 
 [[package]]
@@ -116,8 +134,16 @@ checksum = "cb4064968b35447f0c378010bbf5470ede41d07101bdf3b1fdf29dca5441f91b"
 dependencies = [
  "byteorder",
  "lazy_static",
- "parking_lot 0.10.0",
+ "parking_lot 0.10.2",
  "serde",
+]
+
+[[package]]
+name = "bracket-geometry"
+version = "0.8.1"
+dependencies = [
+ "serde",
+ "ultraviolet",
 ]
 
 [[package]]
@@ -133,16 +159,36 @@ dependencies = [
 [[package]]
 name = "bracket-lib"
 version = "0.8.1"
+dependencies = [
+ "bracket-algorithm-traits 0.8.1",
+ "bracket-color 0.8.1",
+ "bracket-geometry 0.8.1",
+ "bracket-noise 0.8.1",
+ "bracket-pathfinding 0.8.1",
+ "bracket-random 0.8.0",
+ "bracket-terminal 0.8.1",
+]
+
+[[package]]
+name = "bracket-lib"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a0fb005e908ce2e553277e554c32ab06d8b12bea38660da98f2e77e662dea617"
 dependencies = [
- "bracket-algorithm-traits",
- "bracket-color",
- "bracket-geometry",
- "bracket-noise",
- "bracket-pathfinding",
- "bracket-random",
- "bracket-terminal",
+ "bracket-algorithm-traits 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bracket-color 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bracket-geometry 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bracket-noise 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bracket-pathfinding 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bracket-random 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bracket-terminal 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "bracket-noise"
+version = "0.8.1"
+dependencies = [
+ "bracket-random 0.8.0",
 ]
 
 [[package]]
@@ -151,7 +197,16 @@ version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f6b1235bcf925e1ed541da32902abe9ea2313ed388cd6b39038d5bb4b39f611f"
 dependencies = [
- "bracket-random",
+ "bracket-random 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "bracket-pathfinding"
+version = "0.8.1"
+dependencies = [
+ "bracket-algorithm-traits 0.8.1",
+ "bracket-geometry 0.8.1",
+ "smallvec 1.4.2",
 ]
 
 [[package]]
@@ -160,9 +215,20 @@ version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cbd1eeaabc58017f4708c451924db6140fd148ab64f4cb6d433fb0c193cd6733"
 dependencies = [
- "bracket-algorithm-traits",
- "bracket-geometry",
- "smallvec 1.2.0",
+ "bracket-algorithm-traits 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bracket-geometry 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "smallvec 1.4.2",
+]
+
+[[package]]
+name = "bracket-random"
+version = "0.8.0"
+dependencies = [
+ "lazy_static",
+ "rand",
+ "rand_xorshift",
+ "regex",
+ "serde",
 ]
 
 [[package]]
@@ -181,11 +247,9 @@ dependencies = [
 [[package]]
 name = "bracket-terminal"
 version = "0.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2336a503041d18d4335394f8216214593c25e072a9bbb9ae768fe6368071b86b"
 dependencies = [
- "bracket-color",
- "bracket-geometry",
+ "bracket-color 0.8.1",
+ "bracket-geometry 0.8.1",
  "byteorder",
  "console_error_panic_hook",
  "flate2",
@@ -193,8 +257,33 @@ dependencies = [
  "glutin",
  "image",
  "lazy_static",
- "object-pool",
- "parking_lot 0.10.0",
+ "object-pool 0.5.3",
+ "parking_lot 0.10.2",
+ "rand",
+ "ultraviolet",
+ "wasm-bindgen",
+ "wasm-timer",
+ "web-sys",
+ "winit",
+]
+
+[[package]]
+name = "bracket-terminal"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2336a503041d18d4335394f8216214593c25e072a9bbb9ae768fe6368071b86b"
+dependencies = [
+ "bracket-color 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bracket-geometry 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "byteorder",
+ "console_error_panic_hook",
+ "flate2",
+ "glow",
+ "glutin",
+ "image",
+ "lazy_static",
+ "object-pool 0.4.4",
+ "parking_lot 0.10.2",
  "rand",
  "ultraviolet",
  "wasm-bindgen",
@@ -266,14 +355,14 @@ dependencies = [
 name = "chapter-01-hellorust"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "chapter-02-helloecs"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs",
  "specs-derive",
 ]
@@ -282,7 +371,7 @@ dependencies = [
 name = "chapter-03-walkmap"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs",
  "specs-derive",
 ]
@@ -291,7 +380,7 @@ dependencies = [
 name = "chapter-04-newmap"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs",
  "specs-derive",
 ]
@@ -300,7 +389,7 @@ dependencies = [
 name = "chapter-05-fov"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs",
  "specs-derive",
 ]
@@ -309,7 +398,7 @@ dependencies = [
 name = "chapter-06-monsters"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs",
  "specs-derive",
 ]
@@ -318,7 +407,7 @@ dependencies = [
 name = "chapter-07-damage"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs",
  "specs-derive",
 ]
@@ -327,7 +416,7 @@ dependencies = [
 name = "chapter-08-ui"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs",
  "specs-derive",
 ]
@@ -336,7 +425,7 @@ dependencies = [
 name = "chapter-09-items"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs",
  "specs-derive",
 ]
@@ -345,7 +434,7 @@ dependencies = [
 name = "chapter-10-ranged"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs",
  "specs-derive",
 ]
@@ -354,7 +443,7 @@ dependencies = [
 name = "chapter-11-loadsave"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -365,7 +454,7 @@ dependencies = [
 name = "chapter-12-delvingdeeper"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -376,7 +465,7 @@ dependencies = [
 name = "chapter-13-difficulty"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -387,7 +476,7 @@ dependencies = [
 name = "chapter-14-gear"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -398,7 +487,7 @@ dependencies = [
 name = "chapter-16-nicewalls"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -409,7 +498,7 @@ dependencies = [
 name = "chapter-17-blood"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -420,7 +509,7 @@ dependencies = [
 name = "chapter-18-particles"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -431,7 +520,7 @@ dependencies = [
 name = "chapter-19-food"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -442,7 +531,7 @@ dependencies = [
 name = "chapter-20-magicmapping"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -453,7 +542,7 @@ dependencies = [
 name = "chapter-21-rexmenu"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -464,7 +553,7 @@ dependencies = [
 name = "chapter-22-simpletraps"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -475,7 +564,7 @@ dependencies = [
 name = "chapter-23-generic-map"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -486,7 +575,7 @@ dependencies = [
 name = "chapter-24-map-testing"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -497,7 +586,7 @@ dependencies = [
 name = "chapter-25-bsproom-dungeons"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -508,7 +597,7 @@ dependencies = [
 name = "chapter-26-bsp-interiors"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -519,7 +608,7 @@ dependencies = [
 name = "chapter-27-cellular-automata"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -530,7 +619,7 @@ dependencies = [
 name = "chapter-28-drunkards-walk"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -541,7 +630,7 @@ dependencies = [
 name = "chapter-29-mazes"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -552,7 +641,7 @@ dependencies = [
 name = "chapter-30-dla"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -563,7 +652,7 @@ dependencies = [
 name = "chapter-31-symmetry"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -574,7 +663,7 @@ dependencies = [
 name = "chapter-32-voronoi"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -585,7 +674,7 @@ dependencies = [
 name = "chapter-33-wfc"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -596,7 +685,7 @@ dependencies = [
 name = "chapter-34-vaults"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -607,7 +696,7 @@ dependencies = [
 name = "chapter-35-vaults2"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -618,7 +707,7 @@ dependencies = [
 name = "chapter-36-layers"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -629,7 +718,7 @@ dependencies = [
 name = "chapter-37-layers2"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -640,7 +729,7 @@ dependencies = [
 name = "chapter-38-rooms"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -651,7 +740,7 @@ dependencies = [
 name = "chapter-39-halls"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -662,7 +751,7 @@ dependencies = [
 name = "chapter-40-doors"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -673,7 +762,7 @@ dependencies = [
 name = "chapter-41-camera"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -685,7 +774,7 @@ name = "chapter-45-raws1"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -697,7 +786,7 @@ name = "chapter-46-raws2"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -709,7 +798,7 @@ name = "chapter-47-town1"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -721,7 +810,7 @@ name = "chapter-48-town2"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -733,7 +822,7 @@ name = "chapter-49-town3"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -745,7 +834,7 @@ name = "chapter-50-stats"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -758,7 +847,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -771,7 +860,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -784,7 +873,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -797,7 +886,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -810,7 +899,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -823,7 +912,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -836,7 +925,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -849,7 +938,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -862,7 +951,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -875,7 +964,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -888,7 +977,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -901,7 +990,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -914,7 +1003,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -927,7 +1016,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -940,7 +1029,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -953,7 +1042,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -966,7 +1055,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -979,7 +1068,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -992,7 +1081,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -1005,7 +1094,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -1018,7 +1107,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -1031,7 +1120,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -1044,7 +1133,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -1057,7 +1146,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "specs",
@@ -1070,7 +1159,7 @@ version = "0.1.0"
 dependencies = [
  "lazy_static",
  "regex",
- "rltk",
+ "rltk 0.8.1",
  "serde",
  "serde_json",
  "specs",
@@ -1395,7 +1484,7 @@ dependencies = [
  "log",
  "objc",
  "osmesa-sys",
- "parking_lot 0.10.0",
+ "parking_lot 0.10.2",
  "wayland-client",
  "winapi 0.3.8",
  "winit",
@@ -1618,9 +1707,9 @@ dependencies = [
 
 [[package]]
 name = "lock_api"
-version = "0.3.3"
+version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "79b2de95ecb4691949fea4716ca53cdbcfccb2c612e19644a8bad05edcf9f47b"
+checksum = "c4da24a77a3d8a6d4862d95f72e6fdb9c09a643ecdb402d754004a557f2bec75"
 dependencies = [
  "scopeguard",
 ]
@@ -1855,6 +1944,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "object-pool"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "57280719d7b44758cab397e55d4a1a194d4a62575ceea8c794841742b9636e6c"
+dependencies = [
+ "parking_lot 0.10.2",
+]
+
+[[package]]
 name = "ordered-float"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1885,12 +1983,12 @@ dependencies = [
 
 [[package]]
 name = "parking_lot"
-version = "0.10.0"
+version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "92e98c49ab0b7ce5b222f2cc9193fc4efe11c6d0bd4f648e374684a6857b1cfc"
+checksum = "d3a704eb390aafdc107b0e392f56a82b668e3a71366993b5340f5833fd62505e"
 dependencies = [
  "lock_api",
- "parking_lot_core 0.7.0",
+ "parking_lot_core 0.7.2",
 ]
 
 [[package]]
@@ -1910,15 +2008,15 @@ dependencies = [
 
 [[package]]
 name = "parking_lot_core"
-version = "0.7.0"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7582838484df45743c8434fbff785e8edf260c28748353d44bc0da32e0ceabf1"
+checksum = "d58c7c768d4ba344e3e8d72518ac13e259d7c7ade24167003b8488e10b6740a3"
 dependencies = [
  "cfg-if",
  "cloudabi",
  "libc",
  "redox_syscall",
- "smallvec 1.2.0",
+ "smallvec 1.4.2",
  "winapi 0.3.8",
 ]
 
@@ -1958,7 +2056,7 @@ version = "0.5.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ecd45702f76d6d3c75a80564378ae228a85f0b59d2f3ed43c91b4a69eb2ebfc5"
 dependencies = [
- "proc-macro2 1.0.8",
+ "proc-macro2 1.0.24",
  "quote 1.0.2",
  "syn",
 ]
@@ -1974,9 +2072,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.8"
+version = "1.0.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3acb317c6ff86a4e579dfa00fc5e6cca91ecbb4e7eb2df0468805b674eb88548"
+checksum = "1e0704ee1a7e00d7bb417d0770ea303c1bccbabf0ef1667dae92b5967f5f8a71"
 dependencies = [
  "unicode-xid 0.2.0",
 ]
@@ -1996,7 +2094,7 @@ version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "053a8c8bcc71fcce321828dc897a98ab9760bef03a4fc36693c231e5b3216cfe"
 dependencies = [
- "proc-macro2 1.0.8",
+ "proc-macro2 1.0.24",
 ]
 
 [[package]]
@@ -2047,6 +2145,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77d416b86801d23dde1aa643023b775c3a462efc0ed96443add11546cdf1dca8"
 dependencies = [
  "rand_core",
+ "serde",
 ]
 
 [[package]]
@@ -2109,17 +2208,24 @@ checksum = "7fe5bd57d1d7414c6b5ed48563a2c855d995ff777729dcd91c369ec7fea395ae"
 [[package]]
 name = "rltk"
 version = "0.8.1"
+dependencies = [
+ "bracket-lib 0.8.1",
+]
+
+[[package]]
+name = "rltk"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1c83076f8174384edf79d3f4a91934b8c0e1feed6eed943608d54af790f0a7dd"
 dependencies = [
- "bracket-lib",
+ "bracket-lib 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "rust_roguelike_tutorial"
 version = "0.1.0"
 dependencies = [
- "rltk",
+ "rltk 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "specs",
  "specs-derive",
 ]
@@ -2198,20 +2304,20 @@ checksum = "a0eddf2e8f50ced781f288c19f18621fa72a3779e3cb58dbf23b07469b0abeb4"
 
 [[package]]
 name = "serde"
-version = "1.0.106"
+version = "1.0.117"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "36df6ac6412072f67cf767ebbde4133a5b2e88e76dc6187fa7104cd16f783399"
+checksum = "b88fa983de7720629c9387e9f517353ed404164b1e482c970a90c1a4aaf7dc1a"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.106"
+version = "1.0.117"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e549e3abf4fb8621bd1609f11dfc9f5e50320802273b12f3811a67e6716ea6c"
+checksum = "cbd1ae72adb44aab48f325a02444a5fc079349a8d804c1fc922aed3f7454c74e"
 dependencies = [
- "proc-macro2 1.0.8",
+ "proc-macro2 1.0.24",
  "quote 1.0.2",
  "syn",
 ]
@@ -2247,7 +2353,7 @@ dependencies = [
  "hashbrown",
  "mopa",
  "rayon",
- "smallvec 1.2.0",
+ "smallvec 1.4.2",
  "tynm",
 ]
 
@@ -2280,9 +2386,9 @@ dependencies = [
 
 [[package]]
 name = "smallvec"
-version = "1.2.0"
+version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c2fb2ec9bcd216a5b0d0ccf31ab17b5ed1d627960edff65bbe95d3ce221cefc"
+checksum = "fbee7696b84bbf3d89a1c2eccff0850e3047ed46bfcd2e92c29a2d074d57e252"
 
 [[package]]
 name = "smithay-client-toolkit"
@@ -2329,7 +2435,7 @@ version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3e23e09360f3d2190fec4222cd9e19d3158d5da948c0d1ea362df617dd103511"
 dependencies = [
- "proc-macro2 1.0.8",
+ "proc-macro2 1.0.24",
  "quote 1.0.2",
  "syn",
 ]
@@ -2351,11 +2457,11 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "1.0.15"
+version = "1.0.48"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7a0294dc449adc58bb6592fff1a23d3e5e6e235afc6a0ffca2657d19e7bbffe5"
+checksum = "cc371affeffc477f42a221a1e4297aedcea33d47d19b61455588bd9d8f6b19ac"
 dependencies = [
- "proc-macro2 1.0.8",
+ "proc-macro2 1.0.24",
  "quote 1.0.2",
  "unicode-xid 0.2.0",
 ]
@@ -2481,7 +2587,7 @@ dependencies = [
  "bumpalo",
  "lazy_static",
  "log",
- "proc-macro2 1.0.8",
+ "proc-macro2 1.0.24",
  "quote 1.0.2",
  "syn",
  "wasm-bindgen-shared",
@@ -2503,7 +2609,7 @@ version = "0.2.58"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e85031354f25eaebe78bb7db1c3d86140312a911a106b2e29f9cc440ce3e7668"
 dependencies = [
- "proc-macro2 1.0.8",
+ "proc-macro2 1.0.24",
  "quote 1.0.2",
  "syn",
  "wasm-bindgen-backend",
@@ -2525,7 +2631,7 @@ dependencies = [
  "anyhow",
  "heck",
  "log",
- "proc-macro2 1.0.8",
+ "proc-macro2 1.0.24",
  "quote 1.0.2",
  "syn",
  "wasm-bindgen-backend",
@@ -2700,7 +2806,7 @@ dependencies = [
  "mio",
  "mio-extras",
  "objc",
- "parking_lot 0.10.0",
+ "parking_lot 0.10.2",
  "percent-encoding",
  "raw-window-handle",
  "smithay-client-toolkit",

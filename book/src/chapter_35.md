@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 The last chapter was getting overly long, so it was broken into two. In the previous chapter, we learned how to load prefabricated maps and map sections, modified the spawn system so that *meta-builders* could affect the spawn patterns from the previous builder, and demonstrated integration of whole map chunks into levels. In this chapter, we'll explode *room vaults* - prefabricated content that integrates itself into your level. So you might hand-craft some rooms, and have them seamlessly fit into your existing map.

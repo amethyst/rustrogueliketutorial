@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 In the last chapter, we used binary space partition (BSP) to build a dungeon with rooms. BSP is flexible, and can help you with a lot of problems; in this example, we're going to modify BSP to design an interior dungeon - completely inside a rectangular structure (for example, a castle) and with no wasted space other than interior walls.

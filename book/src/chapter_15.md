@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 I've been enjoying writing this tutorial, and people are using it (thank you!) - so I decided to keep adding content. Section 2 is more of a smorgasbord of content than a structured tutorial. I'll keep adding content as we try to build a great roguelike as a community.

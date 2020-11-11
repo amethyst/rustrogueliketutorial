@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 In the last chapter, we added items and inventory - and a single item type, a health potion. Now we'll add a second item type: *a scroll of magic missile*, that lets you zap an entity at range.

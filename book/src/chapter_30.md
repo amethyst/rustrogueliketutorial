@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 Diffusion-Limited Aggregation (DLA) is a fancy name for a constrained form of the drunken walk. It makes organic looking maps, with more of an emphasis on a central area and "arms" coming out of it. With some tricks, it can be made to look quite alien - or quite real. See this [excellent article on Rogue Basin](http://www.roguebasin.com/index.php?title=Diffusion-limited_aggregation).

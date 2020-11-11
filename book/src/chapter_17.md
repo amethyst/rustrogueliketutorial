@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 Our character lives the life of a "murder-hobo", looting and slaying at will - so it only makes sense that the pristine dungeon will start to resemble a charnel house. It also gives us a bridge into a future chapter, in which we'll start to add some particle and visual effects (in ASCII/CP437) to the game.

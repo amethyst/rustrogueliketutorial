@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 And that wraps up section 3 - map building! We've covered a *lot* of ground in this section, learning many techniques for map building. I hope it has inspired you to search for your own interesting combinations, and make fun games! Procedurally generating maps is a *huge* part of making a roguelike, hence it being such a large part of this tutorial.

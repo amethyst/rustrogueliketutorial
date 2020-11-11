@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 A mainstay of dungeon crawl games is the good old-fashioned labyrinth, often featuring a Minotaur. Dungeon Crawl: Stone Soup has a literal minotaur labyrinth, Tome 4 has sand-worm mazes, One Knight has an elven hedge maze. These levels can be annoying for the player, and should be used sparingly: a lot of players don't really enjoy the tedium of exploring to find an exit. This chapter will show you how to make a labyrinth!

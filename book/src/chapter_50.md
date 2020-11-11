@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 Up until now, we've had *very* primitive stats: power and defense. This doesn't give a lot of room for variation, nor does it live up to the Roguelike ideal of drowning the player in numbers (ok, that's an overstatement). In the design document, we mentioned wanting a D&D-like approach to game stats. That gives a *lot* of room to play with things, allowing items with various bonuses (and penalties), and should feel familiar to most people likely to play a game in this genre. It will also require some UI work, but we'll push the bulk of it off until the next chapter.

@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 We have a nicely drawn map, but it shows the whole dungeon! That reduces the usefulness of exploration - if we already know where everything is, why bother exploring? This chapter will add "field of view", and adjust rendering to show the parts of the map we've already discovered. It will also refactor the map into its own structure, rather than just a vector of tiles.

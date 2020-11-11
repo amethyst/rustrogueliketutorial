@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 In this chapter, we'll make a more interesting map. It will be room-based, and look a bit like many of the earlier roguelikes such as Moria - but with less complexity. It will also provide a great starting point for placing monsters!

@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 The remainder of this tutorial will be dedicated to making a Roguelike. [Rogue](https://en.wikipedia.org/wiki/Rogue_(video_game) appeared in 1980, as a text-mode dungeon exploration game. It has spawned an entire genre of "roguelikes": procedurally generated maps, hunting an objective over multiple levels and "permadeath" (restart when you die). The definition is the source of many online fights; I'd rather avoid that!

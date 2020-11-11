@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 Now that we have spells and more advanced item abilities, the player might just be able to survive the first layer of the dwarven fortress we build back in section 4.17! Also, now that NPCs can use special abilities - we should be able to model the evil dragon who (according our design document) occupies the dwarven fortress! This chapter will be all about building the dragon's lair, populating it, and making the dragon a scary - but beatable - foe.

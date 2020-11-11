@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 Our corridor generation so far has been quite primitive, featuring overlaps - and unless you use Voronoi spawning, nothing in them. This chapter will try to offer a few more generation strategies (in turn providing even more map variety), and allow hallways to contain entities.

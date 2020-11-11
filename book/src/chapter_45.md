@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 If you've ever played *Dwarf Fortress*, one of its defining characteristics (under the hood) is the *raw file* system. Huge amounts of the game are detailed in the `raws`, and you can completely "mod" the game into something else. Other games, such as *Tome 4* take this to the extent of defining scripting engine files for *everything* - you can customize the game to your heart's content. Once implemented, `raws` turn your game into more of an *engine* - displaying/managing interactions with content written in the raw files. That isn't to say the engine is simple: it has to support everything that one specifies in the raw files!

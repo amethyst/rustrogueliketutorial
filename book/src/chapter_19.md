@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 Hunger clocks are a controversial feature of a lot of roguelikes. They can really irritate the player if you are spending all of your time looking for food, but they also drive you forward - so you can't sit around without exploring more. Resting to heal becomes more of a risk/reward system, in particular. This chapter will implement a basic hunger clock for the player.

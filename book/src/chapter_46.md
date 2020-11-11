@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 In the previous chapter, we moved spawning to be data-driven: you define your monsters, items and props in a JSON data file - and the spawn function becomes a parser that builds components based on your definitions. That gets you half-way to a data-driven world.

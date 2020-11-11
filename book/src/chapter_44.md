@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 If you plan to *finish* a game, it's important to set out your objectives ahead of time! Traditionally, this has taken the form of a *design document* - a master document outlining the game, and smaller sections detailing what you want to accomplish. In this case, it also forms the skeleton of writing the section. There are thousands of [online references to writing game design documents](https://www.gamasutra.com/blogs/LeandroGonzalez/20160726/277928/How_to_Write_a_Game_Design_Document.php). The format really doesn't matter so long as it acts as a guiding light for development and gives you criteria for which you can say "this is done!"

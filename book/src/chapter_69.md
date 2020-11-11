@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 This chapter will add another level of mushroom grove to the game, this time without a dwarven fortress. It'll also add the final mushroom level, which according to the design document gives way to a dark elven city. Finally, we'll further improve our item story by automating some of the drudge-work going with adding magical and cursed items.

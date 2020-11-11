@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 In the last chapter, we moved to a d20-style (D&D-like) combat system and attributes system. It's functional, but doesn't really give any opportunity to better your character through gear. Finding cool items, and painstakingly maximizing your efficiency is a bedrock of roguelike games - providing a lot of depth, and a feeling that while the game is random you can heavily influence it to get the results you desire.

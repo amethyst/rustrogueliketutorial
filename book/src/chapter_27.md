@@ -8,6 +8,8 @@
 
 *If you enjoy this and would like me to keep writing, please consider supporting [my Patreon](https://www.patreon.com/blackfuture).*
 
+[![Hands-On Rust](./beta-webBanner.jpg)](https://pragprog.com/titles/hwrust/hands-on-rust/)
+
 ---
 
 Sometimes, you need a break from rectangular rooms. You might want a nice, organic looking cavern; a winding forest trail, or a spooky quarry. *One Knight in the Dungeon* uses cellular automata for this purpose, inspired by [this excellent article](http://www.roguebasin.com/index.php?title=Cellular_Automata_Method_for_Generating_Random_Cave-Like_Levels). This chapter will help you create natural looking maps.
