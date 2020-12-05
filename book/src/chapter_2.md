@@ -226,7 +226,7 @@ The other interesting thing here are the parentheses. In Rust, when you wrap var
 ```rust
 ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
 ```
-We're running this for *every* entity that has *both* a `Position` and a `Renderable` component. The `join` method is passing us both, guaranteed to belong to the same enitity. Any entities that have one or the other - but not both - simply won't be included in the data returned to us.
+We're running this for *every* entity that has *both* a `Position` and a `Renderable` component. The `join` method is passing us both, guaranteed to belong to the same entity. Any entities that have one or the other - but not both - simply won't be included in the data returned to us.
 
 `ctx` is the instance of RLTK passed to us when `tick` runs. It offers a function called `set`, that sets a single terminal character to the glyph/colors of your choice. So we pass it the data from `pos` (the `Position` component for that entity), and the colors/glyph from `render` (the `Renderable` component for that entity).
 
