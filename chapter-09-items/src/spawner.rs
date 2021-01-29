@@ -31,10 +31,10 @@ pub fn spawn_room(ecs: &mut World, room : &Rect) {
     // Scope to keep the borrow checker happy
     {
         let mut rng = ecs.write_resource::<RandomNumberGenerator>();
-        let num_monsters = rng.roll_dice(1, MAX_MONSTERS + 2) - 3;
-        let num_items = rng.roll_dice(1, MAX_ITEMS + 2) - 3;
+        let num_monsters = rng.roll_dice(1, MAX_MONSTERS + 1) - 1;
+        let num_items = rng.roll_dice(1, MAX_ITEMS + 1) - 1;
 
-        for _i in 0 .. num_monsters {
+        for _i in 0..num_monsters {
             let mut added = false;
             while !added {
                 let x = (room.x1 + rng.roll_dice(1, i32::abs(room.x2 - room.x1))) as usize;
@@ -47,7 +47,7 @@ pub fn spawn_room(ecs: &mut World, room : &Rect) {
             }
         }
 
-        for _i in 0 .. num_items {
+        for _i in 0..num_items {
             let mut added = false;
             while !added {
                 let x = (room.x1 + rng.roll_dice(1, i32::abs(room.x2 - room.x1))) as usize;
