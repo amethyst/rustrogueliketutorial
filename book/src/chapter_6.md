@@ -337,7 +337,7 @@ impl<'a> System<'a> for MonsterAI {
 }
 ```
 
-We also need to give the player a name; we've explicitly included names in the AI's join, so we better be sure that the player has one! Otherwise, the AI will ignore the player altogether. In `main.rs`, we'll include one in the `Player` creation:
+While we're at it, let's go ahead and give the player a name, too. In `main.rs`, we'll include one in the `Player` creation:
 
 ```rust
 gs.ecs
