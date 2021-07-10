@@ -175,6 +175,8 @@ Now create a new folder called `resources`. RLTK needs a few files to run, and t
 
 Save, and go back to the terminal. Type `cargo run`, and you will be greeted with a console window showing `Hello Rust`.
 
+(Note: If you've reached this point, and thread 'main' has panicked, your graphics card probably doesn't support OpenGL 3.3. Try running this instead: `LIBGL_ALWAYS_SOFTWARE=1 cargo run`. If that works, you'll need to prepend all of your builds with LIBGL_ALWAYS_SOFTWARE=1.)
+
 ![Screenshot](./c1-s1.png)
 
 If you're new to Rust, you are probably wondering what exactly the `Hello Rust` code does, and why it is there - so we'll take a moment to go through it.
