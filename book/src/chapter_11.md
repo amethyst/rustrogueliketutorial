@@ -97,7 +97,7 @@ RunState::MainMenu{ .. } => {
 
 We're basically updating the state with the new menu selection, and if something has been selected we change the game state. For `Quit`, we simply terminate the process. For now, we'll make loading/starting a game do the same thing: go into the `PreRun` state to setup the game.
 
-The last thing to do is to write the menu itself. In `menu.rs`:
+The last thing to do is to write the menu itself. In `gui.rs`:
 
 ```rust
 pub fn main_menu(gs : &mut State, ctx : &mut Rltk) -> MainMenuResult {
