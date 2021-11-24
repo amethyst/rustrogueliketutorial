@@ -21,7 +21,7 @@ The next level of the game is a dark elven city. The design document is a bit sp
 
 ## Generating a basic city
 
-The `level_builder` function in `map_builder/mod.rs` controls which map algorithm is called for a given level. Add a placeholder entry for a new map type:
+The `level_builder` function in `map_builders/mod.rs` controls which map algorithm is called for a given level. Add a placeholder entry for a new map type:
 
 ```rust
 pub fn level_builder(new_depth: i32, width: i32, height: i32) -> BuilderChain {

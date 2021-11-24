@@ -78,5 +78,6 @@
     - [Text Layers](./chapter_72.md)
     - [Systems/Dispatch](./chapter_73.md)
     - [Dark Elf City 1](./chapter_74.md)
+    - [Dark Elf Plaza](./chapter_75.md)
 - [Contributors](./contributors.md)
 - [Licensing](./license.md)

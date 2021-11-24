@@ -83,7 +83,8 @@ members = [
     "chapter-71-logging",
     "chapter-72-textlayers",
     "chapter-73-systems",
-    "chapter-74-darkcity"
+    "chapter-74-darkcity",
+    "chapter-75-darkplaza",
     ]
 
 [profile.dev]
