@@ -95,7 +95,7 @@ In your `wasm` folder, you need to make an HTML page to host/launch your applica
 
 You can't run WASM from a local file source (presumably for security reasons). You need to put it into a web server, and run it from there. If you have web hosting, copy your `wasm` folder to wherever you want it. You can then open the web server URL in a browser, and your game runs.
 
-If you *don't* have web hosting, you need to install a local webserver, and serve it from there.
+If you *don't* have web hosting, you need to install a local webserver, and serve it from there. (If you have Python installed you can run `python -m SimpleHTTPServer` from the `wasm` folder.)
 
 ## Help Wanted!
 
