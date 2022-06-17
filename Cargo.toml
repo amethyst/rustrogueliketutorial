@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 rltk = { version = "0.8.0" }
-specs = "0.16.1"
+specs = "0.17"
 specs-derive = "0.4.1"
 
 [workspace]

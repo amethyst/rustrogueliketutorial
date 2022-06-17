@@ -27,6 +27,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8fd72866655d1904d6b0997d0b07ba561047d070fbe29de039031c641b61217"
 
 [[package]]
+name = "ahash"
+version = "0.7.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fcb51a0695d8f838b1ee009b3fbf66bda078cd64590202a864a8f3e8c4315c47"
+dependencies = [
+ "getrandom",
+ "once_cell",
+ "version_check",
+]
+
+[[package]]
 name = "aho-corasick"
 version = "0.7.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -263,7 +274,7 @@ name = "chapter-02-helloecs"
 version = "0.1.0"
 dependencies = [
  "rltk",
- "specs",
+ "specs 0.16.1",
  "specs-derive",
 ]
 
@@ -272,7 +283,7 @@ name = "chapter-03-walkmap"
 version = "0.1.0"
 dependencies = [
  "rltk",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -281,7 +292,7 @@ name = "chapter-04-newmap"
 version = "0.1.0"
 dependencies = [
  "rltk",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -290,7 +301,7 @@ name = "chapter-05-fov"
 version = "0.1.0"
 dependencies = [
  "rltk",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -299,7 +310,7 @@ name = "chapter-06-monsters"
 version = "0.1.0"
 dependencies = [
  "rltk",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -308,7 +319,7 @@ name = "chapter-07-damage"
 version = "0.1.0"
 dependencies = [
  "rltk",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -317,7 +328,7 @@ name = "chapter-08-ui"
 version = "0.1.0"
 dependencies = [
  "rltk",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -326,7 +337,7 @@ name = "chapter-09-items"
 version = "0.1.0"
 dependencies = [
  "rltk",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -335,7 +346,7 @@ name = "chapter-10-ranged"
 version = "0.1.0"
 dependencies = [
  "rltk",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -346,7 +357,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -357,7 +368,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -368,7 +379,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -379,7 +390,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -390,7 +401,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -401,7 +412,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -412,7 +423,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -423,7 +434,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -434,7 +445,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -445,7 +456,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -456,7 +467,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -467,7 +478,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -478,7 +489,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -489,7 +500,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -500,7 +511,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -511,7 +522,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -522,7 +533,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -533,7 +544,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -544,7 +555,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -555,7 +566,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -566,7 +577,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -577,7 +588,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -588,7 +599,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -599,7 +610,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -610,7 +621,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -621,7 +632,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -632,7 +643,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -643,7 +654,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -654,7 +665,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -665,7 +676,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -677,7 +688,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -689,7 +700,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -701,7 +712,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -713,7 +724,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -725,7 +736,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -737,7 +748,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -750,7 +761,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -763,7 +774,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -776,7 +787,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -789,7 +800,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -802,7 +813,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -815,7 +826,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -828,7 +839,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -841,7 +852,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -854,7 +865,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -867,7 +878,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -880,7 +891,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -893,7 +904,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -906,7 +917,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -919,7 +930,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -932,7 +943,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -945,7 +956,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -958,7 +969,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -971,7 +982,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -984,7 +995,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -997,7 +1008,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -1010,7 +1021,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -1023,7 +1034,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -1036,7 +1047,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -1049,7 +1060,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -1062,7 +1073,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -1075,7 +1086,7 @@ dependencies = [
  "rltk",
  "serde",
  "serde_json",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -1277,6 +1288,16 @@ dependencies = [
  "cfg-if 0.1.10",
  "crossbeam-utils 0.7.2",
  "maybe-uninit",
+]
+
+[[package]]
+name = "crossbeam-queue"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f25d8400f4a7a5778f0e4e52384a48cbd9b5c495d110786187fc750075277a2"
+dependencies = [
+ "cfg-if 1.0.0",
+ "crossbeam-utils 0.8.9",
 ]
 
 [[package]]
@@ -1583,8 +1604,17 @@ version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "96282e96bfcd3da0d3aa9938bedf1e50df3269b6db08b4876d2da0bb1a0841cf"
 dependencies = [
- "ahash",
+ "ahash 0.3.8",
  "autocfg",
+]
+
+[[package]]
+name = "hashbrown"
+version = "0.11.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ab5ef0d4909ef3724cc8cce6ccc8572c5c817592e9285f5464f8e86f8bd3726e"
+dependencies = [
+ "ahash 0.7.6",
 ]
 
 [[package]]
@@ -2292,7 +2322,7 @@ name = "rust_roguelike_tutorial"
 version = "0.1.0"
 dependencies = [
  "rltk",
- "specs",
+ "specs 0.17.0",
  "specs-derive",
 ]
 
@@ -2396,7 +2426,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c5f08237e667ac94ad20f8878b5943d91a93ccb231428446c57c21c57779016d"
 dependencies = [
  "arrayvec",
- "hashbrown",
+ "hashbrown 0.7.2",
+ "mopa",
+ "rayon",
+ "smallvec",
+ "tynm",
+]
+
+[[package]]
+name = "shred"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb0210289d693217926314867c807e0b7b42f7e23c136adb31f8697f5bf242d3"
+dependencies = [
+ "arrayvec",
+ "hashbrown 0.11.2",
  "mopa",
  "rayon",
  "smallvec",
@@ -2455,13 +2499,29 @@ version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fff28a29366aff703d5da8a7e2c8875dc8453ac1118f842cbc0fa70c7db51240"
 dependencies = [
- "crossbeam-queue",
- "hashbrown",
+ "crossbeam-queue 0.2.3",
+ "hashbrown 0.7.2",
+ "hibitset",
+ "log",
+ "rayon",
+ "shred 0.10.2",
+ "shrev",
+ "tuple_utils",
+]
+
+[[package]]
+name = "specs"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5dcc1e4ba7ab1f08ecb3d7e2f693defc3907e2c03bb0924f9978be45b364f83f"
+dependencies = [
+ "crossbeam-queue 0.3.5",
+ "hashbrown 0.11.2",
  "hibitset",
  "log",
  "rayon",
  "serde",
- "shred",
+ "shred 0.12.0",
  "shrev",
  "tuple_utils",
 ]
