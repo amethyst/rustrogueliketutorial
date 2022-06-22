@@ -348,12 +348,12 @@ for i in 0..10 {
 
 Notice how we've added one line: `.with(LeftMover{})` - that's all it takes to add one more component to these entities (and not the yellow `@`).
 
-Now to actually *make them move*. We're going to define our first *system*. Systems are a way to contain entity/component logic together, and have them run independently. There's lots of complex flexibility available, but we're going to keep it simple. Here's everything required for our `LeftWalker` system:
+Now to actually *make them move*. We're going to define our first *system*. Systems are a way to contain entity/component logic together, and have them run independently. There's lots of complex flexibility available, but we're going to keep it simple. Here's everything required for our `LeftMover` system:
 
 ```rust
-struct LeftWalker {}
+struct LeftMover {}
 
-impl<'a> System<'a> for LeftWalker {
+impl<'a> System<'a> for LeftMover {
     type SystemData = (ReadStorage<'a, LeftMover>, 
                         WriteStorage<'a, Position>);
 
@@ -368,8 +368,8 @@ impl<'a> System<'a> for LeftWalker {
 
 This isn't as nice/simple as I'd like, but it does make sense when you understand it. Lets go through it a piece at a time:
 
-* `struct LeftWalker {}` just defines an empty structure - somewhere to attach the logic.
-* `impl<'a> System<'a> for LeftWalker` means we are implementing Specs' `System` trait for our `LeftWalker` structure. The `'a` are *lifetime* specifiers: the system is saying that the components it uses must exist long enough for the system to run. For now, it's not worth worrying too much about it. [If you are interested, the Rust Book can clarify a bit](https://doc.rust-lang.org/book/ch10-00-generics.html).
+* `struct LeftMover {}` just defines an empty structure - somewhere to attach the logic.
+* `impl<'a> System<'a> for LeftMover` means we are implementing Specs' `System` trait for our `LeftMover` structure. The `'a` are *lifetime* specifiers: the system is saying that the components it uses must exist long enough for the system to run. For now, it's not worth worrying too much about it. [If you are interested, the Rust Book can clarify a bit](https://doc.rust-lang.org/book/ch10-00-generics.html).
 * `type SystemData` is defining a type to tell Specs what the system requires. In this case, read access to `LeftMover` components, and write access (since it updates them) to `Position` components. You can mix and match whatever you need in here, as we'll see in later chapters.
 * `fn run` is the actual trait implementation, required by the `impl System`. It takes itself, and the `SystemData` we defined.
 * The for loop is system shorthand for the same iteration we did in the rendering system: it will run once for each entity that has both a `LeftMover` and a `Position`. Note that we're putting an underscore before the `LeftMover` variable name: we never actually use it, we just require that the entity *has* one. The underscore tells Rust "we know we aren't using it, this isn't a bug!" and stops it from warning us every time we compile.
@@ -382,8 +382,8 @@ Now that we've *written* our system, we need to be able to use it. We'll add a `
 ```rust
 impl State {
     fn run_systems(&mut self) {
-        let mut lw = LeftWalker{};
-        lw.run_now(&self.ecs);
+        let mut lm = LeftMover{};
+        lm.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
@@ -393,8 +393,8 @@ This is relatively straightforward:
 
 1. `impl State` means we would like to implement functionality for `State`.
 2. `fn run_systems(&mut self)` means we are defining a *function*, and it needs *mutable* (i.e. it is allowed to change things) access to *self*; this means it can access the data in its instance of `State` with the `self.` keyword.
-3. `let mut lw = LeftWalker{}` makes a new (changeable) instance of the `LeftWalker` system.
-4. `lw.run_now(&self.ecs)` tells the system to run, and tells it how to find the ECS.
+3. `let mut lm = LeftMover{}` makes a new (changeable) instance of the `LeftMover` system.
+4. `lm.run_now(&self.ecs)` tells the system to run, and tells it how to find the ECS.
 5. `self.ecs.maintain()` tells Specs that if any changes were queued up by the systems, they should apply to the world now.
 
 Finally, we actually want to run our systems. In the `tick` function, we add:
@@ -447,9 +447,9 @@ impl GameState for State {
     }
 }
 
-struct LeftWalker {}
+struct LeftMover {}
 
-impl<'a> System<'a> for LeftWalker {
+impl<'a> System<'a> for LeftMover {
     type SystemData = (ReadStorage<'a, LeftMover>, 
                         WriteStorage<'a, Position>);
 
@@ -463,8 +463,8 @@ impl<'a> System<'a> for LeftWalker {
 
 impl State {
     fn run_systems(&mut self) {
-        let mut lw = LeftWalker{};
-        lw.run_now(&self.ecs);
+        let mut lm = LeftMover{};
+        lm.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
@@ -671,9 +671,9 @@ impl GameState for State {
     }
 }
 
-struct LeftWalker {}
+struct LeftMover {}
 
-impl<'a> System<'a> for LeftWalker {
+impl<'a> System<'a> for LeftMover {
     type SystemData = (ReadStorage<'a, LeftMover>, 
                         WriteStorage<'a, Position>);
 
@@ -687,8 +687,8 @@ impl<'a> System<'a> for LeftWalker {
 
 impl State {
     fn run_systems(&mut self) {
-        let mut lw = LeftWalker{};
-        lw.run_now(&self.ecs);
+        let mut lm = LeftMover{};
+        lm.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
