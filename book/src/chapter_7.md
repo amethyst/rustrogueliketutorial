@@ -299,10 +299,10 @@ pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
 
             // Diagonals
             VirtualKeyCode::Numpad9 |
-            VirtualKeyCode::Y => try_move_player(1, -1, &mut gs.ecs),
+            VirtualKeyCode::U => try_move_player(1, -1, &mut gs.ecs),
 
             VirtualKeyCode::Numpad7 |
-            VirtualKeyCode::U => try_move_player(-1, -1, &mut gs.ecs),
+            VirtualKeyCode::Y => try_move_player(-1, -1, &mut gs.ecs),
 
             VirtualKeyCode::Numpad3 |
             VirtualKeyCode::N => try_move_player(1, 1, &mut gs.ecs),
