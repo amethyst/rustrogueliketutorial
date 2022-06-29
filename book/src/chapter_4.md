@@ -43,10 +43,10 @@ So now, in the spirit of the [original libtcod tutorial](http://rogueliketutoria
 We'll start with a new function:
 
 ```rust
-pub fn new_map_rooms_and_corridors() -> Vec<TileType> {
+pub fn new_map_rooms_and_corridors() -> (Vec<Rect>, Vec<TileType>) {
     let mut map = vec![TileType::Wall; 80*50];
 
-    map
+    (Vec::new(), map)
 }
 ```
 
@@ -102,7 +102,7 @@ Notice that we are using `for y in room.y1 +1 ..= room.y2` - that's an *inclusiv
 With these two bits of code, we can create a new rectangle anywhere with `Rect::new(x, y, width, height)`. We can add it to the map as floors with `apply_room_to_map(rect, map)`. That's enough to add a couple of test rooms. Our map function now looks like this:
 
 ```rust
-pub fn new_map_rooms_and_corridors() -> Vec<TileType> {
+pub fn new_map_rooms_and_corridors() -> (Vec<Rect>, Vec<TileType>) {
     let mut map = vec![TileType::Wall; 80*50];
 
     let room1 = Rect::new(20, 15, 10, 15);
@@ -111,7 +111,7 @@ pub fn new_map_rooms_and_corridors() -> Vec<TileType> {
     apply_room_to_map(&room1, &mut map);
     apply_room_to_map(&room2, &mut map);
 
-    map
+    (vec![room1, room2], map)
 }
 ```
 
@@ -150,7 +150,7 @@ Then we add a call, `apply_horizontal_tunnel(&mut map, 25, 40, 23);` to our map 
 Now we can use that to make a random dungeon. We'll modify our function as follows:
 
 ```rust
-pub fn new_map_rooms_and_corridors() -> Vec<TileType> {
+pub fn new_map_rooms_and_corridors() -> (Vec<Rect>, Vec<TileType>) {
     let mut map = vec![TileType::Wall; 80*50];
 
     let mut rooms : Vec<Rect> = Vec::new();
@@ -176,7 +176,7 @@ pub fn new_map_rooms_and_corridors() -> Vec<TileType> {
         }
     }
 
-    map
+    (rooms, map)
 }
 ```
 
