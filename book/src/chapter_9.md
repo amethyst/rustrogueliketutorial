@@ -625,7 +625,7 @@ You probably want to be able to drop items from your inventory, especially later
 
 So we create a component (in `components.rs`), and register it in `main.rs`:
 ```rust
-#[derive(Component, Debug, ConvertSaveload, Clone)]
+#[derive(Component, Debug, Clone)]
 pub struct WantsToDropItem {
     pub item : Entity
 }
