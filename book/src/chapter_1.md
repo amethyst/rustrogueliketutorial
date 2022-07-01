@@ -112,9 +112,9 @@ You may find the following `cargo` features handy:
 
 Cargo also supports *extensions* - that is, plugins that make it do even more. There are some that you may find particularly useful:
 
-* Cargo can reformat all your source code to look like standard Rust from the Rust manuals. You need to type `rustup component add rustfmt` *once* to install the tool. After that's done, you can type `cargo fmt` to format your code at any time.
+* Cargo can reformat all your source code to look like standard Rust from the Rust manuals. You can type `cargo fmt` to format your code at any time.
 * If you'd like to work with the `mdbook` format - used for [this book](https://github.com/thebracket/rustrogueliketutorial)! - cargo can help with that, too. Just once, you need to run `cargo install mdbook` to add the tools to your system. After that, `mdbook build` will build a book project, `mdbook init` will make a new one, and `mdbook serve` will give you a local webserver to view your work! You can learn all about `mdbook` [on their documentation page](https://rust-lang-nursery.github.io/mdBook/cli/index.html).
-* Cargo can also integrate with a "linter" - called `Clippy`. Clippy is a little pedantic (just like his Microsoft Office namesake!). Just the once, run `rustup component add clippy`. You can now type `cargo clippy` at any time to see suggestions for what may be wrong with your code!
+* Cargo can also integrate with a "linter" - called `Clippy`. Clippy is a little pedantic (just like his Microsoft Office namesake!). You can type `cargo clippy` at any time to see suggestions for what may be wrong with your code!
 
 
 ### Making a new project
