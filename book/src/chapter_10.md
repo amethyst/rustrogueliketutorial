@@ -16,14 +16,14 @@ In the last chapter, we added items and inventory - and a single item type, a he
 
 # Using components to describe what an item *does*
 
-In the last chapter, we pretty much wrote code to ensure that all items were healing potions. That got things going, but isn't very flexible. So we'll start by breaking down items into a few more component types. We'll start with a simple *flag* component, `Consumable`:
+In the last chapter, we pretty much wrote code to ensure that all items were healing potions. That got things going, but isn't very flexible. So we'll start with renaming the component `WantsToDrinkPotion` to the more flexible term `WantsToUseItem` and renaming it's field `potion` to `item` (Note that we will need to update the usages of `WantsToUseItem` in `inventory_system.rs` and `main.rs`). We want to break down items into a few more component types, so lets introduce a simple *flag* component, `Consumable`:
 
 ```rust
 #[derive(Component, Debug)]
 pub struct Consumable {}
 ```
 
-Having this item indicates that using it destroys it (consumed on use). So we replace the always-called `entities.delete(useitem.item).expect("Delete failed");` in our `PotionUseSystem` (which we rename `ItemUseSystem`!) with:
+Having this item indicates that using it destroys it (consumed on use). So we replace the always-called `entities.delete(useitem.item).expect("Delete failed");` in our `PotionUseSystem` (which we rename `ItemUseSystem`. We also rename `wants_drink` to `useitem` that fits the theme of being more flexible!) with:
 
 ```rust
 let consumable = consumables.get(useitem.item);
