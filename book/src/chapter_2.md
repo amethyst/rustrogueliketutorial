@@ -223,12 +223,12 @@ This line says `join` positions and renderables; like a database join, it only r
 
 The `join` function returns an *iterator*. [The Rust Book has a great section on iterators](https://doc.rust-lang.org/book/ch13-02-iterators.html). In C++, iterators provide a `begin`, `next` and `end` function - and you can move between elements in collections with them. Rust extends the same concept, only on steroids: just about anything can be made into an iterator if you put your mind to it. Iterators work very well with `for` loops - you can provide any iterator as the target in `for x in iterator` loops. The `0..10` we discussed earlier really is a *range* - and offers an *iterator* for Rust to navigate.
 
-The other interesting thing here are the parentheses. In Rust, when you wrap variables in brackets you are making a *tuple*. These are just a collection of variables, grouped together - but without needing to go and make a structure just for this case. You can access them individually via numeric access (`mytuple.0`, `mytuple.1`, etc.) to get to each field, or you can *destructure* them. `(one, two) = (1, 2)` sets the variable `one` to `1`, and the variable `two` to `2`. That's what we're doing here: the `join` iterator is returning *tuples* containing a `Position` and a `Renderable` component as `.0` and `.1`. Since typing that is ugly and unclear, we *destructure* them into the named variables `pos` and `render`.  This can be confusing at first, so if you are struggling I recommend [Rust By Example's section on Tuples](https://doc.rust-lang.org/rust-by-example/primitives/tuples.html).
+The other interesting thing here is the parentheses. In Rust, when you wrap variables in brackets you are making a *tuple*. These are just a collection of variables, grouped together - but without needing to go and make a structure just for this case. You can access them individually via numeric access (`mytuple.0`, `mytuple.1`, etc.) to get to each field, or you can *destructure* them. `(one, two) = (1, 2)` sets the variable `one` to `1`, and the variable `two` to `2`. That's what we're doing here: the `join` iterator is returning *tuples* containing a `Position` and a `Renderable` component as `.0` and `.1`. Since typing that is ugly and unclear, we *destructure* them into the named variables `pos` and `render`.  This can be confusing at first, so if you are struggling I recommend [Rust By Example's section on Tuples](https://doc.rust-lang.org/rust-by-example/primitives/tuples.html).
 
 ```rust
 ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
 ```
-We're running this for *every* entity that has *both* a `Position` and a `Renderable` component. The `join` method is passing us both, guaranteed to belong to the same enitity. Any entities that have one or the other - but not both - simply won't be included in the data returned to us.
+We're running this for *every* entity that has *both* a `Position` and a `Renderable` component. The `join` method is passing us both, guaranteed to belong to the same entity. Any entities that have one or the other - but not both - simply won't be included in the data returned to us.
 
 `ctx` is the instance of RLTK passed to us when `tick` runs. It offers a function called `set`, that sets a single terminal character to the glyph/colors of your choice. So we pass it the data from `pos` (the `Position` component for that entity), and the colors/glyph from `render` (the `Renderable` component for that entity).
 
@@ -550,7 +550,7 @@ fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
     let mut players = ecs.write_storage::<Player>();
 
     for (_player, pos) in (&mut players, &mut positions).join() {
-        pos.x = min(79 , max(0, pos.x + delta_x));
+        pos.x = min(79, max(0, pos.x + delta_x));
         pos.y = min(49, max(0, pos.y + delta_y));
     }
 }
@@ -582,7 +582,7 @@ The *context* provides a `key` variable. It is an *enumeration* - that is, a var
 
 So to get the data out of an `Option`, we need to *unwrap* it. There's a function called `unwrap` - but if you call it when there isn't any data, your program will crash! So we'll use Rust's `match` command to peek inside. Matching is one of Rust's strongest benefits, and I highly recommend [the Rust book chapter on it](https://doc.rust-lang.org/book/ch06-00-enums.html), or the [Rust by Example section](https://doc.rust-lang.org/rust-by-example/flow_control/match.html) if you prefer learning by examples.
 
-So we call `match ctx.key` - and Rust expects us to provide a list of possibles matches. In the case of `ctx.key`, there are only two possible values: `Some` or `None`. The `None => {}` line says "match the case in which `ctx.key` has no data" - and runs an empty block. `Some(key)` is the other option; there is *some* data - and we'll ask Rust to give it to us as a variable named `key` (you can name it whatever you like).
+So we call `match ctx.key` - and Rust expects us to provide a list of possible matches. In the case of `ctx.key`, there are only two possible values: `Some` or `None`. The `None => {}` line says "match the case in which `ctx.key` has no data" - and runs an empty block. `Some(key)` is the other option; there is *some* data - and we'll ask Rust to give it to us as a variable named `key` (you can name it whatever you like).
 
 We then `match` again, this time on the key. We have a line for each eventuality we want to handle: `VirtualKeyCode::Left => try_move_player(-1, 0, &mut gs.ecs)` says that if `key` equals `VirtualKeyCode::Left` (`VirtualKeyCode` is the name of the enumeration type), we should call our `try_move_player` function with (-1, 0). We repeat that for all four directions. The `_ => {}` is rather odd looking; `_` means *anything else*. So we're telling Rust that any other key code can be ignored here. Rust is rather pedantic: if you don't specify every possible enumeration, it will give a compiler error! By including the default, we don't have to type every possible keystroke.
 
