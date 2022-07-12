@@ -22,7 +22,7 @@ Rust was designed to be a "better systems language" - that is, low-level like `C
 
 Rust is also designed to have a better ecosystem than C++. `Cargo` provides a complete package manager (so do `vcpkg`, `conan`, etc. in C++ land, but cargo is well-integrated), a complete build system (similar to `cmake`, `make`, `meson`, etc. - but standardized). It doesn't run on as many platforms as C or C++, but the list is ever-growing.
 
-I tried Rust (after urging from friends), and found that while it doesn't replace C++ in my daily toolbox - there are times that it really helped get a project out of the door. It's syntax takes a bit of getting used to, but it really does drop in nicely to existing infrastructure.
+I tried Rust (after urging from friends), and found that while it doesn't replace C++ in my daily toolbox - there are times that it really helped get a project out of the door. Its syntax takes a bit of getting used to, but it really does drop in nicely to existing infrastructure.
 
 ## Learning Rust
 
