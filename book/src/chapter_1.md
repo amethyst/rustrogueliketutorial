@@ -257,7 +257,7 @@ I update this tutorial a lot - adding chapters, fixing issues, etc. You will per
 
 ## Updating Your Project
 
-You may find that `rltk_rs` or another package has updated, and you would like the latest version. From your project's folder, you can type `cargo update` to update *everything*. You can type `cargo update --dryrun` to see what it would like to update, and not change anything (people update their crates a lot - so this can be a big list!).
+You may find that `rltk_rs` or another package has updated, and you would like the latest version. From your project's folder, you can type `cargo update` to update *everything*. You can type `cargo update --dry-run` to see what it would like to update, and not change anything (people update their crates a lot - so this can be a big list!).
 
 ## Updating Rust Itself
 
