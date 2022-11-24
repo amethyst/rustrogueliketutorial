@@ -258,7 +258,7 @@ pub struct WantsToUseItem {
 }
 ```
 
-So now when you receive a `WantsToUseItem`, you can now that the *user* is the owning entity, the *item* is the `item` field, and it is aimed at `target` - if there is one (targeting doesn't make much sense for healing potions!).
+So now when you receive a `WantsToUseItem`, you can know that the *user* is the owning entity, the *item* is the `item` field, and it is aimed at `target` - if there is one (targeting doesn't make much sense for healing potions!).
 
 So now we can add another condition to our `ItemUseSystem`:
 ```rust
