@@ -109,7 +109,7 @@ struct Position {
 }
 ```
 
-What does this do? `#[derive(x)]` is a *macro* that says "from my basic data, please derive the boilerplate needed for *x*"; in this case, the *x* is a `Component`. The macro generates the additional code for you, so you don't have to type it in for every component. It makes it nice and easy to use components! The `#[macro_use] use specs_derive::Component;` from earlier is making use of this; *derive macros* are a special type of macro that implements additional functionality for a structure on your behalf - saving lots of typing.
+What does this do? `#[derive(x)]` is a *macro* that says "from my basic data, please derive the boilerplate needed for *x*"; in this case, the *x* is a `Component`. The macro generates the additional code for you, so you don't have to type it in for every component. It makes it nice and easy to use components! The `use specs_derive::Component;` from earlier is making use of this; *derive macros* are a special type of macro that implements additional functionality for a structure on your behalf - saving lots of typing.
 
 ## Defining a renderable component
 
