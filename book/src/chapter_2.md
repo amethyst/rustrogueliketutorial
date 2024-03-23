@@ -178,7 +178,7 @@ What this does, is it tells our `World` (`ecs` in `gs` - our game state) that we
 
 Notice that we are using an interesting layout: lots of functions that don't end in an `;` to separate out the end of the statement, but instead lots of `.` calls to another function. This is called the *builder pattern*, and is very common in Rust. Combining functions in this fashion is called *method chaining* (a *method* is a function inside a structure). It works because each function returns a copy of itself - so each function runs in turn, passing itself as the holder for the next method in the *chain*. So in this example, we start with a `create_entity` call - which returns a new, empty, entity. On that entity, we call `with` - which attaches a component to it. That in turn returns the partially built entity - so we can call `with` again to add the `Renderable` component. Finally, `.build()` takes the assembled entity and does the hard part - actually putting together all of the disparate parts into the right parts of the ECS for you.
 
-You could easily add a bunch more entities, if you want. Lets do just that:
+You could easily add a bunch more entities, if you want. Let's do just that:
 
 ```rust
 for i in 0..10 {
